@@ -122,11 +122,9 @@ function Cart() {
 
   const total = items.reduce((s, p) => s + p.price, 0);
 
+  return <section className="section">
+  <span>CARRITO</span><h1>Tu carrito</h1>
   return (
-    <section className="section">
-      <span>CARRITO</span>
-      <h1>Tu carrito</h1>
-
       {items.length === 0 ? (
         <div className="empty">
           <div>🛒</div>
