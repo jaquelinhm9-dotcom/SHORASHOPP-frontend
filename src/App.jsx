@@ -159,7 +159,6 @@ function Cart() {
           Total <b>{total.toLocaleString("es-MX")} MXN</b>
         </h3>
       </aside>
-    </div>
-  </section>
-);
+     </section>
+    );
     }
