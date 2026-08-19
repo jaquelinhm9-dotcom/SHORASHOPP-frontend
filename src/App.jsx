@@ -123,10 +123,7 @@ function Cart() {
     return (
   <section className="section">
     <span>CARRITO</span>
-    <h1>Tu carrito</h1>
-
-    <div className="cart-layout">
-      {items.length === 0 ? (
+    {items.length === 0 ? (
         <div className="empty">
           <div>🛒</div>
           <h2>Tu carrito está vacío</h2>
