@@ -116,17 +116,18 @@ function Product() {
 }
 
 function Cart() {
-  const [items,setItems] = useState(()=>JSON.parse(localStorage.getItem("shora_cart")||"[]"));
-  const total = items.reduce((s,p)=>s+p.price,0);
-  return <section className="section">
-    <span>CARRITO</span><h1>Tu carrito</h1>
-    return (
-  <section className="section">
-    <span>CARRITO</span>
-   
-    
-    
-    {items.length === 0 ? (
+  const [items, setItems] = useState(() =>
+    JSON.parse(localStorage.getItem("shora_cart") || "[]")
+  );
+
+  const total = items.reduce((s, p) => s + p.price, 0);
+
+  return (
+    <section className="section">
+      <span>CARRITO</span>
+      <h1>Tu carrito</h1>
+
+      {items.length === 0 ? (
         <div className="empty">
           <div>🛒</div>
           <h2>Tu carrito está vacío</h2>
@@ -139,6 +140,7 @@ function Cart() {
           {items.map((item, i) => (
             <div className="cart-item" key={i}>
               <span>{item.emoji}</span>
+
               <div>
                 <b>{item.name}</b>
                 <p>{item.price.toLocaleString("es-MX")} MXN</p>
@@ -150,15 +152,18 @@ function Cart() {
 
       <aside className="summary">
         <h2>Resumen</h2>
+
         <p>
           Productos{" "}
           <b>{total.toLocaleString("es-MX")} MXN</b>
         </p>
+
         <hr />
+
         <h3>
           Total <b>{total.toLocaleString("es-MX")} MXN</b>
         </h3>
       </aside>
-     </section>
-    );
-    }
+    </section>
+  );
+}
