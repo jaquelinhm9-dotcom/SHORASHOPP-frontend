@@ -123,30 +123,3 @@ function Cart() {
     {!items.length ? <div className="empty"><div>🛒</div><h2>Tu carrito está vacío</h2><Link className="primary" to="/catalogo">Explorar productos</Link></div> :
       <div className="cart-layout"><div>{items.map((p,i)=><div className="cart-row" key={i}><div className="mini">{p.emoji}</div><div><strong>{p.name}</strong><small>{p.category}</small></div><b>${p.price.toLocaleString("es-MX")}</b></div>)}</div>
       <aside className="summary"><h2>Resumen</h2><p>Productos <b>${total.toLocaleString("es-MX")}</b></p><hr/><h3>Total <b>${total.toLocaleString("es-MX")} MXN</b></h3><button className="primary" onClick={()=>alert("El siguiente paso conectará este botón con Mercado Pago.")}>Continuar al pago</button><button className="text-btn" onClick={()=>{localStorage.removeItem("shora_cart");setItems([]);}}>Vaciar carrito</button></aside></div>}
-  </section>;
-}
-
-function Account() {
-  return <section className="section auth"><div className="auth-box"><span>SHORASHOPP</span><h1>Mi cuenta</h1><p>Inicia sesión para consultar compras, pedidos y tu perfil.</p><input placeholder="Correo electrónico"/><input placeholder="Contraseña" type="password"/><button className="primary">Iniciar sesión</button><button className="outline">Crear una cuenta</button></div></section>;
-}
-
-function Seller() {
-  return <section className="section seller"><span>VENDE EN SHORASHOPP</span><h1>Empieza a vender</h1><p>Crea tu tienda, agrega productos y gestiona tus pedidos desde un solo lugar.</p>
-    <div className="notice"><strong>Revisión de publicaciones</strong><p>Las publicaciones de vendedores nuevos requieren revisión y aprobación de la administradora antes de hacerse públicas.</p></div>
-    <div className="seller-cards"><div><h3>1. Regístrate</h3><p>Crea tu cuenta de vendedor.</p></div><div><h3>2. Publica</h3><p>Agrega fotos, precio, inventario y descripción.</p></div><div><h3>3. Espera aprobación</h3><p>La administradora revisará tu publicación.</p></div></div>
-    <button className="primary">Comenzar registro</button>
-  </section>;
-}
-
-function Admin() {
-  return <section className="section admin"><span>PANEL ADMINISTRATIVO</span><h1>Control de SHORASHOPP</h1>
-    <div className="stats"><div><b>0</b><span>Publicaciones pendientes</span></div><div><b>0</b><span>Vendedores</span></div><div><b>0</b><span>Pedidos</span></div><div><b>0</b><span>Usuarios</span></div></div>
-    <div className="notice"><strong>Moderación activa</strong><p>Los nuevos vendedores deben tener sus publicaciones aprobadas manualmente antes de publicarse.</p></div>
-  </section>;
-}
-
-export default function App() {
-  const [cartCount,setCartCount] = useState(()=>JSON.parse(localStorage.getItem("shora_cart")||"[]").length);
-  useEffect(()=>{const f=()=>setCartCount(JSON.parse(localStorage.getItem("shora_cart")||"[]").length);window.addEventListener("cartchange",f);return()=>window.removeEventListener("cartchange",f)},[]);
-  return <Layout cartCount={cartCount}/>;
-}
