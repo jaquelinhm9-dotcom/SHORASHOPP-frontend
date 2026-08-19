@@ -120,6 +120,46 @@ function Cart() {
   const total = items.reduce((s,p)=>s+p.price,0);
   return <section className="section">
     <span>CARRITO</span><h1>Tu carrito</h1>
-    {!items.length ? <div className="empty"><div>🛒</div><h2>Tu carrito está vacío</h2><Link className="primary" to="/catalogo">Explorar productos</Link></div> :
-      <div className="cart-layout"><div>{items.map((p,i)=><div className="cart-row" key={i}><div className="mini">{p.emoji}</div><div><strong>{p.name}</strong><small>{p.category}</small></div><b>${p.price.toLocaleString("es-MX")}</b></div>)}</div>
-      <aside className="summary"><h2>Resumen</h2><p>Productos <b>${total.toLocaleString("es-MX")}</b></p><hr/><h3>Total <b>${total.toLocaleString("es-MX")} MXN</b></h3><button className="primary" onClick={()=>alert("El siguiente paso conectará este botón con Mercado Pago.")}>Continuar al pago</button><button className="text-btn" onClick={()=>{localStorage.removeItem("shora_cart");setItems([]);}}>Vaciar carrito</button></aside></div>}
+    return (
+  <section className="section">
+    <span>CARRITO</span>
+    <h1>Tu carrito</h1>
+
+    <div className="cart-layout">
+      {items.length === 0 ? (
+        <div className="empty">
+          <div>🛒</div>
+          <h2>Tu carrito está vacío</h2>
+          <Link className="primary" to="/catalogo">
+            Ver productos
+          </Link>
+        </div>
+      ) : (
+        <div className="cart-items">
+          {items.map((item, i) => (
+            <div className="cart-item" key={i}>
+              <span>{item.emoji}</span>
+              <div>
+                <b>{item.name}</b>
+                <p>{item.price.toLocaleString("es-MX")} MXN</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <aside className="summary">
+        <h2>Resumen</h2>
+        <p>
+          Productos{" "}
+          <b>{total.toLocaleString("es-MX")} MXN</b>
+        </p>
+        <hr />
+        <h3>
+          Total <b>{total.toLocaleString("es-MX")} MXN</b>
+        </h3>
+      </aside>
+    </div>
+  </section>
+);
+    }
