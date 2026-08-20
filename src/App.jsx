@@ -6,7 +6,6 @@ function App() {
   const [session, setSession] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  const [authMethod, setAuthMethod] = useState("email");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -14,7 +13,6 @@ function App() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -45,14 +43,12 @@ function App() {
     setName("");
     setEmail("");
     setPassword("");
-    setPhone("");
     setMessage("");
     setLoading(false);
   };
 
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
-    setAuthMethod("email");
     setMessage("");
     setShowAuth(true);
   };
@@ -62,11 +58,12 @@ function App() {
     resetForm();
   };
 
-  const scrollToSection = (id) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+  const switchAuthMode = (mode) => {
+    setAuthMode(mode);
+    setMessage("");
+    setName("");
+    setEmail("");
+    setPassword("");
   };
 
   const handleEmailAuth = async (event) => {
@@ -83,12 +80,13 @@ function App() {
           options: {
             data: {
               full_name: name.trim(),
-              phone: phone.trim(),
             },
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         if (data?.session) {
           closeAuth();
@@ -103,39 +101,15 @@ function App() {
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         closeAuth();
       }
     } catch (error) {
-      setMessage(error?.message || "Ocurrió un error. Inténtalo nuevamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePhoneAuth = async (event) => {
-    event.preventDefault();
-
-    if (!phone.trim()) {
-      setMessage("Escribe tu número de teléfono.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: phone.trim(),
-      });
-
-      if (error) throw error;
-
-      setMessage("Te enviamos un código de verificación por SMS.");
-    } catch (error) {
       setMessage(
-        error?.message || "No se pudo enviar el código de verificación."
+        error?.message || "Ocurrió un error. Inténtalo nuevamente."
       );
     } finally {
       setLoading(false);
@@ -146,20 +120,37 @@ function App() {
     setLoading(true);
 
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
+
       setSession(null);
+    } catch (error) {
+      setMessage(error?.message || "No se pudo cerrar sesión.");
     } finally {
       setLoading(false);
     }
   };
 
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <div className="app">
+      {/* ================= HEADER ================= */}
+
       <header className="topbar">
         <button
           className="brand"
           type="button"
           onClick={() => scrollToSection("inicio")}
+          aria-label="SHORASHOPP inicio"
         >
           <span className="brand-symbol">S</span>
 
@@ -169,30 +160,50 @@ function App() {
         </button>
 
         <nav className="desktop-nav">
-          <button type="button" onClick={() => scrollToSection("inicio")}>
+          <button
+            type="button"
+            onClick={() => scrollToSection("inicio")}
+          >
             Inicio
           </button>
 
-          <button type="button" onClick={() => scrollToSection("productos")}>
+          <button
+            type="button"
+            onClick={() => scrollToSection("productos")}
+          >
             Productos
           </button>
 
-          <button type="button" onClick={() => scrollToSection("categorias")}>
+          <button
+            type="button"
+            onClick={() => scrollToSection("categorias")}
+          >
             Categorías
           </button>
 
-          <button type="button" onClick={() => scrollToSection("nosotros")}>
+          <button
+            type="button"
+            onClick={() => scrollToSection("nosotros")}
+          >
             Nosotros
           </button>
         </nav>
 
         <div className="header-actions">
-          <button className="header-icon" type="button" aria-label="Buscar">
-            ⌕
+          <button
+            className="header-icon"
+            type="button"
+            aria-label="Buscar"
+          >
+            <span>⌕</span>
           </button>
 
-          <button className="header-icon cart-button" type="button">
-            🛒
+          <button
+            className="header-icon cart-button"
+            type="button"
+            aria-label="Carrito"
+          >
+            <span>🛒</span>
             <small>0</small>
           </button>
 
@@ -217,7 +228,11 @@ function App() {
         </div>
       </header>
 
+      {/* ================= MAIN ================= */}
+
       <main>
+        {/* ================= HERO ================= */}
+
         <section className="hero" id="inicio">
           <div className="hero-left">
             <div className="hero-label">
@@ -232,8 +247,8 @@ function App() {
             </h1>
 
             <p className="hero-description">
-              Descubre productos únicos, tendencias y todo lo que necesitas
-              para expresar quién eres.
+              Descubre productos únicos, tendencias y todo lo que
+              necesitas para expresar quién eres.
             </p>
 
             <div className="hero-actions">
@@ -273,6 +288,8 @@ function App() {
             </div>
           </div>
 
+          {/* ================= HERO VISUAL ================= */}
+
           <div className="hero-right">
             <div className="hero-background-shape" />
 
@@ -307,6 +324,8 @@ function App() {
           </div>
         </section>
 
+        {/* ================= MARQUEE ================= */}
+
         <section className="marquee">
           <div className="marquee-track">
             <span>SHORASHOPP</span>
@@ -324,7 +343,12 @@ function App() {
           </div>
         </section>
 
-        <section className="section categories-section" id="categorias">
+        {/* ================= CATEGORÍAS ================= */}
+
+        <section
+          className="section categories-section"
+          id="categorias"
+        >
           <div className="section-header">
             <div>
               <span className="section-label">01 / EXPLORA</span>
@@ -341,7 +365,10 @@ function App() {
           </div>
 
           <div className="categories-grid">
-            <button className="category-card category-fashion" type="button">
+            <button
+              className="category-card category-fashion"
+              type="button"
+            >
               <span className="category-index">01</span>
 
               <div>
@@ -352,7 +379,10 @@ function App() {
               <span className="category-arrow">↗</span>
             </button>
 
-            <button className="category-card category-tech" type="button">
+            <button
+              className="category-card category-tech"
+              type="button"
+            >
               <span className="category-index">02</span>
 
               <div>
@@ -363,7 +393,10 @@ function App() {
               <span className="category-arrow">↗</span>
             </button>
 
-            <button className="category-card category-home" type="button">
+            <button
+              className="category-card category-home"
+              type="button"
+            >
               <span className="category-index">03</span>
 
               <div>
@@ -374,7 +407,10 @@ function App() {
               <span className="category-arrow">↗</span>
             </button>
 
-            <button className="category-card category-beauty" type="button">
+            <button
+              className="category-card category-beauty"
+              type="button"
+            >
               <span className="category-index">04</span>
 
               <div>
@@ -387,7 +423,12 @@ function App() {
           </div>
         </section>
 
-        <section className="section products-section" id="productos">
+        {/* ================= PRODUCTOS ================= */}
+
+        <section
+          className="section products-section"
+          id="productos"
+        >
           <div className="section-header">
             <div>
               <span className="section-label">02 / SELECCIÓN</span>
@@ -404,7 +445,11 @@ function App() {
               <div className="product-photo product-photo-one">
                 <span className="product-badge">NUEVO</span>
 
-                <button className="favorite-button" type="button">
+                <button
+                  className="favorite-button"
+                  type="button"
+                  aria-label="Agregar a favoritos"
+                >
                   ♡
                 </button>
 
@@ -425,7 +470,11 @@ function App() {
               <div className="product-photo product-photo-two">
                 <span className="product-badge">POPULAR</span>
 
-                <button className="favorite-button" type="button">
+                <button
+                  className="favorite-button"
+                  type="button"
+                  aria-label="Agregar a favoritos"
+                >
                   ♡
                 </button>
 
@@ -446,7 +495,11 @@ function App() {
               <div className="product-photo product-photo-three">
                 <span className="product-badge">TOP</span>
 
-                <button className="favorite-button" type="button">
+                <button
+                  className="favorite-button"
+                  type="button"
+                  aria-label="Agregar a favoritos"
+                >
                   ♡
                 </button>
 
@@ -465,11 +518,15 @@ function App() {
           </div>
         </section>
 
+        {/* ================= NOSOTROS ================= */}
+
         <section className="about-section" id="nosotros">
           <div className="about-number">03</div>
 
           <div className="about-content">
-            <span className="section-label">SOBRE SHORASHOPP</span>
+            <span className="section-label">
+              SOBRE SHORASHOPP
+            </span>
 
             <h2>
               Compra
@@ -480,8 +537,9 @@ function App() {
 
           <div className="about-description">
             <p>
-              Creamos un espacio donde descubrir productos sea tan importante
-              como encontrar exactamente lo que estabas buscando.
+              Creamos un espacio donde descubrir productos sea tan
+              importante como encontrar exactamente lo que estabas
+              buscando.
             </p>
 
             <button
@@ -495,6 +553,8 @@ function App() {
           </div>
         </section>
       </main>
+
+      {/* ================= FOOTER ================= */}
 
       <footer className="footer">
         <div className="footer-top">
@@ -511,7 +571,10 @@ function App() {
           </button>
 
           <div className="footer-links">
-            <button type="button" onClick={() => scrollToSection("inicio")}>
+            <button
+              type="button"
+              onClick={() => scrollToSection("inicio")}
+            >
               Inicio
             </button>
 
@@ -529,7 +592,10 @@ function App() {
               Categorías
             </button>
 
-            <button type="button" onClick={() => scrollToSection("nosotros")}>
+            <button
+              type="button"
+              onClick={() => scrollToSection("nosotros")}
+            >
               Nosotros
             </button>
           </div>
@@ -541,6 +607,8 @@ function App() {
         </div>
       </footer>
 
+      {/* ================= MODAL DE AUTENTICACIÓN ================= */}
+
       {showAuth && (
         <div
           className="auth-overlay"
@@ -550,7 +618,10 @@ function App() {
             }
           }}
         >
-          <div className="auth-modal">
+          <div
+            className="auth-modal"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
             <button
               className="auth-close"
               type="button"
@@ -566,7 +637,9 @@ function App() {
 
             <div className="auth-header">
               <span className="section-label">
-                {authMode === "login" ? "BIENVENIDO" : "ÚNETE"}
+                {authMode === "login"
+                  ? "BIENVENIDO"
+                  : "ÚNETE"}
               </span>
 
               <h2>
@@ -592,136 +665,102 @@ function App() {
               </p>
             </div>
 
-            <div className="auth-tabs">
-              <button
-                type="button"
-                className={authMethod === "email" ? "active" : ""}
-                onClick={() => {
-                  setAuthMethod("email");
-                  setMessage("");
-                }}
-              >
-                Correo
-              </button>
-
-              <button
-                type="button"
-                className={authMethod === "phone" ? "active" : ""}
-                onClick={() => {
-                  setAuthMethod("phone");
-                  setMessage("");
-                }}
-              >
-                Teléfono
-              </button>
-            </div>
-
-            {authMethod === "email" ? (
-              <form className="auth-form" onSubmit={handleEmailAuth}>
-                {authMode === "register" && (
-                  <label>
-                    <span>Nombre</span>
-
-                    <input
-                      type="text"
-                      placeholder="Tu nombre completo"
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      autoComplete="name"
-                      required
-                    />
-                  </label>
-                )}
-
+            <form
+              className="auth-form"
+              onSubmit={handleEmailAuth}
+            >
+              {authMode === "register" && (
                 <label>
-                  <span>Correo electrónico</span>
+                  <span>Nombre</span>
 
                   <input
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    autoComplete="email"
-                    required
-                  />
-                </label>
-
-                <label>
-                  <span>Contraseña</span>
-
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    autoComplete={
-                      authMode === "login"
-                        ? "current-password"
-                        : "new-password"
+                    type="text"
+                    placeholder="Tu nombre completo"
+                    value={name}
+                    onChange={(event) =>
+                      setName(event.target.value)
                     }
-                    minLength={6}
+                    autoComplete="name"
                     required
                   />
                 </label>
+              )}
 
-                {authMode === "register" && (
-                  <label>
-                    <span>Teléfono</span>
+              <label>
+                <span>Correo electrónico</span>
 
-                    <input
-                      type="tel"
-                      placeholder="+52 000 000 0000"
-                      value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
-                      autoComplete="tel"
-                    />
-                  </label>
-                )}
+                <input
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  value={email}
+                  onChange={(event) =>
+                    setEmail(event.target.value)
+                  }
+                  autoComplete="email"
+                  required
+                />
+              </label>
 
-                <button
-                  className="auth-submit"
-                  type="submit"
-                  disabled={loading}
-                >
+              <label>
+                <span>Contraseña</span>
+
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(event) =>
+                    setPassword(event.target.value)
+                  }
+                  autoComplete={
+                    authMode === "login"
+                      ? "current-password"
+                      : "new-password"
+                  }
+                  minLength={6}
+                  required
+                />
+              </label>
+
+              <button
+                className="auth-submit"
+                type="submit"
+                disabled={loading}
+              >
+                <span>
                   {loading
                     ? "Procesando..."
                     : authMode === "login"
                     ? "Iniciar sesión"
                     : "Crear cuenta"}
+                </span>
 
-                  <span>↗</span>
-                </button>
-              </form>
-            ) : (
-              <form className="auth-form" onSubmit={handlePhoneAuth}>
-                <label>
-                  <span>Número de teléfono</span>
+                <span>↗</span>
+              </button>
+            </form>
 
-                  <input
-                    type="tel"
-                    placeholder="+52 000 000 0000"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    autoComplete="tel"
-                    required
-                  />
-                </label>
-
-                <button
-                  className="auth-submit"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Enviando..." : "Enviar código"}
-
-                  <span>↗</span>
-                </button>
-              </form>
+            {message && (
+              <div className="auth-message">
+                {message}
+              </div>
             )}
-
-            {message && <div className="auth-message">{message}</div>}
 
             <div className="auth-switch">
               {authMode === "login" ? (
                 <>
-        
+                  ¿No tienes cuenta?{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      switchAuthMode("register")
+                    }
+                  >
+                    Regístrate
+                  </button>
+                </>
+              ) : (
+                <>
+                  ¿Ya tienes cuenta?{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      swit
