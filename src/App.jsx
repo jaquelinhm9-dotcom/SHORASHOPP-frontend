@@ -3,21 +3,31 @@ import { supabase } from "./lib/supabase";
 import "./App.css";
 
 function App() {
+  const [session, setSession] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+  const [authMethod, setAuthMethod] = useState("email");
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [session, setSession] = useState(null);
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+    let mounted = true;
+
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (mounted) {
+        setSession(data?.session ?? null);
+      }
+    };
+
+    loadSession();
 
     const {
       data: { subscription },
@@ -25,50 +35,70 @@ function App() {
       setSession(currentSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const openAuth = (mode) => {
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setPhone("");
+    setMessage("");
+    setLoading(false);
+  };
+
+  const openAuth = (mode = "login") => {
     setAuthMode(mode);
+    setAuthMethod("email");
     setMessage("");
     setShowAuth(true);
   };
 
   const closeAuth = () => {
     setShowAuth(false);
-    setMessage("");
-    setEmail("");
-    setPassword("");
-    setPhone("");
-    setName("");
+    resetForm();
   };
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
+  const switchAuthMode = (mode) => {
+    setAuthMode(mode);
+    setAuthMethod("email");
+    setMessage("");
+  };
+
+  const handleEmailAuth = async (event) => {
+    event.preventDefault();
+
     setLoading(true);
     setMessage("");
 
     try {
       if (authMode === "register") {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
           password,
           options: {
             data: {
-              full_name: name,
-              phone,
+              full_name: name.trim(),
+              phone: phone.trim(),
             },
           },
         });
 
         if (error) throw error;
 
-        setMessage(
-          "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
-        );
+        if (data?.session) {
+          closeAuth();
+        } else {
+          setMessage(
+            "Cuenta creada. Revisa tu correo electrónico para confirmar tu cuenta."
+          );
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password,
         });
 
@@ -77,14 +107,16 @@ function App() {
         closeAuth();
       }
     } catch (error) {
-      setMessage(error.message || "Ocurrió un error.");
+      setMessage(error?.message || "Ocurrió un error. Inténtalo nuevamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePhoneLogin = async () => {
-    if (!phone) {
+  const handlePhoneAuth = async (event) => {
+    event?.preventDefault();
+
+    if (!phone.trim()) {
       setMessage("Escribe tu número de teléfono.");
       return;
     }
@@ -94,359 +126,595 @@ function App() {
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        phone,
+        phone: phone.trim(),
       });
 
       if (error) throw error;
 
       setMessage("Te enviamos un código de verificación por SMS.");
     } catch (error) {
-      setMessage(error.message || "No se pudo enviar el código.");
+      setMessage(
+        error?.message || "No se pudo enviar el código de verificación."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
+    setLoading(true);
+
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <div className="brand-mark">S</div>
-          <span>SHORASHOPP</span>
-        </div>
+      {/* ================= HEADER ================= */}
 
-        <nav className="nav">
-          <a href="#inicio">Inicio</a>
-          <a href="#productos">Productos</a>
-          <a href="#categorias">Categorías</a>
-          <a href="#nosotros">Nosotros</a>
+      <header className="topbar">
+        <button
+          className="brand"
+          type="button"
+          onClick={() => scrollToSection("inicio")}
+          aria-label="SHORASHOPP inicio"
+        >
+          <span className="brand-symbol">S</span>
+
+          <span className="brand-name">
+            SHORA<span>SHOPP</span>
+          </span>
+        </button>
+
+        <nav className="desktop-nav">
+          <button onClick={() => scrollToSection("inicio")}>Inicio</button>
+          <button onClick={() => scrollToSection("productos")}>
+            Productos
+          </button>
+          <button onClick={() => scrollToSection("categorias")}>
+            Categorías
+          </button>
+          <button onClick={() => scrollToSection("nosotros")}>
+            Nosotros
+          </button>
         </nav>
 
         <div className="header-actions">
-          <button className="icon-button" aria-label="Buscar">
-            ⌕
+          <button className="header-icon" type="button" aria-label="Buscar">
+            <span>⌕</span>
           </button>
 
-          <button className="icon-button" aria-label="Carrito">
-            🛒
+          <button className="header-icon cart-button" type="button">
+            <span>🛒</span>
+            <small>0</small>
           </button>
 
           {session ? (
-            <button className="account-button" onClick={handleLogout}>
-              Cerrar sesión
+            <button
+              className="header-account logged"
+              type="button"
+              onClick={handleLogout}
+              disabled={loading}
+            >
+              {loading ? "..." : "Salir"}
             </button>
           ) : (
             <button
-              className="account-button"
+              className="header-account"
+              type="button"
               onClick={() => openAuth("login")}
             >
-              Iniciar sesión
+              Entrar
             </button>
           )}
         </div>
       </header>
 
+      {/* ================= MAIN ================= */}
+
       <main>
+        {/* ================= HERO ================= */}
+
         <section className="hero" id="inicio">
-          <div className="hero-content">
-            <span className="eyebrow">NUEVA TEMPORADA</span>
+          <div className="hero-left">
+            <div className="hero-label">
+              <span className="label-dot" />
+              NUEVA TEMPORADA
+            </div>
 
             <h1>
-              Encuentra tu
+              Encuentra
               <br />
-              <span>estilo.</span>
+              tu <em>estilo.</em>
             </h1>
 
-            <p>
+            <p className="hero-description">
               Descubre productos únicos, tendencias y todo lo que necesitas
               para expresar quién eres.
             </p>
 
-            <div className="hero-buttons">
+            <div className="hero-actions">
               <button
-                className="primary-button"
-                onClick={() =>
-                  document
-                    .getElementById("productos")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
+                className="main-button"
+                type="button"
+                onClick={() => scrollToSection("productos")}
               >
-                Explorar productos
-                <span>→</span>
+                <span>Explorar productos</span>
+                <strong>↗</strong>
               </button>
 
               <button
-                className="secondary-button"
+                className="outline-button"
+                type="button"
                 onClick={() => openAuth("register")}
               >
                 Crear cuenta
               </button>
             </div>
+
+            <div className="hero-mini-info">
+              <div>
+                <strong>+1K</strong>
+                <span>Productos</span>
+              </div>
+
+              <div>
+                <strong>+500</strong>
+                <span>Clientes</span>
+              </div>
+
+              <div>
+                <strong>24/7</strong>
+                <span>Disponible</span>
+              </div>
+            </div>
           </div>
 
-          <div className="hero-visual">
-            <div className="hero-card card-one">
+          {/* Visual principal */}
+
+          <div className="hero-right">
+            <div className="hero-background-shape" />
+
+            <div className="floating-card floating-card-top">
               <span>01</span>
+              <strong>DISCOVER</strong>
             </div>
 
-            <div className="hero-card card-two">
-              <span>02</span>
+            <div className="hero-main-card">
+              <div className="hero-main-card-top">
+                <span>SHORA</span>
+                <span>2026</span>
+              </div>
+
+              <div className="hero-main-logo">S</div>
+
+              <div className="hero-main-card-bottom">
+                <span>SHOP</span>
+                <span>DISCOVER</span>
+                <span>INSPIRE</span>
+              </div>
             </div>
 
-            <div className="hero-circle">
-              <div className="circle-text">SHOP • DISCOVER • INSPIRE •</div>
-              <strong>S</strong>
+            <div className="floating-card floating-card-bottom">
+              <span>NEW</span>
+              <strong>COLLECTION</strong>
+            </div>
+
+            <div className="hero-round-text">
+              SHOP • DISCOVER • INSPIRE •
             </div>
           </div>
         </section>
 
-        <section className="categories" id="categorias">
-          <div className="section-heading">
+        {/* ================= MARQUEE ================= */}
+
+        <section className="marquee">
+          <div className="marquee-track">
+            <span>SHORASHOPP</span>
+            <i>✦</i>
+            <span>SHOP</span>
+            <i>✦</i>
+            <span>DISCOVER</span>
+            <i>✦</i>
+            <span>INSPIRE</span>
+            <i>✦</i>
+            <span>SHORASHOPP</span>
+            <i>✦</i>
+            <span>SHOP</span>
+            <i>✦</i>
+          </div>
+        </section>
+
+        {/* ================= CATEGORÍAS ================= */}
+
+        <section className="section categories-section" id="categorias">
+          <div className="section-header">
             <div>
-              <span className="eyebrow">EXPLORA</span>
+              <span className="section-label">01 / EXPLORA</span>
               <h2>Categorías</h2>
             </div>
 
-            <button className="text-button">
-              Ver todas <span>→</span>
+            <button
+              className="simple-link"
+              type="button"
+              onClick={() => scrollToSection("productos")}
+            >
+              Ver todas <span>↗</span>
             </button>
           </div>
 
-          <div className="category-grid">
-            <article className="category-card">
-              <div className="category-number">01</div>
-              <h3>Moda</h3>
-              <p>Prendas y accesorios para cada ocasión.</p>
-              <span className="category-arrow">↗</span>
-            </article>
+          <div className="categories-grid">
+            <button className="category-card category-fashion" type="button">
+              <span className="category-index">01</span>
 
-            <article className="category-card">
-              <div className="category-number">02</div>
-              <h3>Tecnología</h3>
-              <p>Innovación para tu día a día.</p>
-              <span className="category-arrow">↗</span>
-            </article>
+              <div>
+                <h3>Moda</h3>
+                <p>Prendas y accesorios para cada ocasión.</p>
+              </div>
 
-            <article className="category-card">
-              <div className="category-number">03</div>
-              <h3>Hogar</h3>
-              <p>Detalles que hacen especial tu espacio.</p>
               <span className="category-arrow">↗</span>
-            </article>
+            </button>
 
-            <article className="category-card">
-              <div className="category-number">04</div>
-              <h3>Belleza</h3>
-              <p>Cuida, descubre y resalta tu estilo.</p>
+            <button className="category-card category-tech" type="button">
+              <span className="category-index">02</span>
+
+              <div>
+                <h3>Tecnología</h3>
+                <p>Innovación para tu día a día.</p>
+              </div>
+
               <span className="category-arrow">↗</span>
-            </article>
+            </button>
+
+            <button className="category-card category-home" type="button">
+              <span className="category-index">03</span>
+
+              <div>
+                <h3>Hogar</h3>
+                <p>Detalles para hacer especial tu espacio.</p>
+              </div>
+
+              <span className="category-arrow">↗</span>
+            </button>
+
+            <button className="category-card category-beauty" type="button">
+              <span className="category-index">04</span>
+
+              <div>
+                <h3>Belleza</h3>
+                <p>Cuida, descubre y resalta tu estilo.</p>
+              </div>
+
+              <span className="category-arrow">↗</span>
+            </button>
           </div>
         </section>
 
-        <section className="products" id="productos">
-          <div className="section-heading">
+        {/* ================= PRODUCTOS ================= */}
+
+        <section className="section products-section" id="productos">
+          <div className="section-header">
             <div>
-              <span className="eyebrow">SELECCIÓN</span>
+              <span className="section-label">02 / SELECCIÓN</span>
               <h2>Productos destacados</h2>
             </div>
 
-            <button className="text-button">
-              Explorar todo <span>→</span>
+            <button className="simple-link" type="button">
+              Explorar todo <span>↗</span>
             </button>
           </div>
 
-          <div className="product-grid">
+          <div className="products-grid">
             <article className="product-card">
-              <div className="product-image image-one">
-                <span className="product-tag">NUEVO</span>
+              <div className="product-photo product-photo-one">
+                <span className="product-badge">NUEVO</span>
+
+                <button className="favorite-button" type="button">
+                  ♡
+                </button>
+
+                <div className="product-photo-symbol">S</div>
               </div>
 
-              <div className="product-info">
+              <div className="product-details">
                 <div>
+                  <span>SHORASHOPP</span>
                   <h3>Producto esencial</h3>
-                  <p>SHORASHOPP</p>
                 </div>
+
                 <strong>$499</strong>
               </div>
             </article>
 
             <article className="product-card">
-              <div className="product-image image-two">
-                <span className="product-tag">POPULAR</span>
+              <div className="product-photo product-photo-two">
+                <span className="product-badge">POPULAR</span>
+
+                <button className="favorite-button" type="button">
+                  ♡
+                </button>
+
+                <div className="product-photo-symbol">S</div>
               </div>
 
-              <div className="product-info">
+              <div className="product-details">
                 <div>
+                  <span>SHORASHOPP</span>
                   <h3>Selección premium</h3>
-                  <p>SHORASHOPP</p>
                 </div>
+
                 <strong>$699</strong>
               </div>
             </article>
 
             <article className="product-card">
-              <div className="product-image image-three">
-                <span className="product-tag">TOP</span>
+              <div className="product-photo product-photo-three">
+                <span className="product-badge">TOP</span>
+
+                <button className="favorite-button" type="button">
+                  ♡
+                </button>
+
+                <div className="product-photo-symbol">S</div>
               </div>
 
-              <div className="product-info">
+              <div className="product-details">
                 <div>
+                  <span>SHORASHOPP</span>
                   <h3>Edición especial</h3>
-                  <p>SHORASHOPP</p>
                 </div>
+
                 <strong>$899</strong>
               </div>
             </article>
           </div>
         </section>
 
-        <section className="about" id="nosotros">
-          <div>
-            <span className="eyebrow">SOBRE SHORASHOPP</span>
-            <h2>Compra diferente.</h2>
+        {/* ================= NOSOTROS ================= */}
+
+        <section className="about-section" id="nosotros">
+          <div className="about-number">03</div>
+
+          <div className="about-content">
+            <span className="section-label">SOBRE SHORASHOPP</span>
+
+            <h2>
+              Compra
+              <br />
+              <em>diferente.</em>
+            </h2>
           </div>
 
-          <p>
-            Creamos un espacio donde descubrir productos sea tan importante
-            como encontrar exactamente lo que estabas buscando.
-          </p>
+          <div className="about-description">
+            <p>
+              Creamos un espacio donde descubrir productos sea tan importante
+              como encontrar exactamente lo que estabas buscando.
+            </p>
+
+            <button
+              className="main-button"
+              type="button"
+              onClick={() => openAuth("register")}
+            >
+              <span>Únete a nosotros</span>
+              <strong>↗</strong>
+            </button>
+          </div>
         </section>
       </main>
 
+      {/* ================= FOOTER ================= */}
+
       <footer className="footer">
-        <div className="brand">
-          <div className="brand-mark">S</div>
-          <span>SHORASHOPP</span>
+        <div className="footer-top">
+          <button
+            className="brand footer-brand"
+            type="button"
+            onClick={() => scrollToSection("inicio")}
+          >
+            <span className="brand-symbol">S</span>
+
+            <span className="brand-name">
+              SHORA<span>SHOPP</span>
+            </span>
+          </button>
+
+          <div className="footer-links">
+            <button onClick={() => scrollToSection("inicio")}>Inicio</button>
+            <button onClick={() => scrollToSection("productos")}>
+              Productos
+            </button>
+            <button onClick={() => scrollToSection("categorias")}>
+              Categorías
+            </button>
+            <button onClick={() => scrollToSection("nosotros")}>
+              Nosotros
+            </button>
+          </div>
         </div>
 
-        <p>© 2026 SHORASHOPP. Todos los derechos reservados.</p>
+        <div className="footer-bottom">
+          <span>© 2026 SHORASHOPP</span>
+          <span>Todos los derechos reservados.</span>
+        </div>
       </footer>
 
+      {/* ================= AUTH MODAL ================= */}
+
       {showAuth && (
-        <div className="modal-overlay" onClick={closeAuth}>
-          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeAuth}>
+        <div
+          className="auth-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAuth();
+            }
+          }}
+        >
+          <div className="auth-modal">
+            <button
+              className="auth-close"
+              type="button"
+              onClick={closeAuth}
+              aria-label="Cerrar"
+            >
               ×
             </button>
 
+            <div className="auth-decoration">
+              <span>S</span>
+            </div>
+
             <div className="auth-header">
-              <span className="eyebrow">
+              <span className="section-label">
                 {authMode === "login" ? "BIENVENIDO" : "ÚNETE"}
               </span>
 
               <h2>
-                {authMode === "login"
-                  ? "Inicia sesión."
-                  : "Crea tu cuenta."}
+                {authMode === "login" ? (
+                  <>
+                    Bienvenido
+                    <br />
+                    de <em>nuevo.</em>
+                  </>
+                ) : (
+                  <>
+                    Crea tu
+                    <br />
+                    <em>cuenta.</em>
+                  </>
+                )}
               </h2>
 
               <p>
                 {authMode === "login"
-                  ? "Accede a tu cuenta de SHORASHOPP."
-                  : "Forma parte de SHORASHOPP."}
+                  ? "Inicia sesión para continuar en SHORASHOPP."
+                  : "Forma parte de la comunidad SHORASHOPP."}
               </p>
             </div>
 
-            <form onSubmit={handleAuth}>
-              {authMode === "register" && (
-                <input
-                  type="text"
-                  placeholder="Nombre completo"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              )}
-
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-
-              {authMode === "register" && (
-                <input
-                  type="tel"
-                  placeholder="Número de teléfono"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              )}
-
+            <div className="auth-tabs">
               <button
-                className="auth-submit"
-                type="submit"
-                disabled={loading}
+                type="button"
+                className={authMethod === "email" ? "active" : ""}
+                onClick={() => {
+                  setAuthMethod("email");
+                  setMessage("");
+                }}
               >
-                {loading
-                  ? "Procesando..."
-                  : authMode === "login"
-                  ? "Iniciar sesión"
-                  : "Crear cuenta"}
+                Correo
               </button>
-            </form>
-
-            <div className="auth-divider">
-              <span>o</span>
-            </div>
-
-            <div className="phone-login">
-              <input
-                type="tel"
-                placeholder="+52 000 000 0000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
 
               <button
                 type="button"
-                onClick={handlePhoneLogin}
-                disabled={loading}
+                className={authMethod === "phone" ? "active" : ""}
+                onClick={() => {
+                  setAuthMethod("phone");
+                  setMessage("");
+                }}
               >
-                Continuar con teléfono
+                Teléfono
               </button>
             </div>
 
-            {message && <div className="auth-message">{message}</div>}
+            {authMethod === "email" ? (
+              <form className="auth-form" onSubmit={handleEmailAuth}>
+                {authMode === "register" && (
+                  <label>
+                    <span>Nombre</span>
 
-            <div className="auth-switch">
-              {authMode === "login" ? (
-                <>
-                  ¿No tienes cuenta?{" "}
-                  <button onClick={() => setAuthMode("register")}>
-                    Regístrate
-                  </button>
-                </>
-              ) : (
-                <>
-                  ¿Ya tienes cuenta?{" "}
-                  <button onClick={() => setAuthMode("login")}>
-                    Inicia sesión
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                    <input
+                      type="text"
+                      placeholder="Tu nombre completo"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      autoComplete="name"
+                      required
+                    />
+                  </label>
+                )}
 
-export default App;
+                <label>
+                  <span>Correo electrónico</span>
+
+                  <input
+                    type="email"
+                    placeholder="correo@ejemplo.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span>Contraseña</span>
+
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    autoComplete={
+                      authMode === "login" ? "current-password" : "new-password"
+                    }
+                    minLength={6}
+                    required
+                  />
+                </label>
+
+                {authMode === "register" && (
+                  <label>
+                    <span>Teléfono</span>
+
+                    <input
+                      type="tel"
+                      placeholder="+52 000 000 0000"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      autoComplete="tel"
+                    />
+                  </label>
+                )}
+
+                <button
+                  className="auth-submit"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Procesando..."
+                    : authMode === "login"
+                    ? "Iniciar sesión"
+                    : "Crear cuenta"}
+
+                  <span>↗</span>
+                </button>
+              </form>
+            ) : (
+              <form className="auth-form" onSubmit={handlePhoneAuth}>
+                <label>
+                  <span>Número de teléfono</span>
+
+                  <input
+                    type="tel"
+                    placeholder="+52 000 000 0000"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    autoComplete="tel"
+                    required
+                  />
+                </label>
+
+                <button
+          
