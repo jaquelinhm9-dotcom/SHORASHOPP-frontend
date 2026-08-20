@@ -1,6 +1,76 @@
+import { useEffect, useState } from "react";
 import "./App.css";
+import { supabase } from "./lib/supabase";
 
 export default function App() {
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleAuth = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      if (authMode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        setMessage(
+          "¡Registro exitoso! Revisa tu correo para confirmar tu cuenta."
+        );
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        setMessage("¡Bienvenido a SHORASHOPP! ✨");
+      }
+    } catch (error) {
+      setMessage(error.message || "Ocurrió un error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setMessage("");
+  };
+
   return (
     <div className="app">
 
@@ -21,13 +91,22 @@ export default function App() {
         </div>
 
         <div className="headerActions">
+
           <button className="headerButton">
             🛒
           </button>
 
-          <button className="headerButton">
-            👤
+          <button
+            className="headerButton"
+            onClick={() => {
+              setShowAuth(true);
+              setMessage("");
+            }}
+            aria-label="Cuenta"
+          >
+            ✨
           </button>
+
         </div>
 
       </header>
@@ -86,6 +165,7 @@ export default function App() {
               <div className="mainCircle">
 
                 <div className="circleContent">
+
                   <div className="shoppingBag">
                     🛍️
                   </div>
@@ -94,6 +174,7 @@ export default function App() {
                     SHORA
                     <strong>SHOPP</strong>
                   </div>
+
                 </div>
 
               </div>
@@ -103,6 +184,7 @@ export default function App() {
 
               <div className="floatingCard cardOne">
                 <div className="floatingIcon">👜</div>
+
                 <div>
                   <strong>Moda</strong>
                   <small>Descubre más</small>
@@ -111,6 +193,7 @@ export default function App() {
 
               <div className="floatingCard cardTwo">
                 <div className="floatingIcon">📱</div>
+
                 <div>
                   <strong>Tecnología</strong>
                   <small>Lo más nuevo</small>
@@ -119,6 +202,7 @@ export default function App() {
 
               <div className="floatingCard cardThree">
                 <div className="floatingIcon">🏠</div>
+
                 <div>
                   <strong>Hogar</strong>
                   <small>Encuentra todo</small>
@@ -137,13 +221,17 @@ export default function App() {
         <section className="categories">
 
           <div className="sectionTitle">
+
             <span>CATEGORÍAS</span>
+
             <h2>
               Explora lo que buscas
             </h2>
+
             <p>
               Todo lo que necesitas, en un solo lugar.
             </p>
+
           </div>
 
 
@@ -197,6 +285,7 @@ export default function App() {
           <div className="featuredHeader">
 
             <div>
+
               <span>DESCUBRE</span>
 
               <h2>
@@ -206,6 +295,7 @@ export default function App() {
               <p>
                 Descubre productos que podrían gustarte.
               </p>
+
             </div>
 
             <button className="viewAll">
@@ -224,13 +314,17 @@ export default function App() {
               </div>
 
               <div className="productInfo">
+
                 <span>MODA</span>
+
                 <h3>
                   Nuevas tendencias
                 </h3>
+
                 <p>
                   Descubre productos de moda.
                 </p>
+
               </div>
 
             </article>
@@ -243,13 +337,17 @@ export default function App() {
               </div>
 
               <div className="productInfo">
+
                 <span>TECNOLOGÍA</span>
+
                 <h3>
                   Tecnología
                 </h3>
+
                 <p>
                   Encuentra lo último.
                 </p>
+
               </div>
 
             </article>
@@ -262,13 +360,17 @@ export default function App() {
               </div>
 
               <div className="productInfo">
+
                 <span>HOGAR</span>
+
                 <h3>
                   Para tu hogar
                 </h3>
+
                 <p>
                   Todo para tu espacio.
                 </p>
+
               </div>
 
             </article>
@@ -338,6 +440,146 @@ export default function App() {
         </small>
 
       </footer>
+
+
+      {/* MODAL DE AUTENTICACIÓN */}
+
+      {showAuth && (
+
+        <div
+          className="authOverlay"
+          onClick={() => setShowAuth(false)}
+        >
+
+          <div
+            className="authModal"
+            onClick={(event) => event.stopPropagation()}
+          >
+
+            <button
+              className="authClose"
+              onClick={() => setShowAuth(false)}
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+
+            <div className="authLogo">
+              ✨
+            </div>
+
+            <h2>
+              {user
+                ? "¡Hola! ✨"
+                : authMode === "login"
+                ? "Bienvenido a SHORASHOPP"
+                : "Crea tu cuenta"}
+            </h2>
+
+            {user ? (
+
+              <div className="authLogged">
+
+                <p>
+                  Has iniciado sesión correctamente.
+                </p>
+
+                <p>
+                  {user.email}
+                </p>
+
+                <button
+                  className="authSubmit"
+                  onClick={handleLogout}
+                >
+                  Cerrar sesión
+                </button>
+
+              </div>
+
+            ) : (
+
+              <form onSubmit={handleAuth}>
+
+                {authMode === "register" && (
+
+                  <input
+                    type="text"
+                    placeholder="Nombre completo"
+                    value={fullName}
+                    onChange={(event) =>
+                      setFullName(event.target.value)
+                    }
+                    required
+                  />
+
+                )}
+
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(event) =>
+                    setEmail(event.target.value)
+                  }
+                  required
+                />
+
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(event) =>
+                    setPassword(event.target.value)
+                  }
+                  minLength="6"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  className="authSubmit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Procesando..."
+                    : authMode === "login"
+                    ? "Iniciar sesión"
+                    : "Crear cuenta"}
+                </button>
+
+                {message && (
+                  <p className="authMessage">
+                    {message}
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  className="authSwitch"
+                  onClick={() => {
+                    setAuthMode(
+                      authMode === "login"
+                        ? "register"
+                        : "login"
+                    );
+                    setMessage("");
+                  }}
+                >
+                  {authMode === "login"
+                    ? "¿No tienes cuenta? Regístrate"
+                    : "¿Ya tienes cuenta? Inicia sesión"}
+                </button>
+
+              </form>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
 
     </div>
   );
