@@ -16,17 +16,53 @@ export default function App() {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
 
+  /* PERFIL */
+  const [profileName, setProfileName] = useState("");
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  /* PRODUCTOS */
+  const [products, setProducts] = useState([]);
+  const [showProductForm, setShowProductForm] = useState(false);
+
+  const [productName, setProductName] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productCategory, setProductCategory] = useState("Moda");
+  const [productDescription, setProductDescription] = useState("");
+
   useEffect(() => {
     if (!supabase) return;
 
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
+      const currentUser = data.session?.user ?? null;
+
+      setUser(currentUser);
+
+      if (currentUser) {
+        setProfileName(
+          currentUser.user_metadata?.full_name ||
+            currentUser.email?.split("@")[0] ||
+            ""
+        );
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+
+      setUser(currentUser);
+
+      if (currentUser) {
+        setProfileName(
+          currentUser.user_metadata?.full_name ||
+            currentUser.email?.split("@")[0] ||
+            ""
+        );
+      } else {
+        setProfileName("");
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -42,6 +78,7 @@ export default function App() {
     setAuthMode(mode);
     setMessage("");
     setShowAccount(false);
+    setActivePanel(null);
     setShowAuth(true);
   };
 
@@ -55,7 +92,12 @@ export default function App() {
     setShowAccount(false);
     setShowAuth(false);
     setActivePanel(null);
+    setEditingProfile(false);
+    setShowProductForm(false);
+    setProfileSaved(false);
   };
+
+  /* AUTENTICACIÓN */
 
   const handleAuth = async (event) => {
     event.preventDefault();
@@ -110,9 +152,96 @@ export default function App() {
     }
 
     setUser(null);
+    setProfileName("");
+    setProducts([]);
     closePanels();
     setMessage("");
   };
+
+  /* PERFIL */
+
+  const saveProfile = async () => {
+    if (!supabase || !user) return;
+
+    const cleanName = profileName.trim();
+
+    if (!cleanName) {
+      setProfileSaved(false);
+      return;
+    }
+
+    setLoading(true);
+    setProfileSaved(false);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: cleanName,
+        },
+      });
+
+      if (error) throw error;
+
+      setUser((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          user_metadata: {
+            ...current.user_metadata,
+            full_name: cleanName,
+          },
+        };
+      });
+
+      setEditingProfile(false);
+      setProfileSaved(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* PRODUCTOS */
+
+  const resetProductForm = () => {
+    setProductName("");
+    setProductPrice("");
+    setProductCategory("Moda");
+    setProductDescription("");
+    setShowProductForm(false);
+  };
+
+  const createProduct = (event) => {
+    event.preventDefault();
+
+    if (!productName.trim() || !productPrice.trim()) {
+      return;
+    }
+
+    const newProduct = {
+      id: Date.now(),
+      name: productName.trim(),
+      price: productPrice.trim(),
+      category: productCategory,
+      description:
+        productDescription.trim() ||
+        "Producto publicado en SHORASHOPP.",
+    };
+
+    setProducts((current) => [newProduct, ...current]);
+
+    resetProductForm();
+  };
+
+  const deleteProduct = (id) => {
+    setProducts((current) =>
+      current.filter((product) => product.id !== id)
+    );
+  };
+
+  /* INFORMACIÓN DE PANELES */
 
   const panelData = {
     profile: {
@@ -120,31 +249,37 @@ export default function App() {
       title: "Mi perfil",
       subtitle: "Administra tu información personal.",
     },
+
     orders: {
       icon: "📦",
       title: "Mis pedidos",
-      subtitle: "Aquí aparecerán tus compras.",
+      subtitle: "Consulta tus compras y el estado de tus pedidos.",
     },
+
     products: {
       icon: "🛍️",
       title: "Mis productos",
       subtitle: "Administra los productos que publiques.",
     },
+
     messages: {
       icon: "💬",
       title: "Mensajes",
       subtitle: "Comunícate con compradores y vendedores.",
     },
+
     favorites: {
       icon: "❤️",
       title: "Favoritos",
       subtitle: "Aquí aparecerán los productos que guardes.",
     },
+
     settings: {
       icon: "⚙️",
       title: "Configuración",
       subtitle: "Personaliza tu experiencia en SHORASHOPP.",
     },
+
     cart: {
       icon: "🛒",
       title: "Mi carrito",
@@ -152,19 +287,448 @@ export default function App() {
     },
   };
 
-  const currentPanel = activePanel ? panelData[activePanel] : null;
+  const currentPanel = activePanel
+    ? panelData[activePanel]
+    : null;
+
+  /* PERFIL */
+
+  const renderProfile = () => {
+    if (!user) {
+      return (
+        <div className="emptyFeature">
+          <div className="emptyBig">👤</div>
+
+          <h3>Inicia sesión para ver tu perfil</h3>
+
+          <p>
+            Necesitas una cuenta de SHORASHOPP para
+            administrar tu información personal.
+          </p>
+
+          <button
+            className="featurePrimary"
+            onClick={() => openAuth("login")}
+          >
+            Iniciar sesión
+          </button>
+
+          <button
+            className="featureSecondary"
+            onClick={() => openAuth("register")}
+          >
+            Crear una cuenta
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="profileContent">
+
+        <div className="profileAvatarLarge">
+          {profileName
+            ? profileName.charAt(0).toUpperCase()
+            : "✨"}
+        </div>
+
+        <div className="profileFields">
+
+          <label>Nombre completo</label>
+
+          {editingProfile ? (
+            <input
+              className="profileInput"
+              value={profileName}
+              onChange={(event) =>
+                setProfileName(event.target.value)
+              }
+              placeholder="Tu nombre completo"
+            />
+          ) : (
+            <div className="profileValue">
+              {profileName || "Sin nombre"}
+            </div>
+          )}
+
+          <label>Correo electrónico</label>
+
+          <div className="profileValue profileEmail">
+            {user.email}
+          </div>
+
+        </div>
+
+        {editingProfile ? (
+          <div className="profileButtons">
+
+            <button
+              className="featurePrimary"
+              onClick={saveProfile}
+              disabled={loading}
+            >
+              {loading
+                ? "Guardando..."
+                : "Guardar cambios"}
+            </button>
+
+            <button
+              className="featureSecondary"
+              onClick={() => {
+                setEditingProfile(false);
+                setProfileSaved(false);
+              }}
+            >
+              Cancelar
+            </button>
+
+          </div>
+        ) : (
+          <button
+            className="featurePrimary"
+            onClick={() => {
+              setEditingProfile(true);
+              setProfileSaved(false);
+            }}
+          >
+            Editar perfil
+          </button>
+        )}
+
+        {profileSaved && (
+          <div className="successMessage">
+            ✓ Tu perfil fue actualizado correctamente.
+          </div>
+        )}
+
+      </div>
+    );
+  };
+
+  /* PEDIDOS */
+
+  const renderOrders = () => {
+    if (!user) {
+      return (
+        <div className="emptyFeature">
+          <div className="emptyBig">📦</div>
+
+          <h3>Inicia sesión para ver tus pedidos</h3>
+
+          <p>
+            Aquí podrás consultar todas tus compras,
+            estados y detalles de entrega.
+          </p>
+
+          <button
+            className="featurePrimary"
+            onClick={() => openAuth("login")}
+          >
+            Iniciar sesión
+          </button>
+
+          <button
+            className="featureSecondary"
+            onClick={() => openAuth("register")}
+          >
+            Crear una cuenta
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="ordersContent">
+
+        <div className="ordersEmptyIcon">
+          📦
+        </div>
+
+        <h3>Aún no tienes pedidos</h3>
+
+        <p>
+          Cuando realices una compra en SHORASHOPP,
+          aparecerá aquí con toda su información.
+        </p>
+
+        <button
+          className="featurePrimary"
+          onClick={() => {
+            closePanels();
+
+            setTimeout(() => {
+              document
+                .getElementById("categorias")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                });
+            }, 50);
+          }}
+        >
+          Explorar productos
+        </button>
+
+      </div>
+    );
+  };
+
+  /* PRODUCTOS */
+
+  const renderProducts = () => {
+    if (!user) {
+      return (
+        <div className="emptyFeature">
+          <div className="emptyBig">🛍️</div>
+
+          <h3>Inicia sesión para vender</h3>
+
+          <p>
+            Crea tu cuenta para comenzar a publicar
+            productos en SHORASHOPP.
+          </p>
+
+          <button
+            className="featurePrimary"
+            onClick={() => openAuth("login")}
+          >
+            Iniciar sesión
+          </button>
+
+          <button
+            className="featureSecondary"
+            onClick={() => openAuth("register")}
+          >
+            Crear una cuenta
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="productsContent">
+
+        {!showProductForm && (
+          <button
+            className="featurePrimary addProductButton"
+            onClick={() => setShowProductForm(true)}
+          >
+            ＋ Publicar un producto
+          </button>
+        )}
+
+        {showProductForm && (
+          <form
+            className="productForm"
+            onSubmit={createProduct}
+          >
+
+            <h3>Nuevo producto</h3>
+
+            <label>Nombre del producto</label>
+
+            <input
+              value={productName}
+              onChange={(event) =>
+                setProductName(event.target.value)
+              }
+              placeholder="Ej. Bolsa de mano"
+              required
+            />
+
+            <label>Precio</label>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={productPrice}
+              onChange={(event) =>
+                setProductPrice(event.target.value)
+              }
+              placeholder="Ej. 599"
+              required
+            />
+
+            <label>Categoría</label>
+
+            <select
+              value={productCategory}
+              onChange={(event) =>
+                setProductCategory(event.target.value)
+              }
+            >
+              <option>Moda</option>
+              <option>Tecnología</option>
+              <option>Hogar</option>
+              <option>Belleza</option>
+              <option>Entretenimiento</option>
+              <option>Automóviles</option>
+              <option>Otros</option>
+            </select>
+
+            <label>Descripción</label>
+
+            <textarea
+              value={productDescription}
+              onChange={(event) =>
+                setProductDescription(event.target.value)
+              }
+              placeholder="Describe tu producto..."
+              rows="4"
+            />
+
+            <div className="productFormButtons">
+
+              <button
+                type="submit"
+                className="featurePrimary"
+              >
+                Publicar producto
+              </button>
+
+              <button
+                type="button"
+                className="featureSecondary"
+                onClick={resetProductForm}
+              >
+                Cancelar
+              </button>
+
+            </div>
+
+          </form>
+        )}
+
+        {!showProductForm && products.length === 0 && (
+          <div className="productsEmpty">
+
+            <div className="emptyBig">
+              🛍️
+            </div>
+
+            <h3>Aún no tienes productos</h3>
+
+            <p>
+              Publica tu primer producto y comienza
+              a vender en SHORASHOPP.
+            </p>
+
+          </div>
+        )}
+
+        {products.length > 0 && (
+          <div className="sellerProducts">
+
+            <h3>
+              Mis publicaciones
+            </h3>
+
+            {products.map((product) => (
+              <article
+                className="sellerProductCard"
+                key={product.id}
+              >
+
+                <div className="sellerProductIcon">
+                  🛍️
+                </div>
+
+                <div className="sellerProductInfo">
+
+                  <span>
+                    {product.category}
+                  </span>
+
+                  <h4>
+                    {product.name}
+                  </h4>
+
+                  <strong>
+                    ${product.price} MXN
+                  </strong>
+
+                  <p>
+                    {product.description}
+                  </p>
+
+                </div>
+
+                <button
+                  className="deleteProduct"
+                  onClick={() =>
+                    deleteProduct(product.id)
+                  }
+                  aria-label="Eliminar producto"
+                >
+                  🗑️
+                </button>
+
+              </article>
+            ))}
+
+          </div>
+        )}
+
+      </div>
+    );
+  };
+
+  const renderPanelContent = () => {
+    switch (activePanel) {
+      case "profile":
+        return renderProfile();
+
+      case "orders":
+        return renderOrders();
+
+      case "products":
+        return renderProducts();
+
+      default:
+        return (
+          <div className="emptyFeature">
+
+            <div className="emptyBig">
+              {currentPanel.icon}
+            </div>
+
+            <h3>
+              Esta sección está lista para crecer
+            </h3>
+
+            <p>
+              Aquí construiremos esta función de
+              SHORASHOPP en el siguiente paso.
+            </p>
+
+            <button
+              className="featurePrimary"
+              onClick={closePanels}
+            >
+              Volver a SHORASHOPP
+            </button>
+
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="app">
 
       {/* HEADER */}
+
       <header className="header">
 
         <button
           className="logo logoButton"
           onClick={() => {
             closePanels();
-            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
           }}
         >
           <span>SHORA</span>
@@ -172,11 +736,16 @@ export default function App() {
         </button>
 
         <div className="searchBox">
+
           <input
             type="text"
             placeholder="¿Qué estás buscando?"
           />
-          <button aria-label="Buscar">⌕</button>
+
+          <button aria-label="Buscar">
+            ⌕
+          </button>
+
         </div>
 
         <div className="headerActions">
@@ -201,8 +770,11 @@ export default function App() {
 
       </header>
 
-      {/* HERO */}
+      {/* CONTENIDO */}
+
       <main>
+
+        {/* HERO */}
 
         <section className="hero">
 
@@ -236,7 +808,9 @@ export default function App() {
                   onClick={() =>
                     document
                       .getElementById("categorias")
-                      ?.scrollIntoView({ behavior: "smooth" })
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                      })
                   }
                 >
                   Explorar productos
@@ -245,7 +819,9 @@ export default function App() {
 
                 <button
                   className="secondaryButton"
-                  onClick={() => openPanel("products")}
+                  onClick={() =>
+                    openPanel("products")
+                  }
                 >
                   Quiero vender
                 </button>
@@ -277,27 +853,42 @@ export default function App() {
               </div>
 
               <div className="floatingCard cardOne">
-                <div className="floatingIcon">👜</div>
+
+                <div className="floatingIcon">
+                  👜
+                </div>
+
                 <div>
                   <strong>Moda</strong>
                   <small>Descubre más</small>
                 </div>
+
               </div>
 
               <div className="floatingCard cardTwo">
-                <div className="floatingIcon">📱</div>
+
+                <div className="floatingIcon">
+                  📱
+                </div>
+
                 <div>
                   <strong>Tecnología</strong>
                   <small>Lo más nuevo</small>
                 </div>
+
               </div>
 
               <div className="floatingCard cardThree">
-                <div className="floatingIcon">🏠</div>
+
+                <div className="floatingIcon">
+                  🏠
+                </div>
+
                 <div>
                   <strong>Hogar</strong>
                   <small>Encuentra todo</small>
                 </div>
+
               </div>
 
             </div>
@@ -307,6 +898,7 @@ export default function App() {
         </section>
 
         {/* CATEGORÍAS */}
+
         <section
           className="categories"
           id="categorias"
@@ -336,15 +928,29 @@ export default function App() {
               ["🎮", "Entretenimiento"],
               ["🚗", "Automóviles"],
             ].map(([icon, name]) => (
+
               <button
                 className="categoryCard"
                 key={name}
-                onClick={() => openPanel("cart")}
+                onClick={() =>
+                  openPanel("cart")
+                }
               >
-                <div className="categoryIcon">{icon}</div>
-                <strong>{name}</strong>
-                <span>Ver productos →</span>
+
+                <div className="categoryIcon">
+                  {icon}
+                </div>
+
+                <strong>
+                  {name}
+                </strong>
+
+                <span>
+                  Ver productos →
+                </span>
+
               </button>
+
             ))}
 
           </div>
@@ -352,6 +958,7 @@ export default function App() {
         </section>
 
         {/* PRODUCTOS */}
+
         <section className="featured">
 
           <div className="featuredHeader">
@@ -372,7 +979,9 @@ export default function App() {
 
             <button
               className="viewAll"
-              onClick={() => openPanel("cart")}
+              onClick={() =>
+                openPanel("cart")
+              }
             >
               Ver todos →
             </button>
@@ -401,7 +1010,9 @@ export default function App() {
 
                 <button
                   className="productAction"
-                  onClick={() => openPanel("cart")}
+                  onClick={() =>
+                    openPanel("cart")
+                  }
                 >
                   Ver producto →
                 </button>
@@ -430,7 +1041,9 @@ export default function App() {
 
                 <button
                   className="productAction"
-                  onClick={() => openPanel("cart")}
+                  onClick={() =>
+                    openPanel("cart")
+                  }
                 >
                   Ver producto →
                 </button>
@@ -459,7 +1072,9 @@ export default function App() {
 
                 <button
                   className="productAction"
-                  onClick={() => openPanel("cart")}
+                  onClick={() =>
+                    openPanel("cart")
+                  }
                 >
                   Ver producto →
                 </button>
@@ -473,6 +1088,7 @@ export default function App() {
         </section>
 
         {/* VENDE */}
+
         <section className="sellerSection">
 
           <div className="sellerContent">
@@ -493,7 +1109,9 @@ export default function App() {
             </p>
 
             <button
-              onClick={() => openPanel("products")}
+              onClick={() =>
+                openPanel("products")
+              }
             >
               Comenzar a vender →
             </button>
@@ -509,6 +1127,7 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
+
       <footer>
 
         <div className="footerLogo">
@@ -521,19 +1140,35 @@ export default function App() {
 
         <div className="footerLinks">
 
-          <button onClick={() => openPanel("messages")}>
+          <button
+            onClick={() =>
+              openPanel("messages")
+            }
+          >
             Ayuda
           </button>
 
-          <button onClick={() => openPanel("settings")}>
+          <button
+            onClick={() =>
+              openPanel("settings")
+            }
+          >
             Privacidad
           </button>
 
-          <button onClick={() => openPanel("settings")}>
+          <button
+            onClick={() =>
+              openPanel("settings")
+            }
+          >
             Términos
           </button>
 
-          <button onClick={() => openPanel("messages")}>
+          <button
+            onClick={() =>
+              openPanel("messages")
+            }
+          >
             Contacto
           </button>
 
@@ -546,11 +1181,14 @@ export default function App() {
       </footer>
 
       {/* PANEL DE CUENTA */}
+
       {showAccount && (
 
         <div
           className="accountOverlay"
-          onClick={() => setShowAccount(false)}
+          onClick={() =>
+            setShowAccount(false)
+          }
         >
 
           <aside
@@ -588,7 +1226,9 @@ export default function App() {
 
               <button
                 className="panelClose"
-                onClick={() => setShowAccount(false)}
+                onClick={() =>
+                  setShowAccount(false)
+                }
               >
                 ×
               </button>
@@ -606,14 +1246,18 @@ export default function App() {
 
                 <button
                   className="panelPrimary"
-                  onClick={() => openAuth("login")}
+                  onClick={() =>
+                    openAuth("login")
+                  }
                 >
                   Iniciar sesión
                 </button>
 
                 <button
                   className="panelSecondary"
-                  onClick={() => openAuth("register")}
+                  onClick={() =>
+                    openAuth("register")
+                  }
                 >
                   Crear una cuenta
                 </button>
@@ -624,57 +1268,123 @@ export default function App() {
 
             <nav className="accountMenu">
 
-              <button onClick={() => openPanel("profile")}>
+              <button
+                onClick={() =>
+                  openPanel("profile")
+                }
+              >
                 <span>👤</span>
+
                 <div>
-                  <strong>Mi perfil</strong>
-                  <small>Información personal</small>
+                  <strong>
+                    Mi perfil
+                  </strong>
+
+                  <small>
+                    Información personal
+                  </small>
                 </div>
+
                 <b>›</b>
               </button>
 
-              <button onClick={() => openPanel("orders")}>
+              <button
+                onClick={() =>
+                  openPanel("orders")
+                }
+              >
                 <span>📦</span>
+
                 <div>
-                  <strong>Mis pedidos</strong>
-                  <small>Consulta tus compras</small>
+                  <strong>
+                    Mis pedidos
+                  </strong>
+
+                  <small>
+                    Consulta tus compras
+                  </small>
                 </div>
+
                 <b>›</b>
               </button>
 
-              <button onClick={() => openPanel("products")}>
+              <button
+                onClick={() =>
+                  openPanel("products")
+                }
+              >
                 <span>🛍️</span>
+
                 <div>
-                  <strong>Mis productos</strong>
-                  <small>Administra tus publicaciones</small>
+                  <strong>
+                    Mis productos
+                  </strong>
+
+                  <small>
+                    Administra tus publicaciones
+                  </small>
                 </div>
+
                 <b>›</b>
               </button>
 
-              <button onClick={() => openPanel("messages")}>
+              <button
+                onClick={() =>
+                  openPanel("messages")
+                }
+              >
                 <span>💬</span>
+
                 <div>
-                  <strong>Mensajes</strong>
-                  <small>Compradores y vendedores</small>
+                  <strong>
+                    Mensajes
+                  </strong>
+
+                  <small>
+                    Compradores y vendedores
+                  </small>
                 </div>
+
                 <b>›</b>
               </button>
 
-              <button onClick={() => openPanel("favorites")}>
+              <button
+                onClick={() =>
+                  openPanel("favorites")
+                }
+              >
                 <span>❤️</span>
+
                 <div>
-                  <strong>Favoritos</strong>
-                  <small>Productos que guardaste</small>
+                  <strong>
+                    Favoritos
+                  </strong>
+
+                  <small>
+                    Productos que guardaste
+                  </small>
                 </div>
+
                 <b>›</b>
               </button>
 
-              <button onClick={() => openPanel("settings")}>
+              <button
+                onClick={() =>
+                  openPanel("settings")
+                }
+              >
                 <span>⚙️</span>
+
                 <div>
-                  <strong>Configuración</strong>
-                  <small>Preferencias de tu cuenta</small>
+                  <strong>
+                    Configuración
+                  </strong>
+
+                  <small>
+                    Preferencias de tu cuenta
+                  </small>
                 </div>
+
                 <b>›</b>
               </button>
 
@@ -698,6 +1408,7 @@ export default function App() {
       )}
 
       {/* VENTANAS INTERNAS */}
+
       {activePanel && currentPanel && (
 
         <div
@@ -706,7 +1417,11 @@ export default function App() {
         >
 
           <section
-            className="featureModal"
+            className={`featureModal ${
+              activePanel === "products"
+                ? "productsModal"
+                : ""
+            }`}
             onClick={(event) =>
               event.stopPropagation()
             }
@@ -715,6 +1430,7 @@ export default function App() {
             <button
               className="featureClose"
               onClick={closePanels}
+              aria-label="Cerrar"
             >
               ×
             </button>
@@ -731,64 +1447,7 @@ export default function App() {
               {currentPanel.subtitle}
             </p>
 
-            {!user && activePanel !== "cart" ? (
-
-              <div className="emptyFeature">
-
-                <div>✨</div>
-
-                <h3>
-                  Inicia sesión para continuar
-                </h3>
-
-                <p>
-                  Necesitas una cuenta de SHORASHOPP
-                  para utilizar esta sección.
-                </p>
-
-                <button
-                  className="featurePrimary"
-                  onClick={() => openAuth("login")}
-                >
-                  Iniciar sesión
-                </button>
-
-                <button
-                  className="featureSecondary"
-                  onClick={() => openAuth("register")}
-                >
-                  Crear una cuenta
-                </button>
-
-              </div>
-
-            ) : (
-
-              <div className="emptyFeature">
-
-                <div className="emptyBig">
-                  {currentPanel.icon}
-                </div>
-
-                <h3>
-                  Esta sección está lista para crecer
-                </h3>
-
-                <p>
-                  Aquí construiremos esta función de
-                  SHORASHOPP en el siguiente paso.
-                </p>
-
-                <button
-                  className="featurePrimary"
-                  onClick={closePanels}
-                >
-                  Volver a SHORASHOPP
-                </button>
-
-              </div>
-
-            )}
+            {renderPanelContent()}
 
           </section>
 
@@ -797,11 +1456,14 @@ export default function App() {
       )}
 
       {/* AUTENTICACIÓN */}
+
       {showAuth && (
 
         <div
           className="authOverlay"
-          onClick={() => setShowAuth(false)}
+          onClick={() =>
+            setShowAuth(false)
+          }
         >
 
           <div
@@ -813,7 +1475,10 @@ export default function App() {
 
             <button
               className="authClose"
-              onClick={() => setShowAuth(false)}
+              onClick={() =>
+                setShowAuth(false)
+              }
+              aria-label="Cerrar"
             >
               ×
             </button>
@@ -895,7 +1560,6 @@ export default function App() {
                 type="button"
                 className="authSwitch"
                 onClick={() => {
-
                   setAuthMode(
                     authMode === "login"
                       ? "register"
@@ -903,7 +1567,6 @@ export default function App() {
                   );
 
                   setMessage("");
-
                 }}
               >
                 {authMode === "login"
