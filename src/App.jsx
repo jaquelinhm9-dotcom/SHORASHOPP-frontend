@@ -42,6 +42,44 @@ const demoProducts = [
   },
 ];
 
+const panelConfig = {
+  messages: {
+    icon: "💬",
+    title: "Ayuda y mensajes",
+    subtitle: "Estamos aquí para ayudarte.",
+  },
+  settings: {
+    icon: "⚙️",
+    title: "Configuración",
+    subtitle: "Administra las opciones de tu cuenta.",
+  },
+  profile: {
+    icon: "👤",
+    title: "Mi perfil",
+    subtitle: "Administra tu información personal.",
+  },
+  orders: {
+    icon: "📦",
+    title: "Mis pedidos",
+    subtitle: "Consulta tus compras y pedidos.",
+  },
+  products: {
+    icon: "🛍️",
+    title: "Mis productos",
+    subtitle: "Publica y administra tus productos.",
+  },
+  favorites: {
+    icon: "❤️",
+    title: "Favoritos",
+    subtitle: "Productos que guardaste.",
+  },
+  cart: {
+    icon: "🛒",
+    title: "Carrito",
+    subtitle: "Revisa los productos que agregaste.",
+  },
+};
+
 export default function App() {
   const [showAccount, setShowAccount] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -57,31 +95,33 @@ export default function App() {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
 
-  /* PERFIL */
   const [profileName, setProfileName] = useState("");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
 
-  /* PRODUCTOS */
   const [products, setProducts] = useState([]);
   const [showProductForm, setShowProductForm] = useState(false);
 
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
-  const [productCategory, setProductCategory] = useState("Moda");
+  const [productCategory, setProductCategory] = useState("Moda y ropa");
   const [productDescription, setProductDescription] = useState("");
   const [productMessage, setProductMessage] = useState("");
 
-  /* PEDIDOS */
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersMessage, setOrdersMessage] = useState("");
 
-  /* INICIO */
   const [offerSlide, setOfferSlide] = useState(0);
   const [search, setSearch] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
+
+  // FIX PRINCIPAL:
+  // Antes currentPanel no existía.
+  const currentPanel = useMemo(() => {
+    return activePanel ? panelConfig[activePanel] : null;
+  }, [activePanel]);
 
   /*
    * CARGA INICIAL
@@ -95,13 +135,14 @@ export default function App() {
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error(error);
+        console.error("Error obteniendo sesión:", error);
         return;
       }
 
       if (!mounted) return;
 
       const currentUser = data.session?.user ?? null;
+
       setUser(currentUser);
 
       if (currentUser) {
@@ -148,7 +189,7 @@ export default function App() {
   }, []);
 
   /*
-   * CAMBIO AUTOMÁTICO DEL CARRUSEL
+   * CARRUSEL
    */
   useEffect(() => {
     const timer = setInterval(() => {
@@ -199,7 +240,7 @@ export default function App() {
   };
 
   /*
-   * CERRAR TODO
+   * CERRAR
    */
   const closePanels = () => {
     setShowAccount(false);
@@ -214,7 +255,7 @@ export default function App() {
   };
 
   /*
-   * AUTENTICACIÓN
+   * LOGIN / REGISTRO
    */
   const handleAuth = async (event) => {
     event.preventDefault();
@@ -231,6 +272,11 @@ export default function App() {
 
     try {
       if (authMode === "register") {
+        if (!fullName.trim()) {
+          setMessage("Escribe tu nombre completo.");
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -262,18 +308,22 @@ export default function App() {
       }
     } catch (error) {
       console.error(error);
-      setMessage(error.message || "Ocurrió un error.");
+      setMessage(error?.message || "Ocurrió un error.");
     } finally {
       setLoading(false);
     }
   };
 
   /*
-   * CERRAR SESIÓN
+   * LOGOUT
    */
   const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
+    try {
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (error) {
+      console.error("Error cerrando sesión:", error);
     }
 
     setUser(null);
@@ -282,6 +332,7 @@ export default function App() {
     setOrders([]);
     setFavorites([]);
     setCart([]);
+
     closePanels();
     setMessage("");
   };
@@ -340,22 +391,24 @@ export default function App() {
 
       if (error) {
         console.error("Error cargando productos:", error);
+        setProducts([]);
         return;
       }
 
       setProducts(data || []);
     } catch (error) {
       console.error(error);
+      setProducts([]);
     }
   };
 
   /*
-   * PRODUCTOS - LIMPIAR
+   * PRODUCTOS - RESET
    */
   const resetProductForm = () => {
     setProductName("");
     setProductPrice("");
-    setProductCategory("Moda");
+    setProductCategory("Moda y ropa");
     setProductDescription("");
     setProductMessage("");
     setShowProductForm(false);
@@ -380,7 +433,12 @@ export default function App() {
       productDescription.trim() ||
       "Producto publicado en SHORASHOPP.";
 
-    if (!cleanName || !productPrice || Number.isNaN(cleanPrice)) {
+    if (
+      !cleanName ||
+      productPrice === "" ||
+      Number.isNaN(cleanPrice) ||
+      cleanPrice < 0
+    ) {
       setProductMessage("Completa correctamente los datos del producto.");
       return;
     }
@@ -409,7 +467,7 @@ export default function App() {
 
       setProductName("");
       setProductPrice("");
-      setProductCategory("Moda");
+      setProductCategory("Moda y ropa");
       setProductDescription("");
       setShowProductForm(false);
       setProductMessage("✓ Producto publicado correctamente.");
@@ -417,7 +475,7 @@ export default function App() {
       console.error(error);
 
       setProductMessage(
-        error.message ||
+        error?.message ||
           "No fue posible publicar el producto. Revisa la configuración de Supabase."
       );
     } finally {
@@ -455,7 +513,7 @@ export default function App() {
       console.error(error);
 
       setProductMessage(
-        error.message || "No fue posible eliminar el producto."
+        error?.message || "No fue posible eliminar el producto."
       );
     } finally {
       setLoading(false);
@@ -524,19 +582,23 @@ export default function App() {
    * BUSCADOR
    */
   const searchProducts = useMemo(() => {
-    const allProducts = products.length
-      ? products
-      : demoProducts;
+    const allProducts = products.length > 0 ? products : demoProducts;
 
-    if (!search.trim()) return allProducts;
+    const term = search.trim().toLowerCase();
 
-    const term = search.toLowerCase();
+    if (!term) return allProducts;
 
-    return allProducts.filter(
-      (product) =>
-        product.name?.toLowerCase().includes(term) ||
-        product.category?.toLowerCase().includes(term)
-    );
+    return allProducts.filter((product) => {
+      const name = product.name?.toLowerCase() || "";
+      const category = product.category?.toLowerCase() || "";
+      const description = product.description?.toLowerCase() || "";
+
+      return (
+        name.includes(term) ||
+        category.includes(term) ||
+        description.includes(term)
+      );
+    });
   }, [products, search]);
 
   /*
@@ -546,17 +608,15 @@ export default function App() {
     closePanels();
 
     setTimeout(() => {
-      document
-        .getElementById(id)
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 50);
   };
 
   /*
-   * PRODUCT CARD
+   * TARJETA PRODUCTO
    */
   const renderProductCard = (product) => {
     const isFavorite = favorites.includes(product.id);
@@ -564,33 +624,30 @@ export default function App() {
     return (
       <article className="shopProductCard" key={product.id}>
         <div className="shopProductImage">
-          <span>
-            {product.icon || "🛍️"}
-          </span>
+          <span>{product.icon || "🛍️"}</span>
 
           <button
+            type="button"
             className={`favoriteProductButton ${
               isFavorite ? "isFavorite" : ""
             }`}
             onClick={() => toggleFavorite(product.id)}
-            aria-label="Agregar a favoritos"
+            aria-label={
+              isFavorite
+                ? "Quitar de favoritos"
+                : "Agregar a favoritos"
+            }
           >
             {isFavorite ? "♥" : "♡"}
           </button>
 
-          <span className="productOfferBadge">
-            OFERTA
-          </span>
+          <span className="productOfferBadge">OFERTA</span>
         </div>
 
         <div className="shopProductInfo">
-          <small>
-            {product.category || "Productos"}
-          </small>
+          <small>{product.category || "Productos"}</small>
 
-          <h3>
-            {product.name}
-          </h3>
+          <h3>{product.name}</h3>
 
           <strong>
             ${Number(product.price || 0).toLocaleString("es-MX")}
@@ -598,6 +655,7 @@ export default function App() {
           </strong>
 
           <button
+            type="button"
             className="addCartButton"
             onClick={() => addToCart(product)}
           >
@@ -617,16 +675,15 @@ export default function App() {
         <div className="emptyFeature">
           <div className="emptyBig">👤</div>
 
-          <h3>
-            Inicia sesión para ver tu perfil
-          </h3>
+          <h3>Inicia sesión para ver tu perfil</h3>
 
           <p>
-            Necesitas una cuenta de SHORASHOPP para
-            administrar tu información personal.
+            Necesitas una cuenta de SHORASHOPP para administrar
+            tu información personal.
           </p>
 
           <button
+            type="button"
             className="featurePrimary"
             onClick={() => openAuth("login")}
           >
@@ -634,6 +691,7 @@ export default function App() {
           </button>
 
           <button
+            type="button"
             className="featureSecondary"
             onClick={() => openAuth("register")}
           >
@@ -679,16 +737,16 @@ export default function App() {
         {editingProfile ? (
           <div className="profileButtons">
             <button
+              type="button"
               className="featurePrimary"
               onClick={saveProfile}
               disabled={loading}
             >
-              {loading
-                ? "Guardando..."
-                : "Guardar cambios"}
+              {loading ? "Guardando..." : "Guardar cambios"}
             </button>
 
             <button
+              type="button"
               className="featureSecondary"
               onClick={() => {
                 setEditingProfile(false);
@@ -700,6 +758,7 @@ export default function App() {
           </div>
         ) : (
           <button
+            type="button"
             className="featurePrimary"
             onClick={() => {
               setEditingProfile(true);
@@ -717,6 +776,7 @@ export default function App() {
         )}
 
         <button
+          type="button"
           className="logoutButton"
           onClick={handleLogout}
         >
@@ -735,16 +795,15 @@ export default function App() {
         <div className="emptyFeature">
           <div className="emptyBig">📦</div>
 
-          <h3>
-            Inicia sesión para ver tus pedidos
-          </h3>
+          <h3>Inicia sesión para ver tus pedidos</h3>
 
           <p>
-            Aquí podrás consultar todas tus compras,
-            estados y detalles de entrega.
+            Aquí podrás consultar todas tus compras, estados
+            y detalles de entrega.
           </p>
 
           <button
+            type="button"
             className="featurePrimary"
             onClick={() => openAuth("login")}
           >
@@ -752,6 +811,7 @@ export default function App() {
           </button>
 
           <button
+            type="button"
             className="featureSecondary"
             onClick={() => openAuth("register")}
           >
@@ -764,13 +824,9 @@ export default function App() {
     if (ordersLoading) {
       return (
         <div className="ordersContent">
-          <div className="ordersEmptyIcon">
-            📦
-          </div>
+          <div className="ordersEmptyIcon">📦</div>
 
-          <h3>
-            Cargando tus pedidos...
-          </h3>
+          <h3>Cargando tus pedidos...</h3>
 
           <p>
             Estamos consultando tu historial de compras.
@@ -782,13 +838,9 @@ export default function App() {
     if (orders.length === 0) {
       return (
         <div className="ordersContent">
-          <div className="ordersEmptyIcon">
-            📦
-          </div>
+          <div className="ordersEmptyIcon">📦</div>
 
-          <h3>
-            Aún no tienes pedidos
-          </h3>
+          <h3>Aún no tienes pedidos</h3>
 
           <p>
             Cuando realices una compra en SHORASHOPP,
@@ -796,12 +848,11 @@ export default function App() {
           </p>
 
           {ordersMessage && (
-            <div className="authMessage">
-              {ordersMessage}
-            </div>
+            <div className="authMessage">{ordersMessage}</div>
           )}
 
           <button
+            type="button"
             className="featurePrimary"
             onClick={() => goTo("productos")}
           >
@@ -815,13 +866,8 @@ export default function App() {
       <div className="ordersContent">
         <div className="ordersList">
           {orders.map((order) => (
-            <article
-              className="orderCard"
-              key={order.id}
-            >
-              <div className="orderIcon">
-                📦
-              </div>
+            <article className="orderCard" key={order.id}>
+              <div className="orderIcon">📦</div>
 
               <div className="orderInfo">
                 <span>PEDIDO</span>
@@ -840,7 +886,7 @@ export default function App() {
                 {order.total !== undefined &&
                   order.total !== null && (
                     <strong>
-                      ${Number(order.total).toFixed(2)} MXN
+                      ${Number(order.total).toLocaleString("es-MX")} MXN
                     </strong>
                   )}
               </div>
@@ -858,20 +904,17 @@ export default function App() {
     if (!user) {
       return (
         <div className="emptyFeature">
-          <div className="emptyBig">
-            🛍️
-          </div>
+          <div className="emptyBig">🛍️</div>
 
-          <h3>
-            Inicia sesión para vender
-          </h3>
+          <h3>Inicia sesión para vender</h3>
 
           <p>
-            Crea tu cuenta para comenzar a publicar
-            productos en SHORASHOPP.
+            Crea tu cuenta para comenzar a publicar productos
+            en SHORASHOPP.
           </p>
 
           <button
+            type="button"
             className="featurePrimary"
             onClick={() => openAuth("login")}
           >
@@ -879,6 +922,7 @@ export default function App() {
           </button>
 
           <button
+            type="button"
             className="featureSecondary"
             onClick={() => openAuth("register")}
           >
@@ -892,6 +936,7 @@ export default function App() {
       <div className="productsContent">
         {!showProductForm && (
           <button
+            type="button"
             className="featurePrimary addProductButton"
             onClick={() => {
               setProductMessage("");
@@ -913,13 +958,9 @@ export default function App() {
             className="productForm"
             onSubmit={createProduct}
           >
-            <h3>
-              Nuevo producto
-            </h3>
+            <h3>Nuevo producto</h3>
 
-            <label>
-              Nombre del producto
-            </label>
+            <label>Nombre del producto</label>
 
             <input
               value={productName}
@@ -930,9 +971,7 @@ export default function App() {
               required
             />
 
-            <label>
-              Precio
-            </label>
+            <label>Precio</label>
 
             <input
               type="number"
@@ -946,9 +985,7 @@ export default function App() {
               required
             />
 
-            <label>
-              Categoría
-            </label>
+            <label>Categoría</label>
 
             <select
               value={productCategory}
@@ -956,18 +993,18 @@ export default function App() {
                 setProductCategory(event.target.value)
               }
             >
-              <option>Moda</option>
-              <option>Tecnología</option>
-              <option>Hogar</option>
-              <option>Belleza</option>
+              {categories.map((category) => (
+                <option key={category.name}>
+                  {category.name}
+                </option>
+              ))}
+
               <option>Entretenimiento</option>
               <option>Automóviles</option>
               <option>Otros</option>
             </select>
 
-            <label>
-              Descripción
-            </label>
+            <label>Descripción</label>
 
             <textarea
               value={productDescription}
@@ -1008,24 +1045,20 @@ export default function App() {
                 key={product.id}
               >
                 <div>
-                  <strong>
-                    {product.name}
-                  </strong>
+                  <strong>{product.name}</strong>
 
                   <span>
                     ${Number(product.price).toLocaleString("es-MX")} MXN
                   </span>
 
-                  <small>
-                    {product.category}
-                  </small>
+                  <small>{product.category}</small>
                 </div>
 
                 <button
+                  type="button"
                   className="deleteProductButton"
-                  onClick={() =>
-                    deleteProduct(product.id)
-                  }
+                  onClick={() => deleteProduct(product.id)}
+                  disabled={loading}
                 >
                   Eliminar
                 </button>
@@ -1038,7 +1071,7 @@ export default function App() {
   };
 
   /*
-   * PANEL ACTUAL
+   * PANEL
    */
   const renderActivePanel = () => {
     if (!activePanel) return null;
@@ -1067,68 +1100,16 @@ export default function App() {
       ) : (
         <div className="emptyFeature">
           <div className="emptyBig">♡</div>
-          <h3>
-            Aún no tienes favoritos
-          </h3>
+
+          <h3>Aún no tienes favoritos</h3>
+
           <p>
             Guarda los productos que más te gusten y
             aparecerán aquí.
           </p>
-        </div>
-      );
-    }
-
-    if (activePanel === "cart") {
-      return cart.length ? (
-        <div className="cartPanel">
-          {cart.map((item, index) => (
-            <div
-              className="cartItem"
-              key={`${item.id}-${index}`}
-            >
-              <span>
-                {item.icon || "🛍️"}
-              </span>
-
-              <div>
-                <strong>
-                  {item.name}
-                </strong>
-
-                <small>
-                  ${Number(item.price).toLocaleString("es-MX")} MXN
-                </small>
-              </div>
-
-              <button
-                onClick={() =>
-                  setCart((current) =>
-                    current.filter((_, i) => i !== index)
-                  )
-                }
-              >
-                ×
-              </button>
-            </div>
-          ))}
-
-          <button className="featurePrimary">
-            Continuar con la compra
-          </button>
-        </div>
-      ) : (
-        <div className="emptyFeature">
-          <div className="emptyBig">🛒</div>
-
-          <h3>
-            Tu carrito está vacío
-          </h3>
-
-          <p>
-            Agrega productos y aparecerán aquí.
-          </p>
 
           <button
+            type="button"
             className="featurePrimary"
             onClick={() => goTo("productos")}
           >
@@ -1138,21 +1119,100 @@ export default function App() {
       );
     }
 
+    if (activePanel === "cart") {
+      if (!cart.length) {
+        return (
+          <div className="emptyFeature">
+            <div className="emptyBig">🛒</div>
+
+            <h3>Tu carrito está vacío</h3>
+
+            <p>
+              Agrega productos y aparecerán aquí.
+            </p>
+
+            <button
+              type="button"
+              className="featurePrimary"
+              onClick={() => goTo("productos")}
+            >
+              Ver productos
+            </button>
+          </div>
+        );
+      }
+
+      const cartTotal = cart.reduce(
+        (total, item) => total + Number(item.price || 0),
+        0
+      );
+
+      return (
+        <div className="cartPanel">
+          {cart.map((item, index) => (
+            <div
+              className="cartItem"
+              key={`${item.id}-${index}`}
+            >
+              <span>{item.icon || "🛍️"}</span>
+
+              <div>
+                <strong>{item.name}</strong>
+
+                <small>
+                  ${Number(item.price).toLocaleString("es-MX")} MXN
+                </small>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCart((current) =>
+                    current.filter((_, i) => i !== index)
+                  )
+                }
+                aria-label="Eliminar producto"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+
+          <div className="cartTotal">
+            <strong>Total</strong>
+            <strong>
+              ${cartTotal.toLocaleString("es-MX")} MXN
+            </strong>
+          </div>
+
+          <button
+            type="button"
+            className="featurePrimary"
+            onClick={() =>
+              alert("El proceso de compra estará disponible próximamente.")
+            }
+          >
+            Continuar con la compra
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="emptyFeature">
         <div className="emptyBig">
-          {activePanel === "messages" ? "💬" : "⚙️"}
+          {currentPanel?.icon || "⚙️"}
         </div>
 
-        <h3>
-          {currentPanel?.title}
-        </h3>
+        <h3>{currentPanel?.title || "SHORASHOPP"}</h3>
 
         <p>
-          {currentPanel?.subtitle}
+          {currentPanel?.subtitle ||
+            "Esta sección estará disponible próximamente."}
         </p>
 
         <button
+          type="button"
           className="featurePrimary"
           onClick={closePanels}
         >
@@ -1162,9 +1222,6 @@ export default function App() {
     );
   };
 
-  /*
-   * APP PRINCIPAL
-   */
   return (
     <div className="shoraApp">
       <style>{`
@@ -1249,7 +1306,6 @@ export default function App() {
           margin-top: 8px;
           font-size: 12px;
           font-weight: 700;
-          letter-spacing: .2px;
         }
 
         .tagBuy {
@@ -1274,7 +1330,6 @@ export default function App() {
           height: 58px;
           display: flex;
           align-items: center;
-          gap: 12px;
           padding: 3px;
           border-radius: 20px;
           background: linear-gradient(90deg, #f43f5e, #ec4899, #8b5cf6);
@@ -1370,7 +1425,6 @@ export default function App() {
         .sectionHeader h2 {
           margin: 0;
           font-size: 20px;
-          letter-spacing: -.4px;
         }
 
         .sectionHeader button {
@@ -1473,7 +1527,6 @@ export default function App() {
           place-items: center;
           font-size: 16px;
           font-weight: 900;
-          box-shadow: 0 8px 20px rgba(0,0,0,.12);
         }
 
         .dots {
@@ -1501,7 +1554,8 @@ export default function App() {
           background: white;
         }
 
-        .productGrid {
+        .productGrid,
+        .panelProductGrid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 13px;
@@ -1801,6 +1855,11 @@ export default function App() {
           color: white;
         }
 
+        .featurePrimary:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+        }
+
         .featureSecondary {
           background: #f6f2f7;
           color: #5e5264;
@@ -1988,10 +2047,12 @@ export default function App() {
           cursor: pointer;
         }
 
+        .deleteProductButton:disabled {
+          opacity: .5;
+        }
+
         .panelProductGrid {
-          display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
         }
 
         .cartPanel {
@@ -2020,6 +2081,14 @@ export default function App() {
           height: 30px;
           border-radius: 50%;
           cursor: pointer;
+        }
+
+        .cartTotal {
+          display: flex;
+          justify-content: space-between;
+          padding: 14px 2px;
+          border-top: 1px solid #eee9f0;
+          margin-top: 5px;
         }
 
         .menuDrawer {
@@ -2122,7 +2191,8 @@ export default function App() {
             font-size: 34px;
           }
 
-          .productGrid {
+          .productGrid,
+          .panelProductGrid {
             grid-template-columns: repeat(2, 1fr);
           }
 
@@ -2158,6 +2228,7 @@ export default function App() {
         <div className="headerTop">
           <div className="headerSide">
             <button
+              type="button"
               className="iconHeaderButton"
               onClick={() => setMenuOpen(true)}
               aria-label="Abrir menú"
@@ -2171,44 +2242,32 @@ export default function App() {
             onClick={() => goTo("inicio")}
           >
             <div className="brandName">
-              <span className="brandShora">
-                Shora
-              </span>{" "}
-              <span className="brandShop">
-                Shop
-              </span>
+              <span className="brandShora">Shora</span>{" "}
+              <span className="brandShop">Shop</span>
             </div>
 
             <div className="brandTagline">
-              <span className="tagBuy">
-                Compra
-              </span>
-              ,{" "}
-              <span className="tagSell">
-                Vende
-              </span>{" "}
-              y{" "}
-              <span className="tagDiscover">
-                Descubre
-              </span>
+              <span className="tagBuy">Compra</span>,{" "}
+              <span className="tagSell">Vende</span> y{" "}
+              <span className="tagDiscover">Descubre</span>
             </div>
           </div>
 
           <div className="headerSide right">
             <button
+              type="button"
               className="iconHeaderButton"
-              onClick={() =>
-                openPanel("messages")
-              }
+              onClick={() => openPanel("messages")}
+              aria-label="Ayuda y mensajes"
             >
               🔔
             </button>
 
             <button
+              type="button"
               className="iconHeaderButton"
-              onClick={() =>
-                openPanel("cart")
-              }
+              onClick={() => openPanel("cart")}
+              aria-label="Carrito"
             >
               🛒
             </button>
@@ -2217,11 +2276,7 @@ export default function App() {
       </header>
 
       {/* INICIO */}
-      <main
-        id="inicio"
-        className="mainHome"
-      >
-        {/* BUSCADOR */}
+      <main id="inicio" className="mainHome">
         <div className="searchBox">
           <div className="searchInner">
             <input
@@ -2232,54 +2287,38 @@ export default function App() {
               placeholder="¿Qué estás pensando comprar hoy?"
             />
 
-            <span className="searchIcon">
-              🔍
-            </span>
+            <span className="searchIcon">🔍</span>
           </div>
         </div>
 
-        {/* ACCESOS */}
         <div className="quickCards">
           <button
+            type="button"
             className="quickCard"
-            onClick={() =>
-              openPanel("products")
-            }
+            onClick={() => openPanel("products")}
           >
             <div className="quickCardLeft">
-              <div className="quickIcon">
-                🏪
-              </div>
+              <div className="quickIcon">🏪</div>
 
               <div>
-                <h3>
-                  Vende en ShoraShop
-                </h3>
-
-                <p>
-                  Vende tus productos de forma fácil
-                </p>
+                <h3>Vende en ShoraShop</h3>
+                <p>Vende tus productos de forma fácil</p>
               </div>
             </div>
 
-            <span className="quickArrow">
-              →
-            </span>
+            <span className="quickArrow">→</span>
           </button>
 
           <button
+            type="button"
             className="quickCard"
             onClick={openAccount}
           >
             <div className="quickCardLeft">
-              <div className="quickIcon">
-                👤
-              </div>
+              <div className="quickIcon">👤</div>
 
               <div>
-                <h3>
-                  Mi cuenta
-                </h3>
+                <h3>Mi cuenta</h3>
 
                 <p>
                   {user
@@ -2289,20 +2328,18 @@ export default function App() {
               </div>
             </div>
 
-            <span className="quickArrow">
-              →
-            </span>
+            <span className="quickArrow">→</span>
           </button>
         </div>
 
-        {/* CATEGORÍAS */}
         <section id="categorias">
           <div className="sectionHeader">
-            <h2>
-              Categorías
-            </h2>
+            <h2>Categorías</h2>
 
-            <button>
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+            >
               Ver todas →
             </button>
           </div>
@@ -2310,25 +2347,31 @@ export default function App() {
           <div className="categoryRow">
             {categories.map((category) => (
               <button
+                type="button"
                 className="categoryCard"
                 key={category.name}
-                onClick={() =>
-                  setSearch(category.name)
-                }
+                onClick={() => {
+                  setSearch(category.name);
+                  setTimeout(() => {
+                    document
+                      .getElementById("productos")
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                  }, 50);
+                }}
               >
                 <span className="categoryEmoji">
                   {category.icon}
                 </span>
 
-                <span>
-                  {category.name}
-                </span>
+                <span>{category.name}</span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* OFERTAS */}
         <section>
           <div className="offerCarousel">
             <div className="offerContent">
@@ -2352,10 +2395,9 @@ export default function App() {
                 </p>
 
                 <button
+                  type="button"
                   className="offerButton"
-                  onClick={() =>
-                    goTo("productos")
-                  }
+                  onClick={() => goTo("productos")}
                 >
                   Ver ofertas
                 </button>
@@ -2363,54 +2405,63 @@ export default function App() {
 
               <div className="offerVisual">
                 🛍️ 🎧 ⌚
-                <span className="offerPercent">
-                  -50%
-                </span>
+                <span className="offerPercent">-50%</span>
               </div>
             </div>
 
             <div className="dots">
               {[0, 1, 2].map((dot) => (
                 <button
+                  type="button"
                   key={dot}
                   className={`dot ${
-                    offerSlide === dot
-                      ? "active"
-                      : ""
+                    offerSlide === dot ? "active" : ""
                   }`}
-                  onClick={() =>
-                    setOfferSlide(dot)
-                  }
+                  onClick={() => setOfferSlide(dot)}
+                  aria-label={`Oferta ${dot + 1}`}
                 />
               ))}
             </div>
           </div>
         </section>
 
-        {/* PRODUCTOS DESTACADOS */}
         <section id="productos">
           <div className="sectionHeader">
-            <h2>
-              Productos destacados
-            </h2>
+            <h2>Productos destacados</h2>
 
             <button
-              onClick={() =>
-                goTo("productos")
-              }
+              type="button"
+              onClick={() => setSearch("")}
             >
               Ver todos →
             </button>
           </div>
 
           <div className="productGrid">
-            {searchProducts
-              .slice(0, 4)
-              .map(renderProductCard)}
+            {searchProducts.slice(0, 4).map(renderProductCard)}
           </div>
+
+          {searchProducts.length === 0 && (
+            <div className="emptyFeature">
+              <div className="emptyBig">🔎</div>
+
+              <h3>No encontramos productos</h3>
+
+              <p>
+                Intenta buscar con otro nombre o categoría.
+              </p>
+
+              <button
+                type="button"
+                className="featurePrimary"
+                onClick={() => setSearch("")}
+              >
+                Ver todos
+              </button>
+            </div>
+          )}
         </section>
 
-        {/* CONFIANZA */}
         <section className="trustStrip">
           <div className="trustItem">
             <span>🔒</span>
@@ -2431,10 +2482,9 @@ export default function App() {
 
       {/* SOPORTE */}
       <button
+        type="button"
         className="supportButton"
-        onClick={() =>
-          openPanel("messages")
-        }
+        onClick={() => openPanel("messages")}
       >
         💬 Ayuda
       </button>
@@ -2442,6 +2492,7 @@ export default function App() {
       {/* BARRA INFERIOR */}
       <nav className="bottomNav">
         <button
+          type="button"
           onClick={() => goTo("inicio")}
         >
           <span>⌂</span>
@@ -2449,6 +2500,7 @@ export default function App() {
         </button>
 
         <button
+          type="button"
           onClick={() => goTo("categorias")}
         >
           <span>▦</span>
@@ -2456,25 +2508,24 @@ export default function App() {
         </button>
 
         <button
+          type="button"
           className="sellButton"
-          onClick={() =>
-            openPanel("products")
-          }
+          onClick={() => openPanel("products")}
         >
           <span>🏪</span>
           Vender
         </button>
 
         <button
-          onClick={() =>
-            openPanel("favorites")
-          }
+          type="button"
+          onClick={() => openPanel("favorites")}
         >
           <span>♡</span>
           Favoritos
         </button>
 
         <button
+          type="button"
           onClick={openAccount}
         >
           <span>♙</span>
@@ -2482,7 +2533,7 @@ export default function App() {
         </button>
       </nav>
 
-      {/* MENÚ LATERAL */}
+      {/* MENÚ */}
       {menuOpen && (
         <div
           className="menuDrawer"
@@ -2495,80 +2546,82 @@ export default function App() {
             }
           >
             <button
+              type="button"
               className="closeButton"
-              onClick={() =>
-                setMenuOpen(false)
-              }
+              onClick={() => setMenuOpen(false)}
             >
               ×
             </button>
 
-            <h2>
-              Menú
-            </h2>
+            <h2>Menú</h2>
 
             <button
+              type="button"
               className="menuItem"
-              onClick={() =>
-                goTo("inicio")
-              }
+              onClick={() => goTo("inicio")}
             >
               🏠 Inicio
             </button>
 
             <button
+              type="button"
               className="menuItem"
-              onClick={() =>
-                goTo("categorias")
-              }
+              onClick={() => goTo("categorias")}
             >
               🗂️ Categorías
             </button>
 
             <button
+              type="button"
               className="menuItem"
-              onClick={() =>
-                openPanel("orders")
-              }
+              onClick={() => openPanel("orders")}
             >
               📦 Mis pedidos
             </button>
 
             <button
+              type="button"
               className="menuItem"
-              onClick={() =>
-                openPanel("products")
-              }
+              onClick={() => openPanel("products")}
             >
               🛍️ Mis productos
             </button>
 
             <button
+              type="button"
               className="menuItem"
-              onClick={() =>
-                openPanel("favorites")
-              }
+              onClick={() => openPanel("favorites")}
             >
               ❤️ Favoritos
             </button>
 
             <button
+              type="button"
               className="menuItem"
-              onClick={() =>
-                openPanel("settings")
-              }
+              onClick={() => openPanel("settings")}
             >
               ⚙️ Configuración
             </button>
 
-            <button
-              className="menuItem"
-              onClick={() =>
-                openAuth("login")
-              }
-            >
-              🔐 Iniciar sesión
-            </button>
+            {!user && (
+              <button
+                type="button"
+                className="menuItem"
+                onClick={() => openAuth("login")}
+              >
+                🔐 Iniciar sesión
+              </button>
+            )}
+
+            {user && (
+              <button
+                type="button"
+                className="menuItem"
+                onClick={handleLogout}
+              >
+                🚪 Cerrar sesión
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -2587,14 +2640,10 @@ export default function App() {
           >
             <div className="panelHeader">
               <div className="panelTitle">
-                <span className="panelTitleIcon">
-                  👤
-                </span>
+                <span className="panelTitleIcon">👤</span>
 
                 <div>
-                  <h2>
-                    Mi cuenta
-                  </h2>
+                  <h2>Mi cuenta</h2>
 
                   <p>
                     {user
@@ -2605,6 +2654,7 @@ export default function App() {
               </div>
 
               <button
+                type="button"
                 className="closeButton"
                 onClick={closePanels}
               >
@@ -2615,51 +2665,47 @@ export default function App() {
             {user ? (
               <div className="accountMenu">
                 <button
+                  type="button"
                   className="menuItem"
-                  onClick={() =>
-                    openPanel("profile")
-                  }
+                  onClick={() => openPanel("profile")}
                 >
                   👤 Mi perfil
                 </button>
 
                 <button
+                  type="button"
                   className="menuItem"
-                  onClick={() =>
-                    openPanel("orders")
-                  }
+                  onClick={() => openPanel("orders")}
                 >
                   📦 Mis pedidos
                 </button>
 
                 <button
+                  type="button"
                   className="menuItem"
-                  onClick={() =>
-                    openPanel("products")
-                  }
+                  onClick={() => openPanel("products")}
                 >
                   🛍️ Mis productos
                 </button>
 
                 <button
+                  type="button"
                   className="menuItem"
-                  onClick={() =>
-                    openPanel("favorites")
-                  }
+                  onClick={() => openPanel("favorites")}
                 >
                   ❤️ Favoritos
                 </button>
 
                 <button
+                  type="button"
                   className="menuItem"
-                  onClick={() =>
-                    openPanel("settings")
-                  }
+                  onClick={() => openPanel("settings")}
                 >
                   ⚙️ Configuración
                 </button>
 
                 <button
+                  type="button"
                   className="logoutButton"
                   onClick={handleLogout}
                 >
@@ -2668,34 +2714,28 @@ export default function App() {
               </div>
             ) : (
               <div className="emptyFeature">
-                <div className="emptyBig">
-                  👋
-                </div>
+                <div className="emptyBig">👋</div>
 
-                <h3>
-                  ¡Bienvenido a SHORASHOPP!
-                </h3>
+                <h3>¡Bienvenido a SHORASHOPP!</h3>
 
                 <p>
                   Compra, vende y descubre productos.
-                  Puedes explorar la tienda antes de
-                  crear tu cuenta.
+                  Puedes explorar la tienda antes de crear
+                  tu cuenta.
                 </p>
 
                 <button
+                  type="button"
                   className="featurePrimary"
-                  onClick={() =>
-                    openAuth("register")
-                  }
+                  onClick={() => openAuth("register")}
                 >
                   Crear una cuenta
                 </button>
 
                 <button
+                  type="button"
                   className="featureSecondary"
-                  onClick={() =>
-                    openAuth("login")
-                  }
+                  onClick={() => openAuth("login")}
                 >
                   Iniciar sesión
                 </button>
@@ -2719,9 +2759,7 @@ export default function App() {
           >
             <div className="panelHeader">
               <div className="panelTitle">
-                <span className="panelTitleIcon">
-                  ✨
-                </span>
+                <span className="panelTitleIcon">✨</span>
 
                 <div>
                   <h2>
@@ -2730,13 +2768,12 @@ export default function App() {
                       : "Crear tu cuenta"}
                   </h2>
 
-                  <p>
-                    Tu espacio en SHORASHOPP
-                  </p>
+                  <p>Tu espacio en SHORASHOPP</p>
                 </div>
               </div>
 
               <button
+                type="button"
                 className="closeButton"
                 onClick={closePanels}
               >
@@ -2751,16 +2788,12 @@ export default function App() {
               >
                 {authMode === "register" && (
                   <>
-                    <label>
-                      Nombre completo
-                    </label>
+                    <label>Nombre completo</label>
 
                     <input
                       value={fullName}
                       onChange={(event) =>
-                        setFullName(
-                          event.target.value
-                        )
+                        setFullName(event.target.value)
                       }
                       placeholder="Tu nombre"
                       required
@@ -2768,9 +2801,7 @@ export default function App() {
                   </>
                 )}
 
-                <label>
-                  Correo electrónico
-                </label>
+                <label>Correo electrónico</label>
 
                 <input
                   type="email"
@@ -2782,17 +2813,13 @@ export default function App() {
                   required
                 />
 
-                <label>
-                  Contraseña
-                </label>
+                <label>Contraseña</label>
 
                 <input
                   type="password"
                   value={password}
                   onChange={(event) =>
-                    setPassword(
-                      event.target.value
-                    )
+                    setPassword(event.target.value)
                   }
                   placeholder="Tu contraseña"
                   required
@@ -2818,20 +2845,28 @@ export default function App() {
                 </div>
               )}
 
-              <p style={{ textAlign: "center", marginTop: 18 }}>
+              <p
+                style={{
+                  textAlign: "center",
+                  marginTop: 18,
+                }}
+              >
                 {authMode === "login"
                   ? "¿Todavía no tienes cuenta? "
                   : "¿Ya tienes una cuenta? "}
 
                 <button
+                  type="button"
                   className="authSwitch"
-                  onClick={() =>
+                  onClick={() => {
+                    setMessage("");
+
                     setAuthMode(
                       authMode === "login"
                         ? "register"
                         : "login"
-                    )
-                  }
+                    );
+                  }}
                 >
                   {authMode === "login"
                     ? "Crear cuenta"
@@ -2858,21 +2893,24 @@ export default function App() {
             <div className="panelHeader">
               <div className="panelTitle">
                 <span className="panelTitleIcon">
-                  {currentPanel?.icon}
+                  {currentPanel?.icon || "✨"}
                 </span>
 
                 <div>
                   <h2>
-                    {currentPanel?.title}
+                    {currentPanel?.title ||
+                      "SHORASHOPP"}
                   </h2>
 
                   <p>
-                    {currentPanel?.subtitle}
+                    {currentPanel?.subtitle ||
+                      "Compra, vende y descubre."}
                   </p>
                 </div>
               </div>
 
               <button
+                type="button"
                 className="closeButton"
                 onClick={closePanels}
               >
