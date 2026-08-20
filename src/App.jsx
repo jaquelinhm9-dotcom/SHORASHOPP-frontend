@@ -1,485 +1,447 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "./lib/supabase";
 import "./App.css";
 
-const categories = [
-  "Todo",
-  "Mujer",
-  "Hombre",
-  "Belleza",
-  "Hogar",
-  "Accesorios",
-];
-
-const products = [
-  {
-    id: 1,
-    name: "Conjunto casual",
-    price: "$399",
-    oldPrice: "$599",
-    category: "Mujer",
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80",
-  },
-  {
-    id: 2,
-    name: "Bolsa elegante",
-    price: "$299",
-    oldPrice: "$450",
-    category: "Accesorios",
-    image:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80",
-  },
-  {
-    id: 3,
-    name: "Tenis urbanos",
-    price: "$549",
-    oldPrice: "$799",
-    category: "Hombre",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80",
-  },
-  {
-    id: 4,
-    name: "Set de belleza",
-    price: "$249",
-    oldPrice: "$350",
-    category: "Belleza",
-    image:
-      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=700&q=80",
-  },
-];
-
 function App() {
-  const [activeCategory, setActiveCategory] = useState("Todo");
-  const [search, setSearch] = useState("");
-  const [cartCount, setCartCount] = useState(0);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [session, setSession] = useState(null);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      activeCategory === "Todo" || product.category === activeCategory;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
 
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
 
-    return matchesCategory && matchesSearch;
-  });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const openAuth = (mode) => {
+    setAuthMode(mode);
+    setMessage("");
+    setShowAuth(true);
+  };
+
+  const closeAuth = () => {
+    setShowAuth(false);
+    setMessage("");
+    setEmail("");
+    setPassword("");
+    setPhone("");
+    setName("");
+  };
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      if (authMode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              phone,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        setMessage(
+          "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
+        );
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        closeAuth();
+      }
+    } catch (error) {
+      setMessage(error.message || "Ocurrió un error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhoneLogin = async () => {
+    if (!phone) {
+      setMessage("Escribe tu número de teléfono.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+
+      if (error) throw error;
+
+      setMessage("Te enviamos un código de verificación por SMS.");
+    } catch (error) {
+      setMessage(error.message || "No se pudo enviar el código.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
 
   return (
     <div className="app">
-      {/* HEADER */}
-      <header className="header">
-        <div className="header-inner">
-          <button
-            className="mobile-menu"
-            onClick={() => setShowMenu(!showMenu)}
-            aria-label="Abrir menú"
-          >
-            ☰
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-mark">S</div>
+          <span>SHORASHOPP</span>
+        </div>
+
+        <nav className="nav">
+          <a href="#inicio">Inicio</a>
+          <a href="#productos">Productos</a>
+          <a href="#categorias">Categorías</a>
+          <a href="#nosotros">Nosotros</a>
+        </nav>
+
+        <div className="header-actions">
+          <button className="icon-button" aria-label="Buscar">
+            ⌕
           </button>
 
-          <div className="logo">
-            <span className="logo-main">SHORA</span>
-            <span className="logo-shop">SHOPP</span>
-          </div>
+          <button className="icon-button" aria-label="Carrito">
+            🛒
+          </button>
 
-          <nav className={`nav ${showMenu ? "nav-open" : ""}`}>
-            <button
-              onClick={() => {
-                setActiveCategory("Todo");
-                setShowMenu(false);
-              }}
-            >
-              Inicio
+          {session ? (
+            <button className="account-button" onClick={handleLogout}>
+              Cerrar sesión
             </button>
-
+          ) : (
             <button
-              onClick={() => {
-                setActiveCategory("Mujer");
-                setShowMenu(false);
-              }}
-            >
-              Mujer
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveCategory("Hombre");
-                setShowMenu(false);
-              }}
-            >
-              Hombre
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveCategory("Belleza");
-                setShowMenu(false);
-              }}
-            >
-              Belleza
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveCategory("Hogar");
-                setShowMenu(false);
-              }}
-            >
-              Hogar
-            </button>
-          </nav>
-
-          <div className="header-actions">
-            <button
-              className="login-link"
-              onClick={() => setShowLogin(true)}
+              className="account-button"
+              onClick={() => openAuth("login")}
             >
               Iniciar sesión
             </button>
-
-            <button
-              className="register-button"
-              onClick={() => setShowRegister(true)}
-            >
-              Registrarse
-            </button>
-
-            <button
-              className="cart-button"
-              onClick={() => alert("Carrito próximamente")}
-              aria-label="Carrito"
-            >
-              🛒
-              {cartCount > 0 && (
-                <span className="cart-count">{cartCount}</span>
-              )}
-            </button>
-          </div>
+          )}
         </div>
       </header>
 
-      {/* HERO */}
       <main>
-        <section className="hero">
+        <section className="hero" id="inicio">
           <div className="hero-content">
-            <div className="hero-text">
-              <span className="hero-small">DESCUBRE · ELIGE · DISFRUTA</span>
+            <span className="eyebrow">NUEVA TEMPORADA</span>
 
-              <h1>
-                Todo lo que buscas,
-                <br />
-                <span>en un solo lugar.</span>
-              </h1>
+            <h1>
+              Encuentra tu
+              <br />
+              <span>estilo.</span>
+            </h1>
 
-              <p>
-                Encuentra productos increíbles, descubre nuevas opciones
-                y compra de una manera sencilla.
-              </p>
+            <p>
+              Descubre productos únicos, tendencias y todo lo que necesitas
+              para expresar quién eres.
+            </p>
 
+            <div className="hero-buttons">
               <button
-                className="hero-button"
-                onClick={() => {
+                className="primary-button"
+                onClick={() =>
                   document
                     .getElementById("productos")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
               >
                 Explorar productos
                 <span>→</span>
               </button>
+
+              <button
+                className="secondary-button"
+                onClick={() => openAuth("register")}
+              >
+                Crear cuenta
+              </button>
+            </div>
+          </div>
+
+          <div className="hero-visual">
+            <div className="hero-card card-one">
+              <span>01</span>
             </div>
 
-            <div className="hero-image-wrapper">
-              <div className="hero-circle"></div>
+            <div className="hero-card card-two">
+              <span>02</span>
+            </div>
 
-              <img
-                className="hero-image"
-                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1000&q=85"
-                alt="Productos de SHORASHOPP"
-              />
-
-              <div className="floating-card floating-card-one">
-                <span>✨</span>
-                <div>
-                  <strong>Nuevos productos</strong>
-                  <small>Descúbrelos ahora</small>
-                </div>
-              </div>
-
-              <div className="floating-card floating-card-two">
-                <strong>+100</strong>
-                <small>productos</small>
-              </div>
+            <div className="hero-circle">
+              <div className="circle-text">SHOP • DISCOVER • INSPIRE •</div>
+              <strong>S</strong>
             </div>
           </div>
         </section>
 
-        {/* CATEGORIES */}
-        <section className="categories-section">
+        <section className="categories" id="categorias">
           <div className="section-heading">
             <div>
-              <span className="section-label">EXPLORA</span>
+              <span className="eyebrow">EXPLORA</span>
               <h2>Categorías</h2>
             </div>
 
-            <p>
-              Encuentra exactamente lo que estás buscando.
-            </p>
+            <button className="text-button">
+              Ver todas <span>→</span>
+            </button>
           </div>
 
-          <div className="categories">
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={
-                  activeCategory === category ? "category active" : "category"
-                }
-                onClick={() => setActiveCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="category-grid">
+            <article className="category-card">
+              <div className="category-number">01</div>
+              <h3>Moda</h3>
+              <p>Prendas y accesorios para cada ocasión.</p>
+              <span className="category-arrow">↗</span>
+            </article>
+
+            <article className="category-card">
+              <div className="category-number">02</div>
+              <h3>Tecnología</h3>
+              <p>Innovación para tu día a día.</p>
+              <span className="category-arrow">↗</span>
+            </article>
+
+            <article className="category-card">
+              <div className="category-number">03</div>
+              <h3>Hogar</h3>
+              <p>Detalles que hacen especial tu espacio.</p>
+              <span className="category-arrow">↗</span>
+            </article>
+
+            <article className="category-card">
+              <div className="category-number">04</div>
+              <h3>Belleza</h3>
+              <p>Cuida, descubre y resalta tu estilo.</p>
+              <span className="category-arrow">↗</span>
+            </article>
           </div>
         </section>
 
-        {/* PRODUCTS */}
-        <section className="products-section" id="productos">
-          <div className="products-top">
+        <section className="products" id="productos">
+          <div className="section-heading">
             <div>
-              <span className="section-label">NUESTRA SELECCIÓN</span>
+              <span className="eyebrow">SELECCIÓN</span>
               <h2>Productos destacados</h2>
             </div>
 
-            <div className="search-box">
-              <span>⌕</span>
-              <input
-                type="text"
-                placeholder="Buscar productos..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            <button className="text-button">
+              Explorar todo <span>→</span>
+            </button>
           </div>
 
-          {filteredProducts.length === 0 ? (
-            <div className="empty-products">
-              <div>🔎</div>
-              <h3>No encontramos productos</h3>
-              <p>Prueba con otra búsqueda o categoría.</p>
-            </div>
-          ) : (
-            <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <article className="product-card" key={product.id}>
-                  <div className="product-image-wrapper">
-                    <img src={product.image} alt={product.name} />
+          <div className="product-grid">
+            <article className="product-card">
+              <div className="product-image image-one">
+                <span className="product-tag">NUEVO</span>
+              </div>
 
-                    <button
-                      className="favorite-button"
-                      aria-label="Agregar a favoritos"
-                    >
-                      ♡
-                    </button>
+              <div className="product-info">
+                <div>
+                  <h3>Producto esencial</h3>
+                  <p>SHORASHOPP</p>
+                </div>
+                <strong>$499</strong>
+              </div>
+            </article>
 
-                    <span className="product-tag">Oferta</span>
-                  </div>
+            <article className="product-card">
+              <div className="product-image image-two">
+                <span className="product-tag">POPULAR</span>
+              </div>
 
-                  <div className="product-info">
-                    <span className="product-category">
-                      {product.category}
-                    </span>
+              <div className="product-info">
+                <div>
+                  <h3>Selección premium</h3>
+                  <p>SHORASHOPP</p>
+                </div>
+                <strong>$699</strong>
+              </div>
+            </article>
 
-                    <h3>{product.name}</h3>
+            <article className="product-card">
+              <div className="product-image image-three">
+                <span className="product-tag">TOP</span>
+              </div>
 
-                    <div className="product-price">
-                      <strong>{product.price}</strong>
-                      <del>{product.oldPrice}</del>
-                    </div>
-
-                    <button
-                      className="add-cart"
-                      onClick={() => setCartCount((count) => count + 1)}
-                    >
-                      Agregar al carrito
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+              <div className="product-info">
+                <div>
+                  <h3>Edición especial</h3>
+                  <p>SHORASHOPP</p>
+                </div>
+                <strong>$899</strong>
+              </div>
+            </article>
+          </div>
         </section>
 
-        {/* CTA */}
-        <section className="cta">
+        <section className="about" id="nosotros">
           <div>
-            <span className="section-label">SHORASHOPP</span>
-            <h2>Descubre algo que te encante.</h2>
-            <p>
-              Explora nuestra colección y encuentra tus próximos favoritos.
-            </p>
+            <span className="eyebrow">SOBRE SHORASHOPP</span>
+            <h2>Compra diferente.</h2>
           </div>
 
-          <button
-            onClick={() =>
-              document
-                .getElementById("productos")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            Ver productos →
-          </button>
+          <p>
+            Creamos un espacio donde descubrir productos sea tan importante
+            como encontrar exactamente lo que estabas buscando.
+          </p>
         </section>
       </main>
 
-      {/* FOOTER */}
       <footer className="footer">
-        <div className="footer-inner">
-          <div>
-            <div className="logo footer-logo">
-              <span className="logo-main">SHORA</span>
-              <span className="logo-shop">SHOPP</span>
-            </div>
-
-            <p>
-              Tu espacio para descubrir productos que te encantan.
-            </p>
-          </div>
-
-          <div className="footer-links">
-            <div>
-              <strong>Comprar</strong>
-              <button>Mujer</button>
-              <button>Hombre</button>
-              <button>Belleza</button>
-            </div>
-
-            <div>
-              <strong>Ayuda</strong>
-              <button>Contacto</button>
-              <button>Preguntas frecuentes</button>
-              <button>Envíos</button>
-            </div>
-          </div>
+        <div className="brand">
+          <div className="brand-mark">S</div>
+          <span>SHORASHOPP</span>
         </div>
 
-        <div className="footer-bottom">
-          <span>© 2026 SHORASHOPP</span>
-          <span>Hecho para comprar mejor.</span>
-        </div>
+        <p>© 2026 SHORASHOPP. Todos los derechos reservados.</p>
       </footer>
 
-      {/* LOGIN MODAL */}
-      {showLogin && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowLogin(false)}
-        >
-          <div
-            className="auth-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="close-modal"
-              onClick={() => setShowLogin(false)}
-            >
+      {showAuth && (
+        <div className="modal-overlay" onClick={closeAuth}>
+          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeAuth}>
               ×
             </button>
 
-            <span className="modal-label">BIENVENIDO</span>
-            <h2>Iniciar sesión</h2>
-            <p>Entra a tu cuenta de SHORASHOPP.</p>
+            <div className="auth-header">
+              <span className="eyebrow">
+                {authMode === "login" ? "BIENVENIDO" : "ÚNETE"}
+              </span>
 
-            <label>Correo electrónico</label>
-            <input
-              type="email"
-              placeholder="tu@email.com"
-            />
+              <h2>
+                {authMode === "login"
+                  ? "Inicia sesión."
+                  : "Crea tu cuenta."}
+              </h2>
 
-            <label>Contraseña</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-            />
+              <p>
+                {authMode === "login"
+                  ? "Accede a tu cuenta de SHORASHOPP."
+                  : "Forma parte de SHORASHOPP."}
+              </p>
+            </div>
 
-            <button className="auth-button">
-              Iniciar sesión
-            </button>
+            <form onSubmit={handleAuth}>
+              {authMode === "register" && (
+                <input
+                  type="text"
+                  placeholder="Nombre completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              )}
+
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+
+              {authMode === "register" && (
+                <input
+                  type="tel"
+                  placeholder="Número de teléfono"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              )}
+
+              <button
+                className="auth-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading
+                  ? "Procesando..."
+                  : authMode === "login"
+                  ? "Iniciar sesión"
+                  : "Crear cuenta"}
+              </button>
+            </form>
 
             <div className="auth-divider">
               <span>o</span>
             </div>
 
-            <button
-              className="secondary-auth-button"
-              onClick={() => {
-                setShowLogin(false);
-                setShowRegister(true);
-              }}
-            >
-              Crear una cuenta
-            </button>
-          </div>
-        </div>
-      )}
+            <div className="phone-login">
+              <input
+                type="tel"
+                placeholder="+52 000 000 0000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
 
-      {/* REGISTER MODAL */}
-      {showRegister && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowRegister(false)}
-        >
-          <div
-            className="auth-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="close-modal"
-              onClick={() => setShowRegister(false)}
-            >
-              ×
-            </button>
-
-            <span className="modal-label">SHORASHOPP</span>
-            <h2>Crear cuenta</h2>
-            <p>Regístrate para comenzar a comprar.</p>
-
-            <label>Nombre</label>
-            <input
-              type="text"
-              placeholder="Tu nombre"
-            />
-
-            <label>Correo electrónico</label>
-            <input
-              type="email"
-              placeholder="tu@email.com"
-            />
-
-            <label>Contraseña</label>
-            <input
-              type="password"
-              placeholder="Crea una contraseña"
-            />
-
-            <button className="auth-button">
-              Registrarme
-            </button>
-
-            <p className="modal-footer-text">
-              ¿Ya tienes una cuenta?{" "}
               <button
-                onClick={() => {
-                  setShowRegister(false);
-                  setShowLogin(true);
-                }}
+                type="button"
+                onClick={handlePhoneLogin}
+                disabled={loading}
               >
-                Iniciar sesión
+                Continuar con teléfono
               </button>
-            </p>
+            </div>
+
+            {message && <div className="auth-message">{message}</div>}
+
+            <div className="auth-switch">
+              {authMode === "login" ? (
+                <>
+                  ¿No tienes cuenta?{" "}
+                  <button onClick={() => setAuthMode("register")}>
+                    Regístrate
+                  </button>
+                </>
+              ) : (
+                <>
+                  ¿Ya tienes cuenta?{" "}
+                  <button onClick={() => setAuthMode("login")}>
+                    Inicia sesión
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
