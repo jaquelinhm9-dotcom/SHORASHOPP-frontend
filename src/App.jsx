@@ -6,7 +6,6 @@ function App() {
   const [session, setSession] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -18,9 +17,9 @@ function App() {
     let mounted = true;
 
     const loadSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
 
-      if (mounted) {
+      if (!error && mounted) {
         setSession(data?.session ?? null);
       }
     };
@@ -30,7 +29,9 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
+      if (mounted) {
+        setSession(currentSession);
+      }
     });
 
     return () => {
@@ -61,9 +62,6 @@ function App() {
   const switchAuthMode = (mode) => {
     setAuthMode(mode);
     setMessage("");
-    setName("");
-    setEmail("");
-    setPassword("");
   };
 
   const handleEmailAuth = async (event) => {
@@ -128,7 +126,7 @@ function App() {
 
       setSession(null);
     } catch (error) {
-      setMessage(error?.message || "No se pudo cerrar sesión.");
+      setMessage(error?.message || "No se pudo cerrar la sesión.");
     } finally {
       setLoading(false);
     }
@@ -195,7 +193,7 @@ function App() {
             type="button"
             aria-label="Buscar"
           >
-            <span>⌕</span>
+            ⌕
           </button>
 
           <button
@@ -203,7 +201,7 @@ function App() {
             type="button"
             aria-label="Carrito"
           >
-            <span>🛒</span>
+            🛒
             <small>0</small>
           </button>
 
@@ -288,8 +286,6 @@ function App() {
             </div>
           </div>
 
-          {/* ================= HERO VISUAL ================= */}
-
           <div className="hero-right">
             <div className="hero-background-shape" />
 
@@ -368,6 +364,7 @@ function App() {
             <button
               className="category-card category-fashion"
               type="button"
+              onClick={() => scrollToSection("productos")}
             >
               <span className="category-index">01</span>
 
@@ -382,6 +379,7 @@ function App() {
             <button
               className="category-card category-tech"
               type="button"
+              onClick={() => scrollToSection("productos")}
             >
               <span className="category-index">02</span>
 
@@ -396,6 +394,7 @@ function App() {
             <button
               className="category-card category-home"
               type="button"
+              onClick={() => scrollToSection("productos")}
             >
               <span className="category-index">03</span>
 
@@ -410,6 +409,7 @@ function App() {
             <button
               className="category-card category-beauty"
               type="button"
+              onClick={() => scrollToSection("productos")}
             >
               <span className="category-index">04</span>
 
@@ -734,7 +734,7 @@ function App() {
                     : "Crear cuenta"}
                 </span>
 
-                <span>↗</span>
+                {!loading && <strong>↗</strong>}
               </button>
             </form>
 
@@ -759,8 +759,4 @@ function App() {
                 </>
               ) : (
                 <>
-                  ¿Ya tienes cuenta?{" "}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      swit
+        
