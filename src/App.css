@@ -1,25 +1,40 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap");
 
-:root {
-  --black: #111111;
-  --black-2: #191919;
-  --cream: #f3eee6;
-  --cream-2: #faf7f1;
-  --orange: #ff5733;
-  --orange-dark: #e74725;
+/* =========================================================
+   SHORASHOPP — APP.CSS
+   Diseño basado en referencia
+========================================================= */
 
-  --purple: #7257c8;
-  --green: #8ca97c;
-  --blue: #839fb5;
-  --pink: #d6a5a0;
+:root {
+  --red: #f51b48;
+  --red-dark: #d90f3c;
+  --purple: #7618d9;
+  --purple-dark: #5b0db1;
+  --pink: #f01876;
+
+  --black: #151515;
+  --gray: #6f6f76;
+  --gray-light: #a8a8ae;
 
   --white: #ffffff;
-  --gray: #77716b;
-  --gray-light: #aaa39b;
+  --bg: #ffffff;
+  --soft: #f7f7fa;
+  --border: #eeeeF2;
 
-  --border: rgba(17, 17, 17, 0.13);
-  --shadow: 0 24px 70px rgba(0, 0, 0, 0.14);
+  --gradient: linear-gradient(135deg, #ff174f 0%, #ef1677 45%, #7214d7 100%);
+  --gradient-reverse: linear-gradient(135deg, #7114d6 0%, #ee1676 55%, #ff174f 100%);
+
+  --shadow-sm: 0 4px 15px rgba(30, 20, 50, 0.08);
+  --shadow: 0 8px 28px rgba(30, 20, 50, 0.11);
+  --shadow-lg: 0 18px 45px rgba(30, 20, 50, 0.16);
+
+  --radius: 14px;
+  --radius-lg: 18px;
 }
+
+/* =========================================================
+   RESET
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -31,24 +46,31 @@ html {
 
 body {
   margin: 0;
-  background: var(--cream);
+  padding: 0;
+  background: var(--bg);
   color: var(--black);
   font-family: "DM Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 body,
 button,
-input {
+input,
+textarea,
+select {
   font-family: "DM Sans", sans-serif;
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
 }
 
 button {
+  border: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -58,16 +80,32 @@ button:disabled {
   opacity: 0.6;
 }
 
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 button:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--orange);
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--purple);
   outline-offset: 2px;
 }
 
+/* =========================================================
+   APP
+========================================================= */
+
 .app {
   min-height: 100vh;
+  background: var(--white);
   overflow-x: hidden;
-  background: var(--cream);
 }
 
 /* =========================================================
@@ -77,7 +115,7 @@ input:focus-visible {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(25px);
   }
 
   to {
@@ -96,70 +134,76 @@ input:focus-visible {
   }
 }
 
-@keyframes heroCardIn {
+@keyframes scaleIn {
   from {
     opacity: 0;
-    transform: translateY(45px) rotate(10deg) scale(0.94);
+    transform: scale(0.92);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) rotate(4deg) scale(1);
+    transform: scale(1);
   }
 }
 
-@keyframes shapeIn {
-  from {
+@keyframes popIn {
+  0% {
     opacity: 0;
-    transform: rotate(-20deg) scale(0.75);
+    transform: scale(0.7);
   }
 
-  to {
-    opacity: 0.96;
-    transform: rotate(-10deg) scale(1);
+  70% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-@keyframes floatCard {
+@keyframes float {
   0%,
   100% {
-    transform: translateY(0) rotate(8deg);
+    transform: translateY(0);
   }
 
   50% {
-    transform: translateY(-12px) rotate(8deg);
+    transform: translateY(-9px);
   }
 }
 
-@keyframes floatCardBottom {
+@keyframes floatRotate {
   0%,
   100% {
     transform: translateY(0) rotate(-7deg);
   }
 
   50% {
-    transform: translateY(10px) rotate(-7deg);
+    transform: translateY(-10px) rotate(-4deg);
   }
 }
 
-@keyframes roundSpin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes logoPulse {
+@keyframes pulse {
   0%,
   100% {
     transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 27, 72, 0.3);
   }
 
   50% {
     transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(245, 27, 72, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -500px 0;
+  }
+
+  100% {
+    background-position: 500px 0;
   }
 }
 
@@ -169,30 +213,48 @@ input:focus-visible {
   }
 
   to {
-    transform: translateX(-30%);
+    transform: translateX(-50%);
   }
 }
 
-@keyframes modalIn {
-  from {
-    opacity: 0;
-    transform: translateY(35px) scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes badgePulse {
-  0%,
-  100% {
+@keyframes cartBounce {
+  0% {
     transform: scale(1);
   }
 
-  50% {
-    transform: scale(1.06);
+  40% {
+    transform: scale(1.2);
+  }
+
+  70% {
+    transform: scale(0.92);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes notification {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  20% {
+    transform: rotate(-12deg);
+  }
+
+  40% {
+    transform: rotate(12deg);
+  }
+
+  60% {
+    transform: rotate(-8deg);
+  }
+
+  80% {
+    transform: rotate(6deg);
   }
 }
 
@@ -205,34 +267,35 @@ input:focus-visible {
   min-height: 82px;
   padding: 0 5.5vw;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 25px;
-
   position: sticky;
   top: 0;
   z-index: 100;
 
-  background: rgba(243, 238, 230, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid var(--border);
 
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 
-  animation: fadeIn 0.7s ease both;
+  animation: fadeIn 0.5s ease both;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
 
   padding: 0;
-  border: 0;
-  background: transparent;
 
+  background: transparent;
   color: var(--black);
+
+  animation: fadeUp 0.55s ease both;
 }
 
 .brand-symbol {
@@ -242,27 +305,24 @@ input:focus-visible {
   display: grid;
   place-items: center;
 
-  background: var(--orange);
+  border-radius: 10px;
+
+  background: var(--gradient);
   color: var(--white);
 
   font-family: "Playfair Display", serif;
-  font-size: 25px;
+  font-size: 24px;
   font-weight: 600;
 
-  transform: rotate(-8deg);
+  transform: rotate(-6deg);
 
-  transition:
-    transform 0.3s ease,
-    background 0.3s ease;
-}
-
-.brand:hover .brand-symbol {
-  transform: rotate(0deg) scale(1.08);
-  background: var(--purple);
+  animation:
+    popIn 0.7s ease both,
+    floatRotate 4s ease-in-out 1s infinite;
 }
 
 .brand-name {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.8px;
 }
@@ -274,7 +334,7 @@ input:focus-visible {
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: 31px;
+  gap: 28px;
 }
 
 .desktop-nav button,
@@ -284,7 +344,7 @@ input:focus-visible {
   color: var(--black);
 
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .desktop-nav button {
@@ -294,17 +354,17 @@ input:focus-visible {
 
 .desktop-nav button::after {
   content: "";
-
   position: absolute;
   left: 0;
   bottom: 2px;
 
   width: 0;
-  height: 1px;
+  height: 2px;
 
-  background: var(--orange);
+  border-radius: 10px;
+  background: var(--gradient);
 
-  transition: width 0.25s ease;
+  transition: width 0.3s ease;
 }
 
 .desktop-nav button:hover::after {
@@ -314,7 +374,7 @@ input:focus-visible {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 
 .header-icon {
@@ -329,19 +389,21 @@ input:focus-visible {
   border: 1px solid var(--border);
   border-radius: 50%;
 
-  background: transparent;
+  background: var(--white);
   color: var(--black);
 
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    transform 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .header-icon:hover {
-  background: var(--black);
   color: var(--white);
+  background: var(--gradient);
   transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 .header-icon span {
@@ -350,8 +412,8 @@ input:focus-visible {
 
 .cart-button small {
   position: absolute;
+  top: -4px;
   right: -3px;
-  top: -3px;
 
   min-width: 17px;
   height: 17px;
@@ -363,38 +425,37 @@ input:focus-visible {
 
   border-radius: 20px;
 
-  background: var(--orange);
+  background: var(--red);
   color: var(--white);
 
   font-size: 9px;
   font-weight: 700;
 
-  animation: badgePulse 1.8s ease-in-out infinite;
+  animation: popIn 0.5s ease both;
 }
 
 .header-account {
   min-height: 40px;
-  padding: 0 19px;
+  padding: 0 18px;
 
-  border: 1px solid var(--black);
   border-radius: 30px;
 
-  background: var(--black);
+  background: var(--gradient);
   color: var(--white);
 
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+
+  box-shadow: 0 6px 16px rgba(239, 23, 104, 0.2);
 
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .header-account:hover {
-  background: var(--orange);
-  border-color: var(--orange);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(118, 24, 217, 0.25);
 }
 
 /* =========================================================
@@ -404,20 +465,25 @@ input:focus-visible {
 .hero {
   min-height: calc(100vh - 82px);
 
-  padding: 72px 7vw 70px;
+  padding: 70px 7vw;
 
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
   gap: 45px;
 
   align-items: center;
+
+  background:
+    radial-gradient(circle at 80% 30%, rgba(118, 24, 217, 0.08), transparent 30%),
+    radial-gradient(circle at 10% 70%, rgba(245, 27, 72, 0.06), transparent 30%),
+    var(--white);
 }
 
 .hero-left {
   position: relative;
   z-index: 3;
 
-  animation: fadeUp 0.8s ease both;
+  animation: fadeUp 0.75s ease both;
 }
 
 .hero-label,
@@ -426,11 +492,12 @@ input:focus-visible {
   align-items: center;
   gap: 9px;
 
-  color: var(--orange);
+  color: var(--red);
 
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.8px;
+  text-transform: uppercase;
 }
 
 .label-dot {
@@ -438,13 +505,14 @@ input:focus-visible {
   height: 7px;
 
   border-radius: 50%;
-  background: var(--orange);
 
-  animation: logoPulse 1.7s ease-in-out infinite;
+  background: var(--red);
+
+  animation: pulse 2s infinite;
 }
 
 .hero h1 {
-  margin: 25px 0 25px;
+  margin: 25px 0;
 
   max-width: 650px;
 
@@ -452,13 +520,15 @@ input:focus-visible {
   line-height: 0.87;
 
   letter-spacing: -6px;
-  font-weight: 600;
+  font-weight: 700;
+
+  animation: fadeUp 0.8s 0.1s ease both;
 }
 
 .hero h1 em,
 .about-section h2 em,
 .auth-header h2 em {
-  color: var(--orange);
+  color: var(--red);
 
   font-family: "Playfair Display", serif;
   font-weight: 500;
@@ -474,7 +544,7 @@ input:focus-visible {
   font-size: 16px;
   line-height: 1.7;
 
-  animation: fadeUp 0.9s 0.15s ease both;
+  animation: fadeUp 0.8s 0.2s ease both;
 }
 
 .hero-actions {
@@ -484,7 +554,7 @@ input:focus-visible {
   align-items: center;
   gap: 12px;
 
-  animation: fadeUp 1s 0.25s ease both;
+  animation: fadeUp 0.8s 0.3s ease both;
 }
 
 .main-button,
@@ -493,27 +563,30 @@ input:focus-visible {
 
   padding: 0 21px;
 
-  border-radius: 2px;
+  border-radius: 10px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 25px;
+  gap: 20px;
 
   font-size: 12px;
   font-weight: 700;
 
   transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
+    transform 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .main-button {
-  border: 1px solid var(--black);
-  background: var(--black);
+  border: 1px solid transparent;
+
+  background: var(--gradient);
   color: var(--white);
+
+  box-shadow: 0 8px 20px rgba(239, 23, 104, 0.2);
 }
 
 .main-button strong {
@@ -522,13 +595,13 @@ input:focus-visible {
 }
 
 .main-button:hover {
-  background: var(--orange);
-  border-color: var(--orange);
   transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(118, 24, 217, 0.25);
 }
 
 .outline-button {
   border: 1px solid var(--black);
+
   background: transparent;
   color: var(--black);
 }
@@ -545,7 +618,7 @@ input:focus-visible {
   display: flex;
   gap: 42px;
 
-  animation: fadeUp 1s 0.35s ease both;
+  animation: fadeUp 0.8s 0.4s ease both;
 }
 
 .hero-mini-info div {
@@ -556,7 +629,6 @@ input:focus-visible {
 
 .hero-mini-info strong {
   font-size: 19px;
-  font-weight: 700;
 }
 
 .hero-mini-info span {
@@ -579,7 +651,7 @@ input:focus-visible {
   display: grid;
   place-items: center;
 
-  animation: fadeIn 1s 0.2s ease both;
+  animation: scaleIn 0.8s 0.2s ease both;
 }
 
 .hero-background-shape {
@@ -588,16 +660,15 @@ input:focus-visible {
 
   position: absolute;
 
-  background: var(--orange);
+  background: var(--gradient);
 
   border-radius:
     46% 54% 55% 45% /
     55% 43% 57% 45%;
 
   transform: rotate(-10deg);
-  opacity: 0.96;
 
-  animation: shapeIn 1.1s 0.2s ease both;
+  animation: floatRotate 5s ease-in-out infinite;
 }
 
 .hero-main-card {
@@ -613,20 +684,16 @@ input:focus-visible {
   flex-direction: column;
   justify-content: space-between;
 
+  border-radius: 18px;
+
   background: var(--black);
   color: var(--white);
 
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
 
   transform: rotate(4deg);
 
-  animation: heroCardIn 1s 0.35s ease both;
-
-  transition: transform 0.4s ease;
-}
-
-.hero-main-card:hover {
-  transform: rotate(1deg) scale(1.025);
+  animation: float 5s ease-in-out 0.5s infinite;
 }
 
 .hero-main-card-top,
@@ -651,16 +718,15 @@ input:focus-visible {
   display: grid;
   place-items: center;
 
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 50%;
 
-  color: var(--orange);
+  color: var(--red);
 
   font-family: "Playfair Display", serif;
   font-size: 100px;
-  font-weight: 500;
 
-  animation: logoPulse 3s ease-in-out infinite;
+  animation: pulse 3s infinite;
 }
 
 .floating-card {
@@ -675,13 +741,17 @@ input:focus-visible {
   flex-direction: column;
   gap: 6px;
 
-  background: var(--cream-2);
+  border-radius: 12px;
 
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  background: var(--white);
+
+  box-shadow: var(--shadow);
+
+  animation: float 4s ease-in-out infinite;
 }
 
 .floating-card span {
-  color: var(--orange);
+  color: var(--red);
 
   font-size: 9px;
   font-weight: 700;
@@ -698,8 +768,7 @@ input:focus-visible {
   right: 5%;
 
   transform: rotate(8deg);
-
-  animation: floatCard 3.5s ease-in-out infinite;
+  animation-delay: 0.5s;
 }
 
 .floating-card-bottom {
@@ -707,8 +776,7 @@ input:focus-visible {
   left: 7%;
 
   transform: rotate(-7deg);
-
-  animation: floatCardBottom 4s ease-in-out infinite;
+  animation-delay: 1s;
 }
 
 .hero-round-text {
@@ -733,7 +801,7 @@ input:focus-visible {
   text-align: center;
   letter-spacing: 1px;
 
-  animation: roundSpin 18s linear infinite;
+  animation: float 4s ease-in-out 1.5s infinite;
 }
 
 /* =========================================================
@@ -745,7 +813,7 @@ input:focus-visible {
 
   overflow: hidden;
 
-  padding: 18px 0;
+  padding: 17px 0;
 
   background: var(--black);
   color: var(--white);
@@ -758,17 +826,18 @@ input:focus-visible {
   align-items: center;
   gap: 30px;
 
-  animation: marquee 25s linear infinite;
+  animation: marquee 24s linear infinite;
 }
 
 .marquee span {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 2px;
+  white-space: nowrap;
 }
 
 .marquee i {
-  color: var(--orange);
+  color: #ff3563;
   font-style: normal;
 }
 
@@ -777,11 +846,11 @@ input:focus-visible {
 ========================================================= */
 
 .section {
-  padding: 105px 7vw;
+  padding: 90px 7vw;
 }
 
 .section-header {
-  margin-bottom: 42px;
+  margin-bottom: 38px;
 
   display: flex;
   align-items: flex-end;
@@ -792,7 +861,7 @@ input:focus-visible {
 .section-header h2 {
   margin: 12px 0 0;
 
-  font-size: clamp(42px, 5vw, 70px);
+  font-size: clamp(40px, 5vw, 68px);
   line-height: 0.95;
 
   letter-spacing: -3px;
@@ -816,8 +885,8 @@ input:focus-visible {
 }
 
 .simple-link:hover {
-  color: var(--orange);
-  border-color: var(--orange);
+  color: var(--purple);
+  border-color: var(--purple);
 }
 
 .simple-link span {
@@ -832,15 +901,16 @@ input:focus-visible {
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .category-card {
-  min-height: 310px;
+  min-height: 250px;
 
-  padding: 24px;
+  padding: 22px;
 
-  border: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 
   position: relative;
 
@@ -854,53 +924,55 @@ input:focus-visible {
 
   overflow: hidden;
 
+  box-shadow: var(--shadow-sm);
+
   transition:
-    transform 0.35s ease,
-    filter 0.25s ease;
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    filter 0.3s ease;
 }
 
 .category-card::before {
   content: "";
 
   position: absolute;
-  width: 160px;
-  height: 160px;
+  inset: 0;
 
-  right: -60px;
-  bottom: -60px;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.4),
+    transparent 70%
+  );
 
-  border-radius: 50%;
+  transform: translateX(-100%);
 
-  background: rgba(255, 255, 255, 0.15);
-
-  transition:
-    transform 0.5s ease,
-    opacity 0.5s ease;
-}
-
-.category-card:hover {
-  transform: translateY(-9px) scale(1.015);
-  filter: brightness(0.97);
+  transition: transform 0.7s ease;
 }
 
 .category-card:hover::before {
-  transform: scale(1.7);
+  transform: translateX(100%);
+}
+
+.category-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow);
 }
 
 .category-fashion {
-  background: var(--orange);
+  background: #fff0f3;
 }
 
 .category-tech {
-  background: var(--purple);
+  background: #f3edff;
 }
 
 .category-home {
-  background: var(--green);
+  background: #f1f8ee;
 }
 
 .category-beauty {
-  background: var(--pink);
+  background: #fff1f5;
 }
 
 .category-index {
@@ -912,14 +984,8 @@ input:focus-visible {
 .category-card h3 {
   margin: 0 0 8px;
 
-  font-size: 30px;
-  letter-spacing: -1.5px;
-
-  transition: transform 0.3s ease;
-}
-
-.category-card:hover h3 {
-  transform: translateX(5px);
+  font-size: 25px;
+  letter-spacing: -1px;
 }
 
 .category-card p {
@@ -927,22 +993,38 @@ input:focus-visible {
 
   margin: 0;
 
+  color: var(--gray);
+
   font-size: 12px;
   line-height: 1.5;
 }
 
 .category-arrow {
   position: absolute;
-  right: 23px;
-  bottom: 20px;
+  right: 20px;
+  bottom: 18px;
 
-  font-size: 25px;
+  width: 35px;
+  height: 35px;
 
-  transition: transform 0.3s ease;
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: var(--white);
+
+  font-size: 20px;
+
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
 }
 
 .category-card:hover .category-arrow {
-  transform: translateX(7px);
+  transform: translateX(4px);
+  background: var(--gradient);
+  color: var(--white);
 }
 
 /* =========================================================
@@ -950,31 +1032,43 @@ input:focus-visible {
 ========================================================= */
 
 .products-section {
-  background: var(--cream-2);
+  background: var(--soft);
 }
 
 .products-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  gap: 20px;
 }
 
 .product-card {
   min-width: 0;
 
-  animation: fadeUp 0.8s ease both;
+  animation: fadeUp 0.7s ease both;
 }
 
 .product-card:nth-child(2) {
-  animation-delay: 0.12s;
+  animation-delay: 0.08s;
 }
 
 .product-card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.product-card:nth-child(4) {
   animation-delay: 0.24s;
 }
 
+.product-card:nth-child(5) {
+  animation-delay: 0.32s;
+}
+
+.product-card:nth-child(6) {
+  animation-delay: 0.4s;
+}
+
 .product-photo {
-  min-height: 480px;
+  min-height: 400px;
 
   position: relative;
 
@@ -983,28 +1077,46 @@ input:focus-visible {
 
   overflow: hidden;
 
-  transition: transform 0.4s ease;
+  border-radius: var(--radius);
 }
 
-.product-card:hover .product-photo {
-  transform: translateY(-5px);
+.product-photo::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+
+  transform: translateX(-100%);
+
+  transition: transform 0.7s ease;
+}
+
+.product-card:hover .product-photo::after {
+  transform: translateX(100%);
 }
 
 .product-photo-one {
-  background: #d9c8ba;
+  background: #f2ddd5;
 }
 
 .product-photo-two {
-  background: #c3c7d7;
+  background: #e0e0ed;
 }
 
 .product-photo-three {
-  background: #d6c5b8;
+  background: #f0ddd7;
 }
 
 .product-photo-symbol {
-  width: 190px;
-  height: 190px;
+  width: 175px;
+  height: 175px;
 
   display: grid;
   place-items: center;
@@ -1012,42 +1124,41 @@ input:focus-visible {
   border-radius: 50%;
 
   background: var(--black);
-  color: var(--orange);
+  color: var(--red);
 
   font-family: "Playfair Display", serif;
-  font-size: 125px;
+  font-size: 115px;
 
   transform: rotate(-10deg);
 
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
 
   transition:
-    transform 0.5s ease,
-    box-shadow 0.5s ease;
+    transform 0.4s ease,
+    box-shadow 0.4s ease;
 }
 
 .product-card:hover .product-photo-symbol {
-  transform: rotate(0deg) scale(1.08);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+  transform: rotate(-4deg) scale(1.08);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
 }
 
 .product-badge {
   position: absolute;
-  left: 18px;
-  top: 18px;
+  left: 15px;
+  top: 15px;
+  z-index: 3;
 
   padding: 7px 10px;
 
-  background: var(--black);
+  border-radius: 7px;
+
+  background: var(--red);
   color: var(--white);
 
   font-size: 8px;
   font-weight: 700;
-  letter-spacing: 1px;
-
-  z-index: 2;
-
-  animation: badgePulse 2.5s ease-in-out infinite;
+  letter-spacing: 0.8px;
 }
 
 .favorite-button {
@@ -1055,33 +1166,33 @@ input:focus-visible {
   height: 40px;
 
   position: absolute;
-  right: 16px;
-  top: 16px;
+  right: 15px;
+  top: 15px;
+  z-index: 3;
 
-  border: 0;
   border-radius: 50%;
 
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--black);
 
-  font-size: 21px;
+  font-size: 20px;
 
-  z-index: 2;
+  box-shadow: var(--shadow-sm);
 
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
 }
 
 .favorite-button:hover {
-  background: var(--orange);
+  background: var(--gradient);
   color: var(--white);
-  transform: scale(1.12) rotate(8deg);
+  transform: scale(1.1);
 }
 
 .product-details {
-  padding-top: 17px;
+  padding: 16px 3px 0;
 
   display: flex;
   justify-content: space-between;
@@ -1092,23 +1203,18 @@ input:focus-visible {
   color: var(--gray);
 
   font-size: 8px;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
 }
 
 .product-details h3 {
   margin: 6px 0 0;
 
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
-
-  transition: color 0.2s ease;
-}
-
-.product-card:hover .product-details h3 {
-  color: var(--orange);
 }
 
 .product-details strong {
+  color: var(--red);
   font-size: 16px;
 }
 
@@ -1117,13 +1223,33 @@ input:focus-visible {
 ========================================================= */
 
 .about-section {
-  padding: 110px 7vw;
+  padding: 100px 7vw;
 
   display: grid;
   grid-template-columns: 70px 1fr minmax(280px, 0.7fr);
   gap: 40px;
 
-  background: var(--orange);
+  background: var(--gradient);
+  color: var(--white);
+
+  position: relative;
+  overflow: hidden;
+}
+
+.about-section::before {
+  content: "";
+
+  width: 450px;
+  height: 450px;
+
+  position: absolute;
+  right: -150px;
+  top: -180px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+
+  animation: float 7s ease-in-out infinite;
 }
 
 .about-number {
@@ -1138,6 +1264,10 @@ input:focus-visible {
   line-height: 0.85;
 
   letter-spacing: -6px;
+}
+
+.about-section h2 em {
+  color: var(--white);
 }
 
 .about-description {
@@ -1187,517 +1317,11 @@ input:focus-visible {
 .footer-links button {
   color: var(--white);
 
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .footer-links button:hover {
-  color: var(--orange);
-  transform: translateY(-2px);
+  color: #ff3c6b;
 }
 
-.footer-bottom {
-  margin-top: 60px;
-  padding-top: 20px;
-
-  display: flex;
-  justify-content: space-between;
-
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
-
-  color: rgba(255, 255, 255, 0.55);
-
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-/* =========================================================
-   AUTH MODAL
-========================================================= */
-
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-
-  padding: 20px;
-
-  display: grid;
-  place-items: center;
-
-  background: rgba(0, 0, 0, 0.74);
-
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-
-  z-index: 500;
-
-  animation: fadeIn 0.25s ease both;
-}
-
-.auth-modal {
-  width: min(510px, 100%);
-  max-height: calc(100vh - 40px);
-
-  overflow-y: auto;
-
-  padding: 45px;
-
-  position: relative;
-
-  background: var(--cream-2);
-
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.3);
-
-  animation: modalIn 0.4s ease both;
-}
-
-.auth-close {
-  width: 38px;
-  height: 38px;
-
-  position: absolute;
-  top: 17px;
-  right: 17px;
-
-  border: 1px solid var(--border);
-  border-radius: 50%;
-
-  background: transparent;
-  color: var(--black);
-
-  font-size: 23px;
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.auth-close:hover {
-  background: var(--black);
-  color: var(--white);
-  transform: rotate(90deg);
-}
-
-.auth-decoration {
-  width: 55px;
-  height: 55px;
-
-  margin-bottom: 30px;
-
-  display: grid;
-  place-items: center;
-
-  background: var(--orange);
-  color: var(--white);
-
-  transform: rotate(-7deg);
-
-  transition: transform 0.4s ease;
-}
-
-.auth-decoration:hover {
-  transform: rotate(0deg) scale(1.08);
-}
-
-.auth-decoration span {
-  font-family: "Playfair Display", serif;
-  font-size: 35px;
-}
-
-.auth-header h2 {
-  margin: 12px 0;
-
-  font-size: 48px;
-  line-height: 0.95;
-
-  letter-spacing: -2px;
-}
-
-.auth-header p {
-  margin: 0 0 28px;
-
-  color: var(--gray);
-
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.auth-tabs {
-  margin-bottom: 20px;
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-
-  border-bottom: 1px solid var(--border);
-}
-
-.auth-tabs button {
-  min-height: 42px;
-
-  border: 0;
-  border-bottom: 2px solid transparent;
-
-  background: transparent;
-  color: var(--gray);
-
-  font-size: 11px;
-  font-weight: 700;
-
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.auth-tabs button.active {
-  color: var(--black);
-  border-bottom-color: var(--orange);
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.auth-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.auth-form label > span {
-  font-size: 10px;
-  font-weight: 700;
-
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.auth-form input {
-  width: 100%;
-  min-height: 48px;
-
-  padding: 0 14px;
-
-  border: 1px solid var(--border);
-  outline: none;
-
-  background: var(--white);
-  color: var(--black);
-
-  font-size: 13px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.auth-form input::placeholder {
-  color: #aaa49c;
-}
-
-.auth-form input:focus {
-  border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255, 87, 51, 0.08);
-}
-
-.auth-submit {
-  min-height: 52px;
-
-  margin-top: 5px;
-  padding: 0 18px;
-
-  border: 0;
-
-  background: var(--black);
-  color: var(--white);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.auth-submit:hover {
-  background: var(--orange);
-  transform: translateY(-1px);
-}
-
-.auth-submit span {
-  font-size: 18px;
-}
-
-.auth-message {
-  margin-top: 17px;
-  padding: 12px;
-
-  background: rgba(255, 87, 51, 0.1);
-
-  color: var(--black);
-
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.auth-switch {
-  margin-top: 25px;
-
-  text-align: center;
-
-  color: var(--gray);
-
-  font-size: 11px;
-}
-
-.auth-switch button {
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-  color: var(--orange);
-
-  font-weight: 700;
-}
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 1100px) {
-  .desktop-nav {
-    display: none;
-  }
-
-  .hero {
-    grid-template-columns: 1fr;
-    padding-top: 65px;
-  }
-
-  .hero-left {
-    max-width: 760px;
-  }
-
-  .hero-right {
-    min-height: 520px;
-  }
-
-  .categories-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .about-section {
-    grid-template-columns: 50px 1fr;
-  }
-
-  .about-description {
-    grid-column: 2;
-  }
-}
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 700px) {
-  .topbar {
-    min-height: 70px;
-    padding: 0 18px;
-    gap: 8px;
-  }
-
-  .brand {
-    gap: 8px;
-  }
-
-  .brand-symbol {
-    width: 34px;
-    height: 34px;
-    font-size: 22px;
-  }
-
-  .brand-name {
-    font-size: 13px;
-  }
-
-  .header-actions {
-    gap: 6px;
-  }
-
-  .header-icon {
-    width: 35px;
-    height: 35px;
-  }
-
-  .header-account {
-    min-height: 35px;
-    padding: 0 13px;
-  }
-
-  .hero {
-    min-height: auto;
-
-    padding: 55px 22px 60px;
-
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .hero h1 {
-    margin-top: 22px;
-
-    font-size: clamp(57px, 17vw, 82px);
-    letter-spacing: -4px;
-  }
-
-  .hero-description {
-    font-size: 14px;
-  }
-
-  .hero-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .main-button,
-  .outline-button {
-    width: 100%;
-  }
-
-  .hero-mini-info {
-    margin-top: 40px;
-    gap: 25px;
-  }
-
-  .hero-right {
-    min-height: 430px;
-  }
-
-  .hero-main-card {
-    width: min(300px, 68%);
-  }
-
-  .hero-main-logo {
-    width: 110px;
-    height: 110px;
-    font-size: 75px;
-  }
-
-  .floating-card {
-    min-width: 110px;
-    padding: 13px;
-  }
-
-  .floating-card-top {
-    right: 0;
-  }
-
-  .floating-card-bottom {
-    left: 0;
-  }
-
-  .hero-round-text {
-    width: 80px;
-    height: 80px;
-    font-size: 6px;
-    right: 0;
-  }
-
-  .section {
-    padding: 75px 22px;
-  }
-
-  .section-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .section-header h2 {
-    letter-spacing: -2px;
-  }
-
-  .categories-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .category-card {
-    min-height: 250px;
-  }
-
-  .products-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .product-photo {
-    min-height: 390px;
-  }
-
-  .about-section {
-    padding: 75px 22px;
-
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .about-description {
-    grid-column: auto;
-  }
-
-  .about-section h2 {
-    font-size: clamp(58px, 16vw, 90px);
-    letter-spacing: -4px;
-  }
-
-  .footer {
-    padding: 50px 22px 20px;
-  }
-
-  .footer-top {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .footer-links {
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .footer-bottom {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .auth-modal {
-    padding: 35px 22px;
-  }
-
-  .auth-header h2 {
-    font-size: 40px;
-  }
-}
-
-/* =========================================================
-   REDUCE MOTION
-========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
+.foo
