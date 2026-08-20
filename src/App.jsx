@@ -16,7 +16,7 @@ function App() {
   useEffect(() => {
     let mounted = true;
 
-    const loadSession = async () => {
+    const getSession = async () => {
       const { data, error } = await supabase.auth.getSession();
 
       if (!error && mounted) {
@@ -24,7 +24,7 @@ function App() {
       }
     };
 
-    loadSession();
+    getSession();
 
     const {
       data: { subscription },
@@ -64,7 +64,7 @@ function App() {
     setMessage("");
   };
 
-  const handleEmailAuth = async (event) => {
+  const handleAuth = async (event) => {
     event.preventDefault();
 
     setLoading(true);
@@ -118,15 +118,8 @@ function App() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        throw error;
-      }
-
+      await supabase.auth.signOut();
       setSession(null);
-    } catch (error) {
-      setMessage(error?.message || "No se pudo cerrar la sesión.");
     } finally {
       setLoading(false);
     }
@@ -141,8 +134,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* ================= HEADER ================= */}
-
       <header className="topbar">
         <button
           className="brand"
@@ -158,31 +149,19 @@ function App() {
         </button>
 
         <nav className="desktop-nav">
-          <button
-            type="button"
-            onClick={() => scrollToSection("inicio")}
-          >
+          <button type="button" onClick={() => scrollToSection("inicio")}>
             Inicio
           </button>
 
-          <button
-            type="button"
-            onClick={() => scrollToSection("productos")}
-          >
+          <button type="button" onClick={() => scrollToSection("productos")}>
             Productos
           </button>
 
-          <button
-            type="button"
-            onClick={() => scrollToSection("categorias")}
-          >
+          <button type="button" onClick={() => scrollToSection("categorias")}>
             Categorías
           </button>
 
-          <button
-            type="button"
-            onClick={() => scrollToSection("nosotros")}
-          >
+          <button type="button" onClick={() => scrollToSection("nosotros")}>
             Nosotros
           </button>
         </nav>
@@ -226,11 +205,7 @@ function App() {
         </div>
       </header>
 
-      {/* ================= MAIN ================= */}
-
       <main>
-        {/* ================= HERO ================= */}
-
         <section className="hero" id="inicio">
           <div className="hero-left">
             <div className="hero-label">
@@ -245,8 +220,8 @@ function App() {
             </h1>
 
             <p className="hero-description">
-              Descubre productos únicos, tendencias y todo lo que
-              necesitas para expresar quién eres.
+              Descubre productos únicos, tendencias y todo lo que necesitas
+              para expresar quién eres.
             </p>
 
             <div className="hero-actions">
@@ -320,8 +295,6 @@ function App() {
           </div>
         </section>
 
-        {/* ================= MARQUEE ================= */}
-
         <section className="marquee">
           <div className="marquee-track">
             <span>SHORASHOPP</span>
@@ -339,12 +312,7 @@ function App() {
           </div>
         </section>
 
-        {/* ================= CATEGORÍAS ================= */}
-
-        <section
-          className="section categories-section"
-          id="categorias"
-        >
+        <section className="section categories-section" id="categorias">
           <div className="section-header">
             <div>
               <span className="section-label">01 / EXPLORA</span>
@@ -361,11 +329,7 @@ function App() {
           </div>
 
           <div className="categories-grid">
-            <button
-              className="category-card category-fashion"
-              type="button"
-              onClick={() => scrollToSection("productos")}
-            >
+            <button className="category-card category-fashion" type="button">
               <span className="category-index">01</span>
 
               <div>
@@ -376,11 +340,7 @@ function App() {
               <span className="category-arrow">↗</span>
             </button>
 
-            <button
-              className="category-card category-tech"
-              type="button"
-              onClick={() => scrollToSection("productos")}
-            >
+            <button className="category-card category-tech" type="button">
               <span className="category-index">02</span>
 
               <div>
@@ -391,11 +351,7 @@ function App() {
               <span className="category-arrow">↗</span>
             </button>
 
-            <button
-              className="category-card category-home"
-              type="button"
-              onClick={() => scrollToSection("productos")}
-            >
+            <button className="category-card category-home" type="button">
               <span className="category-index">03</span>
 
               <div>
@@ -406,11 +362,7 @@ function App() {
               <span className="category-arrow">↗</span>
             </button>
 
-            <button
-              className="category-card category-beauty"
-              type="button"
-              onClick={() => scrollToSection("productos")}
-            >
+            <button className="category-card category-beauty" type="button">
               <span className="category-index">04</span>
 
               <div>
@@ -423,12 +375,7 @@ function App() {
           </div>
         </section>
 
-        {/* ================= PRODUCTOS ================= */}
-
-        <section
-          className="section products-section"
-          id="productos"
-        >
+        <section className="section products-section" id="productos">
           <div className="section-header">
             <div>
               <span className="section-label">02 / SELECCIÓN</span>
@@ -518,15 +465,11 @@ function App() {
           </div>
         </section>
 
-        {/* ================= NOSOTROS ================= */}
-
         <section className="about-section" id="nosotros">
           <div className="about-number">03</div>
 
           <div className="about-content">
-            <span className="section-label">
-              SOBRE SHORASHOPP
-            </span>
+            <span className="section-label">SOBRE SHORASHOPP</span>
 
             <h2>
               Compra
@@ -537,9 +480,8 @@ function App() {
 
           <div className="about-description">
             <p>
-              Creamos un espacio donde descubrir productos sea tan
-              importante como encontrar exactamente lo que estabas
-              buscando.
+              Creamos un espacio donde descubrir productos sea tan importante
+              como encontrar exactamente lo que estabas buscando.
             </p>
 
             <button
@@ -553,8 +495,6 @@ function App() {
           </div>
         </section>
       </main>
-
-      {/* ================= FOOTER ================= */}
 
       <footer className="footer">
         <div className="footer-top">
@@ -571,31 +511,19 @@ function App() {
           </button>
 
           <div className="footer-links">
-            <button
-              type="button"
-              onClick={() => scrollToSection("inicio")}
-            >
+            <button type="button" onClick={() => scrollToSection("inicio")}>
               Inicio
             </button>
 
-            <button
-              type="button"
-              onClick={() => scrollToSection("productos")}
-            >
+            <button type="button" onClick={() => scrollToSection("productos")}>
               Productos
             </button>
 
-            <button
-              type="button"
-              onClick={() => scrollToSection("categorias")}
-            >
+            <button type="button" onClick={() => scrollToSection("categorias")}>
               Categorías
             </button>
 
-            <button
-              type="button"
-              onClick={() => scrollToSection("nosotros")}
-            >
+            <button type="button" onClick={() => scrollToSection("nosotros")}>
               Nosotros
             </button>
           </div>
@@ -607,8 +535,6 @@ function App() {
         </div>
       </footer>
 
-      {/* ================= MODAL DE AUTENTICACIÓN ================= */}
-
       {showAuth && (
         <div
           className="auth-overlay"
@@ -618,10 +544,7 @@ function App() {
             }
           }}
         >
-          <div
-            className="auth-modal"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
+          <div className="auth-modal">
             <button
               className="auth-close"
               type="button"
@@ -637,9 +560,7 @@ function App() {
 
             <div className="auth-header">
               <span className="section-label">
-                {authMode === "login"
-                  ? "BIENVENIDO"
-                  : "ÚNETE"}
+                {authMode === "login" ? "BIENVENIDO" : "ÚNETE"}
               </span>
 
               <h2>
@@ -665,10 +586,7 @@ function App() {
               </p>
             </div>
 
-            <form
-              className="auth-form"
-              onSubmit={handleEmailAuth}
-            >
+            <form className="auth-form" onSubmit={handleAuth}>
               {authMode === "register" && (
                 <label>
                   <span>Nombre</span>
@@ -677,9 +595,7 @@ function App() {
                     type="text"
                     placeholder="Tu nombre completo"
                     value={name}
-                    onChange={(event) =>
-                      setName(event.target.value)
-                    }
+                    onChange={(event) => setName(event.target.value)}
                     autoComplete="name"
                     required
                   />
@@ -693,9 +609,7 @@ function App() {
                   type="email"
                   placeholder="correo@ejemplo.com"
                   value={email}
-                  onChange={(event) =>
-                    setEmail(event.target.value)
-                  }
+                  onChange={(event) => setEmail(event.target.value)}
                   autoComplete="email"
                   required
                 />
@@ -708,9 +622,7 @@ function App() {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
-                  }
+                  onChange={(event) => setPassword(event.target.value)}
                   autoComplete={
                     authMode === "login"
                       ? "current-password"
@@ -726,23 +638,17 @@ function App() {
                 type="submit"
                 disabled={loading}
               >
-                <span>
-                  {loading
-                    ? "Procesando..."
-                    : authMode === "login"
-                    ? "Iniciar sesión"
-                    : "Crear cuenta"}
-                </span>
+                {loading
+                  ? "Procesando..."
+                  : authMode === "login"
+                  ? "Iniciar sesión"
+                  : "Crear cuenta"}
 
-                {!loading && <strong>↗</strong>}
+                <span>↗</span>
               </button>
             </form>
 
-            {message && (
-              <div className="auth-message">
-                {message}
-              </div>
-            )}
+            {message && <div className="auth-message">{message}</div>}
 
             <div className="auth-switch">
               {authMode === "login" ? (
@@ -750,13 +656,28 @@ function App() {
                   ¿No tienes cuenta?{" "}
                   <button
                     type="button"
-                    onClick={() =>
-                      switchAuthMode("register")
-                    }
+                    onClick={() => switchAuthMode("register")}
                   >
                     Regístrate
                   </button>
                 </>
               ) : (
                 <>
-        
+                  ¿Ya tienes cuenta?{" "}
+                  <button
+                    type="button"
+                    onClick={() => switchAuthMode("login")}
+                  >
+                    Inicia sesión
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
