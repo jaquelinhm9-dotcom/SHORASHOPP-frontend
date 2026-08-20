@@ -1373,5 +1373,58 @@ input:focus-visible {
     letter-spacing: -2px;
   }
 
-  .categories-grid {
-    grid-tez
+    .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-photo {
+    min-height: 400px;
+  }
+
+  .about-section {
+    padding: 75px 22px;
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .about-description {
+    grid-column: auto;
+  }
+
+  .about-section h2 {
+    font-size: clamp(55px, 17vw, 82px);
+    letter-spacing: -4px;
+  }
+
+  .footer {
+    padding: 50px 22px 22px;
+  }
+
+  .footer-top,
+  .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+    gap: 15px 22px;
+  }
+
+  .footer-bottom {
+    margin-top: 40px;
+    gap: 10px;
+  }
+
+  .auth-modal {
+    padding: 35px 22px;
+  }
+
+  .auth-header h2 {
+    font-size: 40px;
+  }
+}
