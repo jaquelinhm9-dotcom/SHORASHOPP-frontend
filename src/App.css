@@ -1312,6 +1312,68 @@ input:focus-visible {
   }
 
   .main-button,
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+  .topbar {
+    min-height: 70px;
+    padding: 0 18px;
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-symbol {
+    width: 34px;
+    height: 34px;
+    font-size: 22px;
+  }
+
+  .brand-name {
+    font-size: 13px;
+  }
+
+  .header-actions {
+    gap: 6px;
+  }
+
+  .header-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .header-account {
+    min-height: 35px;
+    padding: 0 13px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 55px 22px 60px;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .hero h1 {
+    margin-top: 22px;
+    font-size: clamp(57px, 17vw, 82px);
+    letter-spacing: -4px;
+  }
+
+  .hero-description {
+    font-size: 14px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .main-button,
   .outline-button {
     width: 100%;
   }
@@ -1355,7 +1417,6 @@ input:focus-visible {
   .hero-round-text {
     width: 85px;
     height: 85px;
-
     font-size: 7px;
   }
 
@@ -1373,39 +1434,68 @@ input:focus-visible {
     letter-spacing: -2px;
   }
 
-    .categories-grid {
+  /* CATEGORÍAS */
+  .categories-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
+  .category-card {
+    min-height: 260px;
+  }
+
+  .category-card h3 {
+    font-size: 28px;
+  }
+
+  /* PRODUCTOS */
   .products-grid {
     grid-template-columns: 1fr;
+    gap: 38px;
   }
 
   .product-photo {
-    min-height: 400px;
+    min-height: 390px;
   }
 
+  .product-photo-symbol {
+    width: 150px;
+    height: 150px;
+    font-size: 100px;
+  }
+
+  /* ABOUT */
   .about-section {
     padding: 75px 22px;
     grid-template-columns: 1fr;
     gap: 25px;
   }
 
-  .about-description {
-    grid-column: auto;
+  .about-number {
+    margin-bottom: 5px;
   }
 
   .about-section h2 {
-    font-size: clamp(55px, 17vw, 82px);
+    margin: 0;
+    font-size: clamp(55px, 16vw, 80px);
     letter-spacing: -4px;
   }
 
+  .about-description {
+    grid-column: auto;
+    max-width: none;
+  }
+
+  .about-description p {
+    font-size: 14px;
+  }
+
+  /* FOOTER */
   .footer {
     padding: 50px 22px 22px;
   }
 
-  .footer-top,
-  .footer-bottom {
+  .footer-top {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -1417,14 +1507,106 @@ input:focus-visible {
 
   .footer-bottom {
     margin-top: 40px;
-    gap: 10px;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  /* LOGIN / REGISTRO */
+  .auth-overlay {
+    padding: 12px;
   }
 
   .auth-modal {
-    padding: 35px 22px;
+    padding: 35px 22px 25px;
   }
 
   .auth-header h2 {
     font-size: 40px;
+  }
+
+  .auth-decoration {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 22px;
+  }
+
+  .auth-decoration span {
+    font-size: 30px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+  .brand-name {
+    font-size: 12px;
+  }
+
+  .header-account {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .hero {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .hero h1 {
+    font-size: 55px;
+    letter-spacing: -3px;
+  }
+
+  .hero-right {
+    min-height: 370px;
+  }
+
+  .hero-main-card {
+    width: 67%;
+  }
+
+  .floating-card {
+    min-width: 95px;
+    padding: 11px;
+  }
+
+  .floating-card strong {
+    font-size: 9px;
+  }
+
+  .hero-round-text {
+    width: 72px;
+    height: 72px;
+    font-size: 6px;
+  }
+
+  .section {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .section-header h2 {
+    font-size: 42px;
+  }
+
+  .product-photo {
+    min-height: 340px;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
