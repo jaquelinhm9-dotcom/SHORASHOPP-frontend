@@ -42,65 +42,56 @@ const demoProducts = [
   },
 ];
 
-const panelConfig = {
-  messages: {
-    icon: "💬",
-    title: "Ayuda y mensajes",
-    subtitle: "Estamos aquí para ayudarte.",
+const offers = [
+  {
+    title: "Ofertas exclusivas",
+    text: "Productos que valen la pena, precios que te van a sorprender.",
+    visual: "🛍️",
   },
-  settings: {
-    icon: "⚙️",
-    title: "Configuración",
-    subtitle: "Administra las opciones de tu cuenta.",
+  {
+    title: "Descuentos increíbles",
+    text: "Encuentra grandes oportunidades todos los días.",
+    visual: "✨",
   },
-  profile: {
-    icon: "👤",
-    title: "Mi perfil",
-    subtitle: "Administra tu información personal.",
+  {
+    title: "Compra, vende y descubre",
+    text: "Todo lo que buscas en un solo lugar.",
+    visual: "🛒",
   },
-  orders: {
-    icon: "📦",
-    title: "Mis pedidos",
-    subtitle: "Consulta tus compras y pedidos.",
-  },
-  products: {
-    icon: "🛍️",
-    title: "Mis productos",
-    subtitle: "Publica y administra tus productos.",
-  },
-  favorites: {
-    icon: "❤️",
-    title: "Favoritos",
-    subtitle: "Productos que guardaste.",
-  },
-  cart: {
-    icon: "🛒",
-    title: "Carrito",
-    subtitle: "Revisa los productos que agregaste.",
-  },
-};
+];
+
+function formatPrice(value) {
+  return Number(value || 0).toLocaleString("es-MX", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
 
 export default function App() {
-  const [showAccount, setShowAccount] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
-  const [activePanel, setActivePanel] = useState(null);
+  const [user, setUser] = useState(null);
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [panel, setPanel] = useState(null);
 
   const [authMode, setAuthMode] = useState("login");
+  const [authMethod, setAuthMethod] = useState("email");
+
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [user, setUser] = useState(null);
+  const [authMessage, setAuthMessage] = useState("");
+  const [authError, setAuthError] = useState("");
 
   const [profileName, setProfileName] = useState("");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
 
   const [products, setProducts] = useState([]);
-  const [showProductForm, setShowProductForm] = useState(false);
+  const [productFormOpen, setProductFormOpen] = useState(false);
 
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -110,69 +101,44 @@ export default function App() {
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersMessage, setOrdersMessage] = useState("");
 
-  const [offerSlide, setOfferSlide] = useState(0);
-  const [search, setSearch] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
 
-  // FIX PRINCIPAL:
-  // Antes currentPanel no existía.
-  const currentPanel = useMemo(() => {
-    return activePanel ? panelConfig[activePanel] : null;
-  }, [activePanel]);
+  const [search, setSearch] = useState("");
+  const [offerSlide, setOfferSlide] = useState(0);
 
-  /*
-   * CARGA INICIAL
-   */
   useEffect(() => {
     if (!supabase) return;
 
     let mounted = true;
 
-    const loadSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error("Error obteniendo sesión:", error);
-        return;
-      }
+    const initialize = async () => {
+      const { data } = await supabase.auth.getSession();
 
       if (!mounted) return;
 
-      const currentUser = data.session?.user ?? null;
-
+      const currentUser = data?.session?.user || null;
       setUser(currentUser);
 
       if (currentUser) {
-        setProfileName(
-          currentUser.user_metadata?.full_name ||
-            currentUser.email?.split("@")[0] ||
-            ""
-        );
-
+        updateUserInformation(currentUser);
         await loadProducts(currentUser.id);
         await loadOrders(currentUser.id);
       }
     };
 
-    loadSession();
+    initialize();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null;
+      const currentUser = session?.user || null;
 
       setUser(currentUser);
 
       if (currentUser) {
-        setProfileName(
-          currentUser.user_metadata?.full_name ||
-            currentUser.email?.split("@")[0] ||
-            ""
-        );
-
+        updateUserInformation(currentUser);
         await loadProducts(currentUser.id);
         await loadOrders(currentUser.id);
       } else {
@@ -184,99 +150,123 @@ export default function App() {
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
-  /*
-   * CARRUSEL
-   */
   useEffect(() => {
-    const timer = setInterval(() => {
-      setOfferSlide((current) => (current + 1) % 3);
+    const interval = setInterval(() => {
+      setOfferSlide((current) => (current + 1) % offers.length);
     }, 5000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, []);
 
-  /*
-   * CUENTA
-   */
-  const openAccount = () => {
-    setMenuOpen(false);
-    setActivePanel(null);
-    setShowAuth(false);
-    setShowAccount(true);
+  const updateUserInformation = (currentUser) => {
+    const name =
+      currentUser?.user_metadata?.full_name ||
+      currentUser?.user_metadata?.name ||
+      currentUser?.email?.split("@")[0] ||
+      "Usuario";
+
+    setProfileName(name);
   };
 
-  /*
-   * AUTENTICACIÓN
-   */
-  const openAuth = (mode = "login") => {
-    setAuthMode(mode);
-    setMessage("");
-    setShowAccount(false);
-    setActivePanel(null);
+  const openPanel = (name) => {
     setMenuOpen(false);
-    setShowAuth(true);
-  };
+    setPanel(name);
+    setAuthMessage("");
+    setAuthError("");
 
-  /*
-   * PANELES
-   */
-  const openPanel = async (panel) => {
-    setShowAccount(false);
-    setShowAuth(false);
-    setMenuOpen(false);
-    setActivePanel(panel);
-
-    if (panel === "products" && user) {
-      await loadProducts(user.id);
+    if (name === "products" && user) {
+      loadProducts(user.id);
     }
 
-    if (panel === "orders" && user) {
-      await loadOrders(user.id);
+    if (name === "orders" && user) {
+      loadOrders(user.id);
     }
   };
 
-  /*
-   * CERRAR
-   */
-  const closePanels = () => {
-    setShowAccount(false);
-    setShowAuth(false);
-    setActivePanel(null);
-    setMenuOpen(false);
+  const closePanel = () => {
+    setPanel(null);
     setEditingProfile(false);
-    setShowProductForm(false);
     setProfileSaved(false);
+    setProductFormOpen(false);
     setProductMessage("");
-    setOrdersMessage("");
   };
 
-  /*
-   * LOGIN / REGISTRO
-   */
-  const handleAuth = async (event) => {
+  const openAuth = (mode = "login") => {
+    setPanel("auth");
+    setAuthMode(mode);
+    setAuthMessage("");
+    setAuthError("");
+    setVerificationCode("");
+  };
+
+  const goTo = (id) => {
+    closePanel();
+    setMenuOpen(false);
+
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 30);
+  };
+
+  const loadProducts = async (userId) => {
+    if (!supabase || !userId) return;
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando productos:", error);
+      return;
+    }
+
+    setProducts(data || []);
+  };
+
+  const loadOrders = async (userId) => {
+    if (!supabase || !userId) return;
+
+    setOrdersLoading(true);
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando pedidos:", error);
+      setOrders([]);
+    } else {
+      setOrders(data || []);
+    }
+
+    setOrdersLoading(false);
+  };
+
+  const handleEmailAuth = async (event) => {
     event.preventDefault();
 
     if (!supabase) {
-      setMessage(
-        "La conexión con SHORASHOPP no está disponible en este momento."
-      );
+      setAuthError("Supabase no está configurado.");
       return;
     }
 
     setLoading(true);
-    setMessage("");
+    setAuthError("");
+    setAuthMessage("");
 
     try {
       if (authMode === "register") {
-        if (!fullName.trim()) {
-          setMessage("Escribe tu nombre completo.");
-          return;
-        }
-
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -289,12 +279,12 @@ export default function App() {
 
         if (error) throw error;
 
-        if (data.user) {
+        if (data?.user) {
           setProfileName(fullName.trim());
         }
 
-        setMessage(
-          "¡Registro exitoso! Revisa tu correo para confirmar tu cuenta. ✨"
+        setAuthMessage(
+          "¡Cuenta creada! Revisa tu correo para confirmar tu cuenta."
         );
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -304,51 +294,125 @@ export default function App() {
 
         if (error) throw error;
 
-        setMessage("¡Bienvenido a SHORASHOPP! ✨");
+        setAuthMessage("¡Bienvenido de nuevo a SHORASHOPP! ✨");
       }
     } catch (error) {
       console.error(error);
-      setMessage(error?.message || "Ocurrió un error.");
+      setAuthError(error.message || "Ocurrió un error.");
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * LOGOUT
-   */
-  const handleLogout = async () => {
+  const handlePhoneAuth = async (event) => {
+    event.preventDefault();
+
+    if (!supabase) {
+      setAuthError("Supabase no está configurado.");
+      return;
+    }
+
+    setLoading(true);
+    setAuthError("");
+    setAuthMessage("");
+
     try {
-      if (supabase) {
-        await supabase.auth.signOut();
+      if (authMode === "register") {
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: phone.trim(),
+          options: {
+            data: {
+              full_name: fullName.trim(),
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        setAuthMessage(
+          "Te enviamos un código por SMS. Escríbelo para continuar."
+        );
+      } else {
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: phone.trim(),
+        });
+
+        if (error) throw error;
+
+        setAuthMessage(
+          "Te enviamos un código de acceso por SMS."
+        );
       }
     } catch (error) {
-      console.error("Error cerrando sesión:", error);
+      console.error(error);
+      setAuthError(
+        error.message ||
+          "No fue posible enviar el código. Verifica la configuración de teléfono en Supabase."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyPhoneCode = async (event) => {
+    event.preventDefault();
+
+    if (!supabase) return;
+
+    setLoading(true);
+    setAuthError("");
+    setAuthMessage("");
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: phone.trim(),
+        token: verificationCode.trim(),
+        type: "sms",
+      });
+
+      if (error) throw error;
+
+      if (data?.user) {
+        setUser(data.user);
+
+        const name =
+          data.user.user_metadata?.full_name ||
+          data.user.phone ||
+          "Usuario";
+
+        setProfileName(name);
+      }
+
+      setAuthMessage("¡Listo! Entraste a SHORASHOPP. ✨");
+      setVerificationCode("");
+    } catch (error) {
+      console.error(error);
+      setAuthError(error.message || "Código incorrecto.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
     }
 
     setUser(null);
-    setProfileName("");
     setProducts([]);
     setOrders([]);
     setFavorites([]);
     setCart([]);
-
-    closePanels();
-    setMessage("");
+    setProfileName("");
+    closePanel();
   };
 
-  /*
-   * PERFIL
-   */
   const saveProfile = async () => {
     if (!supabase || !user) return;
 
     const cleanName = profileName.trim();
 
-    if (!cleanName) {
-      setProfileSaved(false);
-      return;
-    }
+    if (!cleanName) return;
 
     setLoading(true);
     setProfileSaved(false);
@@ -362,84 +426,32 @@ export default function App() {
 
       if (error) throw error;
 
-      if (data.user) {
-        setUser(data.user);
-      }
-
+      setUser(data.user);
       setEditingProfile(false);
       setProfileSaved(true);
     } catch (error) {
       console.error(error);
-      setProfileSaved(false);
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * PRODUCTOS - CARGAR
-   */
-  const loadProducts = async (userId) => {
-    if (!supabase || !userId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error cargando productos:", error);
-        setProducts([]);
-        return;
-      }
-
-      setProducts(data || []);
-    } catch (error) {
-      console.error(error);
-      setProducts([]);
-    }
-  };
-
-  /*
-   * PRODUCTOS - RESET
-   */
-  const resetProductForm = () => {
-    setProductName("");
-    setProductPrice("");
-    setProductCategory("Moda y ropa");
-    setProductDescription("");
-    setProductMessage("");
-    setShowProductForm(false);
-  };
-
-  /*
-   * PRODUCTOS - CREAR
-   */
   const createProduct = async (event) => {
     event.preventDefault();
 
     if (!supabase || !user) {
-      setProductMessage(
-        "Necesitas iniciar sesión para publicar productos."
-      );
+      setProductMessage("Inicia sesión para publicar productos.");
       return;
     }
 
-    const cleanName = productName.trim();
-    const cleanPrice = Number(productPrice);
-    const cleanDescription =
+    const name = productName.trim();
+    const price = Number(productPrice);
+    const description =
       productDescription.trim() ||
       "Producto publicado en SHORASHOPP.";
 
-    if (
-      !cleanName ||
-      productPrice === "" ||
-      Number.isNaN(cleanPrice) ||
-      cleanPrice < 0
-    ) {
-      setProductMessage("Completa correctamente los datos del producto.");
+    if (!name || !productPrice || Number.isNaN(price)) {
+      setProductMessage("Completa correctamente los datos.");
       return;
     }
 
@@ -449,15 +461,13 @@ export default function App() {
     try {
       const { data, error } = await supabase
         .from("products")
-        .insert([
-          {
-            user_id: user.id,
-            name: cleanName,
-            price: cleanPrice,
-            category: productCategory,
-            description: cleanDescription,
-          },
-        ])
+        .insert({
+          user_id: user.id,
+          name,
+          price,
+          category: productCategory,
+          description,
+        })
         .select()
         .single();
 
@@ -469,31 +479,23 @@ export default function App() {
       setProductPrice("");
       setProductCategory("Moda y ropa");
       setProductDescription("");
-      setShowProductForm(false);
+      setProductFormOpen(false);
+
       setProductMessage("✓ Producto publicado correctamente.");
     } catch (error) {
       console.error(error);
-
       setProductMessage(
-        error?.message ||
-          "No fue posible publicar el producto. Revisa la configuración de Supabase."
+        error.message || "No fue posible publicar el producto."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * PRODUCTOS - ELIMINAR
-   */
   const deleteProduct = async (id) => {
     if (!supabase || !user) return;
 
-    const confirmed = window.confirm(
-      "¿Seguro que quieres eliminar este producto?"
-    );
-
-    if (!confirmed) return;
+    if (!window.confirm("¿Eliminar este producto?")) return;
 
     setLoading(true);
 
@@ -511,152 +513,90 @@ export default function App() {
       );
     } catch (error) {
       console.error(error);
-
       setProductMessage(
-        error?.message || "No fue posible eliminar el producto."
+        error.message || "No fue posible eliminar el producto."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * PEDIDOS
-   */
-  const loadOrders = async (userId) => {
-    if (!supabase || !userId) return;
-
-    setOrdersLoading(true);
-    setOrdersMessage("");
-
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error cargando pedidos:", error);
-
-        setOrders([]);
-        setOrdersMessage(
-          "Todavía no hay pedidos disponibles para esta cuenta."
-        );
-
-        return;
-      }
-
-      setOrders(data || []);
-    } catch (error) {
-      console.error(error);
-
-      setOrders([]);
-      setOrdersMessage(
-        "No fue posible consultar los pedidos en este momento."
-      );
-    } finally {
-      setOrdersLoading(false);
-    }
-  };
-
-  /*
-   * FAVORITOS
-   */
-  const toggleFavorite = (id) => {
+  const toggleFavorite = (product) => {
     setFavorites((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
+      current.includes(product.id)
+        ? current.filter((id) => id !== product.id)
+        : [...current, product.id]
     );
   };
 
-  /*
-   * CARRITO
-   */
   const addToCart = (product) => {
     setCart((current) => [...current, product]);
   };
 
-  /*
-   * BUSCADOR
-   */
-  const searchProducts = useMemo(() => {
-    const allProducts = products.length > 0 ? products : demoProducts;
+  const removeFromCart = (index) => {
+    setCart((current) =>
+      current.filter((_, itemIndex) => itemIndex !== index)
+    );
+  };
 
+  const allProducts = products.length ? products : demoProducts;
+
+  const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
 
     if (!term) return allProducts;
 
     return allProducts.filter((product) => {
-      const name = product.name?.toLowerCase() || "";
-      const category = product.category?.toLowerCase() || "";
-      const description = product.description?.toLowerCase() || "";
-
       return (
-        name.includes(term) ||
-        category.includes(term) ||
-        description.includes(term)
+        product.name?.toLowerCase().includes(term) ||
+        product.category?.toLowerCase().includes(term)
       );
     });
-  }, [products, search]);
+  }, [allProducts, search]);
 
-  /*
-   * SCROLL
-   */
-  const goTo = (id) => {
-    closePanels();
+  const favoriteProducts = allProducts.filter((product) =>
+    favorites.includes(product.id)
+  );
 
-    setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 50);
-  };
-
-  /*
-   * TARJETA PRODUCTO
-   */
   const renderProductCard = (product) => {
-    const isFavorite = favorites.includes(product.id);
+    const favorite = favorites.includes(product.id);
 
     return (
-      <article className="shopProductCard" key={product.id}>
-        <div className="shopProductImage">
-          <span>{product.icon || "🛍️"}</span>
+      <article className="productCard" key={product.id}>
+        <div className="productImage">
+          <span className="productEmoji">
+            {product.icon || "🛍️"}
+          </span>
+
+          <span className="offerBadge">
+            OFERTA
+          </span>
 
           <button
-            type="button"
-            className={`favoriteProductButton ${
-              isFavorite ? "isFavorite" : ""
+            className={`favoriteButton ${
+              favorite ? "favoriteActive" : ""
             }`}
-            onClick={() => toggleFavorite(product.id)}
-            aria-label={
-              isFavorite
-                ? "Quitar de favoritos"
-                : "Agregar a favoritos"
-            }
+            onClick={() => toggleFavorite(product)}
+            aria-label="Favorito"
           >
-            {isFavorite ? "♥" : "♡"}
+            {favorite ? "♥" : "♡"}
           </button>
-
-          <span className="productOfferBadge">OFERTA</span>
         </div>
 
-        <div className="shopProductInfo">
-          <small>{product.category || "Productos"}</small>
+        <div className="productInfo">
+          <span className="productCategory">
+            {product.category || "Productos"}
+          </span>
 
           <h3>{product.name}</h3>
 
-          <strong>
-            ${Number(product.price || 0).toLocaleString("es-MX")}
-            <span> MXN</span>
+          <strong className="productPrice">
+            ${formatPrice(product.price)}
+            <small> MXN</small>
           </strong>
 
           <button
-            type="button"
-            className="addCartButton"
+            className="cartButton"
             onClick={() => addToCart(product)}
           >
             Agregar al carrito
@@ -666,104 +606,286 @@ export default function App() {
     );
   };
 
-  /*
-   * PERFIL
-   */
+  const renderAuth = () => (
+    <div className="authContainer">
+      <div className="authLogo">✨</div>
+
+      <h2>
+        {authMode === "login"
+          ? "Bienvenido a SHORASHOPP"
+          : "Crea tu cuenta"}
+      </h2>
+
+      <p className="authIntro">
+        {authMode === "login"
+          ? "Entra para comprar, vender y descubrir."
+          : "Únete para comprar, vender y descubrir productos."}
+      </p>
+
+      <div className="authMethods">
+        <button
+          className={authMethod === "email" ? "active" : ""}
+          onClick={() => {
+            setAuthMethod("email");
+            setAuthError("");
+            setAuthMessage("");
+          }}
+        >
+          📧 Correo
+        </button>
+
+        <button
+          className={authMethod === "phone" ? "active" : ""}
+          onClick={() => {
+            setAuthMethod("phone");
+            setAuthError("");
+            setAuthMessage("");
+          }}
+        >
+          📱 Teléfono
+        </button>
+      </div>
+
+      {authMethod === "email" ? (
+        <form className="authForm" onSubmit={handleEmailAuth}>
+          {authMode === "register" && (
+            <>
+              <label>Nombre completo</label>
+              <input
+                value={fullName}
+                onChange={(event) =>
+                  setFullName(event.target.value)
+                }
+                placeholder="Tu nombre completo"
+                required
+              />
+            </>
+          )}
+
+          <label>Correo electrónico</label>
+
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="correo@ejemplo.com"
+            required
+          />
+
+          <label>Contraseña</label>
+
+          <input
+            type="password"
+            value={password}
+            onChange={(event) =>
+              setPassword(event.target.value)
+            }
+            placeholder="Mínimo 6 caracteres"
+            minLength={6}
+            required
+          />
+
+          <button
+            className="primaryButton fullButton"
+            disabled={loading}
+          >
+            {loading
+              ? "Espera..."
+              : authMode === "login"
+              ? "Iniciar sesión"
+              : "Crear cuenta"}
+          </button>
+        </form>
+      ) : (
+        <>
+          {!verificationCode ? (
+            <form className="authForm" onSubmit={handlePhoneAuth}>
+              {authMode === "register" && (
+                <>
+                  <label>Nombre completo</label>
+
+                  <input
+                    value={fullName}
+                    onChange={(event) =>
+                      setFullName(event.target.value)
+                    }
+                    placeholder="Tu nombre completo"
+                    required
+                  />
+                </>
+              )}
+
+              <label>Número de teléfono</label>
+
+              <input
+                type="tel"
+                value={phone}
+                onChange={(event) =>
+                  setPhone(event.target.value)
+                }
+                placeholder="+52 669 123 4567"
+                required
+              />
+
+              <small className="phoneHint">
+                Incluye el código de país. Ejemplo: +52
+              </small>
+
+              <button
+                className="primaryButton fullButton"
+                disabled={loading}
+              >
+                {loading ? "Enviando..." : "Enviar código SMS"}
+              </button>
+            </form>
+          ) : (
+            <form className="authForm" onSubmit={verifyPhoneCode}>
+              <label>Código de verificación</label>
+
+              <input
+                value={verificationCode}
+                onChange={(event) =>
+                  setVerificationCode(event.target.value)
+                }
+                placeholder="Escribe el código SMS"
+                inputMode="numeric"
+                required
+              />
+
+              <button
+                className="primaryButton fullButton"
+                disabled={loading}
+              >
+                {loading
+                  ? "Verificando..."
+                  : "Verificar código"}
+              </button>
+
+              <button
+                type="button"
+                className="textButton"
+                onClick={() => setVerificationCode("")}
+              >
+                Cambiar número
+              </button>
+            </form>
+          )}
+        </>
+      )}
+
+      {authError && (
+        <div className="errorMessage">
+          {authError}
+        </div>
+      )}
+
+      {authMessage && (
+        <div className="successMessage">
+          {authMessage}
+        </div>
+      )}
+
+      <div className="authSwitch">
+        {authMode === "login"
+          ? "¿No tienes cuenta?"
+          : "¿Ya tienes una cuenta?"}
+
+        <button
+          onClick={() => {
+            setAuthMode(
+              authMode === "login" ? "register" : "login"
+            );
+            setAuthError("");
+            setAuthMessage("");
+          }}
+        >
+          {authMode === "login"
+            ? "Crear cuenta"
+            : "Iniciar sesión"}
+        </button>
+      </div>
+    </div>
+  );
+
   const renderProfile = () => {
     if (!user) {
       return (
-        <div className="emptyFeature">
-          <div className="emptyBig">👤</div>
-
-          <h3>Inicia sesión para ver tu perfil</h3>
-
+        <div className="emptyState">
+          <div className="emptyIcon">👤</div>
+          <h3>Inicia sesión para ver tu cuenta</h3>
           <p>
-            Necesitas una cuenta de SHORASHOPP para administrar
-            tu información personal.
+            Administra tu perfil, pedidos, favoritos y productos.
           </p>
-
           <button
-            type="button"
-            className="featurePrimary"
+            className="primaryButton"
             onClick={() => openAuth("login")}
           >
             Iniciar sesión
-          </button>
-
-          <button
-            type="button"
-            className="featureSecondary"
-            onClick={() => openAuth("register")}
-          >
-            Crear una cuenta
           </button>
         </div>
       );
     }
 
     return (
-      <div className="profileContent">
-        <div className="profileAvatarLarge">
-          {profileName
-            ? profileName.charAt(0).toUpperCase()
-            : "✨"}
+      <div className="profile">
+        <div className="avatar">
+          {(profileName || "U").charAt(0).toUpperCase()}
         </div>
 
-        <div className="profileFields">
-          <label>Nombre completo</label>
+        <div className="profileField">
+          <label>Nombre</label>
 
           {editingProfile ? (
             <input
-              className="profileInput"
               value={profileName}
               onChange={(event) =>
                 setProfileName(event.target.value)
               }
-              placeholder="Tu nombre completo"
             />
           ) : (
             <div className="profileValue">
               {profileName || "Sin nombre"}
             </div>
           )}
+        </div>
 
-          <label>Correo electrónico</label>
-
-          <div className="profileValue profileEmail">
-            {user.email}
+        <div className="profileField">
+          <label>Correo</label>
+          <div className="profileValue">
+            {user.email || "Cuenta por teléfono"}
           </div>
         </div>
 
+        {user.phone && (
+          <div className="profileField">
+            <label>Teléfono</label>
+            <div className="profileValue">
+              {user.phone}
+            </div>
+          </div>
+        )}
+
         {editingProfile ? (
-          <div className="profileButtons">
+          <div className="buttonRow">
             <button
-              type="button"
-              className="featurePrimary"
+              className="primaryButton"
               onClick={saveProfile}
               disabled={loading}
             >
-              {loading ? "Guardando..." : "Guardar cambios"}
+              {loading ? "Guardando..." : "Guardar"}
             </button>
 
             <button
-              type="button"
-              className="featureSecondary"
-              onClick={() => {
-                setEditingProfile(false);
-                setProfileSaved(false);
-              }}
+              className="secondaryButton"
+              onClick={() => setEditingProfile(false)}
             >
               Cancelar
             </button>
           </div>
         ) : (
           <button
-            type="button"
-            className="featurePrimary"
-            onClick={() => {
-              setEditingProfile(true);
-              setProfileSaved(false);
-            }}
+            className="primaryButton fullButton"
+            onClick={() => setEditingProfile(true)}
           >
             Editar perfil
           </button>
@@ -771,51 +893,31 @@ export default function App() {
 
         {profileSaved && (
           <div className="successMessage">
-            ✓ Tu perfil fue actualizado correctamente.
+            ✓ Perfil actualizado.
           </div>
         )}
 
-        <button
-          type="button"
-          className="logoutButton"
-          onClick={handleLogout}
-        >
+        <button className="logoutButton" onClick={handleLogout}>
           Cerrar sesión
         </button>
       </div>
     );
   };
 
-  /*
-   * PEDIDOS
-   */
   const renderOrders = () => {
     if (!user) {
       return (
-        <div className="emptyFeature">
-          <div className="emptyBig">📦</div>
-
+        <div className="emptyState">
+          <div className="emptyIcon">📦</div>
           <h3>Inicia sesión para ver tus pedidos</h3>
-
           <p>
-            Aquí podrás consultar todas tus compras, estados
-            y detalles de entrega.
+            Aquí aparecerán tus compras y su estado.
           </p>
-
           <button
-            type="button"
-            className="featurePrimary"
+            className="primaryButton"
             onClick={() => openAuth("login")}
           >
             Iniciar sesión
-          </button>
-
-          <button
-            type="button"
-            className="featureSecondary"
-            onClick={() => openAuth("register")}
-          >
-            Crear una cuenta
           </button>
         </div>
       );
@@ -823,38 +925,27 @@ export default function App() {
 
     if (ordersLoading) {
       return (
-        <div className="ordersContent">
-          <div className="ordersEmptyIcon">📦</div>
-
-          <h3>Cargando tus pedidos...</h3>
-
-          <p>
-            Estamos consultando tu historial de compras.
-          </p>
+        <div className="emptyState">
+          <div className="emptyIcon">⏳</div>
+          <h3>Cargando pedidos...</h3>
         </div>
       );
     }
 
-    if (orders.length === 0) {
+    if (!orders.length) {
       return (
-        <div className="ordersContent">
-          <div className="ordersEmptyIcon">📦</div>
-
+        <div className="emptyState">
+          <div className="emptyIcon">📦</div>
           <h3>Aún no tienes pedidos</h3>
-
           <p>
-            Cuando realices una compra en SHORASHOPP,
-            aparecerá aquí con toda su información.
+            Cuando realices una compra aparecerá aquí.
           </p>
-
-          {ordersMessage && (
-            <div className="authMessage">{ordersMessage}</div>
-          )}
-
           <button
-            type="button"
-            className="featurePrimary"
-            onClick={() => goTo("productos")}
+            className="primaryButton"
+            onClick={() => {
+              closePanel();
+              goTo("productos");
+            }}
           >
             Explorar productos
           </button>
@@ -863,104 +954,77 @@ export default function App() {
     }
 
     return (
-      <div className="ordersContent">
-        <div className="ordersList">
-          {orders.map((order) => (
-            <article className="orderCard" key={order.id}>
-              <div className="orderIcon">📦</div>
+      <div className="ordersList">
+        {orders.map((order) => (
+          <article className="orderCard" key={order.id}>
+            <div className="orderIcon">📦</div>
 
-              <div className="orderInfo">
-                <span>PEDIDO</span>
+            <div>
+              <small>PEDIDO</small>
 
-                <h3>
-                  #{String(order.id).slice(-8)}
-                </h3>
+              <h3>
+                #{String(order.id).slice(-8)}
+              </h3>
 
-                <p>
-                  Estado:{" "}
+              <p>
+                Estado:{" "}
+                <strong>
+                  {order.status || "Pendiente"}
+                </strong>
+              </p>
+
+              {order.total !== null &&
+                order.total !== undefined && (
                   <strong>
-                    {order.status || "Pendiente"}
+                    ${formatPrice(order.total)} MXN
                   </strong>
-                </p>
-
-                {order.total !== undefined &&
-                  order.total !== null && (
-                    <strong>
-                      ${Number(order.total).toLocaleString("es-MX")} MXN
-                    </strong>
-                  )}
-              </div>
-            </article>
-          ))}
-        </div>
+                )}
+            </div>
+          </article>
+        ))}
       </div>
     );
   };
 
-  /*
-   * PRODUCTOS DEL VENDEDOR
-   */
-  const renderProducts = () => {
+  const renderSellerProducts = () => {
     if (!user) {
       return (
-        <div className="emptyFeature">
-          <div className="emptyBig">🛍️</div>
-
-          <h3>Inicia sesión para vender</h3>
-
+        <div className="emptyState">
+          <div className="emptyIcon">🏪</div>
+          <h3>Vende en SHORASHOPP</h3>
           <p>
-            Crea tu cuenta para comenzar a publicar productos
-            en SHORASHOPP.
+            Inicia sesión para publicar tus productos.
           </p>
 
           <button
-            type="button"
-            className="featurePrimary"
+            className="primaryButton"
             onClick={() => openAuth("login")}
           >
             Iniciar sesión
-          </button>
-
-          <button
-            type="button"
-            className="featureSecondary"
-            onClick={() => openAuth("register")}
-          >
-            Crear una cuenta
           </button>
         </div>
       );
     }
 
     return (
-      <div className="productsContent">
-        {!showProductForm && (
+      <div className="sellerArea">
+        {!productFormOpen && (
           <button
-            type="button"
-            className="featurePrimary addProductButton"
+            className="primaryButton fullButton"
             onClick={() => {
               setProductMessage("");
-              setShowProductForm(true);
+              setProductFormOpen(true);
             }}
           >
-            ＋ Publicar un producto
+            ＋ Publicar producto
           </button>
         )}
 
-        {productMessage && (
-          <div className="successMessage">
-            {productMessage}
-          </div>
-        )}
-
-        {showProductForm && (
-          <form
-            className="productForm"
-            onSubmit={createProduct}
-          >
+        {productFormOpen && (
+          <form className="productForm" onSubmit={createProduct}>
             <h3>Nuevo producto</h3>
 
-            <label>Nombre del producto</label>
+            <label>Nombre</label>
 
             <input
               value={productName}
@@ -981,7 +1045,7 @@ export default function App() {
               onChange={(event) =>
                 setProductPrice(event.target.value)
               }
-              placeholder="Ej. 599"
+              placeholder="599"
               required
             />
 
@@ -998,38 +1062,31 @@ export default function App() {
                   {category.name}
                 </option>
               ))}
-
-              <option>Entretenimiento</option>
-              <option>Automóviles</option>
-              <option>Otros</option>
             </select>
 
             <label>Descripción</label>
 
             <textarea
+              rows="4"
               value={productDescription}
               onChange={(event) =>
                 setProductDescription(event.target.value)
               }
               placeholder="Describe tu producto..."
-              rows="4"
             />
 
-            <div className="productFormButtons">
+            <div className="buttonRow">
               <button
-                type="submit"
-                className="featurePrimary"
+                className="primaryButton"
                 disabled={loading}
               >
-                {loading
-                  ? "Publicando..."
-                  : "Publicar producto"}
+                {loading ? "Publicando..." : "Publicar"}
               </button>
 
               <button
                 type="button"
-                className="featureSecondary"
-                onClick={resetProductForm}
+                className="secondaryButton"
+                onClick={() => setProductFormOpen(false)}
               >
                 Cancelar
               </button>
@@ -1037,81 +1094,51 @@ export default function App() {
           </form>
         )}
 
-        {products.length > 0 && (
-          <div className="sellerProductList">
-            {products.map((product) => (
-              <article
-                className="sellerProductCard"
-                key={product.id}
-              >
-                <div>
-                  <strong>{product.name}</strong>
-
-                  <span>
-                    ${Number(product.price).toLocaleString("es-MX")} MXN
-                  </span>
-
-                  <small>{product.category}</small>
-                </div>
-
-                <button
-                  type="button"
-                  className="deleteProductButton"
-                  onClick={() => deleteProduct(product.id)}
-                  disabled={loading}
-                >
-                  Eliminar
-                </button>
-              </article>
-            ))}
+        {productMessage && (
+          <div className="successMessage">
+            {productMessage}
           </div>
         )}
+
+        <div className="sellerList">
+          {products.map((product) => (
+            <article className="sellerItem" key={product.id}>
+              <div>
+                <strong>{product.name}</strong>
+                <span>
+                  ${formatPrice(product.price)} MXN
+                </span>
+                <small>{product.category}</small>
+              </div>
+
+              <button
+                className="deleteButton"
+                onClick={() => deleteProduct(product.id)}
+              >
+                Eliminar
+              </button>
+            </article>
+          ))}
+        </div>
       </div>
     );
   };
 
-  /*
-   * PANEL
-   */
-  const renderActivePanel = () => {
-    if (!activePanel) return null;
-
-    if (activePanel === "profile") {
-      return renderProfile();
-    }
-
-    if (activePanel === "orders") {
-      return renderOrders();
-    }
-
-    if (activePanel === "products") {
-      return renderProducts();
-    }
-
-    if (activePanel === "favorites") {
-      const favoriteProducts = searchProducts.filter((product) =>
-        favorites.includes(product.id)
-      );
-
-      return favoriteProducts.length ? (
-        <div className="panelProductGrid">
-          {favoriteProducts.map(renderProductCard)}
-        </div>
-      ) : (
-        <div className="emptyFeature">
-          <div className="emptyBig">♡</div>
-
-          <h3>Aún no tienes favoritos</h3>
-
+  const renderCart = () => {
+    if (!cart.length) {
+      return (
+        <div className="emptyState">
+          <div className="emptyIcon">🛒</div>
+          <h3>Tu carrito está vacío</h3>
           <p>
-            Guarda los productos que más te gusten y
-            aparecerán aquí.
+            Agrega productos y aparecerán aquí.
           </p>
-
           <button
-            type="button"
-            className="featurePrimary"
-            onClick={() => goTo("productos")}
+            className="primaryButton"
+            onClick={() => {
+              closePanel();
+              goTo("productos");
+            }}
           >
             Ver productos
           </button>
@@ -1119,1166 +1146,228 @@ export default function App() {
       );
     }
 
-    if (activePanel === "cart") {
-      if (!cart.length) {
-        return (
-          <div className="emptyFeature">
-            <div className="emptyBig">🛒</div>
-
-            <h3>Tu carrito está vacío</h3>
-
-            <p>
-              Agrega productos y aparecerán aquí.
-            </p>
-
-            <button
-              type="button"
-              className="featurePrimary"
-              onClick={() => goTo("productos")}
-            >
-              Ver productos
-            </button>
-          </div>
-        );
-      }
-
-      const cartTotal = cart.reduce(
-        (total, item) => total + Number(item.price || 0),
-        0
-      );
-
-      return (
-        <div className="cartPanel">
-          {cart.map((item, index) => (
-            <div
-              className="cartItem"
-              key={`${item.id}-${index}`}
-            >
-              <span>{item.icon || "🛍️"}</span>
-
-              <div>
-                <strong>{item.name}</strong>
-
-                <small>
-                  ${Number(item.price).toLocaleString("es-MX")} MXN
-                </small>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setCart((current) =>
-                    current.filter((_, i) => i !== index)
-                  )
-                }
-                aria-label="Eliminar producto"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-
-          <div className="cartTotal">
-            <strong>Total</strong>
-            <strong>
-              ${cartTotal.toLocaleString("es-MX")} MXN
-            </strong>
-          </div>
-
-          <button
-            type="button"
-            className="featurePrimary"
-            onClick={() =>
-              alert("El proceso de compra estará disponible próximamente.")
-            }
-          >
-            Continuar con la compra
-          </button>
-        </div>
-      );
-    }
+    const total = cart.reduce(
+      (sum, item) => sum + Number(item.price || 0),
+      0
+    );
 
     return (
-      <div className="emptyFeature">
-        <div className="emptyBig">
-          {currentPanel?.icon || "⚙️"}
+      <div className="cartArea">
+        {cart.map((item, index) => (
+          <article
+            className="cartItem"
+            key={`${item.id}-${index}`}
+          >
+            <span className="cartEmoji">
+              {item.icon || "🛍️"}
+            </span>
+
+            <div>
+              <strong>{item.name}</strong>
+              <small>
+                ${formatPrice(item.price)} MXN
+              </small>
+            </div>
+
+            <button
+              className="removeCart"
+              onClick={() => removeFromCart(index)}
+            >
+              ×
+            </button>
+          </article>
+        ))}
+
+        <div className="cartTotal">
+          <span>Total</span>
+          <strong>${formatPrice(total)} MXN</strong>
         </div>
 
-        <h3>{currentPanel?.title || "SHORASHOPP"}</h3>
-
-        <p>
-          {currentPanel?.subtitle ||
-            "Esta sección estará disponible próximamente."}
-        </p>
-
-        <button
-          type="button"
-          className="featurePrimary"
-          onClick={closePanels}
-        >
-          Volver a SHORASHOPP
+        <button className="primaryButton fullButton">
+          Continuar con la compra
         </button>
       </div>
     );
   };
 
-  return (
-    <div className="shoraApp">
-      <style>{`
-        .shoraApp {
-          --shora-red: #f43f5e;
-          --shora-pink: #ec4899;
-          --shora-purple: #8b5cf6;
-          --shora-text: #26232b;
-          --shora-muted: #77727d;
-          --shora-border: #eeeaf1;
-          min-height: 100vh;
-          background: #fff;
-          color: var(--shora-text);
-          font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          padding-bottom: 92px;
-        }
-
-        .shoraHeader {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: rgba(255,255,255,.96);
-          backdrop-filter: blur(14px);
-          border-bottom: 1px solid #f0edf2;
-        }
-
-        .headerTop {
-          height: 92px;
-          max-width: 1180px;
-          margin: auto;
-          display: grid;
-          grid-template-columns: 1fr auto 1fr;
-          align-items: center;
-          padding: 10px 22px;
-        }
-
-        .headerSide {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .headerSide.right {
-          justify-content: flex-end;
-        }
-
-        .iconHeaderButton {
-          width: 42px;
-          height: 42px;
-          border: 0;
-          background: #fff;
-          border-radius: 14px;
-          font-size: 21px;
-          cursor: pointer;
-        }
-
-        .iconHeaderButton:hover {
-          background: #f8f5f9;
-        }
-
-        .brand {
-          text-align: center;
-          line-height: 1;
-          cursor: pointer;
-        }
-
-        .brandName {
-          font-size: clamp(28px, 5vw, 42px);
-          font-weight: 900;
-          letter-spacing: -2px;
-        }
-
-        .brandShora {
-          color: var(--shora-red);
-        }
-
-        .brandShop {
-          color: var(--shora-purple);
-        }
-
-        .brandTagline {
-          margin-top: 8px;
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .tagBuy {
-          color: var(--shora-red);
-        }
-
-        .tagSell {
-          color: var(--shora-purple);
-        }
-
-        .tagDiscover {
-          color: #88838c;
-        }
-
-        .mainHome {
-          max-width: 1180px;
-          margin: auto;
-          padding: 18px 20px 40px;
-        }
-
-        .searchBox {
-          height: 58px;
-          display: flex;
-          align-items: center;
-          padding: 3px;
-          border-radius: 20px;
-          background: linear-gradient(90deg, #f43f5e, #ec4899, #8b5cf6);
-          margin-bottom: 16px;
-        }
-
-        .searchInner {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          background: white;
-          border-radius: 17px;
-          padding: 0 18px;
-        }
-
-        .searchInner input {
-          flex: 1;
-          border: 0;
-          outline: 0;
-          font-size: 16px;
-          color: #333;
-          background: transparent;
-        }
-
-        .searchIcon {
-          font-size: 22px;
-        }
-
-        .quickCards {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .quickCard {
-          border: 1px solid var(--shora-border);
-          background: #fff;
-          border-radius: 20px;
-          padding: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          min-height: 92px;
-          cursor: pointer;
-          box-shadow: 0 5px 20px rgba(40,20,50,.04);
-        }
-
-        .quickCard:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 25px rgba(40,20,50,.07);
-        }
-
-        .quickCardLeft {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .quickIcon {
-          width: 52px;
-          height: 52px;
-          display: grid;
-          place-items: center;
-          border-radius: 16px;
-          background: #fff4f7;
-          font-size: 28px;
-        }
-
-        .quickCard h3 {
-          margin: 0 0 4px;
-          font-size: 16px;
-        }
-
-        .quickCard p {
-          margin: 0;
-          font-size: 12px;
-          color: var(--shora-muted);
-        }
-
-        .quickArrow {
-          font-size: 24px;
-          color: #777;
-        }
-
-        .sectionHeader {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin: 28px 0 13px;
-        }
-
-        .sectionHeader h2 {
-          margin: 0;
-          font-size: 20px;
-        }
-
-        .sectionHeader button {
-          border: 0;
-          background: transparent;
-          color: var(--shora-purple);
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .categoryRow {
-          display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 10px;
-        }
-
-        .categoryCard {
-          min-width: 0;
-          border: 1px solid var(--shora-border);
-          border-radius: 17px;
-          background: #fff;
-          padding: 14px 8px;
-          text-align: center;
-          cursor: pointer;
-        }
-
-        .categoryCard:hover {
-          border-color: #dfd4e8;
-        }
-
-        .categoryEmoji {
-          display: block;
-          font-size: 27px;
-          margin-bottom: 7px;
-        }
-
-        .categoryCard span:last-child {
-          font-size: 11px;
-          font-weight: 700;
-          line-height: 1.2;
-        }
-
-        .offerCarousel {
-          overflow: hidden;
-          position: relative;
-          border-radius: 24px;
-          background: linear-gradient(110deg, #f43f5e, #ec4899 55%, #8b5cf6);
-          min-height: 185px;
-          color: white;
-          margin-top: 24px;
-        }
-
-        .offerContent {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          min-height: 185px;
-          padding: 25px 30px;
-        }
-
-        .offerText {
-          max-width: 58%;
-        }
-
-        .offerText h2 {
-          margin: 0 0 8px;
-          font-size: 25px;
-        }
-
-        .offerText p {
-          margin: 0 0 16px;
-          opacity: .95;
-        }
-
-        .offerButton {
-          border: 0;
-          border-radius: 12px;
-          background: white;
-          color: #8b3e8f;
-          font-weight: 800;
-          padding: 11px 18px;
-          cursor: pointer;
-        }
-
-        .offerVisual {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          font-size: 45px;
-          transform: rotate(-3deg);
-        }
-
-        .offerPercent {
-          background: white;
-          color: var(--shora-red);
-          border-radius: 50%;
-          width: 58px;
-          height: 58px;
-          display: grid;
-          place-items: center;
-          font-size: 16px;
-          font-weight: 900;
-        }
-
-        .dots {
-          position: absolute;
-          bottom: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 6px;
-        }
-
-        .dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          border: 0;
-          padding: 0;
-          background: rgba(255,255,255,.45);
-          cursor: pointer;
-        }
-
-        .dot.active {
-          width: 20px;
-          border-radius: 10px;
-          background: white;
-        }
-
-        .productGrid,
-        .panelProductGrid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 13px;
-        }
-
-        .shopProductCard {
-          background: #fff;
-          border: 1px solid var(--shora-border);
-          border-radius: 19px;
-          overflow: hidden;
-          min-width: 0;
-        }
-
-        .shopProductImage {
-          position: relative;
-          height: 170px;
-          display: grid;
-          place-items: center;
-          background: linear-gradient(145deg, #fff4f7, #f7f2ff);
-        }
-
-        .shopProductImage > span:first-child {
-          font-size: 65px;
-        }
-
-        .favoriteProductButton {
-          position: absolute;
-          top: 9px;
-          right: 9px;
-          width: 34px;
-          height: 34px;
-          border-radius: 50%;
-          border: 0;
-          background: rgba(255,255,255,.9);
-          font-size: 21px;
-          color: #777;
-          cursor: pointer;
-        }
-
-        .favoriteProductButton.isFavorite {
-          color: var(--shora-red);
-        }
-
-        .productOfferBadge {
-          position: absolute;
-          left: 9px;
-          top: 9px;
-          padding: 5px 8px;
-          border-radius: 8px;
-          background: #fff;
-          color: var(--shora-red);
-          font-size: 9px;
-          font-weight: 900;
-        }
-
-        .shopProductInfo {
-          padding: 13px;
-        }
-
-        .shopProductInfo small {
-          color: #999;
-          font-size: 10px;
-        }
-
-        .shopProductInfo h3 {
-          margin: 5px 0 7px;
-          font-size: 14px;
-        }
-
-        .shopProductInfo strong {
-          font-size: 17px;
-        }
-
-        .shopProductInfo strong span {
-          font-size: 10px;
-          color: #777;
-        }
-
-        .addCartButton {
-          width: 100%;
-          margin-top: 10px;
-          border: 1px solid #eadfeb;
-          background: #fff;
-          border-radius: 10px;
-          padding: 9px;
-          font-size: 12px;
-          font-weight: 800;
-          color: #7c4a91;
-          cursor: pointer;
-        }
-
-        .trustStrip {
-          margin-top: 30px;
-          border: 1px solid var(--shora-border);
-          border-radius: 20px;
-          padding: 20px 15px;
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-          background: #fff;
-        }
-
-        .trustItem {
-          text-align: center;
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .trustItem span {
-          display: block;
-          font-size: 23px;
-          margin-bottom: 6px;
-        }
-
-        .supportButton {
-          position: fixed;
-          right: 18px;
-          bottom: 92px;
-          z-index: 70;
-          border: 0;
-          border-radius: 50px;
-          padding: 13px 17px;
-          background: linear-gradient(135deg, #f43f5e, #8b5cf6);
-          color: white;
-          box-shadow: 0 10px 25px rgba(139,92,246,.28);
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .bottomNav {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 60;
-          height: 76px;
-          background: rgba(255,255,255,.97);
-          backdrop-filter: blur(12px);
-          border-top: 1px solid #eeeaf1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-        }
-
-        .bottomNav button {
-          border: 0;
-          background: transparent;
-          min-width: 72px;
-          height: 58px;
-          border-radius: 15px;
-          color: #777;
-          font-size: 11px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .bottomNav button span {
-          display: block;
-          font-size: 20px;
-          margin-bottom: 3px;
-        }
-
-        .bottomNav .sellButton {
-          min-width: 82px;
-          height: 64px;
-          color: white;
-          background: linear-gradient(135deg, #f43f5e, #8b5cf6);
-          box-shadow: 0 7px 18px rgba(139,92,246,.22);
-          transform: translateY(-4px);
-        }
-
-        .bottomNav .sellButton span {
-          font-size: 23px;
-        }
-
-        .overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 100;
-          background: rgba(28,20,32,.42);
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-        }
-
-        .panel {
-          width: min(680px, 100%);
-          max-height: 88vh;
-          overflow-y: auto;
-          background: white;
-          border-radius: 28px 28px 0 0;
-          padding: 22px;
-          box-shadow: 0 -15px 50px rgba(0,0,0,.15);
-        }
-
-        .panelHeader {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 20px;
-        }
-
-        .panelTitle {
-          display: flex;
-          align-items: center;
-          gap: 11px;
-        }
-
-        .panelTitleIcon {
-          font-size: 27px;
-        }
-
-        .panelTitle h2 {
-          margin: 0;
-          font-size: 21px;
-        }
-
-        .panelTitle p {
-          margin: 3px 0 0;
-          color: #888;
-          font-size: 12px;
-        }
-
-        .closeButton {
-          border: 0;
-          background: #f5f2f6;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          font-size: 20px;
-          cursor: pointer;
-        }
-
-        .authBox {
-          max-width: 450px;
-          margin: auto;
-        }
-
-        .authBox h2 {
-          text-align: center;
-          margin-bottom: 8px;
-        }
-
-        .authBox > p {
-          text-align: center;
-          color: #888;
-          font-size: 13px;
-        }
-
-        .authForm {
-          display: grid;
-          gap: 12px;
-          margin-top: 22px;
-        }
-
-        .authForm label,
-        .productForm label,
-        .profileFields label {
-          font-size: 12px;
-          font-weight: 800;
-          color: #555;
-        }
-
-        .authForm input,
-        .productForm input,
-        .productForm select,
-        .productForm textarea,
-        .profileInput {
-          width: 100%;
-          box-sizing: border-box;
-          border: 1px solid #e7e1ea;
-          border-radius: 12px;
-          padding: 12px;
-          outline: none;
-          font-size: 14px;
-        }
-
-        .authForm input:focus,
-        .productForm input:focus,
-        .productForm textarea:focus,
-        .profileInput:focus {
-          border-color: #c78adf;
-        }
-
-        .featurePrimary,
-        .featureSecondary {
-          border: 0;
-          border-radius: 12px;
-          padding: 12px 17px;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .featurePrimary {
-          background: linear-gradient(135deg, #f43f5e, #8b5cf6);
-          color: white;
-        }
-
-        .featurePrimary:disabled {
-          opacity: .6;
-          cursor: not-allowed;
-        }
-
-        .featureSecondary {
-          background: #f6f2f7;
-          color: #5e5264;
-        }
-
-        .authSwitch {
-          border: 0;
-          background: transparent;
-          color: #8b5cf6;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .authMessage,
-        .successMessage {
-          padding: 12px;
-          border-radius: 12px;
-          background: #f8f3fb;
-          color: #6b4d78;
-          margin-top: 12px;
-          font-size: 13px;
-        }
-
-        .emptyFeature,
-        .ordersContent {
-          text-align: center;
-          padding: 30px 15px;
-        }
-
-        .emptyBig,
-        .ordersEmptyIcon {
-          font-size: 55px;
-          margin-bottom: 10px;
-        }
-
-        .emptyFeature h3,
-        .ordersContent h3 {
-          margin: 8px 0;
-        }
-
-        .emptyFeature p,
-        .ordersContent p {
-          color: #888;
-          font-size: 13px;
-          max-width: 420px;
-          margin: 0 auto 18px;
-          line-height: 1.6;
-        }
-
-        .emptyFeature button {
-          margin: 4px;
-        }
-
-        .profileContent {
-          max-width: 470px;
-          margin: auto;
-          text-align: center;
-        }
-
-        .profileAvatarLarge {
-          width: 82px;
-          height: 82px;
-          display: grid;
-          place-items: center;
-          margin: 0 auto 20px;
-          border-radius: 50%;
-          color: white;
-          font-size: 32px;
-          font-weight: 900;
-          background: linear-gradient(135deg, #f43f5e, #8b5cf6);
-        }
-
-        .profileFields {
-          display: grid;
-          gap: 8px;
-          text-align: left;
-        }
-
-        .profileValue {
-          padding: 13px;
-          border-radius: 12px;
-          background: #f8f6f9;
-          margin-bottom: 10px;
-        }
-
-        .profileButtons {
-          display: flex;
-          gap: 8px;
-          margin-top: 10px;
-        }
-
-        .profileButtons button {
-          flex: 1;
-        }
-
-        .logoutButton {
-          margin-top: 15px;
-          border: 0;
-          background: transparent;
-          color: #e54861;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .ordersList {
-          display: grid;
-          gap: 10px;
-          text-align: left;
-        }
-
-        .orderCard,
-        .sellerProductCard,
-        .cartItem {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border: 1px solid #eee9f0;
-          border-radius: 15px;
-          padding: 13px;
-        }
-
-        .orderIcon {
-          font-size: 30px;
-        }
-
-        .orderInfo span {
-          font-size: 9px;
-          color: #999;
-        }
-
-        .orderInfo h3 {
-          margin: 3px 0;
-        }
-
-        .orderInfo p {
-          margin: 0;
-        }
-
-        .productForm {
-          display: grid;
-          gap: 8px;
-        }
-
-        .productForm h3 {
-          margin-bottom: 5px;
-        }
-
-        .productFormButtons {
-          display: flex;
-          gap: 8px;
-          margin-top: 7px;
-        }
-
-        .productFormButtons button {
-          flex: 1;
-        }
-
-        .sellerProductList {
-          display: grid;
-          gap: 10px;
-          margin-top: 18px;
-        }
-
-        .sellerProductCard {
-          justify-content: space-between;
-        }
-
-        .sellerProductCard div {
-          display: grid;
-          gap: 4px;
-        }
-
-        .sellerProductCard span,
-        .sellerProductCard small {
-          color: #888;
-        }
-
-        .deleteProductButton {
-          border: 0;
-          background: #fff0f2;
-          color: #d94359;
-          padding: 8px 10px;
-          border-radius: 9px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .deleteProductButton:disabled {
-          opacity: .5;
-        }
-
-        .panelProductGrid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .cartPanel {
-          display: grid;
-          gap: 10px;
-        }
-
-        .cartItem > span {
-          font-size: 32px;
-        }
-
-        .cartItem div {
-          flex: 1;
-          display: grid;
-          gap: 4px;
-        }
-
-        .cartItem small {
-          color: #888;
-        }
-
-        .cartItem > button {
-          border: 0;
-          background: #f5f2f6;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          cursor: pointer;
-        }
-
-        .cartTotal {
-          display: flex;
-          justify-content: space-between;
-          padding: 14px 2px;
-          border-top: 1px solid #eee9f0;
-          margin-top: 5px;
-        }
-
-        .menuDrawer {
-          position: fixed;
-          inset: 0;
-          z-index: 110;
-          background: rgba(30,20,35,.35);
-        }
-
-        .menuContent {
-          width: min(330px, 88%);
-          height: 100%;
-          background: white;
-          padding: 25px 20px;
-          box-shadow: 10px 0 35px rgba(0,0,0,.12);
-        }
-
-        .menuContent h2 {
-          margin-top: 10px;
-        }
-
-        .menuItem {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border: 0;
-          background: transparent;
-          padding: 14px 8px;
-          border-radius: 12px;
-          font-weight: 700;
-          text-align: left;
-          cursor: pointer;
-        }
-
-        .menuItem:hover {
-          background: #f8f5f9;
-        }
-
-        @media (max-width: 800px) {
-          .categoryRow {
-            grid-template-columns: repeat(3, 1fr);
-          }
-
-          .productGrid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (max-width: 560px) {
-          .headerTop {
-            height: 82px;
-            padding: 8px 10px;
-          }
-
-          .brandName {
-            font-size: 27px;
-          }
-
-          .brandTagline {
-            font-size: 9px;
-          }
-
-          .iconHeaderButton {
-            width: 36px;
-            height: 36px;
-            font-size: 18px;
-          }
-
-          .mainHome {
-            padding: 12px 12px 30px;
-          }
-
-          .quickCards {
-            grid-template-columns: 1fr;
-          }
-
-          .categoryRow {
-            display: flex;
-            overflow-x: auto;
-            padding-bottom: 4px;
-          }
-
-          .categoryCard {
-            min-width: 105px;
-          }
-
-          .offerText {
-            max-width: 72%;
-          }
-
-          .offerText h2 {
-            font-size: 20px;
-          }
-
-          .offerVisual {
-            position: absolute;
-            right: 12px;
-            opacity: .35;
-            font-size: 34px;
-          }
-
-          .productGrid,
-          .panelProductGrid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .shopProductImage {
-            height: 135px;
-          }
-
-          .shopProductImage > span:first-child {
-            font-size: 52px;
-          }
-
-          .trustStrip {
-            grid-template-columns: 1fr;
-          }
-
-          .bottomNav button {
-            min-width: 59px;
-          }
-
-          .bottomNav .sellButton {
-            min-width: 67px;
-          }
-
-          .supportButton {
-            right: 12px;
-            bottom: 87px;
-          }
-        }
-      `}</style>
-
-      {/* ENCABEZADO */}
-      <header className="shoraHeader">
-        <div className="headerTop">
-          <div className="headerSide">
-            <button
-              type="button"
-              className="iconHeaderButton"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Abrir menú"
-            >
-              ☰
-            </button>
+  const renderPanelContent = () => {
+    if (panel === "auth") return renderAuth();
+    if (panel === "profile") return renderProfile();
+    if (panel === "orders") return renderOrders();
+    if (panel === "products") return renderSellerProducts();
+    if (panel === "cart") return renderCart();
+
+    if (panel === "favorites") {
+      return favoriteProducts.length ? (
+        <div className="panelGrid">
+          {favoriteProducts.map(renderProductCard)}
+        </div>
+      ) : (
+        <div className="emptyState">
+          <div className="emptyIcon">♡</div>
+          <h3>Aún no tienes favoritos</h3>
+          <p>
+            Presiona el corazón de cualquier producto para guardarlo.
+          </p>
+        </div>
+      );
+    }
+
+    if (panel === "messages") {
+      return (
+        <div className="emptyState">
+          <div className="emptyIcon">💬</div>
+          <h3>¿Necesitas ayuda?</h3>
+          <p>
+            Próximamente podrás contactar con soporte directamente
+            desde SHORASHOPP.
+          </p>
+          <button
+            className="primaryButton"
+            onClick={closePanel}
+          >
+            Volver a la tienda
+          </button>
+        </div>
+      );
+    }
+
+    if (panel === "settings") {
+      return (
+        <div className="settingsList">
+          <div className="settingItem">
+            <span>🔔</span>
+            <div>
+              <strong>Notificaciones</strong>
+              <small>
+                Mantente al día con tus pedidos.
+              </small>
+            </div>
           </div>
 
-          <div
+          <div className="settingItem">
+            <span>🔒</span>
+            <div>
+              <strong>Privacidad</strong>
+              <small>
+                Controla la información de tu cuenta.
+              </small>
+            </div>
+          </div>
+
+          <div className="settingItem">
+            <span>❓</span>
+            <div>
+              <strong>Ayuda</strong>
+              <small>
+                Estamos aquí para ayudarte.
+              </small>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const panelTitles = {
+    auth: {
+      title: "Tu cuenta",
+      subtitle: "Compra, vende y descubre",
+      icon: "✨",
+    },
+    profile: {
+      title: "Mi perfil",
+      subtitle: "Administra tu información",
+      icon: "👤",
+    },
+    orders: {
+      title: "Mis pedidos",
+      subtitle: "Consulta tus compras",
+      icon: "📦",
+    },
+    products: {
+      title: "Mis productos",
+      subtitle: "Vende en SHORASHOPP",
+      icon: "🏪",
+    },
+    favorites: {
+      title: "Favoritos",
+      subtitle: "Tus productos guardados",
+      icon: "❤️",
+    },
+    cart: {
+      title: "Mi carrito",
+      subtitle: `${cart.length} producto${
+        cart.length === 1 ? "" : "s"
+      }`,
+      icon: "🛒",
+    },
+    messages: {
+      title: "Ayuda",
+      subtitle: "Estamos para ayudarte",
+      icon: "💬",
+    },
+    settings: {
+      title: "Configuración",
+      subtitle: "Preferencias de tu cuenta",
+      icon: "⚙️",
+    },
+  };
+
+  const currentPanel = panelTitles[panel];
+
+  return (
+    <div className="app">
+      <header className="header">
+        <div className="headerInner">
+          <button
+            className="headerIcon"
+            onClick={() => setMenuOpen(true)}
+          >
+            ☰
+          </button>
+
+          <button
             className="brand"
             onClick={() => goTo("inicio")}
           >
-            <div className="brandName">
-              <span className="brandShora">Shora</span>{" "}
-              <span className="brandShop">Shop</span>
-            </div>
+            <span className="brandShora">Shora</span>
+            <span className="brandShop">Shop</span>
 
-            <div className="brandTagline">
-              <span className="tagBuy">Compra</span>,{" "}
-              <span className="tagSell">Vende</span> y{" "}
-              <span className="tagDiscover">Descubre</span>
-            </div>
-          </div>
+            <small>
+              <b>Compra</b>, <strong>Vende</strong> y Descubre
+            </small>
+          </button>
 
-          <div className="headerSide right">
+          <div className="headerActions">
             <button
-              type="button"
-              className="iconHeaderButton"
+              className="headerIcon"
               onClick={() => openPanel("messages")}
-              aria-label="Ayuda y mensajes"
             >
               🔔
             </button>
 
             <button
-              type="button"
-              className="iconHeaderButton"
+              className="headerIcon"
               onClick={() => openPanel("cart")}
-              aria-label="Carrito"
             >
               🛒
+
+              {cart.length > 0 && (
+                <span className="cartCount">
+                  {cart.length}
+                </span>
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* INICIO */}
-      <main id="inicio" className="mainHome">
-        <div className="searchBox">
-          <div className="searchInner">
+      <main id="inicio" className="main">
+        <div className="searchWrapper">
+          <div className="searchInput">
             <input
               value={search}
               onChange={(event) =>
@@ -2286,639 +1375,335 @@ export default function App() {
               }
               placeholder="¿Qué estás pensando comprar hoy?"
             />
-
-            <span className="searchIcon">🔍</span>
+            <span>🔍</span>
           </div>
         </div>
 
-        <div className="quickCards">
+        <section className="quickGrid">
           <button
-            type="button"
             className="quickCard"
             onClick={() => openPanel("products")}
           >
-            <div className="quickCardLeft">
-              <div className="quickIcon">🏪</div>
+            <span className="quickIcon">🏪</span>
 
-              <div>
-                <h3>Vende en ShoraShop</h3>
-                <p>Vende tus productos de forma fácil</p>
-              </div>
+            <div>
+              <strong>Vende en ShoraShop</strong>
+              <small>
+                Vende tus productos de forma fácil
+              </small>
             </div>
 
-            <span className="quickArrow">→</span>
+            <span className="arrow">→</span>
           </button>
 
           <button
-            type="button"
             className="quickCard"
-            onClick={openAccount}
+            onClick={() => {
+              if (user) openPanel("profile");
+              else openAuth("login");
+            }}
           >
-            <div className="quickCardLeft">
-              <div className="quickIcon">👤</div>
+            <span className="quickIcon">👤</span>
 
-              <div>
-                <h3>Mi cuenta</h3>
-
-                <p>
-                  {user
-                    ? `Hola, ${profileName || "usuario"}`
-                    : "Hola, crea tu cuenta"}
-                </p>
-              </div>
+            <div>
+              <strong>Mi cuenta</strong>
+              <small>
+                {user
+                  ? `Hola, ${profileName}`
+                  : "Hola, crea tu cuenta"}
+              </small>
             </div>
 
-            <span className="quickArrow">→</span>
+            <span className="arrow">→</span>
           </button>
-        </div>
+        </section>
 
-        <section id="categorias">
+        <section id="categorias" className="section">
           <div className="sectionHeader">
             <h2>Categorías</h2>
 
             <button
-              type="button"
               onClick={() => setSearch("")}
             >
               Ver todas →
             </button>
           </div>
 
-          <div className="categoryRow">
+          <div className="categoryScroller">
             {categories.map((category) => (
               <button
-                type="button"
                 className="categoryCard"
                 key={category.name}
-                onClick={() => {
-                  setSearch(category.name);
-                  setTimeout(() => {
-                    document
-                      .getElementById("productos")
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
-                  }, 50);
-                }}
+                onClick={() => setSearch(category.name)}
               >
-                <span className="categoryEmoji">
-                  {category.icon}
-                </span>
-
-                <span>{category.name}</span>
+                <span>{category.icon}</span>
+                <strong>{category.name}</strong>
               </button>
             ))}
           </div>
         </section>
 
-        <section>
-          <div className="offerCarousel">
-            <div className="offerContent">
-              <div className="offerText">
-                <h2>
-                  {offerSlide === 0 &&
-                    "Ofertas exclusivas"}
-                  {offerSlide === 1 &&
-                    "Descuentos increíbles"}
-                  {offerSlide === 2 &&
-                    "Encuentra lo que buscas"}
-                </h2>
+        <section className="offer">
+          <div className="offerContent">
+            <div>
+              <span className="offerLabel">
+                SHORASHOPP
+              </span>
 
-                <p>
-                  {offerSlide === 0 &&
-                    "Productos que valen la pena, precios que te van a sorprender."}
-                  {offerSlide === 1 &&
-                    "Aprovecha nuestras promociones antes de que cambien."}
-                  {offerSlide === 2 &&
-                    "Compra, descubre y encuentra nuevos productos cada día."}
-                </p>
+              <h2>{offers[offerSlide].title}</h2>
 
-                <button
-                  type="button"
-                  className="offerButton"
-                  onClick={() => goTo("productos")}
-                >
-                  Ver ofertas
-                </button>
-              </div>
+              <p>{offers[offerSlide].text}</p>
 
-              <div className="offerVisual">
-                🛍️ 🎧 ⌚
-                <span className="offerPercent">-50%</span>
-              </div>
+              <button
+                onClick={() => goTo("productos")}
+              >
+                Ver ofertas
+              </button>
             </div>
 
-            <div className="dots">
-              {[0, 1, 2].map((dot) => (
-                <button
-                  type="button"
-                  key={dot}
-                  className={`dot ${
-                    offerSlide === dot ? "active" : ""
-                  }`}
-                  onClick={() => setOfferSlide(dot)}
-                  aria-label={`Oferta ${dot + 1}`}
-                />
-              ))}
+            <div className="offerVisual">
+              <span>{offers[offerSlide].visual}</span>
+              <b>-50%</b>
             </div>
+          </div>
+
+          <div className="offerDots">
+            {offers.map((_, index) => (
+              <button
+                key={index}
+                className={
+                  offerSlide === index ? "active" : ""
+                }
+                onClick={() => setOfferSlide(index)}
+              />
+            ))}
           </div>
         </section>
 
-        <section id="productos">
+        <section id="productos" className="section">
           <div className="sectionHeader">
             <h2>Productos destacados</h2>
 
             <button
-              type="button"
-              onClick={() => setSearch("")}
+              onClick={() => {
+                setSearch("");
+                document
+                  .getElementById("productos")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+              }}
             >
               Ver todos →
             </button>
           </div>
 
-          <div className="productGrid">
-            {searchProducts.slice(0, 4).map(renderProductCard)}
-          </div>
-
-          {searchProducts.length === 0 && (
-            <div className="emptyFeature">
-              <div className="emptyBig">🔎</div>
-
+          {filteredProducts.length ? (
+            <div className="productGrid">
+              {filteredProducts
+                .slice(0, 8)
+                .map(renderProductCard)}
+            </div>
+          ) : (
+            <div className="noProducts">
+              <span>🔎</span>
               <h3>No encontramos productos</h3>
-
-              <p>
-                Intenta buscar con otro nombre o categoría.
-              </p>
-
-              <button
-                type="button"
-                className="featurePrimary"
-                onClick={() => setSearch("")}
-              >
-                Ver todos
-              </button>
+              <p>Prueba con otra búsqueda.</p>
             </div>
           )}
         </section>
 
-        <section className="trustStrip">
-          <div className="trustItem">
+        <section className="trust">
+          <div>
             <span>🔒</span>
-            Protegemos tus datos y compras
+            <strong>Compra segura</strong>
+            <small>Protegemos tus datos</small>
           </div>
 
-          <div className="trustItem">
+          <div>
             <span>🚚</span>
-            Envíos rápidos en tiempo récord
+            <strong>Envíos rápidos</strong>
+            <small>Recibe tus productos</small>
           </div>
 
-          <div className="trustItem">
+          <div>
             <span>🤝</span>
-            Vendedores y compradores 24/7
+            <strong>Compra y vende</strong>
+            <small>Una comunidad 24/7</small>
           </div>
         </section>
       </main>
 
-      {/* SOPORTE */}
       <button
-        type="button"
-        className="supportButton"
+        className="support"
         onClick={() => openPanel("messages")}
       >
         💬 Ayuda
       </button>
 
-      {/* BARRA INFERIOR */}
       <nav className="bottomNav">
-        <button
-          type="button"
-          onClick={() => goTo("inicio")}
-        >
+        <button onClick={() => goTo("inicio")}>
           <span>⌂</span>
           Inicio
         </button>
 
-        <button
-          type="button"
-          onClick={() => goTo("categorias")}
-        >
+        <button onClick={() => goTo("categorias")}>
           <span>▦</span>
           Categorías
         </button>
 
         <button
-          type="button"
-          className="sellButton"
+          className="sellNav"
           onClick={() => openPanel("products")}
         >
           <span>🏪</span>
           Vender
         </button>
 
-        <button
-          type="button"
-          onClick={() => openPanel("favorites")}
-        >
+        <button onClick={() => openPanel("favorites")}>
           <span>♡</span>
           Favoritos
         </button>
 
         <button
-          type="button"
-          onClick={openAccount}
+          onClick={() => {
+            if (user) openPanel("profile");
+            else openAuth("login");
+          }}
         >
           <span>♙</span>
           Cuenta
         </button>
       </nav>
 
-      {/* MENÚ */}
       {menuOpen && (
         <div
-          className="menuDrawer"
+          className="drawerBackdrop"
           onClick={() => setMenuOpen(false)}
         >
-          <div
-            className="menuContent"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+          <aside
+            className="drawer"
+            onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              className="closeButton"
-              onClick={() => setMenuOpen(false)}
-            >
-              ×
-            </button>
+            <div className="drawerTop">
+              <div>
+                <span className="drawerLogo">
+                  Shora<span>Shop</span>
+                </span>
 
-            <h2>Menú</h2>
+                <small>
+                  Compra, Vende y Descubre
+                </small>
+              </div>
+
+              <button
+                className="closeIcon"
+                onClick={() => setMenuOpen(false)}
+              >
+                ×
+              </button>
+            </div>
 
             <button
-              type="button"
-              className="menuItem"
+              className="drawerItem"
               onClick={() => goTo("inicio")}
             >
               🏠 Inicio
             </button>
 
             <button
-              type="button"
-              className="menuItem"
+              className="drawerItem"
               onClick={() => goTo("categorias")}
             >
               🗂️ Categorías
             </button>
 
             <button
-              type="button"
-              className="menuItem"
+              className="drawerItem"
               onClick={() => openPanel("orders")}
             >
               📦 Mis pedidos
             </button>
 
             <button
-              type="button"
-              className="menuItem"
+              className="drawerItem"
               onClick={() => openPanel("products")}
             >
               🛍️ Mis productos
             </button>
 
             <button
-              type="button"
-              className="menuItem"
+              className="drawerItem"
               onClick={() => openPanel("favorites")}
             >
               ❤️ Favoritos
             </button>
 
             <button
-              type="button"
-              className="menuItem"
+              className="drawerItem"
               onClick={() => openPanel("settings")}
             >
               ⚙️ Configuración
             </button>
 
-            {!user && (
-              <button
-                type="button"
-                className="menuItem"
-                onClick={() => openAuth("login")}
-              >
-                🔐 Iniciar sesión
-              </button>
-            )}
-
-            {user && (
-              <button
-                type="button"
-                className="menuItem"
-                onClick={handleLogout}
-              >
-                🚪 Cerrar sesión
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* CUENTA */}
-      {showAccount && (
-        <div
-          className="overlay"
-          onClick={closePanels}
-        >
-          <div
-            className="panel"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <div className="panelHeader">
-              <div className="panelTitle">
-                <span className="panelTitleIcon">👤</span>
-
-                <div>
-                  <h2>Mi cuenta</h2>
-
-                  <p>
-                    {user
-                      ? `Hola, ${profileName || "usuario"}`
-                      : "Entra a tu cuenta de SHORASHOPP"}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="closeButton"
-                onClick={closePanels}
-              >
-                ×
-              </button>
-            </div>
-
-            {user ? (
-              <div className="accountMenu">
+            <div className="drawerBottom">
+              {user ? (
                 <button
-                  type="button"
-                  className="menuItem"
-                  onClick={() => openPanel("profile")}
-                >
-                  👤 Mi perfil
-                </button>
-
-                <button
-                  type="button"
-                  className="menuItem"
-                  onClick={() => openPanel("orders")}
-                >
-                  📦 Mis pedidos
-                </button>
-
-                <button
-                  type="button"
-                  className="menuItem"
-                  onClick={() => openPanel("products")}
-                >
-                  🛍️ Mis productos
-                </button>
-
-                <button
-                  type="button"
-                  className="menuItem"
-                  onClick={() => openPanel("favorites")}
-                >
-                  ❤️ Favoritos
-                </button>
-
-                <button
-                  type="button"
-                  className="menuItem"
-                  onClick={() => openPanel("settings")}
-                >
-                  ⚙️ Configuración
-                </button>
-
-                <button
-                  type="button"
-                  className="logoutButton"
+                  className="drawerLogout"
                   onClick={handleLogout}
                 >
                   Cerrar sesión
                 </button>
-              </div>
-            ) : (
-              <div className="emptyFeature">
-                <div className="emptyBig">👋</div>
+              ) : (
+                <>
+                  <button
+                    className="primaryButton fullButton"
+                    onClick={() => openAuth("login")}
+                  >
+                    Iniciar sesión
+                  </button>
 
-                <h3>¡Bienvenido a SHORASHOPP!</h3>
-
-                <p>
-                  Compra, vende y descubre productos.
-                  Puedes explorar la tienda antes de crear
-                  tu cuenta.
-                </p>
-
-                <button
-                  type="button"
-                  className="featurePrimary"
-                  onClick={() => openAuth("register")}
-                >
-                  Crear una cuenta
-                </button>
-
-                <button
-                  type="button"
-                  className="featureSecondary"
-                  onClick={() => openAuth("login")}
-                >
-                  Iniciar sesión
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* AUTENTICACIÓN */}
-      {showAuth && (
-        <div
-          className="overlay"
-          onClick={closePanels}
-        >
-          <div
-            className="panel"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <div className="panelHeader">
-              <div className="panelTitle">
-                <span className="panelTitleIcon">✨</span>
-
-                <div>
-                  <h2>
-                    {authMode === "login"
-                      ? "Iniciar sesión"
-                      : "Crear tu cuenta"}
-                  </h2>
-
-                  <p>Tu espacio en SHORASHOPP</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="closeButton"
-                onClick={closePanels}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="authBox">
-              <form
-                className="authForm"
-                onSubmit={handleAuth}
-              >
-                {authMode === "register" && (
-                  <>
-                    <label>Nombre completo</label>
-
-                    <input
-                      value={fullName}
-                      onChange={(event) =>
-                        setFullName(event.target.value)
-                      }
-                      placeholder="Tu nombre"
-                      required
-                    />
-                  </>
-                )}
-
-                <label>Correo electrónico</label>
-
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) =>
-                    setEmail(event.target.value)
-                  }
-                  placeholder="correo@ejemplo.com"
-                  required
-                />
-
-                <label>Contraseña</label>
-
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
-                  }
-                  placeholder="Tu contraseña"
-                  required
-                  minLength={6}
-                />
-
-                <button
-                  type="submit"
-                  className="featurePrimary"
-                  disabled={loading}
-                >
-                  {loading
-                    ? "Espera..."
-                    : authMode === "login"
-                    ? "Entrar a SHORASHOPP"
-                    : "Crear mi cuenta"}
-                </button>
-              </form>
-
-              {message && (
-                <div className="authMessage">
-                  {message}
-                </div>
+                  <button
+                    className="secondaryButton fullButton"
+                    onClick={() => openAuth("register")}
+                  >
+                    Crear cuenta
+                  </button>
+                </>
               )}
-
-              <p
-                style={{
-                  textAlign: "center",
-                  marginTop: 18,
-                }}
-              >
-                {authMode === "login"
-                  ? "¿Todavía no tienes cuenta? "
-                  : "¿Ya tienes una cuenta? "}
-
-                <button
-                  type="button"
-                  className="authSwitch"
-                  onClick={() => {
-                    setMessage("");
-
-                    setAuthMode(
-                      authMode === "login"
-                        ? "register"
-                        : "login"
-                    );
-                  }}
-                >
-                  {authMode === "login"
-                    ? "Crear cuenta"
-                    : "Iniciar sesión"}
-                </button>
-              </p>
             </div>
-          </div>
+          </aside>
         </div>
       )}
 
-      {/* PANEL GENERAL */}
-      {activePanel && (
+      {panel && (
         <div
-          className="overlay"
-          onClick={closePanels}
+          className="panelBackdrop"
+          onClick={closePanel}
         >
           <div
             className="panel"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="panelHeader">
               <div className="panelTitle">
-                <span className="panelTitleIcon">
-                  {currentPanel?.icon || "✨"}
-                </span>
+                <span>{currentPanel?.icon}</span>
 
                 <div>
-                  <h2>
-                    {currentPanel?.title ||
-                      "SHORASHOPP"}
-                  </h2>
-
-                  <p>
-                    {currentPanel?.subtitle ||
-                      "Compra, vende y descubre."}
-                  </p>
+                  <h2>{currentPanel?.title}</h2>
+                  <small>{currentPanel?.subtitle}</small>
                 </div>
               </div>
 
               <button
-                type="button"
-                className="closeButton"
-                onClick={closePanels}
+                className="closeIcon"
+                onClick={closePanel}
               >
                 ×
               </button>
             </div>
 
-            {renderActivePanel()}
+            {renderPanelContent()}
           </div>
         </div>
       )}
