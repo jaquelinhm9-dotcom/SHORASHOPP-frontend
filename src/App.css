@@ -1,18 +1,10 @@
-/* ================================
-   SHORASHOPP
-   ESTILO PRINCIPAL
-================================ */
-
 * {
   box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
   font-family: Arial, Helvetica, sans-serif;
   background: #fff;
   color: #24152f;
@@ -32,114 +24,92 @@ button {
   overflow-x: hidden;
 }
 
-
-/* ================================
-   HEADER
-================================ */
+/* HEADER */
 
 .header {
-  height: 78px;
-  width: 100%;
+  height: 82px;
   padding: 0 6%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 25px;
   background: rgba(255, 255, 255, 0.96);
-  border-bottom: 1px solid rgba(80, 30, 100, 0.08);
+  border-bottom: 1px solid #eee6f4;
   position: relative;
   z-index: 20;
 }
 
 .logo {
-  display: flex;
-  flex-direction: column;
-  line-height: 0.85;
-  min-width: 130px;
-  font-weight: 900;
+  font-size: 25px;
+  font-weight: 800;
   letter-spacing: -1px;
+  white-space: nowrap;
 }
 
 .logo span {
-  color: #e83b8f;
-  font-size: 20px;
+  color: #a52780;
 }
 
 .logo strong {
-  color: #6927a8;
-  font-size: 24px;
+  color: #5b1a75;
 }
 
 .searchBox {
-  flex: 1;
-  max-width: 600px;
-  height: 46px;
+  width: min(480px, 45%);
   display: flex;
-  align-items: center;
-  border-radius: 25px;
-  background: #f7f2fa;
-  border: 1px solid rgba(100, 50, 130, 0.08);
+  background: #f7f3fa;
+  border: 1px solid #eadff0;
+  border-radius: 16px;
   overflow: hidden;
 }
 
 .searchBox input {
   flex: 1;
-  height: 100%;
+  min-width: 0;
   border: none;
   outline: none;
+  padding: 14px 18px;
   background: transparent;
-  padding: 0 20px;
-  color: #35213f;
-}
-
-.searchBox input::placeholder {
-  color: #9a8ca1;
+  color: #392342;
 }
 
 .searchBox button {
-  width: 55px;
-  height: 100%;
+  width: 52px;
   border: none;
   background: transparent;
-  color: #7028a8;
+  color: #75236f;
   font-size: 24px;
 }
 
 .headerActions {
   display: flex;
-  align-items: center;
   gap: 10px;
 }
 
 .headerButton {
   width: 46px;
   height: 46px;
-  border: none;
-  border-radius: 50%;
-  background: #f6eefb;
-  color: #6725a1;
+  border: 1px solid #eadff0;
+  border-radius: 14px;
+  background: #fff;
   font-size: 21px;
-  transition: 0.2s ease;
+  transition: 0.2s;
 }
 
 .headerButton:hover {
   transform: translateY(-2px);
-  background: #ead8f5;
+  box-shadow: 0 8px 22px rgba(100, 35, 115, 0.14);
 }
 
 
-/* ================================
-   HERO
-================================ */
+/* HERO */
 
 .hero {
-  min-height: 620px;
-  padding: 70px 7%;
+  min-height: 650px;
+  padding: 80px 7%;
   background:
-    radial-gradient(circle at 75% 40%, rgba(226, 71, 155, 0.22), transparent 28%),
-    radial-gradient(circle at 90% 10%, rgba(106, 42, 170, 0.25), transparent 32%),
-    linear-gradient(135deg, #fff7fc 0%, #f7edff 48%, #eee5ff 100%);
-  overflow: hidden;
+    radial-gradient(circle at 80% 35%, rgba(207, 58, 157, 0.22), transparent 30%),
+    linear-gradient(135deg, #fff 0%, #faf3fb 48%, #f4e7f8 100%);
 }
 
 .heroContent {
@@ -151,164 +121,154 @@ button {
   gap: 50px;
 }
 
-.heroText {
-  max-width: 550px;
-}
-
-.heroTag {
-  display: inline-block;
-  margin-bottom: 20px;
-  padding: 8px 15px;
-  border-radius: 20px;
-  background: rgba(219, 48, 133, 0.1);
-  color: #c02a79;
+.heroTag,
+.sectionTitle span,
+.featuredHeader span,
+.sellerContent > span {
+  color: #a12682;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 
-.hero h1 {
-  margin: 0;
-  font-size: clamp(54px, 7vw, 88px);
+.heroText h1 {
+  margin: 18px 0;
+  font-size: clamp(52px, 7vw, 88px);
   line-height: 0.9;
   letter-spacing: -5px;
-  color: #2d1739;
+  color: #34163f;
 }
 
-.hero h1 span {
-  background: linear-gradient(90deg, #e32d87, #7628b3);
-  -webkit-background-clip: text;
-  color: transparent;
+.heroText h1 span {
+  color: #a92782;
 }
 
 .heroText p {
-  max-width: 500px;
-  margin: 28px 0;
-  color: #725f7c;
-  font-size: 17px;
+  max-width: 520px;
+  color: #725e79;
   line-height: 1.7;
+  font-size: 17px;
 }
 
 .heroButtons {
   display: flex;
   gap: 14px;
+  margin-top: 30px;
   flex-wrap: wrap;
 }
 
 .primaryButton,
-.secondaryButton {
-  border-radius: 30px;
-  padding: 14px 23px;
-  font-weight: 800;
+.secondaryButton,
+.sellerContent button {
+  border-radius: 14px;
+  padding: 15px 22px;
   border: none;
+  font-weight: 700;
 }
 
 .primaryButton {
+  background: linear-gradient(135deg, #a92883, #642071);
   color: white;
-  background: linear-gradient(90deg, #e22f87, #7428af);
-  box-shadow: 0 10px 25px rgba(121, 35, 153, 0.2);
+  box-shadow: 0 12px 28px rgba(110, 30, 110, 0.22);
 }
 
 .primaryButton span {
-  margin-left: 10px;
+  margin-left: 12px;
 }
 
 .secondaryButton {
-  color: #6927a4;
   background: white;
-  border: 1px solid #e1d4e9;
+  border: 1px solid #e2d4e8;
+  color: #63206e;
 }
 
 
-/* ================================
-   HERO VISUAL
-================================ */
+/* HERO VISUAL */
 
 .heroVisual {
-  min-height: 480px;
   position: relative;
+  height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40px);
-}
-
-.glowOne {
-  width: 250px;
-  height: 250px;
-  background: rgba(229, 53, 137, 0.25);
-}
-
-.glowTwo {
-  width: 220px;
-  height: 220px;
-  background: rgba(109, 39, 175, 0.22);
-  right: 20px;
-  bottom: 60px;
 }
 
 .mainCircle {
-  width: 330px;
-  height: 330px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f6b1d5, #b48be0);
-  box-shadow:
-    0 30px 80px rgba(104, 35, 144, 0.25),
-    inset 0 0 50px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(145deg, #b92c8d, #60206e);
+  box-shadow: 0 35px 80px rgba(99, 29, 111, 0.3);
   position: relative;
   z-index: 2;
 }
 
 .circleContent {
   text-align: center;
+  color: white;
 }
 
 .shoppingBag {
-  font-size: 85px;
-  margin-bottom: 10px;
+  font-size: 80px;
+  margin-bottom: 8px;
 }
 
 .circleText {
-  color: white;
-  font-weight: 900;
   font-size: 25px;
-  letter-spacing: 2px;
+  font-weight: 500;
 }
 
 .circleText strong {
-  display: block;
+  display: inline;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(25px);
+}
+
+.glowOne {
+  width: 230px;
+  height: 230px;
+  background: rgba(208, 51, 151, 0.2);
+  top: 35px;
+  right: 60px;
+}
+
+.glowTwo {
+  width: 170px;
+  height: 170px;
+  background: rgba(102, 35, 150, 0.2);
+  bottom: 50px;
+  left: 50px;
 }
 
 .floatingCard {
   position: absolute;
-  z-index: 4;
+  z-index: 5;
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 160px;
-  padding: 13px 16px;
+  padding: 13px 17px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 15px 35px rgba(71, 27, 90, 0.15);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 15px 40px rgba(66, 29, 73, 0.14);
 }
 
-.floatingCard strong {
+.floatingCard strong,
+.floatingCard small {
   display: block;
-  font-size: 14px;
 }
 
 .floatingCard small {
-  color: #95849e;
-  font-size: 11px;
+  color: #8c7892;
+  margin-top: 3px;
 }
 
 .floatingIcon {
@@ -316,28 +276,28 @@ button {
 }
 
 .cardOne {
-  top: 80px;
-  left: 0;
+  top: 70px;
+  left: 5px;
 }
 
 .cardTwo {
+  top: 205px;
   right: 0;
-  top: 170px;
 }
 
 .cardThree {
-  left: 30px;
-  bottom: 45px;
+  bottom: 65px;
+  left: 35px;
 }
 
 
-/* ================================
-   SECCIONES
-================================ */
+/* CATEGORIES */
 
 .categories,
 .featured {
-  padding: 90px 7%;
+  max-width: 1200px;
+  margin: auto;
+  padding: 85px 6%;
 }
 
 .sectionTitle {
@@ -345,98 +305,82 @@ button {
   margin-bottom: 45px;
 }
 
-.sectionTitle span,
-.featuredHeader > div > span,
-.sellerContent > span {
-  color: #d02c80;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 2px;
-}
-
 .sectionTitle h2,
-.featured h2 {
+.featuredHeader h2 {
+  font-size: 38px;
+  color: #35163e;
   margin: 10px 0;
-  font-size: 42px;
-  color: #2d1739;
 }
 
 .sectionTitle p,
 .featuredHeader p {
-  color: #8a7b91;
+  color: #806d86;
 }
 
 .categoryGrid {
-  max-width: 1150px;
-  margin: auto;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
 }
 
 .categoryCard {
-  border: none;
+  border: 1px solid #eee2f2;
+  background: white;
   border-radius: 20px;
-  padding: 25px 12px;
-  background: #faf7fc;
-  color: #3b2547;
-  transition: 0.2s ease;
+  padding: 27px;
+  text-align: left;
+  transition: 0.25s;
 }
 
 .categoryCard:hover {
   transform: translateY(-5px);
-  background: #f3e7f9;
+  box-shadow: 0 18px 35px rgba(80, 31, 90, 0.1);
 }
 
 .categoryIcon {
   font-size: 35px;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+.categoryCard strong,
+.categoryCard span {
+  display: block;
 }
 
 .categoryCard strong {
-  display: block;
-  margin-bottom: 8px;
+  color: #3b2043;
+  font-size: 18px;
 }
 
 .categoryCard span {
-  font-size: 11px;
-  color: #967f9f;
+  color: #a12682;
+  margin-top: 8px;
+  font-size: 13px;
 }
 
 
-/* ================================
-   PRODUCTOS
-================================ */
+/* PRODUCTS */
 
 .featured {
-  background: #faf7fc;
+  max-width: 1300px;
 }
 
 .featuredHeader {
-  max-width: 1150px;
-  margin: auto auto 40px;
   display: flex;
   justify-content: space-between;
   align-items: end;
   gap: 20px;
-}
-
-.featuredHeader h2 {
-  margin-bottom: 5px;
+  margin-bottom: 35px;
 }
 
 .viewAll {
   border: none;
-  background: white;
-  color: #7027a6;
-  padding: 12px 18px;
-  border-radius: 20px;
+  background: transparent;
+  color: #922477;
   font-weight: 800;
 }
 
 .productGrid {
-  max-width: 1150px;
-  margin: auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 22px;
@@ -444,381 +388,343 @@ button {
 
 .productCard {
   overflow: hidden;
-  background: white;
   border-radius: 22px;
-  box-shadow: 0 12px 30px rgba(60, 30, 75, 0.08);
+  border: 1px solid #eee3f1;
+  background: white;
 }
 
 .productImage {
-  min-height: 230px;
+  height: 230px;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   font-size: 80px;
 }
 
 .productPink {
-  background: #f9d8e9;
+  background: #f9dff0;
 }
 
 .productPurple {
-  background: #ded2f2;
+  background: #e8ddf6;
 }
 
 .productOrange {
-  background: #f7dfca;
+  background: #fae5d1;
 }
 
 .productInfo {
   padding: 22px;
 }
 
-.productInfo > span {
-  color: #c82c7c;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 1px;
+.productInfo span {
+  color: #a12682;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
 }
 
 .productInfo h3 {
   margin: 8px 0;
+  color: #3c2045;
 }
 
 .productInfo p {
-  margin: 0;
-  color: #8d7e94;
+  color: #7e6d84;
 }
 
 
-/* ================================
-   SELLER
-================================ */
+/* SELLER */
 
 .sellerSection {
-  margin: 70px 7%;
+  margin: 40px 7% 90px;
+  border-radius: 30px;
   padding: 60px;
-  border-radius: 35px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(120deg, #f7d8e9, #e1d2f2);
-  overflow: hidden;
-}
-
-.sellerContent {
-  max-width: 600px;
+  gap: 40px;
+  background: linear-gradient(135deg, #531b68, #aa2783);
+  color: white;
 }
 
 .sellerContent h2 {
-  margin: 12px 0;
-  font-size: 50px;
+  font-size: 48px;
   line-height: 1;
-  color: #2d1739;
+  margin: 15px 0;
 }
 
 .sellerContent p {
-  color: #725f7c;
+  color: #f1dff0;
+  margin-bottom: 25px;
+}
+
+.sellerContent > span {
+  color: #ffd8f1;
 }
 
 .sellerContent button {
-  margin-top: 15px;
-  border: none;
-  padding: 15px 24px;
-  border-radius: 25px;
-  color: white;
-  background: #6e29a7;
-  font-weight: 800;
+  background: white;
+  color: #70216f;
 }
 
 .sellerVisual {
-  font-size: 120px;
+  font-size: 130px;
 }
 
 
-/* ================================
-   FOOTER
-================================ */
+/* FOOTER */
 
 footer {
-  padding: 50px 7%;
+  padding: 55px 7%;
+  background: #211126;
+  color: white;
   text-align: center;
-  background: #25152e;
-  color: #d8c8df;
 }
 
 .footerLogo {
-  color: #ef75b1;
   font-size: 25px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .footerLogo strong {
-  color: #b68add;
+  color: #d957aa;
 }
 
 footer p {
-  color: #9f8ca7;
+  color: #bcaabe;
+  margin: 10px 0 22px;
 }
 
 .footerLinks {
   display: flex;
   justify-content: center;
   gap: 25px;
-  margin: 25px 0;
-  font-size: 13px;
+  color: #e2d6e5;
+  margin-bottom: 25px;
 }
 
 footer small {
-  color: #79677f;
+  color: #8e7b91;
 }
 
 
-/* ==================================================
-   MODAL DE REGISTRO / CUENTA
-   ================================================== */
+/* PANEL DE CUENTA */
 
-/*
-   Esta parte es la importante.
-   La ventana queda SOBRE la Home y centrada.
-*/
+.accountOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(28, 11, 35, 0.45);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.accountPanel {
+  width: min(410px, 92vw);
+  height: 100%;
+  background: white;
+  box-shadow: -20px 0 60px rgba(32, 12, 38, 0.25);
+  padding: 35px 28px;
+  position: relative;
+  overflow-y: auto;
+  animation: panelIn 0.25s ease;
+}
+
+@keyframes panelIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.accountClose,
+.authClose {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: #f5edf7;
+  color: #60206e;
+  font-size: 25px;
+}
+
+.accountTop {
+  text-align: center;
+  padding: 25px 15px 25px;
+}
+
+.accountIcon {
+  width: 75px;
+  height: 75px;
+  margin: 5px auto 17px;
+  border-radius: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 35px;
+  background: linear-gradient(135deg, #f5d8ed, #e5d5f4);
+}
+
+.accountTop h2 {
+  color: #35163e;
+  margin-bottom: 8px;
+}
+
+.accountTop p {
+  color: #827188;
+  line-height: 1.5;
+}
+
+.accountAuthButtons {
+  display: grid;
+  gap: 12px;
+}
+
+.accountPrimary,
+.accountSecondary {
+  padding: 15px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.accountPrimary {
+  border: none;
+  color: white;
+  background: linear-gradient(135deg, #a92883, #642071);
+}
+
+.accountSecondary {
+  border: 1px solid #dfd0e5;
+  color: #68206f;
+  background: white;
+}
+
+.accountDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 15px;
+  color: #a08da5;
+  font-size: 12px;
+}
+
+.accountDivider::before,
+.accountDivider::after {
+  content: "";
+  height: 1px;
+  background: #eee4f0;
+  flex: 1;
+}
+
+.accountGuestMenu,
+.accountMenu {
+  display: grid;
+  gap: 7px;
+}
+
+.accountGuestMenu button,
+.accountMenu button {
+  width: 100%;
+  padding: 15px 12px;
+  border: none;
+  border-radius: 13px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: #44234c;
+  text-align: left;
+}
+
+.accountGuestMenu button:hover,
+.accountMenu button:hover {
+  background: #f8f1fa;
+}
+
+.accountGuestMenu b,
+.accountMenu b {
+  margin-left: auto;
+  color: #a786ae;
+  font-size: 22px;
+}
+
+.loggedUser {
+  padding-top: 35px;
+}
+
+.profileCircle {
+  width: 76px;
+  height: 76px;
+  margin: auto auto 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #a92883, #642071);
+  color: white;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.accountMenu {
+  border-top: 1px solid #eee5f0;
+  padding-top: 15px;
+}
+
+.accountMenu button span {
+  font-size: 21px;
+  width: 28px;
+  text-align: center;
+}
+
+.logoutButton {
+  width: 100%;
+  margin-top: 25px;
+  padding: 14px;
+  border: 1px solid #f0d5df;
+  border-radius: 13px;
+  background: #fff7fa;
+  color: #a32955;
+  font-weight: 700;
+}
+
+
+/* LOGIN / REGISTRO */
 
 .authOverlay {
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-
+  z-index: 200;
+  background: rgba(25, 10, 31, 0.58);
+  backdrop-filter: blur(7px);
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 20px;
-
-  background: rgba(28, 12, 38, 0.62);
-
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-
-  animation: authFadeIn 0.2s ease;
 }
 
 .authModal {
-  position: relative;
-
-  width: min(430px, 100%);
-  max-height: calc(100vh - 40px);
-
-  overflow-y: auto;
-
-  padding: 38px 32px 32px;
-
-  border-radius: 28px;
-
-  background: rgba(255, 255, 255, 0.98);
-
-  box-shadow:
-    0 30px 90px rgba(26, 10, 35, 0.4),
-    0 5px 25px rgba(90, 30, 110, 0.15);
-
-  animation: authModalIn 0.25s ease;
-}
-
-.authClose {
-  position: absolute;
-
-  top: 14px;
-  right: 15px;
-
-  width: 38px;
-  height: 38px;
-
-  border: none;
-  border-radius: 50%;
-
-  background: #f5edf8;
-  color: #633078;
-
-  font-size: 25px;
-  line-height: 1;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  transition: 0.2s ease;
-}
-
-.authClose:hover {
-  background: #ead9f0;
-  transform: rotate(90deg);
-}
-
-.authLogo {
-  width: 68px;
-  height: 68px;
-
-  margin: 0 auto 15px;
-
-  border-radius: 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 34px;
-
-  background: linear-gradient(
-    135deg,
-    #f7b4d5,
-    #8d4bb8
-  );
-
-  box-shadow:
-    0 10px 25px rgba(116, 39, 157, 0.2);
-}
-
-.authModal h2 {
-  margin: 0 0 25px;
-
-  text-align: center;
-
-  color: #2d1739;
-
-  font-size: 25px;
-  line-height: 1.2;
-}
-
-.authModal form {
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-}
-
-.authModal input {
-  width: 100%;
-  height: 50px;
-
-  padding: 0 16px;
-
-  border: 1px solid #e5dbe9;
-  border-radius: 14px;
-
-  outline: none;
-
-  background: #faf8fb;
-  color: #35213f;
-
-  transition: 0.2s ease;
-}
-
-.authModal input:focus {
-  border-color: #a04fc1;
+  width: min(440px, 94vw);
   background: white;
-  box-shadow: 0 0 0 3px rgba(160, 79, 193, 0.1);
+  border-radius: 26px;
+  padding: 38px 30px 30px;
+  position: relative;
+  box-shadow: 0 30px 90px rgba(30, 10, 35, 0.3);
+  animation: modalIn 0.22s ease;
 }
 
-.authModal input::placeholder {
-  color: #9c8da3;
-}
-
-.authSubmit {
-  width: 100%;
-  min-height: 50px;
-
-  margin-top: 5px;
-
-  border: none;
-  border-radius: 15px;
-
-  color: white;
-
-  background: linear-gradient(
-    90deg,
-    #e12f87,
-    #7128ad
-  );
-
-  font-weight: 800;
-
-  box-shadow:
-    0 10px 25px rgba(115, 35, 150, 0.2);
-
-  transition: 0.2s ease;
-}
-
-.authSubmit:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
-
-.authSubmit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.authMessage {
-  margin: 12px 0 0;
-
-  text-align: center;
-
-  color: #6f287f;
-
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.authSwitch {
-  width: 100%;
-
-  margin-top: 7px;
-
-  border: none;
-  background: transparent;
-
-  color: #7028a7;
-
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.authSwitch:hover {
-  text-decoration: underline;
-}
-
-.authLogged {
-  text-align: center;
-}
-
-.authLogged p {
-  color: #75657d;
-  line-height: 1.5;
-}
-
-.authLogged p:nth-child(2) {
-  color: #67269c;
-  font-weight: 700;
-  word-break: break-word;
-}
-
-
-/* ================================
-   ANIMACIONES DEL MODAL
-================================ */
-
-@keyframes authFadeIn {
+@keyframes modalIn {
   from {
     opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes authModalIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.96);
+    transform: translateY(15px) scale(0.98);
   }
 
   to {
@@ -827,19 +733,104 @@ footer small {
   }
 }
 
+.authLogo {
+  width: 65px;
+  height: 65px;
+  margin: 0 auto 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f4d7ec, #e2d4f2);
+  font-size: 30px;
+}
 
-/* ================================
-   MÓVIL
-================================ */
+.authModal h2 {
+  text-align: center;
+  color: #35163e;
+  font-size: 25px;
+}
 
-@media (max-width: 900px) {
+.authIntro {
+  text-align: center;
+  color: #847288;
+  margin: 10px 0 22px;
+  line-height: 1.5;
+}
+
+.authModal form {
+  display: grid;
+  gap: 12px;
+}
+
+.authModal input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 13px;
+  border: 1px solid #ded1e3;
+  outline: none;
+  background: #fbf9fc;
+}
+
+.authModal input:focus {
+  border-color: #a92883;
+  box-shadow: 0 0 0 3px rgba(169, 40, 131, 0.08);
+}
+
+.authSubmit {
+  padding: 15px;
+  border: none;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #a92883, #642071);
+  color: white;
+  font-weight: 800;
+  margin-top: 5px;
+}
+
+.authSubmit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.authMessage {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f7eef9;
+  color: #68206f;
+  text-align: center;
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+.authSwitch {
+  border: none;
+  background: transparent;
+  color: #9b277c;
+  font-weight: 700;
+  padding: 8px;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
 
   .header {
-    padding: 0 20px;
+    padding: 0 4%;
+    gap: 10px;
+  }
+
+  .logo {
+    font-size: 20px;
   }
 
   .searchBox {
-    max-width: none;
+    width: auto;
+    flex: 1;
+  }
+
+  .hero {
+    padding: 60px 5%;
   }
 
   .heroContent {
@@ -847,8 +838,11 @@ footer small {
   }
 
   .heroText {
-    margin: auto;
     text-align: center;
+  }
+
+  .heroText p {
+    margin: auto;
   }
 
   .heroButtons {
@@ -856,156 +850,90 @@ footer small {
   }
 
   .heroVisual {
-    min-height: 420px;
+    height: 430px;
   }
 
-  .categoryGrid {
-    grid-template-columns: repeat(3, 1fr);
+  .categoryGrid,
+  .productGrid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .sellerSection {
-    margin: 40px 20px;
+    margin-left: 5%;
+    margin-right: 5%;
+    padding: 40px;
   }
-}
 
+}
 
 @media (max-width: 600px) {
 
   .header {
     height: 70px;
-    gap: 8px;
-  }
-
-  .logo {
-    min-width: 95px;
-  }
-
-  .logo span {
-    font-size: 15px;
-  }
-
-  .logo strong {
-    font-size: 18px;
   }
 
   .searchBox {
-    height: 40px;
+    display: none;
   }
 
-  .searchBox input {
-    padding: 0 12px;
-    font-size: 12px;
-  }
-
-  .searchBox button {
-    width: 38px;
-  }
-
-  .headerButton {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
-
-  .hero {
-    padding: 50px 20px;
-  }
-
-  .hero h1 {
+  .heroText h1 {
     font-size: 58px;
-    letter-spacing: -3px;
   }
 
   .mainCircle {
-    width: 260px;
-    height: 260px;
+    width: 270px;
+    height: 270px;
   }
 
   .shoppingBag {
-    font-size: 65px;
+    font-size: 60px;
+  }
+
+  .circleText {
+    font-size: 20px;
+  }
+
+  .floatingCard {
+    transform: scale(0.85);
   }
 
   .cardOne {
-    left: -5px;
-    top: 55px;
+    left: -10px;
   }
 
   .cardTwo {
-    right: -5px;
-    top: 150px;
+    right: -15px;
   }
 
   .cardThree {
     left: 0;
-    bottom: 30px;
   }
 
-  .floatingCard {
-    min-width: 135px;
-    padding: 10px;
-  }
-
-  .floatingIcon {
-    font-size: 23px;
-  }
-
-  .categories,
-  .featured {
-    padding: 60px 20px;
-  }
-
-  .sectionTitle h2,
-  .featured h2 {
-    font-size: 32px;
-  }
-
-  .categoryGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
+  .categoryGrid,
   .productGrid {
     grid-template-columns: 1fr;
   }
 
   .featuredHeader {
-    align-items: flex-start;
+    align-items: start;
     flex-direction: column;
   }
 
   .sellerSection {
-    padding: 40px 25px;
     flex-direction: column;
-    align-items: flex-start;
+    text-align: center;
   }
 
   .sellerContent h2 {
-    font-size: 40px;
+    font-size: 38px;
   }
 
   .sellerVisual {
-    align-self: center;
-    font-size: 80px;
+    font-size: 90px;
   }
 
   .footerLinks {
     flex-wrap: wrap;
   }
 
-
-  /* MODAL EN TELÉFONO */
-
-  .authOverlay {
-    padding: 15px;
-  }
-
-  .authModal {
-    width: 100%;
-    max-height: calc(100vh - 30px);
-    padding: 34px 22px 25px;
-    border-radius: 24px;
-  }
-
-  .authModal h2 {
-    font-size: 22px;
-  }
 }
