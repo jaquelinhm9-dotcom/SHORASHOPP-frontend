@@ -1,152 +1,39 @@
-import { useState } from "react";
 import "./App.css";
 
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-
   return (
     <div className="app">
 
-      {/* ENCABEZADO */}
+      {/* HEADER */}
       <header className="header">
 
-        {/* BOTONES IZQUIERDA */}
-        <div className="leftButtons">
-
-          <button
-            className="iconButton"
-            onClick={() => setCartOpen(!cartOpen)}
-            aria-label="Carrito"
-          >
-            🛒
-          </button>
-
-          <button
-            className="iconButton menuButton"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Menú"
-          >
-            ☰
-          </button>
-
-        </div>
-
-        {/* LOGO */}
         <div className="logo">
           <span>SHORA</span>
           <strong>SHOPP</strong>
         </div>
 
-        {/* BUSCADOR */}
         <div className="searchBox">
           <input
             type="text"
             placeholder="¿Qué estás buscando?"
           />
-          <button>🔍</button>
+          <button>⌕</button>
+        </div>
+
+        <div className="headerActions">
+          <button className="headerButton">
+            🛒
+          </button>
+
+          <button className="headerButton">
+            👤
+          </button>
         </div>
 
       </header>
 
 
-      {/* MENÚ SOBRE LA PÁGINA */}
-      {menuOpen && (
-        <>
-          <div
-            className="overlay"
-            onClick={() => setMenuOpen(false)}
-          />
-
-          <div className="sideMenu">
-
-            <div className="menuHeader">
-              <h2>SHORASHOPP</h2>
-              <button onClick={() => setMenuOpen(false)}>✕</button>
-            </div>
-
-            <div className="profileBox">
-              <div className="profileIcon">👤</div>
-              <div>
-                <h3>Mi cuenta</h3>
-                <p>Inicia sesión o regístrate</p>
-              </div>
-            </div>
-
-            <button className="menuItem">
-              👤 <span>Cuenta</span>
-            </button>
-
-            <button className="menuItem">
-              💜 <span>Mi perfil</span>
-            </button>
-
-            <button className="menuItem">
-              📦 <span>Mis pedidos</span>
-            </button>
-
-            <button className="menuItem">
-              💬 <span>Mensajes</span>
-            </button>
-
-            <button className="menuItem">
-              ❤️ <span>Favoritos</span>
-            </button>
-
-            <button className="menuItem">
-              ⚙️ <span>Configuración</span>
-            </button>
-
-            <button className="menuItem">
-              ❓ <span>Ayuda</span>
-            </button>
-
-            <div className="menuDivider" />
-
-            <button className="sellerButton">
-              🛍️ Vender en SHORASHOPP
-            </button>
-
-          </div>
-        </>
-      )}
-
-
-      {/* CARRITO */}
-      {cartOpen && (
-        <>
-          <div
-            className="overlay"
-            onClick={() => setCartOpen(false)}
-          />
-
-          <div className="cartPanel">
-
-            <div className="cartHeader">
-              <h2>🛒 Mi carrito</h2>
-              <button onClick={() => setCartOpen(false)}>✕</button>
-            </div>
-
-            <div className="emptyCart">
-              <div className="bigCart">🛒</div>
-              <h3>Tu carrito está vacío</h3>
-              <p>
-                Agrega productos y aparecerán aquí.
-              </p>
-              <button
-                className="continueButton"
-                onClick={() => setCartOpen(false)}
-              >
-                Explorar productos
-              </button>
-            </div>
-
-          </div>
-        </>
-      )}
-
-
-      {/* HERO PRINCIPAL */}
+      {/* HERO */}
       <main>
 
         <section className="hero">
@@ -155,9 +42,9 @@ export default function App() {
 
             <div className="heroText">
 
-              <span className="smallTitle">
-                ✨ TODO EN UN SOLO LUGAR
-              </span>
+              <div className="heroTag">
+                ✦ TODO EN UN SOLO LUGAR
+              </div>
 
               <h1>
                 Compra.
@@ -168,19 +55,21 @@ export default function App() {
               </h1>
 
               <p>
-                Encuentra todo lo que buscas en SHORASHOPP.
-                Productos de diferentes vendedores,
-                grandes oportunidades y mucho más.
+                Encuentra productos increíbles,
+                descubre nuevas oportunidades y
+                compra directamente a vendedores
+                de SHORASHOPP.
               </p>
 
               <div className="heroButtons">
 
                 <button className="primaryButton">
                   Explorar productos
+                  <span>→</span>
                 </button>
 
                 <button className="secondaryButton">
-                  Vender ahora
+                  Quiero vender
                 </button>
 
               </div>
@@ -188,27 +77,51 @@ export default function App() {
             </div>
 
 
-            {/* TARJETAS DECORATIVAS */}
+            {/* VISUAL CENTRAL */}
             <div className="heroVisual">
 
+              <div className="glow glowOne"></div>
+              <div className="glow glowTwo"></div>
+
+              <div className="mainCircle">
+
+                <div className="circleContent">
+                  <div className="shoppingBag">
+                    🛍️
+                  </div>
+
+                  <div className="circleText">
+                    SHORA
+                    <strong>SHOPP</strong>
+                  </div>
+                </div>
+
+              </div>
+
+
+              {/* TARJETAS FLOTANTES */}
+
               <div className="floatingCard cardOne">
-                👜
-                <span>Moda</span>
+                <div className="floatingIcon">👜</div>
+                <div>
+                  <strong>Moda</strong>
+                  <small>Descubre más</small>
+                </div>
               </div>
 
               <div className="floatingCard cardTwo">
-                📱
-                <span>Tecnología</span>
+                <div className="floatingIcon">📱</div>
+                <div>
+                  <strong>Tecnología</strong>
+                  <small>Lo más nuevo</small>
+                </div>
               </div>
 
               <div className="floatingCard cardThree">
-                🏠
-                <span>Hogar</span>
-              </div>
-
-              <div className="mainCircle">
-                <div className="circleInner">
-                  🛍️
+                <div className="floatingIcon">🏠</div>
+                <div>
+                  <strong>Hogar</strong>
+                  <small>Encuentra todo</small>
                 </div>
               </div>
 
@@ -220,44 +133,57 @@ export default function App() {
 
 
         {/* CATEGORÍAS */}
+
         <section className="categories">
 
           <div className="sectionTitle">
-            <h2>Explora categorías</h2>
-            <p>Encuentra algo que te encante</p>
+            <span>CATEGORÍAS</span>
+            <h2>
+              Explora lo que buscas
+            </h2>
+            <p>
+              Todo lo que necesitas, en un solo lugar.
+            </p>
           </div>
+
 
           <div className="categoryGrid">
 
-            <div className="categoryCard">
-              <div>👗</div>
-              <span>Moda</span>
-            </div>
+            <button className="categoryCard">
+              <div className="categoryIcon">👗</div>
+              <strong>Moda</strong>
+              <span>Ver productos →</span>
+            </button>
 
-            <div className="categoryCard">
-              <div>📱</div>
-              <span>Tecnología</span>
-            </div>
+            <button className="categoryCard">
+              <div className="categoryIcon">📱</div>
+              <strong>Tecnología</strong>
+              <span>Ver productos →</span>
+            </button>
 
-            <div className="categoryCard">
-              <div>🏠</div>
-              <span>Hogar</span>
-            </div>
+            <button className="categoryCard">
+              <div className="categoryIcon">🏠</div>
+              <strong>Hogar</strong>
+              <span>Ver productos →</span>
+            </button>
 
-            <div className="categoryCard">
-              <div>💄</div>
-              <span>Belleza</span>
-            </div>
+            <button className="categoryCard">
+              <div className="categoryIcon">💄</div>
+              <strong>Belleza</strong>
+              <span>Ver productos →</span>
+            </button>
 
-            <div className="categoryCard">
-              <div>🎮</div>
-              <span>Entretenimiento</span>
-            </div>
+            <button className="categoryCard">
+              <div className="categoryIcon">🎮</div>
+              <strong>Entretenimiento</strong>
+              <span>Ver productos →</span>
+            </button>
 
-            <div className="categoryCard">
-              <div>🚗</div>
-              <span>Automóviles</span>
-            </div>
+            <button className="categoryCard">
+              <div className="categoryIcon">🚗</div>
+              <strong>Automóviles</strong>
+              <span>Ver productos →</span>
+            </button>
 
           </div>
 
@@ -265,76 +191,121 @@ export default function App() {
 
 
         {/* PRODUCTOS */}
-        <section className="products">
 
-          <div className="sectionTitle productTitle">
+        <section className="featured">
+
+          <div className="featuredHeader">
+
             <div>
-              <h2>Productos destacados</h2>
-              <p>Descubre productos increíbles</p>
+              <span>DESCUBRE</span>
+
+              <h2>
+                Productos destacados
+              </h2>
+
+              <p>
+                Descubre productos que podrían gustarte.
+              </p>
             </div>
 
             <button className="viewAll">
               Ver todos →
             </button>
+
           </div>
+
 
           <div className="productGrid">
 
-            <div className="productCard">
-              <div className="productImage pink">
+            <article className="productCard">
+
+              <div className="productImage productPink">
                 👜
               </div>
-              <h3>Productos de moda</h3>
-              <p>Descubre las novedades</p>
-              <strong>Ver productos →</strong>
-            </div>
 
-            <div className="productCard">
-              <div className="productImage purple">
+              <div className="productInfo">
+                <span>MODA</span>
+                <h3>
+                  Nuevas tendencias
+                </h3>
+                <p>
+                  Descubre productos de moda.
+                </p>
+              </div>
+
+            </article>
+
+
+            <article className="productCard">
+
+              <div className="productImage productPurple">
                 📱
               </div>
-              <h3>Tecnología</h3>
-              <p>Lo último en tecnología</p>
-              <strong>Ver productos →</strong>
-            </div>
 
-            <div className="productCard">
-              <div className="productImage red">
+              <div className="productInfo">
+                <span>TECNOLOGÍA</span>
+                <h3>
+                  Tecnología
+                </h3>
+                <p>
+                  Encuentra lo último.
+                </p>
+              </div>
+
+            </article>
+
+
+            <article className="productCard">
+
+              <div className="productImage productOrange">
                 🏠
               </div>
-              <h3>Hogar</h3>
-              <p>Todo para tu hogar</p>
-              <strong>Ver productos →</strong>
-            </div>
+
+              <div className="productInfo">
+                <span>HOGAR</span>
+                <h3>
+                  Para tu hogar
+                </h3>
+                <p>
+                  Todo para tu espacio.
+                </p>
+              </div>
+
+            </article>
 
           </div>
 
         </section>
 
 
-        {/* INVITACIÓN A VENDEDORES */}
+        {/* VENDE */}
+
         <section className="sellerSection">
 
-          <div>
-            <span>¿TIENES ALGO QUE VENDER?</span>
+          <div className="sellerContent">
+
+            <span>
+              VENDE EN SHORASHOPP
+            </span>
 
             <h2>
-              Convierte tus productos
+              Tu producto.
               <br />
-              en oportunidades.
+              Tu oportunidad.
             </h2>
 
             <p>
-              Publica tus productos y llega a nuevos clientes
-              a través de SHORASHOPP.
+              Publica tus productos y conecta
+              con nuevos compradores.
             </p>
 
             <button>
               Comenzar a vender →
             </button>
+
           </div>
 
-          <div className="sellerIcon">
+          <div className="sellerVisual">
             🛍️
           </div>
 
@@ -344,6 +315,7 @@ export default function App() {
 
 
       {/* FOOTER */}
+
       <footer>
 
         <div className="footerLogo">
@@ -351,7 +323,7 @@ export default function App() {
         </div>
 
         <p>
-          Compra y vende de todo en un solo lugar.
+          Compra, vende y descubre.
         </p>
 
         <div className="footerLinks">
