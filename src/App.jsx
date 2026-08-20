@@ -3,10 +3,11 @@ import "./App.css";
 import { supabase } from "./lib/supabase";
 
 export default function App() {
-  const [showAuth, setShowAuth] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
-  const [authMode, setAuthMode] = useState("login");
+  const [showAuth, setShowAuth] = useState(false);
+  const [activePanel, setActivePanel] = useState(null);
 
+  const [authMode, setAuthMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -32,6 +33,8 @@ export default function App() {
   }, []);
 
   const openAccount = () => {
+    setActivePanel(null);
+    setShowAuth(false);
     setShowAccount(true);
   };
 
@@ -42,11 +45,25 @@ export default function App() {
     setShowAuth(true);
   };
 
+  const openPanel = (panel) => {
+    setShowAccount(false);
+    setShowAuth(false);
+    setActivePanel(panel);
+  };
+
+  const closePanels = () => {
+    setShowAccount(false);
+    setShowAuth(false);
+    setActivePanel(null);
+  };
+
   const handleAuth = async (event) => {
     event.preventDefault();
 
     if (!supabase) {
-      setMessage("La conexión con SHORASHOPP no está disponible.");
+      setMessage(
+        "La conexión con SHORASHOPP no está disponible en este momento."
+      );
       return;
     }
 
@@ -93,9 +110,49 @@ export default function App() {
     }
 
     setUser(null);
-    setShowAccount(false);
+    closePanels();
     setMessage("");
   };
+
+  const panelData = {
+    profile: {
+      icon: "👤",
+      title: "Mi perfil",
+      subtitle: "Administra tu información personal.",
+    },
+    orders: {
+      icon: "📦",
+      title: "Mis pedidos",
+      subtitle: "Aquí aparecerán tus compras.",
+    },
+    products: {
+      icon: "🛍️",
+      title: "Mis productos",
+      subtitle: "Administra los productos que publiques.",
+    },
+    messages: {
+      icon: "💬",
+      title: "Mensajes",
+      subtitle: "Comunícate con compradores y vendedores.",
+    },
+    favorites: {
+      icon: "❤️",
+      title: "Favoritos",
+      subtitle: "Aquí aparecerán los productos que guardes.",
+    },
+    settings: {
+      icon: "⚙️",
+      title: "Configuración",
+      subtitle: "Personaliza tu experiencia en SHORASHOPP.",
+    },
+    cart: {
+      icon: "🛒",
+      title: "Mi carrito",
+      subtitle: "Aquí aparecerán los productos que agregues.",
+    },
+  };
+
+  const currentPanel = activePanel ? panelData[activePanel] : null;
 
   return (
     <div className="app">
@@ -103,10 +160,16 @@ export default function App() {
       {/* HEADER */}
       <header className="header">
 
-        <div className="logo">
+        <button
+          className="logo logoButton"
+          onClick={() => {
+            closePanels();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
           <span>SHORA</span>
           <strong>SHOPP</strong>
-        </div>
+        </button>
 
         <div className="searchBox">
           <input
@@ -120,6 +183,7 @@ export default function App() {
 
           <button
             className="headerButton"
+            onClick={() => openPanel("cart")}
             aria-label="Carrito"
           >
             🛒
@@ -137,10 +201,9 @@ export default function App() {
 
       </header>
 
-      {/* CONTENIDO */}
+      {/* HERO */}
       <main>
 
-        {/* HERO */}
         <section className="hero">
 
           <div className="heroContent">
@@ -167,14 +230,26 @@ export default function App() {
               </p>
 
               <div className="heroButtons">
-                <button className="primaryButton">
+
+                <button
+                  className="primaryButton"
+                  onClick={() =>
+                    document
+                      .getElementById("categorias")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
                   Explorar productos
                   <span>→</span>
                 </button>
 
-                <button className="secondaryButton">
+                <button
+                  className="secondaryButton"
+                  onClick={() => openPanel("products")}
+                >
                   Quiero vender
                 </button>
+
               </div>
 
             </div>
@@ -187,6 +262,7 @@ export default function App() {
               <div className="mainCircle">
 
                 <div className="circleContent">
+
                   <div className="shoppingBag">
                     🛍️
                   </div>
@@ -195,6 +271,7 @@ export default function App() {
                     SHORA
                     <strong>SHOPP</strong>
                   </div>
+
                 </div>
 
               </div>
@@ -230,51 +307,45 @@ export default function App() {
         </section>
 
         {/* CATEGORÍAS */}
-        <section className="categories">
+        <section
+          className="categories"
+          id="categorias"
+        >
 
           <div className="sectionTitle">
+
             <span>CATEGORÍAS</span>
-            <h2>Explora lo que buscas</h2>
-            <p>Todo lo que necesitas, en un solo lugar.</p>
+
+            <h2>
+              Explora lo que buscas
+            </h2>
+
+            <p>
+              Todo lo que necesitas, en un solo lugar.
+            </p>
+
           </div>
 
           <div className="categoryGrid">
 
-            <button className="categoryCard">
-              <div className="categoryIcon">👗</div>
-              <strong>Moda</strong>
-              <span>Ver productos →</span>
-            </button>
-
-            <button className="categoryCard">
-              <div className="categoryIcon">📱</div>
-              <strong>Tecnología</strong>
-              <span>Ver productos →</span>
-            </button>
-
-            <button className="categoryCard">
-              <div className="categoryIcon">🏠</div>
-              <strong>Hogar</strong>
-              <span>Ver productos →</span>
-            </button>
-
-            <button className="categoryCard">
-              <div className="categoryIcon">💄</div>
-              <strong>Belleza</strong>
-              <span>Ver productos →</span>
-            </button>
-
-            <button className="categoryCard">
-              <div className="categoryIcon">🎮</div>
-              <strong>Entretenimiento</strong>
-              <span>Ver productos →</span>
-            </button>
-
-            <button className="categoryCard">
-              <div className="categoryIcon">🚗</div>
-              <strong>Automóviles</strong>
-              <span>Ver productos →</span>
-            </button>
+            {[
+              ["👗", "Moda"],
+              ["📱", "Tecnología"],
+              ["🏠", "Hogar"],
+              ["💄", "Belleza"],
+              ["🎮", "Entretenimiento"],
+              ["🚗", "Automóviles"],
+            ].map(([icon, name]) => (
+              <button
+                className="categoryCard"
+                key={name}
+                onClick={() => openPanel("cart")}
+              >
+                <div className="categoryIcon">{icon}</div>
+                <strong>{name}</strong>
+                <span>Ver productos →</span>
+              </button>
+            ))}
 
           </div>
 
@@ -286,12 +357,23 @@ export default function App() {
           <div className="featuredHeader">
 
             <div>
+
               <span>DESCUBRE</span>
-              <h2>Productos destacados</h2>
-              <p>Descubre productos que podrían gustarte.</p>
+
+              <h2>
+                Productos destacados
+              </h2>
+
+              <p>
+                Descubre productos que podrían gustarte.
+              </p>
+
             </div>
 
-            <button className="viewAll">
+            <button
+              className="viewAll"
+              onClick={() => openPanel("cart")}
+            >
               Ver todos →
             </button>
 
@@ -300,30 +382,90 @@ export default function App() {
           <div className="productGrid">
 
             <article className="productCard">
-              <div className="productImage productPink">👜</div>
+
+              <div className="productImage productPink">
+                👜
+              </div>
+
               <div className="productInfo">
+
                 <span>MODA</span>
-                <h3>Nuevas tendencias</h3>
-                <p>Descubre productos de moda.</p>
+
+                <h3>
+                  Nuevas tendencias
+                </h3>
+
+                <p>
+                  Descubre productos de moda.
+                </p>
+
+                <button
+                  className="productAction"
+                  onClick={() => openPanel("cart")}
+                >
+                  Ver producto →
+                </button>
+
               </div>
+
             </article>
 
             <article className="productCard">
-              <div className="productImage productPurple">📱</div>
+
+              <div className="productImage productPurple">
+                📱
+              </div>
+
               <div className="productInfo">
+
                 <span>TECNOLOGÍA</span>
-                <h3>Tecnología</h3>
-                <p>Encuentra lo último.</p>
+
+                <h3>
+                  Tecnología
+                </h3>
+
+                <p>
+                  Encuentra lo último.
+                </p>
+
+                <button
+                  className="productAction"
+                  onClick={() => openPanel("cart")}
+                >
+                  Ver producto →
+                </button>
+
               </div>
+
             </article>
 
             <article className="productCard">
-              <div className="productImage productOrange">🏠</div>
-              <div className="productInfo">
-                <span>HOGAR</span>
-                <h3>Para tu hogar</h3>
-                <p>Todo para tu espacio.</p>
+
+              <div className="productImage productOrange">
+                🏠
               </div>
+
+              <div className="productInfo">
+
+                <span>HOGAR</span>
+
+                <h3>
+                  Para tu hogar
+                </h3>
+
+                <p>
+                  Todo para tu espacio.
+                </p>
+
+                <button
+                  className="productAction"
+                  onClick={() => openPanel("cart")}
+                >
+                  Ver producto →
+                </button>
+
+              </div>
+
             </article>
 
           </div>
@@ -335,7 +477,9 @@ export default function App() {
 
           <div className="sellerContent">
 
-            <span>VENDE EN SHORASHOPP</span>
+            <span>
+              VENDE EN SHORASHOPP
+            </span>
 
             <h2>
               Tu producto.
@@ -348,7 +492,9 @@ export default function App() {
               con nuevos compradores.
             </p>
 
-            <button>
+            <button
+              onClick={() => openPanel("products")}
+            >
               Comenzar a vender →
             </button>
 
@@ -369,13 +515,28 @@ export default function App() {
           SHORA<strong>SHOPP</strong>
         </div>
 
-        <p>Compra, vende y descubre.</p>
+        <p>
+          Compra, vende y descubre.
+        </p>
 
         <div className="footerLinks">
-          <span>Ayuda</span>
-          <span>Privacidad</span>
-          <span>Términos</span>
-          <span>Contacto</span>
+
+          <button onClick={() => openPanel("messages")}>
+            Ayuda
+          </button>
+
+          <button onClick={() => openPanel("settings")}>
+            Privacidad
+          </button>
+
+          <button onClick={() => openPanel("settings")}>
+            Términos
+          </button>
+
+          <button onClick={() => openPanel("messages")}>
+            Contacto
+          </button>
+
         </div>
 
         <small>
@@ -386,6 +547,7 @@ export default function App() {
 
       {/* PANEL DE CUENTA */}
       {showAccount && (
+
         <div
           className="accountOverlay"
           onClick={() => setShowAccount(false)}
@@ -393,15 +555,21 @@ export default function App() {
 
           <aside
             className="accountPanel"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
 
             <div className="accountPanelHeader">
 
               <div className="accountIdentity">
-                <div className="accountAvatar">✨</div>
+
+                <div className="accountAvatar">
+                  ✨
+                </div>
 
                 <div>
+
                   <strong>
                     {user
                       ? "Mi cuenta"
@@ -413,13 +581,14 @@ export default function App() {
                       ? user.email
                       : "Inicia sesión para continuar"}
                   </small>
+
                 </div>
+
               </div>
 
               <button
                 className="panelClose"
                 onClick={() => setShowAccount(false)}
-                aria-label="Cerrar"
               >
                 ×
               </button>
@@ -427,6 +596,7 @@ export default function App() {
             </div>
 
             {!user && (
+
               <div className="accountLoginBox">
 
                 <p>
@@ -449,11 +619,12 @@ export default function App() {
                 </button>
 
               </div>
+
             )}
 
             <nav className="accountMenu">
 
-              <button>
+              <button onClick={() => openPanel("profile")}>
                 <span>👤</span>
                 <div>
                   <strong>Mi perfil</strong>
@@ -462,7 +633,7 @@ export default function App() {
                 <b>›</b>
               </button>
 
-              <button>
+              <button onClick={() => openPanel("orders")}>
                 <span>📦</span>
                 <div>
                   <strong>Mis pedidos</strong>
@@ -471,7 +642,7 @@ export default function App() {
                 <b>›</b>
               </button>
 
-              <button>
+              <button onClick={() => openPanel("products")}>
                 <span>🛍️</span>
                 <div>
                   <strong>Mis productos</strong>
@@ -480,16 +651,16 @@ export default function App() {
                 <b>›</b>
               </button>
 
-              <button>
+              <button onClick={() => openPanel("messages")}>
                 <span>💬</span>
                 <div>
                   <strong>Mensajes</strong>
-                  <small>Habla con compradores y vendedores</small>
+                  <small>Compradores y vendedores</small>
                 </div>
                 <b>›</b>
               </button>
 
-              <button>
+              <button onClick={() => openPanel("favorites")}>
                 <span>❤️</span>
                 <div>
                   <strong>Favoritos</strong>
@@ -498,7 +669,7 @@ export default function App() {
                 <b>›</b>
               </button>
 
-              <button>
+              <button onClick={() => openPanel("settings")}>
                 <span>⚙️</span>
                 <div>
                   <strong>Configuración</strong>
@@ -510,21 +681,124 @@ export default function App() {
             </nav>
 
             {user && (
+
               <button
                 className="logoutButton"
                 onClick={handleLogout}
               >
                 🚪 Cerrar sesión
               </button>
+
             )}
 
           </aside>
 
         </div>
+
+      )}
+
+      {/* VENTANAS INTERNAS */}
+      {activePanel && currentPanel && (
+
+        <div
+          className="featureOverlay"
+          onClick={closePanels}
+        >
+
+          <section
+            className="featureModal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            <button
+              className="featureClose"
+              onClick={closePanels}
+            >
+              ×
+            </button>
+
+            <div className="featureIcon">
+              {currentPanel.icon}
+            </div>
+
+            <h2>
+              {currentPanel.title}
+            </h2>
+
+            <p className="featureSubtitle">
+              {currentPanel.subtitle}
+            </p>
+
+            {!user && activePanel !== "cart" ? (
+
+              <div className="emptyFeature">
+
+                <div>✨</div>
+
+                <h3>
+                  Inicia sesión para continuar
+                </h3>
+
+                <p>
+                  Necesitas una cuenta de SHORASHOPP
+                  para utilizar esta sección.
+                </p>
+
+                <button
+                  className="featurePrimary"
+                  onClick={() => openAuth("login")}
+                >
+                  Iniciar sesión
+                </button>
+
+                <button
+                  className="featureSecondary"
+                  onClick={() => openAuth("register")}
+                >
+                  Crear una cuenta
+                </button>
+
+              </div>
+
+            ) : (
+
+              <div className="emptyFeature">
+
+                <div className="emptyBig">
+                  {currentPanel.icon}
+                </div>
+
+                <h3>
+                  Esta sección está lista para crecer
+                </h3>
+
+                <p>
+                  Aquí construiremos esta función de
+                  SHORASHOPP en el siguiente paso.
+                </p>
+
+                <button
+                  className="featurePrimary"
+                  onClick={closePanels}
+                >
+                  Volver a SHORASHOPP
+                </button>
+
+              </div>
+
+            )}
+
+          </section>
+
+        </div>
+
       )}
 
       {/* AUTENTICACIÓN */}
       {showAuth && (
+
         <div
           className="authOverlay"
           onClick={() => setShowAuth(false)}
@@ -532,18 +806,21 @@ export default function App() {
 
           <div
             className="authModal"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
 
             <button
               className="authClose"
               onClick={() => setShowAuth(false)}
-              aria-label="Cerrar"
             >
               ×
             </button>
 
-            <div className="authLogo">✨</div>
+            <div className="authLogo">
+              ✨
+            </div>
 
             <h2>
               {authMode === "login"
@@ -560,6 +837,7 @@ export default function App() {
             <form onSubmit={handleAuth}>
 
               {authMode === "register" && (
+
                 <input
                   type="text"
                   placeholder="Nombre completo"
@@ -569,6 +847,7 @@ export default function App() {
                   }
                   required
                 />
+
               )}
 
               <input
@@ -605,21 +884,26 @@ export default function App() {
               </button>
 
               {message && (
+
                 <p className="authMessage">
                   {message}
                 </p>
+
               )}
 
               <button
                 type="button"
                 className="authSwitch"
                 onClick={() => {
+
                   setAuthMode(
                     authMode === "login"
                       ? "register"
                       : "login"
                   );
+
                   setMessage("");
+
                 }}
               >
                 {authMode === "login"
@@ -632,6 +916,7 @@ export default function App() {
           </div>
 
         </div>
+
       )}
 
     </div>
