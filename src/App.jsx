@@ -29,11 +29,31 @@ export default function App() {
   const [productPrice, setProductPrice] = useState("");
   const [productCategory, setProductCategory] = useState("Moda");
   const [productDescription, setProductDescription] = useState("");
+  const [productMessage, setProductMessage] = useState("");
 
+  /* PEDIDOS */
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersMessage, setOrdersMessage] = useState("");
+
+  /*
+   * CARGA INICIAL DE SESIÓN
+   */
   useEffect(() => {
     if (!supabase) return;
 
-    supabase.auth.getSession().then(({ data }) => {
+    let mounted = true;
+
+    const loadSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      if (!mounted) return;
+
       const currentUser = data.session?.user ?? null;
 
       setUser(currentUser);
@@ -44,12 +64,17 @@ export default function App() {
             currentUser.email?.split("@")[0] ||
             ""
         );
+
+        await loadProducts(currentUser.id);
+        await loadOrders(currentUser.id);
       }
-    });
+    };
+
+    loadSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
 
       setUser(currentUser);
@@ -60,20 +85,34 @@ export default function App() {
             currentUser.email?.split("@")[0] ||
             ""
         );
+
+        await loadProducts(currentUser.id);
+        await loadOrders(currentUser.id);
       } else {
         setProfileName("");
+        setProducts([]);
+        setOrders([]);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
+  /*
+   * ABRIR CUENTA
+   */
   const openAccount = () => {
     setActivePanel(null);
     setShowAuth(false);
     setShowAccount(true);
   };
 
+  /*
+   * ABRIR AUTENTICACIÓN
+   */
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setMessage("");
@@ -82,12 +121,26 @@ export default function App() {
     setShowAuth(true);
   };
 
-  const openPanel = (panel) => {
+  /*
+   * ABRIR PANEL
+   */
+  const openPanel = async (panel) => {
     setShowAccount(false);
     setShowAuth(false);
     setActivePanel(panel);
+
+    if (panel === "products" && user) {
+      await loadProducts(user.id);
+    }
+
+    if (panel === "orders" && user) {
+      await loadOrders(user.id);
+    }
   };
 
+  /*
+   * CERRAR TODO
+   */
   const closePanels = () => {
     setShowAccount(false);
     setShowAuth(false);
@@ -95,10 +148,13 @@ export default function App() {
     setEditingProfile(false);
     setShowProductForm(false);
     setProfileSaved(false);
+    setProductMessage("");
+    setOrdersMessage("");
   };
 
-  /* AUTENTICACIÓN */
-
+  /*
+   * AUTENTICACIÓN
+   */
   const handleAuth = async (event) => {
     event.preventDefault();
 
@@ -114,24 +170,28 @@ export default function App() {
 
     try {
       if (authMode === "register") {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
           password,
           options: {
             data: {
-              full_name: fullName,
+              full_name: fullName.trim(),
             },
           },
         });
 
         if (error) throw error;
 
+        if (data.user) {
+          setProfileName(fullName.trim());
+        }
+
         setMessage(
           "¡Registro exitoso! Revisa tu correo para confirmar tu cuenta. ✨"
         );
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password,
         });
 
@@ -140,12 +200,16 @@ export default function App() {
         setMessage("¡Bienvenido a SHORASHOPP! ✨");
       }
     } catch (error) {
+      console.error(error);
       setMessage(error.message || "Ocurrió un error.");
     } finally {
       setLoading(false);
     }
   };
 
+  /*
+   * CERRAR SESIÓN
+   */
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -154,12 +218,14 @@ export default function App() {
     setUser(null);
     setProfileName("");
     setProducts([]);
+    setOrders([]);
     closePanels();
     setMessage("");
   };
 
-  /* PERFIL */
-
+  /*
+   * PERFIL
+   */
   const saveProfile = async () => {
     if (!supabase || !user) return;
 
@@ -174,7 +240,7 @@ export default function App() {
     setProfileSaved(false);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         data: {
           full_name: cleanName,
         },
@@ -182,67 +248,196 @@ export default function App() {
 
       if (error) throw error;
 
-      setUser((current) => {
-        if (!current) return current;
-
-        return {
-          ...current,
-          user_metadata: {
-            ...current.user_metadata,
-            full_name: cleanName,
-          },
-        };
-      });
+      if (data.user) {
+        setUser(data.user);
+      }
 
       setEditingProfile(false);
       setProfileSaved(true);
     } catch (error) {
       console.error(error);
+      setProfileSaved(false);
     } finally {
       setLoading(false);
     }
   };
 
-  /* PRODUCTOS */
+  /*
+   * PRODUCTOS - CARGAR
+   */
+  const loadProducts = async (userId) => {
+    if (!supabase || !userId) return;
 
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando productos:", error);
+        return;
+      }
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  /*
+   * PRODUCTOS - LIMPIAR FORMULARIO
+   */
   const resetProductForm = () => {
     setProductName("");
     setProductPrice("");
     setProductCategory("Moda");
     setProductDescription("");
+    setProductMessage("");
     setShowProductForm(false);
   };
 
-  const createProduct = (event) => {
+  /*
+   * PRODUCTOS - CREAR
+   */
+  const createProduct = async (event) => {
     event.preventDefault();
 
-    if (!productName.trim() || !productPrice.trim()) {
+    if (!supabase || !user) {
+      setProductMessage(
+        "Necesitas iniciar sesión para publicar productos."
+      );
       return;
     }
 
-    const newProduct = {
-      id: Date.now(),
-      name: productName.trim(),
-      price: productPrice.trim(),
-      category: productCategory,
-      description:
-        productDescription.trim() ||
-        "Producto publicado en SHORASHOPP.",
-    };
+    const cleanName = productName.trim();
+    const cleanPrice = Number(productPrice);
+    const cleanDescription =
+      productDescription.trim() ||
+      "Producto publicado en SHORASHOPP.";
 
-    setProducts((current) => [newProduct, ...current]);
+    if (!cleanName || !productPrice || Number.isNaN(cleanPrice)) {
+      setProductMessage("Completa correctamente los datos del producto.");
+      return;
+    }
 
-    resetProductForm();
+    setLoading(true);
+    setProductMessage("");
+
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .insert([
+          {
+            user_id: user.id,
+            name: cleanName,
+            price: cleanPrice,
+            category: productCategory,
+            description: cleanDescription,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProducts((current) => [data, ...current]);
+
+      resetProductForm();
+      setProductMessage("✓ Producto publicado correctamente.");
+    } catch (error) {
+      console.error(error);
+
+      setProductMessage(
+        error.message ||
+          "No fue posible publicar el producto. Revisa la configuración de Supabase."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteProduct = (id) => {
-    setProducts((current) =>
-      current.filter((product) => product.id !== id)
+  /*
+   * PRODUCTOS - ELIMINAR
+   */
+  const deleteProduct = async (id) => {
+    if (!supabase || !user) return;
+
+    const confirmed = window.confirm(
+      "¿Seguro que quieres eliminar este producto?"
     );
+
+    if (!confirmed) return;
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setProducts((current) =>
+        current.filter((product) => product.id !== id)
+      );
+    } catch (error) {
+      console.error(error);
+
+      setProductMessage(
+        error.message || "No fue posible eliminar el producto."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /* INFORMACIÓN DE PANELES */
+  /*
+   * PEDIDOS - CARGAR
+   */
+  const loadOrders = async (userId) => {
+    if (!supabase || !userId) return;
 
+    setOrdersLoading(true);
+    setOrdersMessage("");
+
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando pedidos:", error);
+
+        setOrders([]);
+        setOrdersMessage(
+          "Todavía no hay pedidos disponibles para esta cuenta."
+        );
+
+        return;
+      }
+
+      setOrders(data || []);
+    } catch (error) {
+      console.error(error);
+
+      setOrders([]);
+      setOrdersMessage(
+        "No fue posible consultar los pedidos en este momento."
+      );
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  /*
+   * INFORMACIÓN DE PANELES
+   */
   const panelData = {
     profile: {
       icon: "👤",
@@ -253,37 +448,43 @@ export default function App() {
     orders: {
       icon: "📦",
       title: "Mis pedidos",
-      subtitle: "Consulta tus compras y el estado de tus pedidos.",
+      subtitle:
+        "Consulta tus compras y el estado de tus pedidos.",
     },
 
     products: {
       icon: "🛍️",
       title: "Mis productos",
-      subtitle: "Administra los productos que publiques.",
+      subtitle:
+        "Administra los productos que publiques.",
     },
 
     messages: {
       icon: "💬",
       title: "Mensajes",
-      subtitle: "Comunícate con compradores y vendedores.",
+      subtitle:
+        "Comunícate con compradores y vendedores.",
     },
 
     favorites: {
       icon: "❤️",
       title: "Favoritos",
-      subtitle: "Aquí aparecerán los productos que guardes.",
+      subtitle:
+        "Aquí aparecerán los productos que guardes.",
     },
 
     settings: {
       icon: "⚙️",
       title: "Configuración",
-      subtitle: "Personaliza tu experiencia en SHORASHOPP.",
+      subtitle:
+        "Personaliza tu experiencia en SHORASHOPP.",
     },
 
     cart: {
       icon: "🛒",
       title: "Mi carrito",
-      subtitle: "Aquí aparecerán los productos que agregues.",
+      subtitle:
+        "Aquí aparecerán los productos que agregues.",
     },
   };
 
@@ -291,15 +492,18 @@ export default function App() {
     ? panelData[activePanel]
     : null;
 
-  /* PERFIL */
-
+  /*
+   * PERFIL
+   */
   const renderProfile = () => {
     if (!user) {
       return (
         <div className="emptyFeature">
           <div className="emptyBig">👤</div>
 
-          <h3>Inicia sesión para ver tu perfil</h3>
+          <h3>
+            Inicia sesión para ver tu perfil
+          </h3>
 
           <p>
             Necesitas una cuenta de SHORASHOPP para
@@ -405,15 +609,18 @@ export default function App() {
     );
   };
 
-  /* PEDIDOS */
-
+  /*
+   * PEDIDOS
+   */
   const renderOrders = () => {
     if (!user) {
       return (
         <div className="emptyFeature">
           <div className="emptyBig">📦</div>
 
-          <h3>Inicia sesión para ver tus pedidos</h3>
+          <h3>
+            Inicia sesión para ver tus pedidos
+          </h3>
 
           <p>
             Aquí podrás consultar todas tus compras,
@@ -437,50 +644,133 @@ export default function App() {
       );
     }
 
+    if (ordersLoading) {
+      return (
+        <div className="ordersContent">
+          <div className="ordersEmptyIcon">
+            📦
+          </div>
+
+          <h3>
+            Cargando tus pedidos...
+          </h3>
+
+          <p>
+            Estamos consultando tu historial de compras.
+          </p>
+        </div>
+      );
+    }
+
+    if (orders.length === 0) {
+      return (
+        <div className="ordersContent">
+
+          <div className="ordersEmptyIcon">
+            📦
+          </div>
+
+          <h3>
+            Aún no tienes pedidos
+          </h3>
+
+          <p>
+            Cuando realices una compra en SHORASHOPP,
+            aparecerá aquí con toda su información.
+          </p>
+
+          {ordersMessage && (
+            <div className="authMessage">
+              {ordersMessage}
+            </div>
+          )}
+
+          <button
+            className="featurePrimary"
+            onClick={() => {
+              closePanels();
+
+              setTimeout(() => {
+                document
+                  .getElementById("categorias")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+              }, 50);
+            }}
+          >
+            Explorar productos
+          </button>
+
+        </div>
+      );
+    }
+
     return (
       <div className="ordersContent">
 
-        <div className="ordersEmptyIcon">
-          📦
+        <div className="ordersList">
+
+          {orders.map((order) => (
+            <article
+              className="orderCard"
+              key={order.id}
+            >
+
+              <div className="orderIcon">
+                📦
+              </div>
+
+              <div className="orderInfo">
+
+                <span>
+                  PEDIDO
+                </span>
+
+                <h3>
+                  #{String(order.id).slice(-8)}
+                </h3>
+
+                <p>
+                  Estado:{" "}
+                  <strong>
+                    {order.status || "Pendiente"}
+                  </strong>
+                </p>
+
+                {order.total !== undefined &&
+                  order.total !== null && (
+                    <strong>
+                      ${Number(order.total).toFixed(2)} MXN
+                    </strong>
+                  )}
+
+              </div>
+
+            </article>
+          ))}
+
         </div>
-
-        <h3>Aún no tienes pedidos</h3>
-
-        <p>
-          Cuando realices una compra en SHORASHOPP,
-          aparecerá aquí con toda su información.
-        </p>
-
-        <button
-          className="featurePrimary"
-          onClick={() => {
-            closePanels();
-
-            setTimeout(() => {
-              document
-                .getElementById("categorias")
-                ?.scrollIntoView({
-                  behavior: "smooth",
-                });
-            }, 50);
-          }}
-        >
-          Explorar productos
-        </button>
 
       </div>
     );
   };
 
-  /* PRODUCTOS */
-
+  /*
+   * PRODUCTOS
+   */
   const renderProducts = () => {
     if (!user) {
       return (
         <div className="emptyFeature">
-          <div className="emptyBig">🛍️</div>
 
-          <h3>Inicia sesión para vender</h3>
+          <div className="emptyBig">
+            🛍️
+          </div>
+
+          <h3>
+            Inicia sesión para vender
+          </h3>
 
           <p>
             Crea tu cuenta para comenzar a publicar
@@ -500,6 +790,7 @@ export default function App() {
           >
             Crear una cuenta
           </button>
+
         </div>
       );
     }
@@ -510,10 +801,19 @@ export default function App() {
         {!showProductForm && (
           <button
             className="featurePrimary addProductButton"
-            onClick={() => setShowProductForm(true)}
+            onClick={() => {
+              setProductMessage("");
+              setShowProductForm(true);
+            }}
           >
             ＋ Publicar un producto
           </button>
+        )}
+
+        {productMessage && (
+          <div className="successMessage">
+            {productMessage}
+          </div>
         )}
 
         {showProductForm && (
@@ -522,9 +822,13 @@ export default function App() {
             onSubmit={createProduct}
           >
 
-            <h3>Nuevo producto</h3>
+            <h3>
+              Nuevo producto
+            </h3>
 
-            <label>Nombre del producto</label>
+            <label>
+              Nombre del producto
+            </label>
 
             <input
               value={productName}
@@ -535,7 +839,9 @@ export default function App() {
               required
             />
 
-            <label>Precio</label>
+            <label>
+              Precio
+            </label>
 
             <input
               type="number"
@@ -549,7 +855,9 @@ export default function App() {
               required
             />
 
-            <label>Categoría</label>
+            <label>
+              Categoría
+            </label>
 
             <select
               value={productCategory}
@@ -566,7 +874,9 @@ export default function App() {
               <option>Otros</option>
             </select>
 
-            <label>Descripción</label>
+            <label>
+              Descripción
+            </label>
 
             <textarea
               value={productDescription}
@@ -582,8 +892,11 @@ export default function App() {
               <button
                 type="submit"
                 className="featurePrimary"
+                disabled={loading}
               >
-                Publicar producto
+                {loading
+                  ? "Publicando..."
+                  : "Publicar producto"}
               </button>
 
               <button
@@ -599,22 +912,25 @@ export default function App() {
           </form>
         )}
 
-        {!showProductForm && products.length === 0 && (
-          <div className="productsEmpty">
+        {!showProductForm &&
+          products.length === 0 && (
+            <div className="productsEmpty">
 
-            <div className="emptyBig">
-              🛍️
+              <div className="emptyBig">
+                🛍️
+              </div>
+
+              <h3>
+                Aún no tienes productos
+              </h3>
+
+              <p>
+                Publica tu primer producto y comienza
+                a vender en SHORASHOPP.
+              </p>
+
             </div>
-
-            <h3>Aún no tienes productos</h3>
-
-            <p>
-              Publica tu primer producto y comienza
-              a vender en SHORASHOPP.
-            </p>
-
-          </div>
-        )}
+          )}
 
         {products.length > 0 && (
           <div className="sellerProducts">
@@ -644,7 +960,9 @@ export default function App() {
                   </h4>
 
                   <strong>
-                    ${product.price} MXN
+                    $
+                    {Number(product.price || 0).toFixed(2)}
+                    {" "}MXN
                   </strong>
 
                   <p>
@@ -659,6 +977,7 @@ export default function App() {
                     deleteProduct(product.id)
                   }
                   aria-label="Eliminar producto"
+                  disabled={loading}
                 >
                   🗑️
                 </button>
@@ -673,6 +992,9 @@ export default function App() {
     );
   };
 
+  /*
+   * CONTENIDO DEL PANEL
+   */
   const renderPanelContent = () => {
     switch (activePanel) {
       case "profile":
@@ -1203,14 +1525,16 @@ export default function App() {
               <div className="accountIdentity">
 
                 <div className="accountAvatar">
-                  ✨
+                  {profileName
+                    ? profileName.charAt(0).toUpperCase()
+                    : "✨"}
                 </div>
 
                 <div>
 
                   <strong>
                     {user
-                      ? "Mi cuenta"
+                      ? profileName || "Mi cuenta"
                       : "Bienvenido a SHORASHOPP"}
                   </strong>
 
