@@ -62,10 +62,11 @@ function App() {
     resetForm();
   };
 
-  const switchAuthMode = (mode) => {
-    setAuthMode(mode);
-    setAuthMethod("email");
-    setMessage("");
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const handleEmailAuth = async (event) => {
@@ -114,7 +115,7 @@ function App() {
   };
 
   const handlePhoneAuth = async (event) => {
-    event?.preventDefault();
+    event.preventDefault();
 
     if (!phone.trim()) {
       setMessage("Escribe tu número de teléfono.");
@@ -152,23 +153,13 @@ function App() {
     }
   };
 
-  const scrollToSection = (id) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
   return (
     <div className="app">
-      {/* ================= HEADER ================= */}
-
       <header className="topbar">
         <button
           className="brand"
           type="button"
           onClick={() => scrollToSection("inicio")}
-          aria-label="SHORASHOPP inicio"
         >
           <span className="brand-symbol">S</span>
 
@@ -178,25 +169,30 @@ function App() {
         </button>
 
         <nav className="desktop-nav">
-          <button onClick={() => scrollToSection("inicio")}>Inicio</button>
-          <button onClick={() => scrollToSection("productos")}>
+          <button type="button" onClick={() => scrollToSection("inicio")}>
+            Inicio
+          </button>
+
+          <button type="button" onClick={() => scrollToSection("productos")}>
             Productos
           </button>
-          <button onClick={() => scrollToSection("categorias")}>
+
+          <button type="button" onClick={() => scrollToSection("categorias")}>
             Categorías
           </button>
-          <button onClick={() => scrollToSection("nosotros")}>
+
+          <button type="button" onClick={() => scrollToSection("nosotros")}>
             Nosotros
           </button>
         </nav>
 
         <div className="header-actions">
           <button className="header-icon" type="button" aria-label="Buscar">
-            <span>⌕</span>
+            ⌕
           </button>
 
           <button className="header-icon cart-button" type="button">
-            <span>🛒</span>
+            🛒
             <small>0</small>
           </button>
 
@@ -221,11 +217,7 @@ function App() {
         </div>
       </header>
 
-      {/* ================= MAIN ================= */}
-
       <main>
-        {/* ================= HERO ================= */}
-
         <section className="hero" id="inicio">
           <div className="hero-left">
             <div className="hero-label">
@@ -281,8 +273,6 @@ function App() {
             </div>
           </div>
 
-          {/* Visual principal */}
-
           <div className="hero-right">
             <div className="hero-background-shape" />
 
@@ -317,8 +307,6 @@ function App() {
           </div>
         </section>
 
-        {/* ================= MARQUEE ================= */}
-
         <section className="marquee">
           <div className="marquee-track">
             <span>SHORASHOPP</span>
@@ -335,8 +323,6 @@ function App() {
             <i>✦</i>
           </div>
         </section>
-
-        {/* ================= CATEGORÍAS ================= */}
 
         <section className="section categories-section" id="categorias">
           <div className="section-header">
@@ -400,8 +386,6 @@ function App() {
             </button>
           </div>
         </section>
-
-        {/* ================= PRODUCTOS ================= */}
 
         <section className="section products-section" id="productos">
           <div className="section-header">
@@ -481,8 +465,6 @@ function App() {
           </div>
         </section>
 
-        {/* ================= NOSOTROS ================= */}
-
         <section className="about-section" id="nosotros">
           <div className="about-number">03</div>
 
@@ -514,8 +496,6 @@ function App() {
         </section>
       </main>
 
-      {/* ================= FOOTER ================= */}
-
       <footer className="footer">
         <div className="footer-top">
           <button
@@ -531,14 +511,25 @@ function App() {
           </button>
 
           <div className="footer-links">
-            <button onClick={() => scrollToSection("inicio")}>Inicio</button>
-            <button onClick={() => scrollToSection("productos")}>
+            <button type="button" onClick={() => scrollToSection("inicio")}>
+              Inicio
+            </button>
+
+            <button
+              type="button"
+              onClick={() => scrollToSection("productos")}
+            >
               Productos
             </button>
-            <button onClick={() => scrollToSection("categorias")}>
+
+            <button
+              type="button"
+              onClick={() => scrollToSection("categorias")}
+            >
               Categorías
             </button>
-            <button onClick={() => scrollToSection("nosotros")}>
+
+            <button type="button" onClick={() => scrollToSection("nosotros")}>
               Nosotros
             </button>
           </div>
@@ -549,8 +540,6 @@ function App() {
           <span>Todos los derechos reservados.</span>
         </div>
       </footer>
-
-      {/* ================= AUTH MODAL ================= */}
 
       {showAuth && (
         <div
@@ -666,7 +655,9 @@ function App() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     autoComplete={
-                      authMode === "login" ? "current-password" : "new-password"
+                      authMode === "login"
+                        ? "current-password"
+                        : "new-password"
                     }
                     minLength={6}
                     required
@@ -716,17 +707,21 @@ function App() {
                   />
                 </label>
 
-                          <button
-            type="button"
-            className="auth-submit"
-            onClick={() => setAuthMode("login")}
-          >
-            Iniciar sesión
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+                <button
+                  className="auth-submit"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? "Enviando..." : "Enviar código"}
 
-export default App;
+                  <span>↗</span>
+                </button>
+              </form>
+            )}
+
+            {message && <div className="auth-message">{message}</div>}
+
+            <div className="auth-switch">
+              {authMode === "login" ? (
+                <>
+        
