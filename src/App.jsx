@@ -13,61 +13,124 @@ export default function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
+    if (!supabase) {
+      console.warn("Supabase no está disponible.");
+      return;
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    let subscription = null;
 
-    return () => subscription.unsubscribe();
+    const loadSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Error al obtener la sesión:", error);
+          return;
+        }
+
+        setUser(data?.session?.user ?? null);
+
+        const authListener = supabase.auth.onAuthStateChange(
+          (_event, session) => {
+            setUser(session?.user ?? null);
+          }
+        );
+
+        subscription = authListener?.data?.subscription ?? null;
+      } catch (error) {
+        console.error("Error de Supabase:", error);
+      }
+    };
+
+    loadSession();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleAuth = async (event) => {
     event.preventDefault();
+
+    if (!supabase) {
+      setMessage(
+        "La conexión con SHORASHOPP no está disponible en este momento."
+      );
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
     try {
       if (authMode === "register") {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: email.trim(),
           password,
           options: {
             data: {
-              full_name: fullName,
+              full_name: fullName.trim(),
             },
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         setMessage(
           "¡Registro exitoso! Revisa tu correo para confirmar tu cuenta."
         );
+
+        setPassword("");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         setMessage("¡Bienvenido a SHORASHOPP! ✨");
+        setPassword("");
       }
     } catch (error) {
-      setMessage(error.message || "Ocurrió un error.");
+      console.error("Error de autenticación:", error);
+
+      setMessage(
+        error?.message || "Ocurrió un error. Inténtalo nuevamente."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (!supabase) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+
     setUser(null);
+    setMessage("");
+  };
+
+  const openAuth = () => {
+    setShowAuth(true);
+    setMessage("");
+  };
+
+  const closeAuth = () => {
+    setShowAuth(false);
     setMessage("");
   };
 
@@ -87,21 +150,26 @@ export default function App() {
             type="text"
             placeholder="¿Qué estás buscando?"
           />
-          <button>⌕</button>
+
+          <button type="button">
+            ⌕
+          </button>
         </div>
 
         <div className="headerActions">
 
-          <button className="headerButton">
+          <button
+            type="button"
+            className="headerButton"
+            aria-label="Carrito"
+          >
             🛒
           </button>
 
           <button
+            type="button"
             className="headerButton"
-            onClick={() => {
-              setShowAuth(true);
-              setMessage("");
-            }}
+            onClick={openAuth}
             aria-label="Cuenta"
           >
             ✨
@@ -142,12 +210,18 @@ export default function App() {
 
               <div className="heroButtons">
 
-                <button className="primaryButton">
+                <button
+                  type="button"
+                  className="primaryButton"
+                >
                   Explorar productos
                   <span>→</span>
                 </button>
 
-                <button className="secondaryButton">
+                <button
+                  type="button"
+                  className="secondaryButton"
+                >
                   Quiero vender
                 </button>
 
@@ -183,30 +257,44 @@ export default function App() {
               {/* TARJETAS FLOTANTES */}
 
               <div className="floatingCard cardOne">
-                <div className="floatingIcon">👜</div>
+
+                <div className="floatingIcon">
+                  👜
+                </div>
 
                 <div>
                   <strong>Moda</strong>
                   <small>Descubre más</small>
                 </div>
+
               </div>
 
+
               <div className="floatingCard cardTwo">
-                <div className="floatingIcon">📱</div>
+
+                <div className="floatingIcon">
+                  📱
+                </div>
 
                 <div>
                   <strong>Tecnología</strong>
                   <small>Lo más nuevo</small>
                 </div>
+
               </div>
 
+
               <div className="floatingCard cardThree">
-                <div className="floatingIcon">🏠</div>
+
+                <div className="floatingIcon">
+                  🏠
+                </div>
 
                 <div>
                   <strong>Hogar</strong>
                   <small>Encuentra todo</small>
                 </div>
+
               </div>
 
             </div>
@@ -237,37 +325,37 @@ export default function App() {
 
           <div className="categoryGrid">
 
-            <button className="categoryCard">
+            <button type="button" className="categoryCard">
               <div className="categoryIcon">👗</div>
               <strong>Moda</strong>
               <span>Ver productos →</span>
             </button>
 
-            <button className="categoryCard">
+            <button type="button" className="categoryCard">
               <div className="categoryIcon">📱</div>
               <strong>Tecnología</strong>
               <span>Ver productos →</span>
             </button>
 
-            <button className="categoryCard">
+            <button type="button" className="categoryCard">
               <div className="categoryIcon">🏠</div>
               <strong>Hogar</strong>
               <span>Ver productos →</span>
             </button>
 
-            <button className="categoryCard">
+            <button type="button" className="categoryCard">
               <div className="categoryIcon">💄</div>
               <strong>Belleza</strong>
               <span>Ver productos →</span>
             </button>
 
-            <button className="categoryCard">
+            <button type="button" className="categoryCard">
               <div className="categoryIcon">🎮</div>
               <strong>Entretenimiento</strong>
               <span>Ver productos →</span>
             </button>
 
-            <button className="categoryCard">
+            <button type="button" className="categoryCard">
               <div className="categoryIcon">🚗</div>
               <strong>Automóviles</strong>
               <span>Ver productos →</span>
@@ -298,7 +386,10 @@ export default function App() {
 
             </div>
 
-            <button className="viewAll">
+            <button
+              type="button"
+              className="viewAll"
+            >
               Ver todos →
             </button>
 
@@ -401,7 +492,7 @@ export default function App() {
               con nuevos compradores.
             </p>
 
-            <button>
+            <button type="button">
               Comenzar a vender →
             </button>
 
@@ -448,7 +539,7 @@ export default function App() {
 
         <div
           className="authOverlay"
-          onClick={() => setShowAuth(false)}
+          onClick={closeAuth}
         >
 
           <div
@@ -457,16 +548,19 @@ export default function App() {
           >
 
             <button
+              type="button"
               className="authClose"
-              onClick={() => setShowAuth(false)}
+              onClick={closeAuth}
               aria-label="Cerrar"
             >
               ×
             </button>
 
+
             <div className="authLogo">
               ✨
             </div>
+
 
             <h2>
               {user
@@ -475,6 +569,7 @@ export default function App() {
                 ? "Bienvenido a SHORASHOPP"
                 : "Crea tu cuenta"}
             </h2>
+
 
             {user ? (
 
@@ -489,6 +584,7 @@ export default function App() {
                 </p>
 
                 <button
+                  type="button"
                   className="authSubmit"
                   onClick={handleLogout}
                 >
@@ -515,6 +611,7 @@ export default function App() {
 
                 )}
 
+
                 <input
                   type="email"
                   placeholder="Correo electrónico"
@@ -525,6 +622,7 @@ export default function App() {
                   required
                 />
 
+
                 <input
                   type="password"
                   placeholder="Contraseña"
@@ -532,9 +630,10 @@ export default function App() {
                   onChange={(event) =>
                     setPassword(event.target.value)
                   }
-                  minLength="6"
+                  minLength={6}
                   required
                 />
+
 
                 <button
                   type="submit"
@@ -548,11 +647,15 @@ export default function App() {
                     : "Crear cuenta"}
                 </button>
 
+
                 {message && (
+
                   <p className="authMessage">
                     {message}
                   </p>
+
                 )}
+
 
                 <button
                   type="button"
@@ -563,6 +666,7 @@ export default function App() {
                         ? "register"
                         : "login"
                     );
+
                     setMessage("");
                   }}
                 >
