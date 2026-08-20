@@ -16,10 +16,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Descargar código
         uses: actions/checkout@v4
 
@@ -27,13 +29,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      
+          cache: npm
 
       - name: Instalar dependencias
         run: npm install
 
       - name: Compilar SHORASHOPP
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
@@ -47,10 +52,13 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     needs: build
+
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Publicar SHORASHOPP
         id: deployment
         uses: actions/deploy-pages@v4
