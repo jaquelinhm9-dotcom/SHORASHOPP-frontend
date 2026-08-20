@@ -716,5 +716,17 @@ function App() {
                   />
                 </label>
 
-                <button
-          
+                          <button
+            type="button"
+            className="auth-submit"
+            onClick={() => setAuthMode("login")}
+          >
+            Iniciar sesión
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
