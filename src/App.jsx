@@ -3,11 +3,14 @@ import "./App.css";
 import { supabase } from "./lib/supabase";
 
 export default function App() {
+  const [showAuth, setShowAuth] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
@@ -30,21 +33,20 @@ export default function App() {
 
   const openAccount = () => {
     setShowAccount(true);
-    setMessage("");
   };
 
-  const closeAccount = () => {
-    setShowAccount(false);
+  const openAuth = (mode = "login") => {
+    setAuthMode(mode);
     setMessage("");
+    setShowAccount(false);
+    setShowAuth(true);
   };
 
   const handleAuth = async (event) => {
     event.preventDefault();
 
     if (!supabase) {
-      setMessage(
-        "La conexión con SHORASHOPP no está disponible en este momento."
-      );
+      setMessage("La conexión con SHORASHOPP no está disponible.");
       return;
     }
 
@@ -91,17 +93,7 @@ export default function App() {
     }
 
     setUser(null);
-    setMessage("");
-    setAuthMode("login");
-  };
-
-  const openLogin = () => {
-    setAuthMode("login");
-    setMessage("");
-  };
-
-  const openRegister = () => {
-    setAuthMode("register");
+    setShowAccount(false);
     setMessage("");
   };
 
@@ -134,7 +126,7 @@ export default function App() {
           </button>
 
           <button
-            className="headerButton"
+            className="headerButton accountButton"
             onClick={openAccount}
             aria-label="Cuenta"
           >
@@ -145,10 +137,10 @@ export default function App() {
 
       </header>
 
-
-      {/* HERO */}
+      {/* CONTENIDO */}
       <main>
 
+        {/* HERO */}
         <section className="hero">
 
           <div className="heroContent">
@@ -175,7 +167,6 @@ export default function App() {
               </p>
 
               <div className="heroButtons">
-
                 <button className="primaryButton">
                   Explorar productos
                   <span>→</span>
@@ -184,11 +175,9 @@ export default function App() {
                 <button className="secondaryButton">
                   Quiero vender
                 </button>
-
               </div>
 
             </div>
-
 
             <div className="heroVisual">
 
@@ -198,7 +187,6 @@ export default function App() {
               <div className="mainCircle">
 
                 <div className="circleContent">
-
                   <div className="shoppingBag">
                     🛍️
                   </div>
@@ -207,7 +195,6 @@ export default function App() {
                     SHORA
                     <strong>SHOPP</strong>
                   </div>
-
                 </div>
 
               </div>
@@ -242,20 +229,13 @@ export default function App() {
 
         </section>
 
-
         {/* CATEGORÍAS */}
         <section className="categories">
 
           <div className="sectionTitle">
             <span>CATEGORÍAS</span>
-
-            <h2>
-              Explora lo que buscas
-            </h2>
-
-            <p>
-              Todo lo que necesitas, en un solo lugar.
-            </p>
+            <h2>Explora lo que buscas</h2>
+            <p>Todo lo que necesitas, en un solo lugar.</p>
           </div>
 
           <div className="categoryGrid">
@@ -300,7 +280,6 @@ export default function App() {
 
         </section>
 
-
         {/* PRODUCTOS */}
         <section className="featured">
 
@@ -308,14 +287,8 @@ export default function App() {
 
             <div>
               <span>DESCUBRE</span>
-
-              <h2>
-                Productos destacados
-              </h2>
-
-              <p>
-                Descubre productos que podrían gustarte.
-              </p>
+              <h2>Productos destacados</h2>
+              <p>Descubre productos que podrían gustarte.</p>
             </div>
 
             <button className="viewAll">
@@ -327,10 +300,7 @@ export default function App() {
           <div className="productGrid">
 
             <article className="productCard">
-              <div className="productImage productPink">
-                👜
-              </div>
-
+              <div className="productImage productPink">👜</div>
               <div className="productInfo">
                 <span>MODA</span>
                 <h3>Nuevas tendencias</h3>
@@ -339,10 +309,7 @@ export default function App() {
             </article>
 
             <article className="productCard">
-              <div className="productImage productPurple">
-                📱
-              </div>
-
+              <div className="productImage productPurple">📱</div>
               <div className="productInfo">
                 <span>TECNOLOGÍA</span>
                 <h3>Tecnología</h3>
@@ -351,10 +318,7 @@ export default function App() {
             </article>
 
             <article className="productCard">
-              <div className="productImage productOrange">
-                🏠
-              </div>
-
+              <div className="productImage productOrange">🏠</div>
               <div className="productInfo">
                 <span>HOGAR</span>
                 <h3>Para tu hogar</h3>
@@ -366,15 +330,12 @@ export default function App() {
 
         </section>
 
-
         {/* VENDE */}
         <section className="sellerSection">
 
           <div className="sellerContent">
 
-            <span>
-              VENDE EN SHORASHOPP
-            </span>
+            <span>VENDE EN SHORASHOPP</span>
 
             <h2>
               Tu producto.
@@ -401,7 +362,6 @@ export default function App() {
 
       </main>
 
-
       {/* FOOTER */}
       <footer>
 
@@ -409,9 +369,7 @@ export default function App() {
           SHORA<strong>SHOPP</strong>
         </div>
 
-        <p>
-          Compra, vende y descubre.
-        </p>
+        <p>Compra, vende y descubre.</p>
 
         <div className="footerLinks">
           <span>Ayuda</span>
@@ -426,13 +384,11 @@ export default function App() {
 
       </footer>
 
-
       {/* PANEL DE CUENTA */}
       {showAccount && (
-
         <div
           className="accountOverlay"
-          onClick={closeAccount}
+          onClick={() => setShowAccount(false)}
         >
 
           <aside
@@ -440,173 +396,138 @@ export default function App() {
             onClick={(event) => event.stopPropagation()}
           >
 
-            <button
-              className="accountClose"
-              onClick={closeAccount}
-              aria-label="Cerrar"
-            >
-              ×
-            </button>
+            <div className="accountPanelHeader">
 
+              <div className="accountIdentity">
+                <div className="accountAvatar">✨</div>
 
-            {!user ? (
+                <div>
+                  <strong>
+                    {user
+                      ? "Mi cuenta"
+                      : "Bienvenido a SHORASHOPP"}
+                  </strong>
 
-              <>
-                <div className="accountTop">
-                  <div className="accountIcon">
-                    ✨
-                  </div>
-
-                  <h2>
-                    Mi cuenta
-                  </h2>
-
-                  <p>
-                    Entra a SHORASHOPP para disfrutar
-                    de todas las funciones.
-                  </p>
+                  <small>
+                    {user
+                      ? user.email
+                      : "Inicia sesión para continuar"}
+                  </small>
                 </div>
+              </div>
 
+              <button
+                className="panelClose"
+                onClick={() => setShowAccount(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
 
-                <div className="accountAuthButtons">
+            </div>
 
-                  <button
-                    className="accountPrimary"
-                    onClick={openLogin}
-                  >
-                    Iniciar sesión
-                  </button>
+            {!user && (
+              <div className="accountLoginBox">
 
-                  <button
-                    className="accountSecondary"
-                    onClick={openRegister}
-                  >
-                    Crear cuenta
-                  </button>
-
-                </div>
-
-
-                <div className="accountDivider">
-                  <span>o continúa como visitante</span>
-                </div>
-
-
-                <div className="accountGuestMenu">
-
-                  <button>
-                    ❤️
-                    <span>Mis favoritos</span>
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    🛒
-                    <span>Mi carrito</span>
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    🛍️
-                    <span>Vender en SHORASHOPP</span>
-                    <b>›</b>
-                  </button>
-
-                </div>
-
-              </>
-
-            ) : (
-
-              <>
-                <div className="accountTop loggedUser">
-
-                  <div className="profileCircle">
-                    {(
-                      user.user_metadata?.full_name ||
-                      user.email ||
-                      "U"
-                    )
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
-
-                  <h2>
-                    {user.user_metadata?.full_name || "Mi cuenta"}
-                  </h2>
-
-                  <p>
-                    {user.email}
-                  </p>
-
-                </div>
-
-
-                <nav className="accountMenu">
-
-                  <button>
-                    <span>👤</span>
-                    Mi perfil
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    <span>📦</span>
-                    Mis pedidos
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    <span>💬</span>
-                    Mensajes
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    <span>❤️</span>
-                    Mis favoritos
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    <span>⚙️</span>
-                    Configuración
-                    <b>›</b>
-                  </button>
-
-                  <button>
-                    <span>🛍️</span>
-                    Vender en SHORASHOPP
-                    <b>›</b>
-                  </button>
-
-                </nav>
-
+                <p>
+                  Accede a tu cuenta para disfrutar
+                  de todas las funciones.
+                </p>
 
                 <button
-                  className="logoutButton"
-                  onClick={handleLogout}
+                  className="panelPrimary"
+                  onClick={() => openAuth("login")}
                 >
-                  🚪 Cerrar sesión
+                  Iniciar sesión
                 </button>
 
-              </>
+                <button
+                  className="panelSecondary"
+                  onClick={() => openAuth("register")}
+                >
+                  Crear una cuenta
+                </button>
 
+              </div>
+            )}
+
+            <nav className="accountMenu">
+
+              <button>
+                <span>👤</span>
+                <div>
+                  <strong>Mi perfil</strong>
+                  <small>Información personal</small>
+                </div>
+                <b>›</b>
+              </button>
+
+              <button>
+                <span>📦</span>
+                <div>
+                  <strong>Mis pedidos</strong>
+                  <small>Consulta tus compras</small>
+                </div>
+                <b>›</b>
+              </button>
+
+              <button>
+                <span>🛍️</span>
+                <div>
+                  <strong>Mis productos</strong>
+                  <small>Administra tus publicaciones</small>
+                </div>
+                <b>›</b>
+              </button>
+
+              <button>
+                <span>💬</span>
+                <div>
+                  <strong>Mensajes</strong>
+                  <small>Habla con compradores y vendedores</small>
+                </div>
+                <b>›</b>
+              </button>
+
+              <button>
+                <span>❤️</span>
+                <div>
+                  <strong>Favoritos</strong>
+                  <small>Productos que guardaste</small>
+                </div>
+                <b>›</b>
+              </button>
+
+              <button>
+                <span>⚙️</span>
+                <div>
+                  <strong>Configuración</strong>
+                  <small>Preferencias de tu cuenta</small>
+                </div>
+                <b>›</b>
+              </button>
+
+            </nav>
+
+            {user && (
+              <button
+                className="logoutButton"
+                onClick={handleLogout}
+              >
+                🚪 Cerrar sesión
+              </button>
             )}
 
           </aside>
 
         </div>
-
       )}
 
-
-      {/* VENTANA DE LOGIN / REGISTRO */}
-      {showAccount && !user && authMode && (
-
+      {/* AUTENTICACIÓN */}
+      {showAuth && (
         <div
           className="authOverlay"
-          onClick={() => setAuthMode(null)}
+          onClick={() => setShowAuth(false)}
         >
 
           <div
@@ -616,15 +537,13 @@ export default function App() {
 
             <button
               className="authClose"
-              onClick={() => setAuthMode(null)}
+              onClick={() => setShowAuth(false)}
               aria-label="Cerrar"
             >
               ×
             </button>
 
-            <div className="authLogo">
-              ✨
-            </div>
+            <div className="authLogo">✨</div>
 
             <h2>
               {authMode === "login"
@@ -632,16 +551,15 @@ export default function App() {
                 : "Crea tu cuenta"}
             </h2>
 
-            <p className="authIntro">
+            <p className="authSubtitle">
               {authMode === "login"
                 ? "Inicia sesión para continuar."
-                : "Únete a SHORASHOPP y descubre todo lo que tenemos para ti."}
+                : "Regístrate y comienza a disfrutar SHORASHOPP."}
             </p>
 
             <form onSubmit={handleAuth}>
 
               {authMode === "register" && (
-
                 <input
                   type="text"
                   placeholder="Nombre completo"
@@ -651,7 +569,6 @@ export default function App() {
                   }
                   required
                 />
-
               )}
 
               <input
@@ -671,7 +588,7 @@ export default function App() {
                 onChange={(event) =>
                   setPassword(event.target.value)
                 }
-                minLength={6}
+                minLength="6"
                 required
               />
 
@@ -715,7 +632,6 @@ export default function App() {
           </div>
 
         </div>
-
       )}
 
     </div>
