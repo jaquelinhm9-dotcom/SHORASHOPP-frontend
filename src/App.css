@@ -859,3 +859,175 @@ footer small {
     padding: 30px 22px;
   }
 }
+/* BOTÓN LOGO */
+
+.logoButton {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+
+/* BOTONES DE PRODUCTO */
+
+.productAction {
+  margin-top: 15px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #f7eafa;
+  color: #7423bd;
+  font-weight: 700;
+}
+
+
+/* FOOTER INTERACTIVO */
+
+.footerLinks button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+
+/* VENTANAS INTERNAS */
+
+.featureOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(25, 12, 32, 0.58);
+  backdrop-filter: blur(6px);
+}
+
+.featureModal {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 40px;
+  border-radius: 28px;
+  background: white;
+  box-shadow: 0 30px 90px rgba(35, 12, 45, 0.32);
+  text-align: center;
+  animation: featureIn 0.22s ease;
+}
+
+@keyframes featureIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.featureClose {
+  position: absolute;
+  top: 15px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: #faf3fc;
+  color: #766477;
+  font-size: 27px;
+}
+
+.featureIcon {
+  width: 75px;
+  height: 75px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #ffe4f0, #eee3ff);
+  font-size: 36px;
+}
+
+.featureModal h2 {
+  margin: 0;
+  font-size: 32px;
+  color: #281632;
+}
+
+.featureSubtitle {
+  margin: 10px 0 0;
+  color: #817383;
+  line-height: 1.6;
+}
+
+.emptyFeature {
+  margin-top: 30px;
+  padding: 30px 20px;
+  border-radius: 20px;
+  background: #faf5fc;
+}
+
+.emptyFeature > div:first-child {
+  font-size: 45px;
+}
+
+.emptyBig {
+  font-size: 65px !important;
+  margin-bottom: 10px;
+}
+
+.emptyFeature h3 {
+  margin: 10px 0;
+  color: #302039;
+}
+
+.emptyFeature p {
+  color: #7d7080;
+  line-height: 1.6;
+}
+
+.featurePrimary,
+.featureSecondary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.featurePrimary {
+  border: 0;
+  color: white;
+  background: linear-gradient(135deg, #e32b78, #7525c6);
+}
+
+.featureSecondary {
+  margin-top: 10px;
+  border: 1px solid #dfcde4;
+  background: white;
+  color: #7224bb;
+}
+
+
+/* MEJORAS MÓVILES */
+
+@media (max-width: 800px) {
+
+  .featureModal {
+    padding: 32px 22px;
+  }
+
+  .featureModal h2 {
+    font-size: 27px;
+  }
+
+  .logoButton {
+    font-size: 21px;
+  }
+
+}
