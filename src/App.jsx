@@ -57,6 +57,9 @@ const products = [
 function App() {
   const [session, setSession] = useState(null);
 
+  const [view, setView] = useState("home");
+  const [previousView, setPreviousView] = useState("home");
+
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
@@ -67,20 +70,11 @@ function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [showMenu, setShowMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showCart, setShowCart] = useState(false);
-  const [showFavorites, setShowFavorites] = useState(false);
-
-  const [activeCategory, setActiveCategory] = useState("Todas");
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const [showAllProducts, setShowAllProducts] = useState(false);
-
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Todas");
+
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
-
-  const [activePanel, setActivePanel] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -97,9 +91,11 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
-    });
+    } = supabase.auth.onAuthStateChange(
+      (_event, currentSession) => {
+        setSession(currentSession);
+      }
+    );
 
     return () => {
       mounted = false;
@@ -107,11 +103,48 @@ function App() {
     };
   }, []);
 
+  /* =========================
+     NAVEGACIÓN
+  ========================= */
+
+  const navigate = (newView) => {
+    setPreviousView(view);
+    setView(newView);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const goBack = () => {
+    setView(previousView || "home");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const goHome = () => {
+    setView("home");
+    setSelectedCategory("Todas");
+    setSearch("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  /* =========================
+     AUTENTICACIÓN
+  ========================= */
+
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setMessage("");
     setShowAuth(true);
-    setShowMenu(false);
   };
 
   const closeAuth = () => {
@@ -145,20 +178,23 @@ function App() {
 
         if (data?.session) {
           closeAuth();
+          navigate("account");
         } else {
           setMessage(
             "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
           );
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+        const { error } =
+          await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
 
         if (error) throw error;
 
         closeAuth();
+        navigate("account");
       }
     } catch (error) {
       setMessage(error?.message || "Ocurrió un error.");
@@ -170,23 +206,12 @@ function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSession(null);
-    setShowMenu(false);
-    setActivePanel(null);
+    navigate("home");
   };
 
-  const goHome = () => {
-    setActiveCategory("Todas");
-    setSearch("");
-    setShowAllCategories(false);
-    setShowAllProducts(false);
-    setShowFavorites(false);
-    setActivePanel(null);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  /* =========================
+     FAVORITOS
+  ========================= */
 
   const toggleFavorite = (productName) => {
     setFavorites((current) =>
@@ -195,6 +220,10 @@ function App() {
         : [...current, productName]
     );
   };
+
+  /* =========================
+     CARRITO
+  ========================= */
 
   const addToCart = (product) => {
     setCart((current) => {
@@ -205,7 +234,10 @@ function App() {
       if (existing) {
         return current.map((item) =>
           item.name === product.name
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
             : item
         );
       }
@@ -218,8 +250,6 @@ function App() {
         },
       ];
     });
-
-    setShowCart(true);
   };
 
   const changeCartQuantity = (productName, amount) => {
@@ -243,19 +273,24 @@ function App() {
   );
 
   const cartTotal = cart.reduce((total, item) => {
-    const numericPrice = Number(
+    const price = Number(
       item.price.replace("$", "").replace(",", "")
     );
 
-    return total + numericPrice * item.quantity;
+    return total + price * item.quantity;
   }, 0);
+
+  /* =========================
+     PRODUCTOS FILTRADOS
+  ========================= */
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    if (activeCategory !== "Todas") {
+    if (selectedCategory !== "Todas") {
       result = result.filter(
-        (product) => product.category === activeCategory
+        (product) =>
+          product.category === selectedCategory
       );
     }
 
@@ -269,369 +304,211 @@ function App() {
       );
     }
 
-    if (showFavorites) {
-      result = result.filter((product) =>
-        favorites.includes(product.name)
-      );
-    }
-
-    if (!showAllProducts && !search.trim()) {
-      result = result.slice(0, 4);
-    }
-
     return result;
-  }, [
-    activeCategory,
-    search,
-    showFavorites,
-    favorites,
-    showAllProducts,
-  ]);
+  }, [selectedCategory, search]);
 
-  const selectCategory = (categoryName) => {
-    setActiveCategory(categoryName);
-    setShowFavorites(false);
-    setShowAllProducts(true);
-    setActivePanel(null);
+  /* =========================
+     HEADER
+  ========================= */
 
-    setTimeout(() => {
-      document
-        .querySelector(".products-section")
-        ?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
-  };
+  const Header = () => (
+    <header className="mobile-header">
 
-  const openMenuPanel = (panel) => {
-    setShowMenu(false);
-    setShowNotifications(false);
-    setShowCart(false);
-    setShowFavorites(false);
-    setActivePanel(panel);
-  };
+      <button
+        className="menu-button"
+        type="button"
+        onClick={() => navigate("menu")}
+      >
+        ☰
+      </button>
 
-  return (
-    <div className="app">
+      <button
+        className="logo"
+        type="button"
+        onClick={goHome}
+      >
+        <strong>
+          SHORA<span>SHOPP</span>
+        </strong>
 
-      {/* HEADER */}
-      <header className="mobile-header">
+        <small>
+          Compra. <b>Vende.</b> Descubre.
+        </small>
+      </button>
+
+      <div className="header-icons">
 
         <button
-          className="menu-button"
           type="button"
-          onClick={() => {
-            setShowMenu((value) => !value);
-            setShowNotifications(false);
-            setShowCart(false);
-          }}
-          aria-label="Abrir menú"
+          className="notification-button"
+          onClick={() => navigate("notifications")}
         >
-          ☰
+          ♧
+          <i>3</i>
         </button>
 
         <button
-          className="logo"
           type="button"
-          onClick={goHome}
+          className="cart-button"
+          onClick={() => navigate("cart")}
         >
-          <strong>
-            SHORA<span>SHOPP</span>
-          </strong>
-
-          <small>
-            Compra. <b>Vende.</b> Descubre.
-          </small>
+          🛒
+          {cartCount > 0 && <i>{cartCount}</i>}
         </button>
 
-        <div className="header-icons">
+      </div>
+    </header>
+  );
 
-          <button
-            type="button"
-            className="notification-button"
-            onClick={() => {
-              setShowNotifications((value) => !value);
-              setShowMenu(false);
-              setShowCart(false);
-            }}
-            aria-label="Notificaciones"
-          >
-            ♧
-            <i>3</i>
-          </button>
+  /* =========================
+     BARRA DE BÚSQUEDA
+  ========================= */
 
-          <button
-            type="button"
-            className="cart-button"
-            onClick={() => {
-              setShowCart((value) => !value);
-              setShowNotifications(false);
-              setShowMenu(false);
-            }}
-            aria-label="Carrito"
-          >
-            🛒
-            {cartCount > 0 && <i>{cartCount}</i>}
-          </button>
+  const SearchBar = () => (
+    <div className="search-container">
+      <div className="search-box">
 
-        </div>
-      </header>
+        <span>⌕</span>
 
-      {/* MENU */}
-      {showMenu && (
-        <div
-          className="floating-menu"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setShowMenu(false);
+        <input
+          type="text"
+          placeholder="¿Qué estás buscando hoy?"
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+
+            if (view !== "search") {
+              setView("search");
             }
           }}
+        />
+
+        <button
+          type="button"
+          onClick={() => navigate("search")}
         >
-          <div className="menu-panel">
+          ⌕
+        </button>
 
-            <div className="menu-header">
-              <strong>
-                {session ? "Mi SHORASHOPP" : "Hola, Jacqueline"}
-              </strong>
+      </div>
+    </div>
+  );
 
-              <button
-                type="button"
-                onClick={() => setShowMenu(false)}
-              >
-                ×
-              </button>
-            </div>
+  /* =========================
+     CABECERA DE PÁGINA
+  ========================= */
 
-            <button
-              type="button"
-              onClick={() =>
-                session
-                  ? openMenuPanel("profile")
-                  : openAuth("login")
-              }
-            >
-              ✨ <span>Mi cuenta / Perfil</span>
-            </button>
+  const PageHeader = ({ title, icon = "‹" }) => (
+    <div className="page-header">
 
-            <button
-              type="button"
-              onClick={() => openMenuPanel("orders")}
-            >
-              📦 <span>Mis pedidos</span>
-            </button>
+      <button
+        type="button"
+        onClick={goBack}
+        className="page-back"
+      >
+        {icon}
+      </button>
 
-            <button
-              type="button"
-              onClick={() => openMenuPanel("messages")}
-            >
-              💬 <span>Mensajes</span>
-            </button>
+      <h1>{title}</h1>
 
-            <button
-              type="button"
-              onClick={() => openMenuPanel("settings")}
-            >
-              ⚙️ <span>Configuración</span>
-            </button>
+      <button
+        type="button"
+        className="page-home"
+        onClick={goHome}
+      >
+        ⌂
+      </button>
 
-            <button
-              type="button"
-              onClick={() => openMenuPanel("help")}
-            >
-              💬 <span>Ayuda y soporte</span>
-            </button>
+    </div>
+  );
 
-            <button
-              type="button"
-              onClick={() =>
-                session ? handleLogout() : openAuth("login")
-              }
-              className="menu-logout"
-            >
-              {session ? "↪️ Cerrar sesión" : "🔐 Iniciar sesión"}
-            </button>
+  /* =========================
+     TARJETA DE PRODUCTO
+  ========================= */
 
-          </div>
-        </div>
-      )}
+  const ProductCard = ({ product }) => (
+    <article className="product-card">
 
-      {/* NOTIFICATIONS */}
-      {showNotifications && (
-        <div className="floating-panel notification-panel">
+      <div
+        className="product-image"
+        onClick={() => addToCart(product)}
+      >
 
-          <div className="panel-header">
-            <strong>Notificaciones</strong>
+        <span className="product-label">
+          {product.discount}
+        </span>
 
-            <button
-              type="button"
-              onClick={() => setShowNotifications(false)}
-            >
-              ×
-            </button>
-          </div>
+        <button
+          className="heart-button"
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleFavorite(product.name);
+          }}
+        >
+          {favorites.includes(product.name)
+            ? "♥"
+            : "♡"}
+        </button>
 
-          <div className="notification-item">
-            <span>🎉</span>
-            <div>
-              <strong>¡Bienvenido a SHORASHOPP!</strong>
-              <small>Descubre nuestras ofertas.</small>
-            </div>
-          </div>
-
-          <div className="notification-item">
-            <span>🔥</span>
-            <div>
-              <strong>Ofertas exclusivas</strong>
-              <small>Hay descuentos disponibles.</small>
-            </div>
-          </div>
-
-          <div className="notification-item">
-            <span>📦</span>
-            <div>
-              <strong>Tu carrito te espera</strong>
-              <small>Revisa tus productos.</small>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* CART */}
-      {showCart && (
-        <div className="floating-panel cart-panel">
-
-          <div className="panel-header">
-            <strong>Mi carrito</strong>
-
-            <button
-              type="button"
-              onClick={() => setShowCart(false)}
-            >
-              ×
-            </button>
-          </div>
-
-          {cart.length === 0 ? (
-            <div className="empty-panel">
-              <span>🛒</span>
-              <strong>Tu carrito está vacío</strong>
-              <small>Agrega productos para comenzar.</small>
-            </div>
-          ) : (
-            <>
-              <div className="cart-items">
-
-                {cart.map((item) => (
-                  <div
-                    className="cart-item"
-                    key={item.name}
-                  >
-                    <div className="cart-item-art">
-                      {item.type === "earbuds" && "🎧"}
-                      {item.type === "bag" && "👜"}
-                      {item.type === "watch" && "⌚"}
-                      {item.type === "blender" && "🥤"}
-                    </div>
-
-                    <div className="cart-item-info">
-                      <strong>{item.name}</strong>
-                      <span>{item.price}</span>
-
-                      <div className="quantity-controls">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            changeCartQuantity(item.name, -1)
-                          }
-                        >
-                          −
-                        </button>
-
-                        <b>{item.quantity}</b>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            changeCartQuantity(item.name, 1)
-                          }
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              </div>
-
-              <div className="cart-total">
-                <span>Total</span>
-                <strong>
-                  ${cartTotal.toLocaleString("es-MX", {
-                    minimumFractionDigits: 2,
-                  })}
-                </strong>
-              </div>
-
-              <button
-                className="checkout-button"
-                type="button"
-                onClick={() => openMenuPanel("checkout")}
-              >
-                Continuar compra
-              </button>
-            </>
-          )}
-
-        </div>
-      )}
-
-      {/* SEARCH */}
-      <div className="search-container">
-
-        <div className="search-box">
-
-          <span>⌕</span>
-
-          <input
-            type="text"
-            placeholder="¿Qué estás buscando hoy?"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setShowFavorites(false);
-              setShowAllProducts(true);
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={() => {
-              setShowAllProducts(true);
-
-              document
-                .querySelector(".products-section")
-                ?.scrollIntoView({
-                  behavior: "smooth",
-                });
-            }}
-            aria-label="Buscar"
-          >
-            ⌕
-          </button>
-
+        <div
+          className={`product-art ${product.type}`}
+        >
+          {product.type === "earbuds" && "🎧"}
+          {product.type === "bag" && "👜"}
+          {product.type === "watch" && "⌚"}
+          {product.type === "blender" && "🥤"}
         </div>
 
       </div>
 
+      <div className="product-info">
+
+        <h3>{product.name}</h3>
+
+        <div className="price-row">
+          <strong>{product.price}</strong>
+
+          {product.oldPrice && (
+            <del>{product.oldPrice}</del>
+          )}
+        </div>
+
+        <div className="rating-row">
+          <span>★</span>
+          {product.rating}
+          <small>• {product.reviews}</small>
+        </div>
+
+        <button
+          className="add-cart-button"
+          type="button"
+          onClick={() => addToCart(product)}
+        >
+          🛒 Agregar al carrito
+        </button>
+
+      </div>
+
+    </article>
+  );
+
+  /* =========================
+     PÁGINA INICIO
+  ========================= */
+
+  const HomePage = () => (
+    <>
+      <SearchBar />
+
       <main>
 
-        {/* QUICK CARDS */}
         <section className="quick-cards">
 
           <button
             className="quick-card sell-card"
             type="button"
-            onClick={() => openAuth("register")}
+            onClick={() => navigate("sell")}
           >
             <div className="quick-icon">▣</div>
 
@@ -656,7 +533,9 @@ function App() {
             className="quick-card account-card"
             type="button"
             onClick={() =>
-              session ? openMenuPanel("profile") : openAuth("login")
+              session
+                ? navigate("account")
+                : openAuth("login")
             }
           >
             <div className="quick-icon">✨</div>
@@ -671,9 +550,7 @@ function App() {
               </span>
 
               <small>
-                {session
-                  ? "Ver mi perfil"
-                  : "Ver perfil, pedidos y configuraciones"}
+                Ver perfil, pedidos y configuraciones
               </small>
             </div>
 
@@ -682,7 +559,6 @@ function App() {
 
         </section>
 
-        {/* CATEGORIES */}
         <section className="content-section">
 
           <div className="section-title-row">
@@ -690,51 +566,36 @@ function App() {
 
             <button
               type="button"
-              onClick={() => {
-                setShowAllCategories((value) => !value);
-                setActiveCategory("Todas");
-              }}
+              onClick={() => navigate("categories")}
             >
-              {showAllCategories ? "Ver menos" : "Ver todas"}
-              <span>›</span>
+              Ver todas <span>›</span>
             </button>
           </div>
 
           <div className="categories-scroll">
 
-            {categories
-              .slice(
-                0,
-                showAllCategories
-                  ? categories.length
-                  : 4
-              )
-              .map((category) => (
-                <button
-                  className={`category-item ${
-                    activeCategory === category.name
-                      ? "selected"
-                      : ""
-                  }`}
-                  key={category.name}
-                  type="button"
-                  onClick={() =>
-                    selectCategory(category.name)
-                  }
-                >
-                  <div className="category-icon">
-                    {category.icon}
-                  </div>
+            {categories.slice(0, 4).map((category) => (
+              <button
+                className="category-item"
+                key={category.name}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(category.name);
+                  navigate("category");
+                }}
+              >
+                <div className="category-icon">
+                  {category.icon}
+                </div>
 
-                  <span>{category.name}</span>
-                </button>
-              ))}
+                <span>{category.name}</span>
+              </button>
+            ))}
 
           </div>
 
         </section>
 
-        {/* OFFER BANNER */}
         <section className="offer-section">
 
           <div className="offer-banner">
@@ -755,17 +616,7 @@ function App() {
 
               <button
                 type="button"
-                onClick={() => {
-                  setActiveCategory("Todas");
-                  setShowFavorites(false);
-                  setShowAllProducts(true);
-
-                  document
-                    .querySelector(".products-section")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    });
-                }}
+                onClick={() => navigate("offers")}
               >
                 Ver ofertas <b>›</b>
               </button>
@@ -783,407 +634,1031 @@ function App() {
 
         </section>
 
-        {/* PRODUCTS */}
         <section className="content-section products-section">
 
           <div className="section-title-row">
 
-            <h2>
-              {showFavorites
-                ? "Mis favoritos"
-                : activeCategory !== "Todas"
-                ? activeCategory
-                : "Productos destacados"}
-            </h2>
+            <h2>Productos destacados</h2>
 
             <button
               type="button"
-              onClick={() => {
-                setShowAllProducts((value) => !value);
-                setShowFavorites(false);
-              }}
+              onClick={() => navigate("products")}
             >
-              {showAllProducts ? "Ver menos" : "Ver todos"}
-              <span>›</span>
+              Ver todos <span>›</span>
             </button>
 
           </div>
 
-          {filteredProducts.length === 0 ? (
-            <div className="empty-products">
-              <span>🔎</span>
-              <strong>No encontramos productos.</strong>
-              <small>
-                Intenta con otra búsqueda o categoría.
-              </small>
-            </div>
-          ) : (
-            <div className="products-grid">
+          <div className="products-grid">
 
-              {filteredProducts.map((product) => (
-                <article
-                  className="product-card"
-                  key={product.name}
-                >
+            {products.map((product) => (
+              <ProductCard
+                key={product.name}
+                product={product}
+              />
+            ))}
 
-                  <div
-                    className="product-image"
-                    onClick={() => addToCart(product)}
-                  >
-
-                    <span className="product-label">
-                      {product.discount}
-                    </span>
-
-                    <button
-                      className="heart-button"
-                      type="button"
-                      aria-label="Favorito"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        toggleFavorite(product.name);
-                      }}
-                    >
-                      {favorites.includes(product.name)
-                        ? "♥"
-                        : "♡"}
-                    </button>
-
-                    <div
-                      className={`product-art ${product.type}`}
-                    >
-                      {product.type === "earbuds" && "🎧"}
-                      {product.type === "bag" && "👜"}
-                      {product.type === "watch" && "⌚"}
-                      {product.type === "blender" && "🥤"}
-                    </div>
-
-                  </div>
-
-                  <div className="product-info">
-
-                    <h3>{product.name}</h3>
-
-                    <div className="price-row">
-                      <strong>{product.price}</strong>
-
-                      {product.oldPrice && (
-                        <del>{product.oldPrice}</del>
-                      )}
-                    </div>
-
-                    <div className="rating-row">
-                      <span>★</span>
-                      {product.rating}
-                      <small>• {product.reviews}</small>
-                    </div>
-
-                    <button
-                      className="add-cart-button"
-                      type="button"
-                      onClick={() => addToCart(product)}
-                    >
-                      🛒 Agregar al carrito
-                    </button>
-
-                  </div>
-
-                </article>
-              ))}
-
-            </div>
-          )}
-
-        </section>
-
-        {/* TRUST */}
-        <section className="trust-section">
-
-          <div className="trust-item">
-            <span>♢</span>
-            <strong>Compra segura</strong>
-            <small>
-              Protegemos tus datos y compras
-            </small>
-          </div>
-
-          <div className="trust-item">
-            <span>♧</span>
-            <strong>Envíos rápidos</strong>
-            <small>
-              Recibe tus productos en tiempo récord
-            </small>
-          </div>
-
-          <div className="trust-item">
-            <span>✿</span>
-            <strong>Vendedores verificados</strong>
-            <small>
-              Más confianza para ti
-            </small>
-          </div>
-
-          <div className="trust-item">
-            <span>☏</span>
-            <strong>Soporte 24/7</strong>
-            <small>
-              Estamos aquí para ayudarte
-            </small>
           </div>
 
         </section>
+
+        <TrustSection />
 
       </main>
+    </>
+  );
 
-      {/* BOTTOM NAV */}
-      <nav className="bottom-nav">
+  /* =========================
+     CATEGORÍAS
+  ========================= */
+
+  const CategoriesPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Categorías" />
+
+      <div className="all-categories">
+
+        {categories.map((category) => (
+          <button
+            className="category-item"
+            key={category.name}
+            type="button"
+            onClick={() => {
+              setSelectedCategory(category.name);
+              navigate("category");
+            }}
+          >
+            <div className="category-icon">
+              {category.icon}
+            </div>
+
+            <strong>{category.name}</strong>
+
+            <span>Ver productos ›</span>
+          </button>
+        ))}
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     CATEGORÍA
+  ========================= */
+
+  const CategoryPage = () => (
+    <main className="page-content">
+
+      <PageHeader title={selectedCategory} />
+
+      <div className="section-title-row">
+        <h2>{selectedCategory}</h2>
+        <span>{filteredProducts.length} productos</span>
+      </div>
+
+      <div className="products-grid">
+
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => (
+            <ProductCard
+              key={product.name}
+              product={product}
+            />
+          ))
+        ) : (
+          <div className="empty-products">
+            No hay productos disponibles todavía.
+          </div>
+        )}
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     PRODUCTOS
+  ========================= */
+
+  const ProductsPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Todos los productos" />
+
+      <div className="products-grid">
+
+        {products.map((product) => (
+          <ProductCard
+            key={product.name}
+            product={product}
+          />
+        ))}
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     OFERTAS
+  ========================= */
+
+  const OffersPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Ofertas exclusivas" />
+
+      <div className="offer-page">
+
+        <div className="offer-page-banner">
+          <strong>🔥 OFERTAS ESPECIALES</strong>
+          <span>
+            Aprovecha nuestros precios por tiempo limitado.
+          </span>
+        </div>
+
+        <div className="products-grid">
+
+          {products.map((product) => (
+            <ProductCard
+              key={product.name}
+              product={product}
+            />
+          ))}
+
+        </div>
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     BÚSQUEDA
+  ========================= */
+
+  const SearchPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Buscar" />
+
+      <div className="search-page-box">
+        <input
+          type="text"
+          placeholder="Buscar productos..."
+          value={search}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+          autoFocus
+        />
+      </div>
+
+      <h2>
+        {search
+          ? `Resultados para "${search}"`
+          : "Todos los productos"}
+      </h2>
+
+      <div className="products-grid">
+
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => (
+            <ProductCard
+              key={product.name}
+              product={product}
+            />
+          ))
+        ) : (
+          <div className="empty-products">
+            🔎 No encontramos productos.
+          </div>
+        )}
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     CARRITO
+  ========================= */
+
+  const CartPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Mi carrito" />
+
+      {cart.length === 0 ? (
+        <div className="empty-page">
+
+          <div className="empty-icon">🛒</div>
+
+          <h2>Tu carrito está vacío</h2>
+
+          <p>
+            Agrega productos y aparecerán aquí.
+          </p>
+
+          <button
+            className="panel-primary-button"
+            type="button"
+            onClick={() => navigate("products")}
+          >
+            Explorar productos
+          </button>
+
+        </div>
+      ) : (
+        <>
+
+          <div className="cart-page-list">
+
+            {cart.map((item) => (
+              <div
+                className="cart-page-item"
+                key={item.name}
+              >
+
+                <div className="cart-item-art">
+                  {item.type === "earbuds" && "🎧"}
+                  {item.type === "bag" && "👜"}
+                  {item.type === "watch" && "⌚"}
+                  {item.type === "blender" && "🥤"}
+                </div>
+
+                <div className="cart-item-info">
+
+                  <h3>{item.name}</h3>
+
+                  <strong>{item.price}</strong>
+
+                  <div className="quantity-controls">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeCartQuantity(
+                          item.name,
+                          -1
+                        )
+                      }
+                    >
+                      −
+                    </button>
+
+                    <b>{item.quantity}</b>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeCartQuantity(
+                          item.name,
+                          1
+                        )
+                      }
+                    >
+                      +
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+
+          <div className="cart-page-total">
+
+            <span>Total</span>
+
+            <strong>
+              $
+              {cartTotal.toLocaleString("es-MX", {
+                minimumFractionDigits: 2,
+              })}
+            </strong>
+
+          </div>
+
+          <button
+            className="checkout-button"
+            type="button"
+            onClick={() => navigate("checkout")}
+          >
+            Continuar compra
+          </button>
+
+        </>
+      )}
+
+    </main>
+  );
+
+  /* =========================
+     FAVORITOS
+  ========================= */
+
+  const FavoritesPage = () => {
+
+    const favoriteProducts = products.filter(
+      (product) =>
+        favorites.includes(product.name)
+    );
+
+    return (
+      <main className="page-content">
+
+        <PageHeader title="Mis favoritos" />
+
+        {favoriteProducts.length === 0 ? (
+          <div className="empty-page">
+
+            <div className="empty-icon">♡</div>
+
+            <h2>No tienes favoritos</h2>
+
+            <p>
+              Toca el corazón de un producto para guardarlo.
+            </p>
+
+            <button
+              className="panel-primary-button"
+              type="button"
+              onClick={() => navigate("products")}
+            >
+              Ver productos
+            </button>
+
+          </div>
+        ) : (
+          <div className="products-grid">
+
+            {favoriteProducts.map((product) => (
+              <ProductCard
+                key={product.name}
+                product={product}
+              />
+            ))}
+
+          </div>
+        )}
+
+      </main>
+    );
+  };
+
+  /* =========================
+     NOTIFICACIONES
+  ========================= */
+
+  const NotificationsPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Notificaciones" />
+
+      <div className="notification-list">
+
+        <div className="notification-item">
+          <span>🎉</span>
+
+          <div>
+            <strong>
+              ¡Bienvenido a SHORASHOPP!
+            </strong>
+
+            <small>
+              Descubre productos increíbles.
+            </small>
+          </div>
+        </div>
+
+        <div className="notification-item">
+          <span>🔥</span>
+
+          <div>
+            <strong>
+              Nuevas ofertas disponibles
+            </strong>
+
+            <small>
+              Revisa nuestras promociones.
+            </small>
+          </div>
+        </div>
+
+        <div className="notification-item">
+          <span>📦</span>
+
+          <div>
+            <strong>
+              Tus pedidos aparecerán aquí
+            </strong>
+
+            <small>
+              Podrás consultar el estado de tus compras.
+            </small>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     CUENTA
+  ========================= */
+
+  const AccountPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Mi cuenta" />
+
+      <div className="account-page">
+
+        <div className="account-avatar">
+          ✨
+        </div>
+
+        <h2>
+          {session
+            ? "Mi cuenta"
+            : "Hola, Jacqueline"}
+        </h2>
+
+        <p>
+          {session
+            ? session.user.email
+            : "Inicia sesión para acceder a todas las funciones."}
+        </p>
+
+        {!session ? (
+          <>
+            <button
+              className="panel-primary-button"
+              type="button"
+              onClick={() => openAuth("login")}
+            >
+              Iniciar sesión
+            </button>
+
+            <button
+              className="panel-option"
+              type="button"
+              onClick={() => openAuth("register")}
+            >
+              Crear una cuenta
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className="panel-option"
+              type="button"
+              onClick={() => navigate("orders")}
+            >
+              📦 Mis pedidos
+            </button>
+
+            <button
+              className="panel-option"
+              type="button"
+              onClick={() => navigate("messages")}
+            >
+              💬 Mensajes
+            </button>
+
+            <button
+              className="panel-option"
+              type="button"
+              onClick={() => navigate("settings")}
+            >
+              ⚙️ Configuración
+            </button>
+
+            <button
+              className="panel-primary-button"
+              type="button"
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </button>
+          </>
+        )}
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     PEDIDOS
+  ========================= */
+
+  const OrdersPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Mis pedidos" />
+
+      <div className="empty-page">
+
+        <div className="empty-icon">📦</div>
+
+        <h2>Todavía no tienes pedidos</h2>
+
+        <p>
+          Cuando realices una compra podrás consultar
+          aquí el estado de tu pedido.
+        </p>
 
         <button
-          className="bottom-item active"
+          className="panel-primary-button"
           type="button"
-          onClick={goHome}
+          onClick={() => navigate("products")}
         >
-          <span>⌂</span>
-          <small>Inicio</small>
+          Comprar ahora
+        </button>
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     MENSAJES
+  ========================= */
+
+  const MessagesPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Mensajes" />
+
+      <div className="empty-page">
+
+        <div className="empty-icon">💬</div>
+
+        <h2>No tienes mensajes</h2>
+
+        <p>
+          Aquí podrás comunicarte con vendedores y
+          con el equipo de SHORASHOPP.
+        </p>
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     CONFIGURACIÓN
+  ========================= */
+
+  const SettingsPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Configuración" />
+
+      <div className="settings-list">
+
+        <button
+          type="button"
+          className="panel-option"
+        >
+          🔔 Notificaciones
+          <span>›</span>
         </button>
 
         <button
-          className="bottom-item"
           type="button"
-          onClick={() => {
-            setShowAllCategories(true);
-            window.scrollTo({
-              top: 350,
-              behavior: "smooth",
-            });
-          }}
+          className="panel-option"
         >
-          <span>▦</span>
-          <small>Categorías</small>
+          🔐 Privacidad y seguridad
+          <span>›</span>
         </button>
 
         <button
-          className="seller-button"
+          type="button"
+          className="panel-option"
+        >
+          🌎 País y preferencias
+          <span>›</span>
+        </button>
+
+        <button
+          type="button"
+          className="panel-option"
+        >
+          📄 Términos y condiciones
+          <span>›</span>
+        </button>
+
+        <button
+          type="button"
+          className="panel-option"
+        >
+          ℹ️ Acerca de SHORASHOPP
+          <span>›</span>
+        </button>
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     VENDER
+  ========================= */
+
+  const SellPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Vende en SHORASHOPP" />
+
+      <div className="sell-page">
+
+        <div className="sell-page-icon">
+          🛍️
+        </div>
+
+        <h2>
+          Comienza a vender
+        </h2>
+
+        <p>
+          Publica tus productos y llega a nuevos
+          compradores dentro de SHORASHOPP.
+        </p>
+
+        <button
+          className="panel-primary-button"
           type="button"
           onClick={() => openAuth("register")}
         >
-          <span>▰</span>
-          <small>Vender</small>
+          Crear cuenta de vendedor
         </button>
 
         <button
-          className="bottom-item"
+          className="panel-option"
           type="button"
-          onClick={() => {
-            setShowFavorites(true);
-            setShowAllProducts(true);
-
-            document
-              .querySelector(".products-section")
-              ?.scrollIntoView({
-                behavior: "smooth",
-              });
-          }}
+          onClick={() => openAuth("login")}
         >
-          <span>
-            {favorites.length > 0 ? "♥" : "♡"}
-          </span>
-          <small>Favoritos</small>
+          Ya tengo una cuenta
         </button>
 
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     CHECKOUT
+  ========================= */
+
+  const CheckoutPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Finalizar compra" />
+
+      <div className="checkout-page">
+
+        <div className="checkout-icon">
+          🛒
+        </div>
+
+        <h2>
+          Resumen de compra
+        </h2>
+
+        <p>
+          Productos: {cartCount}
+        </p>
+
+        <div className="cart-page-total">
+          <span>Total</span>
+
+          <strong>
+            $
+            {cartTotal.toLocaleString("es-MX", {
+              minimumFractionDigits: 2,
+            })}
+          </strong>
+        </div>
+
         <button
-          className="bottom-item"
+          className="panel-primary-button"
+          type="button"
+          onClick={() =>
+            setMessage(
+              "El sistema de pago se conectará aquí."
+            )
+          }
+        >
+          Continuar al pago
+        </button>
+
+        {message && (
+          <div className="auth-message">
+            {message}
+          </div>
+        )}
+
+      </div>
+
+    </main>
+  );
+
+  /* =========================
+     MENÚ
+  ========================= */
+
+  const MenuPage = () => (
+    <main className="page-content">
+
+      <PageHeader title="Menú" />
+
+      <div className="main-menu-page">
+
+        <button
           type="button"
           onClick={() =>
             session
-              ? openMenuPanel("profile")
+              ? navigate("account")
               : openAuth("login")
           }
         >
-          <span>✨</span>
-          <small>Cuenta</small>
+          ✨
+          <span>Mi cuenta</span>
+          <b>›</b>
         </button>
 
-      </nav>
-
-      {/* GENERAL PANELS */}
-      {activePanel && (
-        <div
-          className="panel-overlay"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setActivePanel(null);
-            }
-          }}
+        <button
+          type="button"
+          onClick={() => navigate("orders")}
         >
-          <div className="large-panel">
+          📦
+          <span>Mis pedidos</span>
+          <b>›</b>
+        </button>
 
-            <button
-              className="panel-close"
-              type="button"
-              onClick={() => setActivePanel(null)}
-            >
-              ×
-            </button>
+        <button
+          type="button"
+          onClick={() => navigate("messages")}
+        >
+          💬
+          <span>Mensajes</span>
+          <b>›</b>
+        </button>
 
-            {activePanel === "profile" && (
-              <>
-                <div className="panel-icon">✨</div>
-                <h2>Mi cuenta</h2>
+        <button
+          type="button"
+          onClick={() => navigate("settings")}
+        >
+          ⚙️
+          <span>Configuración</span>
+          <b>›</b>
+        </button>
 
-                <p>
-                  {session
-                    ? session.user.email
-                    : "Inicia sesión para acceder a tu cuenta."}
-                </p>
+        <button
+          type="button"
+          onClick={() => navigate("favorites")}
+        >
+          ♡
+          <span>Favoritos</span>
+          <b>›</b>
+        </button>
 
-                {!session && (
-                  <button
-                    className="panel-primary-button"
-                    type="button"
-                    onClick={() => {
-                      setActivePanel(null);
-                      openAuth("login");
-                    }}
-                  >
-                    Iniciar sesión
-                  </button>
-                )}
+        <button
+          type="button"
+          onClick={() => navigate("sell")}
+        >
+          🛍️
+          <span>Vender en SHORASHOPP</span>
+          <b>›</b>
+        </button>
 
-                {session && (
-                  <button
-                    className="panel-primary-button"
-                    type="button"
-                    onClick={handleLogout}
-                  >
-                    Cerrar sesión
-                  </button>
-                )}
-              </>
-            )}
+        <button
+          type="button"
+          onClick={() => navigate("notifications")}
+        >
+          🔔
+          <span>Notificaciones</span>
+          <b>›</b>
+        </button>
 
-            {activePanel === "orders" && (
-              <>
-                <div className="panel-icon">📦</div>
-                <h2>Mis pedidos</h2>
-                <p>
-                  Aquí aparecerán tus pedidos realizados en
-                  SHORASHOPP.
-                </p>
-                <div className="panel-empty">
-                  Todavía no tienes pedidos.
-                </div>
-              </>
-            )}
+        {session && (
+          <button
+            type="button"
+            className="menu-logout"
+            onClick={handleLogout}
+          >
+            ↪️
+            <span>Cerrar sesión</span>
+          </button>
+        )}
 
-            {activePanel === "messages" && (
-              <>
-                <div className="panel-icon">💬</div>
-                <h2>Mensajes</h2>
-                <p>
-                  Aquí podrás comunicarte con vendedores y
-                  recibir atención de SHORASHOPP.
-                </p>
-                <div className="panel-empty">
-                  No tienes mensajes nuevos.
-                </div>
-              </>
-            )}
+      </div>
 
-            {activePanel === "settings" && (
-              <>
-                <div className="panel-icon">⚙️</div>
-                <h2>Configuración</h2>
+    </main>
+  );
 
-                <button
-                  className="panel-option"
-                  type="button"
-                >
-                  🔔 Notificaciones
-                </button>
+  /* =========================
+     CONFIANZA
+  ========================= */
 
-                <button
-                  className="panel-option"
-                  type="button"
-                >
-                  🔐 Privacidad y seguridad
-                </button>
+  const TrustSection = () => (
+    <section className="trust-section">
 
-                <button
-                  className="panel-option"
-                  type="button"
-                >
-                  🌎 País y preferencias
-                </button>
-              </>
-            )}
+      <div className="trust-item">
+        <span>♢</span>
+        <strong>Compra segura</strong>
+        <small>
+          Protegemos tus datos y compras
+        </small>
+      </div>
 
-            {activePanel === "help" && (
-              <>
-                <div className="panel-icon">💬</div>
-                <h2>Ayuda y soporte</h2>
-                <p>
-                  Nuestro equipo está aquí para ayudarte.
-                </p>
+      <div className="trust-item">
+        <span>♧</span>
+        <strong>Envíos rápidos</strong>
+        <small>
+          Recibe tus productos en tiempo récord
+        </small>
+      </div>
 
-                <button
-                  className="panel-primary-button"
-                  type="button"
-                >
-                  Contactar soporte
-                </button>
-              </>
-            )}
+      <div className="trust-item">
+        <span>✿</span>
+        <strong>Vendedores verificados</strong>
+        <small>
+          Más confianza para ti
+        </small>
+      </div>
 
-            {activePanel === "checkout" && (
-              <>
-                <div className="panel-icon">🛒</div>
-                <h2>Finalizar compra</h2>
+      <div className="trust-item">
+        <span>☏</span>
+        <strong>Soporte 24/7</strong>
+        <small>
+          Estamos aquí para ayudarte
+        </small>
+      </div>
 
-                <p>
-                  Tu carrito tiene {cartCount} producto
-                  {cartCount === 1 ? "" : "s"}.
-                </p>
+    </section>
+  );
 
-                <div className="checkout-summary">
-                  <span>Total</span>
-                  <strong>
-                    ${cartTotal.toLocaleString("es-MX", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </strong>
-                </div>
+  /* =========================
+     CONTENIDO PRINCIPAL
+  ========================= */
 
-                <button
-                  className="panel-primary-button"
-                  type="button"
-                  onClick={() => {
-                    setMessage(
-                      "El checkout se conectará con el sistema de pagos de SHORASHOPP."
-                    );
-                  }}
-                >
-                  Continuar
-                </button>
+  const renderView = () => {
+    switch (view) {
+      case "categories":
+        return <CategoriesPage />;
 
-                {message && (
-                  <div className="auth-message">
-                    {message}
-                  </div>
-                )}
-              </>
-            )}
+      case "category":
+        return <CategoryPage />;
 
-          </div>
-        </div>
-      )}
+      case "products":
+        return <ProductsPage />;
 
-      {/* AUTH */}
+      case "offers":
+        return <OffersPage />;
+
+      case "search":
+        return <SearchPage />;
+
+      case "cart":
+        return <CartPage />;
+
+      case "favorites":
+        return <FavoritesPage />;
+
+      case "notifications":
+        return <NotificationsPage />;
+
+      case "account":
+        return <AccountPage />;
+
+      case "orders":
+        return <OrdersPage />;
+
+      case "messages":
+        return <MessagesPage />;
+
+      case "settings":
+        return <SettingsPage />;
+
+      case "sell":
+        return <SellPage />;
+
+      case "checkout":
+        return <CheckoutPage />;
+
+      case "menu":
+        return <MenuPage />;
+
+      case "home":
+      default:
+        return <HomePage />;
+    }
+  };
+
+  /* =========================
+     BARRA INFERIOR
+  ========================= */
+
+  const BottomNav = () => (
+    <nav className="bottom-nav">
+
+      <button
+        className={`bottom-item ${
+          view === "home" ? "active" : ""
+        }`}
+        type="button"
+        onClick={goHome}
+      >
+        <span>⌂</span>
+        <small>Inicio</small>
+      </button>
+
+      <button
+        className={`bottom-item ${
+          view === "categories" ||
+          view === "category"
+            ? "active"
+            : ""
+        }`}
+        type="button"
+        onClick={() => navigate("categories")}
+      >
+        <span>▦</span>
+        <small>Categorías</small>
+      </button>
+
+      <button
+        className={`seller-button ${
+          view === "sell" ? "active" : ""
+        }`}
+        type="button"
+        onClick={() => navigate("sell")}
+      >
+        <span>▰</span>
+        <small>Vender</small>
+      </button>
+
+      <button
+        className={`bottom-item ${
+          view === "favorites" ? "active" : ""
+        }`}
+        type="button"
+        onClick={() => navigate("favorites")}
+      >
+        <span>
+          {favorites.length > 0 ? "♥" : "♡"}
+        </span>
+        <small>Favoritos</small>
+      </button>
+
+      <button
+        className={`bottom-item ${
+          view === "account" ? "active" : ""
+        }`}
+        type="button"
+        onClick={() =>
+          session
+            ? navigate("account")
+            : openAuth("login")
+        }
+      >
+        <span>✨</span>
+        <small>Cuenta</small>
+      </button>
+
+    </nav>
+  );
+
+  return (
+    <div className="app">
+
+      <Header />
+
+      {renderView()}
+
+      <BottomNav />
+
+      {/* =========================
+          LOGIN / REGISTRO
+      ========================= */}
+
       {showAuth && (
         <div
           className="auth-overlay"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
+            if (
+              event.target === event.currentTarget
+            ) {
               closeAuth();
             }
           }}
