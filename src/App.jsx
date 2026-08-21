@@ -56,10 +56,6 @@ const products = [
   },
 ];
 
-/* =========================================================
-   PÁGINAS DISPONIBLES
-========================================================= */
-
 const VALID_PAGES = [
   "home",
   "account",
@@ -70,14 +66,24 @@ const VALID_PAGES = [
   "favorites",
   "offers",
   "notifications",
+
+  // Notificaciones
   "notification-offers",
   "notification-orders",
   "notification-messages",
-];
 
-/* =========================================================
-   HISTORIAL
-========================================================= */
+  // Mensajes
+  "messages",
+  "messages-conversations",
+  "messages-sellers",
+  "messages-support",
+
+  // Pedidos
+  "orders",
+  "orders-list",
+  "orders-tracking",
+  "orders-confirmations",
+];
 
 function getPageFromUrl() {
   const hash = window.location.hash.replace("#", "");
@@ -88,10 +94,6 @@ function getPageFromUrl() {
 
   return "home";
 }
-
-/* =========================================================
-   APP
-========================================================= */
 
 function App() {
   const [session, setSession] = useState(null);
@@ -110,21 +112,17 @@ function App() {
   const [favorites, setFavorites] = useState([]);
   const [actionMessage, setActionMessage] = useState("");
 
-  const [currentPage, setCurrentPage] =
-    useState(getPageFromUrl);
+  const [currentPage, setCurrentPage] = useState(
+    getPageFromUrl()
+  );
 
   const [menuOpen, setMenuOpen] = useState(false);
-
-  /* =======================================================
-     SESIÓN
-  ======================================================= */
 
   useEffect(() => {
     let mounted = true;
 
     const getSession = async () => {
-      const { data } =
-        await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
 
       if (mounted) {
         setSession(data?.session ?? null);
@@ -147,13 +145,8 @@ function App() {
     };
   }, []);
 
-  /* =======================================================
-     HISTORIAL DEL TELÉFONO
-  ======================================================= */
-
   useEffect(() => {
-    const initialPage =
-      getPageFromUrl();
+    const initialPage = getPageFromUrl();
 
     window.history.replaceState(
       { shorashoppPage: initialPage },
@@ -164,18 +157,10 @@ function App() {
     );
 
     const handlePopState = () => {
-      const page =
-        getPageFromUrl();
+      const page = getPageFromUrl();
 
       setCurrentPage(page);
       setMenuOpen(false);
-      setSelectedCategory("");
-
-      if (
-        page !== "favorites"
-      ) {
-        setSearchTerm("");
-      }
 
       window.scrollTo({
         top: 0,
@@ -183,22 +168,12 @@ function App() {
       });
     };
 
-    window.addEventListener(
-      "popstate",
-      handlePopState
-    );
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
-      window.removeEventListener(
-        "popstate",
-        handlePopState
-      );
+      window.removeEventListener("popstate", handlePopState);
     };
   }, []);
-
-  /* =======================================================
-     ABRIR PÁGINA
-  ======================================================= */
 
   const openPage = (page) => {
     if (!VALID_PAGES.includes(page)) {
@@ -228,9 +203,7 @@ function App() {
     setMenuOpen(false);
     setSelectedCategory("");
 
-    if (
-      page !== "favorites"
-    ) {
+    if (page !== "favorites") {
       setSearchTerm("");
     }
 
@@ -240,14 +213,8 @@ function App() {
     });
   };
 
-  /* =======================================================
-     ATRÁS INTERNO
-  ======================================================= */
-
   const goBack = () => {
-    if (
-      window.history.length > 1
-    ) {
+    if (window.history.length > 1) {
       window.history.back();
       return;
     }
@@ -255,13 +222,7 @@ function App() {
     openPage("home");
   };
 
-  /* =======================================================
-     AUTENTICACIÓN
-  ======================================================= */
-
-  const openAuth = (
-    mode = "login"
-  ) => {
+  const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setMessage("");
     setShowAuth(true);
@@ -276,33 +237,23 @@ function App() {
     setLoading(false);
   };
 
-  const handleAuth = async (
-    event
-  ) => {
+  const handleAuth = async (event) => {
     event.preventDefault();
 
     setLoading(true);
     setMessage("");
 
     try {
-      if (
-        authMode === "register"
-      ) {
-        const {
-          data,
-          error,
-        } =
-          await supabase.auth.signUp({
-            email:
-              email.trim(),
-            password,
-            options: {
-              data: {
-                full_name:
-                  name.trim(),
-              },
+      if (authMode === "register") {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              full_name: name.trim(),
             },
-          });
+          },
+        });
 
         if (error) {
           throw error;
@@ -318,13 +269,10 @@ function App() {
         }
       } else {
         const { error } =
-          await supabase.auth.signInWithPassword(
-            {
-              email:
-                email.trim(),
-              password,
-            }
-          );
+          await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
 
         if (error) {
           throw error;
@@ -334,31 +282,19 @@ function App() {
         openPage("account");
       }
     } catch (error) {
-      setMessage(
-        error?.message ||
-          "Ocurrió un error."
-      );
+      setMessage(error?.message || "Ocurrió un error.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout =
-    async () => {
-      await supabase.auth.signOut();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    openPage("home");
+  };
 
-      setSession(null);
-
-      openPage("home");
-    };
-
-  /* =======================================================
-     MENSAJES
-  ======================================================= */
-
-  const showActionMessage = (
-    text
-  ) => {
+  const showActionMessage = (text) => {
     setActionMessage(text);
 
     window.setTimeout(() => {
@@ -366,17 +302,11 @@ function App() {
     }, 2000);
   };
 
-  /* =======================================================
-     NAVEGACIÓN GENERAL
-  ======================================================= */
-
   const goHome = () => {
     setSelectedCategory("");
     setSearchTerm("");
 
-    if (
-      currentPage === "home"
-    ) {
+    if (currentPage === "home") {
       window.scrollTo({
         top: 0,
         behavior: "smooth",
@@ -388,14 +318,6 @@ function App() {
     openPage("home");
   };
 
-  const goHomePage = () => {
-    openPage("home");
-  };
-
-  const goToCategories = () => {
-    openPage("categories");
-  };
-
   const handleAccountAccess = () => {
     if (session) {
       openPage("account");
@@ -404,36 +326,20 @@ function App() {
     }
   };
 
-  /* =======================================================
-     CATEGORÍAS
-  ======================================================= */
-
-  const handleCategoryClick = (
-    categoryName
-  ) => {
-    setSelectedCategory(
-      categoryName
-    );
+  const handleCategoryClick = (categoryName) => {
+    setSelectedCategory(categoryName);
     setSearchTerm("");
-
     openPage("categories");
   };
 
-  const handleShowAllCategories =
-    () => {
-      setSelectedCategory("");
-      setSearchTerm("");
-
-      openPage("categories");
-    };
-
-  /* =======================================================
-     BÚSQUEDA
-  ======================================================= */
+  const handleShowAllCategories = () => {
+    setSelectedCategory("");
+    setSearchTerm("");
+    openPage("categories");
+  };
 
   const handleSearch = () => {
-    const cleanSearch =
-      searchTerm.trim();
+    const cleanSearch = searchTerm.trim();
 
     if (!cleanSearch) {
       setSelectedCategory("");
@@ -442,17 +348,12 @@ function App() {
 
     setSelectedCategory("");
 
-    if (
-      currentPage !== "home"
-    ) {
+    if (currentPage !== "home") {
       openPage("home");
     }
 
     window.setTimeout(() => {
-      const element =
-        document.querySelector(
-          ".products-section"
-        );
+      const element = document.querySelector(".products-section");
 
       if (element) {
         element.scrollIntoView({
@@ -463,156 +364,99 @@ function App() {
     }, 50);
   };
 
-  const handleSearchKeyDown =
-    (event) => {
-      if (event.key === "Enter") {
-        handleSearch();
-      }
-    };
-
-  /* =======================================================
-     FAVORITOS
-  ======================================================= */
-
-  const toggleFavorite = (
-    productName
-  ) => {
-    setFavorites(
-      (currentFavorites) => {
-        if (
-          currentFavorites.includes(
-            productName
-          )
-        ) {
-          showActionMessage(
-            "Producto eliminado de favoritos."
-          );
-
-          return currentFavorites.filter(
-            (name) =>
-              name !== productName
-          );
-        }
-
-        showActionMessage(
-          "Producto agregado a favoritos."
-        );
-
-        return [
-          ...currentFavorites,
-          productName,
-        ];
-      }
-    );
+  const handleSearchKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
   };
 
-  const handleProductClick = (
-    product
-  ) => {
+  const toggleFavorite = (productName) => {
+    setFavorites((currentFavorites) => {
+      if (currentFavorites.includes(productName)) {
+        showActionMessage(
+          "Producto eliminado de favoritos."
+        );
+
+        return currentFavorites.filter(
+          (name) => name !== productName
+        );
+      }
+
+      showActionMessage(
+        "Producto agregado a favoritos."
+      );
+
+      return [...currentFavorites, productName];
+    });
+  };
+
+  const handleProductClick = (product) => {
     showActionMessage(
       `Seleccionaste: ${product.name}`
     );
   };
 
-  /* =======================================================
-     OFERTAS
-  ======================================================= */
-
   const handleOffers = () => {
     setSelectedCategory("");
     setSearchTerm("");
-
     openPage("offers");
   };
 
-  /* =======================================================
-     PRODUCTOS FILTRADOS
-  ======================================================= */
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      !selectedCategory ||
+      product.category === selectedCategory;
 
-  const filteredProducts =
-    products.filter(
-      (product) => {
-        const matchesCategory =
-          !selectedCategory ||
-          product.category ===
-            selectedCategory;
+    const search = searchTerm.trim().toLowerCase();
 
-        const search =
-          searchTerm
-            .trim()
-            .toLowerCase();
+    const matchesSearch =
+      !search ||
+      product.name.toLowerCase().includes(search);
 
-        const matchesSearch =
-          !search ||
-          product.name
-            .toLowerCase()
-            .includes(search);
+    return matchesCategory && matchesSearch;
+  });
 
-        return (
-          matchesCategory &&
-          matchesSearch
-        );
-      }
-    );
+  const favoriteProducts = products.filter((product) =>
+    favorites.includes(product.name)
+  );
 
-  const favoriteProducts =
-    products.filter(
-      (product) =>
-        favorites.includes(
-          product.name
-        )
-    );
+  const accountPageButtonStyle = {
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: "16px",
+    border: "1px solid #ece7f3",
+    borderRadius: 16,
+    background: "white",
+    color: "#24152f",
+    fontWeight: 800,
+    textAlign: "left",
+    cursor: "pointer",
+    boxShadow: "0 5px 18px rgba(50,16,74,.05)",
+  };
 
-  /* =======================================================
-     ESTILOS
-  ======================================================= */
-
-  const accountPageButtonStyle =
-    {
-      width: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent:
-        "space-between",
-      gap: 12,
-      padding: "16px",
-      border:
-        "1px solid #ece7f3",
-      borderRadius: 16,
-      background: "white",
-      color: "#24152f",
-      fontWeight: 800,
-      textAlign: "left",
-      cursor: "pointer",
-      boxShadow:
-        "0 5px 18px rgba(50,16,74,.05)",
-    };
-
-  const securityPageButtonStyle =
-    {
-      width: "100%",
-      display: "grid",
-      gap: 6,
-      padding: "18px",
-      border:
-        "1px solid #ece7f3",
-      borderRadius: 17,
-      background: "white",
-      color: "#24152f",
-      textAlign: "left",
-      cursor: "pointer",
-      boxShadow:
-        "0 5px 18px rgba(50,16,74,.05)",
-    };
+  const securityPageButtonStyle = {
+    width: "100%",
+    display: "grid",
+    gap: 6,
+    padding: "18px",
+    border: "1px solid #ece7f3",
+    borderRadius: 17,
+    background: "white",
+    color: "#24152f",
+    textAlign: "left",
+    cursor: "pointer",
+    boxShadow: "0 5px 18px rgba(50,16,74,.05)",
+  };
 
   const infoCardStyle = {
     background: "white",
-    border:
-      "1px solid #ece7f3",
+    border: "1px solid #ece7f3",
     borderRadius: 18,
     padding: "22px",
-    boxShadow:
-      "0 5px 18px rgba(50,16,74,.05)",
+    boxShadow: "0 5px 18px rgba(50,16,74,.05)",
   };
 
   const menuButtonStyle = {
@@ -631,16 +475,8 @@ function App() {
     cursor: "pointer",
   };
 
-  /* =======================================================
-     CUENTA
-  ======================================================= */
-
   const renderAccountPage = () => (
-    <div
-      style={{
-        marginTop: 14,
-      }}
-    >
+    <div style={{ marginTop: 14 }}>
       <div
         style={{
           background:
@@ -651,51 +487,26 @@ function App() {
           marginBottom: 16,
         }}
       >
-        <div
-          style={{
-            fontSize: 12,
-            opacity: 0.85,
-          }}
-        >
+        <div style={{ fontSize: 12, opacity: 0.85 }}>
           SHORASHOPP
         </div>
 
-        <h1
-          style={{
-            margin: "6px 0",
-            fontSize: 28,
-          }}
-        >
+        <h1 style={{ margin: "6px 0", fontSize: 28 }}>
           Mi cuenta
         </h1>
 
-        <p
-          style={{
-            margin: 0,
-            opacity: 0.92,
-          }}
-        >
-          Gestiona tu perfil,
-          pedidos y seguridad.
+        <p style={{ margin: 0, opacity: 0.92 }}>
+          Gestiona tu perfil, pedidos y seguridad.
         </p>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-        }}
-      >
+      <div style={{ display: "grid", gap: 12 }}>
         <button
           type="button"
           onClick={() =>
-            showActionMessage(
-              "Perfil próximamente."
-            )
+            showActionMessage("Perfil próximamente.")
           }
-          style={
-            accountPageButtonStyle
-          }
+          style={accountPageButtonStyle}
         >
           👤 Perfil
           <span>›</span>
@@ -703,14 +514,8 @@ function App() {
 
         <button
           type="button"
-          onClick={() =>
-            showActionMessage(
-              "Tus pedidos se conectarán aquí."
-            )
-          }
-          style={
-            accountPageButtonStyle
-          }
+          onClick={() => openPage("orders")}
+          style={accountPageButtonStyle}
         >
           📦 Mis pedidos
           <span>›</span>
@@ -723,9 +528,7 @@ function App() {
               "Tus direcciones se conectarán aquí."
             )
           }
-          style={
-            accountPageButtonStyle
-          }
+          style={accountPageButtonStyle}
         >
           📍 Direcciones
           <span>›</span>
@@ -733,15 +536,10 @@ function App() {
 
         <button
           type="button"
-          onClick={() =>
-            openPage("privacy")
-          }
-          style={
-            accountPageButtonStyle
-          }
+          onClick={() => openPage("privacy")}
+          style={accountPageButtonStyle}
         >
-          🔐 Privacidad y
-          seguridad
+          🔐 Privacidad y seguridad
           <span>›</span>
         </button>
 
@@ -760,1390 +558,1288 @@ function App() {
     </div>
   );
 
-  /* =======================================================
-     PRIVACIDAD
-  ======================================================= */
+  const renderPrivacyPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <h1 style={{ marginBottom: 6 }}>
+        Privacidad y seguridad
+      </h1>
 
-  const renderPrivacyPage =
-    () => (
+      <p style={{ color: "#666", marginTop: 0 }}>
+        Administra las opciones relacionadas con la
+        protección de tu cuenta.
+      </p>
+
       <div
         style={{
-          marginTop: 14,
+          display: "grid",
+          gap: 12,
+          marginTop: 18,
         }}
       >
-        <h1
-          style={{
-            marginBottom: 6,
-          }}
+        <button
+          type="button"
+          onClick={() => openPage("sessions")}
+          style={securityPageButtonStyle}
         >
-          Privacidad y
-          seguridad
-        </h1>
+          <strong>📱 Sesiones activas</strong>
 
-        <p
-          style={{
-            color: "#666",
-            marginTop: 0,
-          }}
+          <span>
+            Revisa las sesiones de tu cuenta y su
+            administración. ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => openPage("security")}
+          style={securityPageButtonStyle}
         >
-          Administra las
-          opciones relacionadas
-          con la protección de
-          tu cuenta.
-        </p>
+          <strong>🛡️ Verificación de seguridad</strong>
 
-        <div
-          style={{
-            display: "grid",
-            gap: 12,
-            marginTop: 18,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() =>
-              openPage("sessions")
-            }
-            style={
-              securityPageButtonStyle
-            }
-          >
-            <strong>
-              📱 Sesiones activas
-            </strong>
-
-            <span>
-              Revisa las sesiones
-              de tu cuenta y su
-              administración. ›
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              openPage("security")
-            }
-            style={
-              securityPageButtonStyle
-            }
-          >
-            <strong>
-              🛡️ Verificación de
-              seguridad
-            </strong>
-
-            <span>
-              Consulta el estado
-              de seguridad de tu
-              cuenta. ›
-            </span>
-          </button>
-        </div>
+          <span>
+            Consulta el estado de seguridad de tu
+            cuenta. ›
+          </span>
+        </button>
       </div>
-    );
+    </div>
+  );
 
-  /* =======================================================
-     SESIONES
-  ======================================================= */
+  const renderSessionsPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <h1 style={{ marginBottom: 6 }}>
+        Sesiones activas
+      </h1>
 
-  const renderSessionsPage =
-    () => (
-      <div
-        style={{
-          marginTop: 14,
-        }}
-      >
-        <h1
-          style={{
-            marginBottom: 6,
-          }}
-        >
-          Sesiones activas
-        </h1>
+      <p style={{ color: "#666" }}>
+        Administra los dispositivos y sesiones
+        asociados a tu cuenta.
+      </p>
+
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 34 }}>📱</div>
+
+        <h2 style={{ margin: "10px 0 6px" }}>
+          Sesiones de tu cuenta
+        </h2>
 
         <p
           style={{
+            margin: 0,
             color: "#666",
+            lineHeight: 1.6,
           }}
         >
-          Administra los
-          dispositivos y
-          sesiones asociados a
-          tu cuenta.
+          La administración de sesiones se conectará
+          aquí.
         </p>
+      </div>
+    </div>
+  );
 
-        <div
-          style={
-            infoCardStyle
-          }
-        >
-          <div
-            style={{
-              fontSize: 34,
-            }}
-          >
-            📱
-          </div>
+  const renderSecurityPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <h1 style={{ marginBottom: 6 }}>
+        Verificación de seguridad
+      </h1>
 
-          <h2
-            style={{
-              margin:
-                "10px 0 6px",
-            }}
-          >
-            Sesiones de tu
-            cuenta
-          </h2>
+      <p style={{ color: "#666" }}>
+        Revisa las medidas básicas de protección de
+        tu cuenta SHORASHOPP.
+      </p>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 12,
+          marginTop: 18,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>🔑 Contraseña</strong>
 
           <p
             style={{
-              margin: 0,
+              margin: "7px 0 0",
               color: "#666",
-              lineHeight: 1.6,
             }}
           >
-            La administración
-            de sesiones se
-            conectará aquí.
+            Tu contraseña se gestiona de forma segura
+            mediante Supabase.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>✉️ Correo electrónico</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            La cuenta utiliza tu correo electrónico
+            para la autenticación.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>🛡️ Estado de seguridad</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Tu flujo actual de inicio de sesión y
+            registro permanece sin cambios.
           </p>
         </div>
       </div>
-    );
+    </div>
+  );
 
-  /* =======================================================
-     SEGURIDAD
-  ======================================================= */
+  const renderCategoriesPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <h1 style={{ marginBottom: 6 }}>
+        Categorías
+      </h1>
 
-  const renderSecurityPage =
-    () => (
+      <p style={{ color: "#666", marginTop: 0 }}>
+        Explora productos por categoría.
+      </p>
+
       <div
+        className="categories-scroll"
         style={{
-          marginTop: 14,
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(2, minmax(0, 1fr))",
+          gap: 12,
+          marginTop: 18,
         }}
       >
-        <h1
-          style={{
-            marginBottom: 6,
-          }}
-        >
-          Verificación de
-          seguridad
-        </h1>
-
-        <p
-          style={{
-            color: "#666",
-          }}
-        >
-          Revisa las medidas
-          básicas de protección
-          de tu cuenta
-          SHORASHOPP.
-        </p>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 12,
-            marginTop: 18,
-          }}
-        >
-          <div
-            style={
-              infoCardStyle
+        {categories.map((category) => (
+          <button
+            className="category-item"
+            key={category.name}
+            type="button"
+            onClick={() =>
+              handleCategoryClick(category.name)
             }
-          >
-            <strong>
-              🔑 Contraseña
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              Tu contraseña se
-              gestiona de forma
-              segura mediante
-              Supabase.
-            </p>
-          </div>
-
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              ✉️ Correo electrónico
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              La cuenta utiliza
-              tu correo electrónico
-              para la autenticación.
-            </p>
-          </div>
-
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              🛡️ Estado de
-              seguridad
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              No se han agregado
-              cambios que alteren
-              tu flujo actual de
-              inicio de sesión,
-              registro o
-              recuperación.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-
-  /* =======================================================
-     CATEGORÍAS
-  ======================================================= */
-
-  const renderCategoriesPage =
-    () => (
-      <div
-        style={{
-          marginTop: 14,
-        }}
-      >
-        <h1
-          style={{
-            marginBottom: 6,
-          }}
-        >
-          Categorías
-        </h1>
-
-        <p
-          style={{
-            color: "#666",
-            marginTop: 0,
-          }}
-        >
-          Explora productos
-          por categoría.
-        </p>
-
-        <div
-          className="categories-scroll"
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(2, minmax(0, 1fr))",
-            gap: 12,
-            marginTop: 18,
-          }}
-        >
-          {categories.map(
-            (category) => (
-              <button
-                className="category-item"
-                key={
-                  category.name
-                }
-                type="button"
-                onClick={() =>
-                  handleCategoryClick(
-                    category.name
-                  )
-                }
-                style={{
-                  border:
-                    "1px solid #ece7f3",
-                  borderRadius: 18,
-                  background:
-                    "white",
-                  padding: 18,
-                  cursor:
-                    "pointer",
-                }}
-              >
-                <div
-                  className="category-icon"
-                  style={{
-                    fontSize: 34,
-                  }}
-                >
-                  {
-                    category.icon
-                  }
-                </div>
-
-                <span>
-                  {
-                    category.name
-                  }
-                </span>
-              </button>
-            )
-          )}
-        </div>
-
-        {selectedCategory && (
-          <div
             style={{
-              marginTop: 28,
+              border: "1px solid #ece7f3",
+              borderRadius: 18,
+              background: "white",
+              padding: 18,
+              cursor: "pointer",
             }}
           >
-            <h2>
-              {selectedCategory}
-            </h2>
-
-            <div className="products-grid">
-              {filteredProducts.length >
-              0 ? (
-                filteredProducts.map(
-                  (product) => (
-                    <article
-                      className="product-card"
-                      key={
-                        product.name
-                      }
-                      onClick={() =>
-                        handleProductClick(
-                          product
-                        )
-                      }
-                    >
-                      <div className="product-image">
-                        <span className="product-label">
-                          {
-                            product.discount
-                          }
-                        </span>
-
-                        <button
-                          className="heart-button"
-                          type="button"
-                          aria-label="Favorito"
-                          onClick={(
-                            event
-                          ) => {
-                            event.stopPropagation();
-
-                            toggleFavorite(
-                              product.name
-                            );
-                          }}
-                        >
-                          {favorites.includes(
-                            product.name
-                          )
-                            ? "♥"
-                            : "♡"}
-                        </button>
-
-                        <div
-                          className={`product-art ${product.type}`}
-                        >
-                          {product.type ===
-                            "earbuds" &&
-                            "🎧"}
-
-                          {product.type ===
-                            "bag" &&
-                            "👜"}
-
-                          {product.type ===
-                            "watch" &&
-                            "⌚"}
-
-                          {product.type ===
-                            "blender" &&
-                            "🥤"}
-                        </div>
-                      </div>
-
-                      <div className="product-info">
-                        <h3>
-                          {
-                            product.name
-                          }
-                        </h3>
-
-                        <div className="price-row">
-                          <strong>
-                            {
-                              product.price
-                            }
-                          </strong>
-
-                          {product.oldPrice && (
-                            <del>
-                              {
-                                product.oldPrice
-                              }
-                            </del>
-                          )}
-                        </div>
-
-                        <div className="rating-row">
-                          <span>
-                            ★
-                          </span>
-
-                          {
-                            product.rating
-                          }
-
-                          <small>
-                            •{" "}
-                            {
-                              product.reviews
-                            }
-                          </small>
-                        </div>
-                      </div>
-                    </article>
-                  )
-                )
-              ) : (
-                <div
-                  style={{
-                    width:
-                      "100%",
-                    textAlign:
-                      "center",
-                    padding:
-                      "30px",
-                  }}
-                >
-                  No encontramos
-                  productos con
-                  esa búsqueda.
-                </div>
-              )}
+            <div
+              className="category-icon"
+              style={{ fontSize: 34 }}
+            >
+              {category.icon}
             </div>
-          </div>
-        )}
+
+            <span>{category.name}</span>
+          </button>
+        ))}
       </div>
-    );
 
-  /* =======================================================
-     FAVORITOS
-  ======================================================= */
+      {selectedCategory && (
+        <div style={{ marginTop: 28 }}>
+          <h2>{selectedCategory}</h2>
 
-  const renderFavoritesPage =
-    () => (
-      <div
-        style={{
-          marginTop: 14,
-        }}
-      >
-        <h1
-          style={{
-            marginBottom: 6,
-          }}
-        >
-          Favoritos
-        </h1>
-
-        <p
-          style={{
-            color: "#666",
-            marginTop: 0,
-          }}
-        >
-          Aquí encontrarás
-          los productos que
-          hayas guardado.
-        </p>
-
-        {favoriteProducts.length >
-        0 ? (
-          <div
-            className="products-grid"
-            style={{
-              marginTop: 20,
-            }}
-          >
-            {favoriteProducts.map(
-              (product) => (
+          <div className="products-grid">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
                 <article
                   className="product-card"
-                  key={
-                    product.name
-                  }
+                  key={product.name}
                   onClick={() =>
-                    handleProductClick(
-                      product
-                    )
+                    handleProductClick(product)
                   }
                 >
                   <div className="product-image">
                     <span className="product-label">
-                      {
-                        product.discount
-                      }
+                      {product.discount}
                     </span>
 
                     <button
                       className="heart-button"
                       type="button"
-                      aria-label="Eliminar favorito"
-                      onClick={(
-                        event
-                      ) => {
+                      aria-label="Favorito"
+                      onClick={(event) => {
                         event.stopPropagation();
-
-                        toggleFavorite(
-                          product.name
-                        );
+                        toggleFavorite(product.name);
                       }}
                     >
-                      ♥
+                      {favorites.includes(product.name)
+                        ? "♥"
+                        : "♡"}
                     </button>
 
                     <div
                       className={`product-art ${product.type}`}
                     >
-                      {product.type ===
-                        "earbuds" &&
+                      {product.type === "earbuds" &&
                         "🎧"}
-
-                      {product.type ===
-                        "bag" &&
-                        "👜"}
-
-                      {product.type ===
-                        "watch" &&
-                        "⌚"}
-
-                      {product.type ===
-                        "blender" &&
-                        "🥤"}
+                      {product.type === "bag" && "👜"}
+                      {product.type === "watch" && "⌚"}
+                      {product.type === "blender" && "🥤"}
                     </div>
                   </div>
 
                   <div className="product-info">
-                    <h3>
-                      {
-                        product.name
-                      }
-                    </h3>
+                    <h3>{product.name}</h3>
 
                     <div className="price-row">
-                      <strong>
-                        {
-                          product.price
-                        }
-                      </strong>
+                      <strong>{product.price}</strong>
 
                       {product.oldPrice && (
-                        <del>
-                          {
-                            product.oldPrice
-                          }
-                        </del>
+                        <del>{product.oldPrice}</del>
                       )}
                     </div>
 
                     <div className="rating-row">
-                      <span>
-                        ★
-                      </span>
-
-                      {
-                        product.rating
-                      }
+                      <span>★</span>
+                      {product.rating}
 
                       <small>
-                        •{" "}
-                        {
-                          product.reviews
-                        }
+                        • {product.reviews}
                       </small>
                     </div>
                   </div>
                 </article>
-              )
+              ))
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  textAlign: "center",
+                  padding: "30px",
+                }}
+              >
+                No encontramos productos con esa
+                búsqueda.
+              </div>
             )}
           </div>
-        ) : (
-          <div
-            style={{
-              background:
-                "white",
-              border:
-                "1px solid #ece7f3",
-              borderRadius: 18,
-              padding: 30,
-              marginTop: 20,
-              textAlign:
-                "center",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 42,
-              }}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderFavoritesPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <h1 style={{ marginBottom: 6 }}>
+        Favoritos
+      </h1>
+
+      <p style={{ color: "#666", marginTop: 0 }}>
+        Aquí encontrarás los productos que hayas
+        guardado.
+      </p>
+
+      {favoriteProducts.length > 0 ? (
+        <div
+          className="products-grid"
+          style={{ marginTop: 20 }}
+        >
+          {favoriteProducts.map((product) => (
+            <article
+              className="product-card"
+              key={product.name}
+              onClick={() =>
+                handleProductClick(product)
+              }
             >
-              ♡
-            </div>
+              <div className="product-image">
+                <span className="product-label">
+                  {product.discount}
+                </span>
 
-            <h2>
-              Aún no tienes
-              favoritos
-            </h2>
+                <button
+                  className="heart-button"
+                  type="button"
+                  aria-label="Eliminar favorito"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleFavorite(product.name);
+                  }}
+                >
+                  ♥
+                </button>
 
-            <p
-              style={{
-                color: "#666",
-              }}
-            >
-              Guarda productos
-              tocando el corazón
-              para encontrarlos
-              fácilmente aquí.
-            </p>
+                <div
+                  className={`product-art ${product.type}`}
+                >
+                  {product.type === "earbuds" && "🎧"}
+                  {product.type === "bag" && "👜"}
+                  {product.type === "watch" && "⌚"}
+                  {product.type === "blender" && "🥤"}
+                </div>
+              </div>
 
-            <button
-              type="button"
-              onClick={goHome}
-              style={{
-                border: 0,
-                borderRadius: 12,
-                padding:
-                  "12px 20px",
-                background:
-                  "linear-gradient(90deg,#ed174d,#7020d0)",
-                color: "white",
-                fontWeight: 800,
-                cursor:
-                  "pointer",
-              }}
-            >
-              Explorar productos
-            </button>
-          </div>
-        )}
-      </div>
-    );
+              <div className="product-info">
+                <h3>{product.name}</h3>
 
-  /* =======================================================
-     OFERTAS
-  ======================================================= */
+                <div className="price-row">
+                  <strong>{product.price}</strong>
 
-  const renderOffersPage =
-    () => (
-      <div
-        style={{
-          marginTop: 14,
-        }}
-      >
+                  {product.oldPrice && (
+                    <del>{product.oldPrice}</del>
+                  )}
+                </div>
+
+                <div className="rating-row">
+                  <span>★</span>
+                  {product.rating}
+
+                  <small>
+                    • {product.reviews}
+                  </small>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
         <div
           style={{
-            background:
-              "linear-gradient(135deg,#ed174d,#7020d0)",
-            color: "white",
-            borderRadius: 22,
-            padding: 24,
-            marginBottom: 20,
+            background: "white",
+            border: "1px solid #ece7f3",
+            borderRadius: 18,
+            padding: 30,
+            marginTop: 20,
+            textAlign: "center",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              opacity: 0.85,
-            }}
-          >
-            SHORASHOPP
-          </div>
+          <div style={{ fontSize: 42 }}>♡</div>
 
-          <h1
-            style={{
-              margin: "6px 0",
-              fontSize: 30,
-            }}
-          >
-            Ofertas
-            exclusivas
-          </h1>
+          <h2>Aún no tienes favoritos</h2>
 
-          <p
-            style={{
-              margin: 0,
-            }}
-          >
-            Descuentos increíbles
-            por tiempo limitado.
+          <p style={{ color: "#666" }}>
+            Guarda productos tocando el corazón para
+            encontrarlos fácilmente aquí.
           </p>
+
+          <button
+            type="button"
+            onClick={goHome}
+            style={{
+              border: 0,
+              borderRadius: 12,
+              padding: "12px 20px",
+              background:
+                "linear-gradient(90deg,#ed174d,#7020d0)",
+              color: "white",
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            Explorar productos
+          </button>
         </div>
+      )}
+    </div>
+  );
 
-        <div className="products-grid">
-          {products.map(
-            (product) => (
-              <article
-                className="product-card"
-                key={
-                  product.name
-                }
-                onClick={() =>
-                  handleProductClick(
-                    product
-                  )
-                }
-              >
-                <div className="product-image">
-                  <span className="product-label">
-                    {
-                      product.discount
-                    }
-                  </span>
-
-                  <button
-                    className="heart-button"
-                    type="button"
-                    aria-label="Favorito"
-                    onClick={(
-                      event
-                    ) => {
-                      event.stopPropagation();
-
-                      toggleFavorite(
-                        product.name
-                      );
-                    }}
-                  >
-                    {favorites.includes(
-                      product.name
-                    )
-                      ? "♥"
-                      : "♡"}
-                  </button>
-
-                  <div
-                    className={`product-art ${product.type}`}
-                  >
-                    {product.type ===
-                      "earbuds" &&
-                      "🎧"}
-
-                    {product.type ===
-                      "bag" &&
-                      "👜"}
-
-                    {product.type ===
-                      "watch" &&
-                      "⌚"}
-
-                    {product.type ===
-                      "blender" &&
-                      "🥤"}
-                  </div>
-                </div>
-
-                <div className="product-info">
-                  <h3>
-                    {product.name}
-                  </h3>
-
-                  <div className="price-row">
-                    <strong>
-                      {product.price}
-                    </strong>
-
-                    {product.oldPrice && (
-                      <del>
-                        {
-                          product.oldPrice
-                        }
-                      </del>
-                    )}
-                  </div>
-
-                  <div className="rating-row">
-                    <span>
-                      ★
-                    </span>
-
-                    {
-                      product.rating
-                    }
-
-                    <small>
-                      •{" "}
-                      {
-                        product.reviews
-                      }
-                    </small>
-                  </div>
-                </div>
-              </article>
-            )
-          )}
-        </div>
-      </div>
-    );
-
-  /* =======================================================
-     NOTIFICACIONES
-  ======================================================= */
-
-  const renderNotificationsPage =
-    () => (
+  const renderOffersPage = () => (
+    <div style={{ marginTop: 14 }}>
       <div
         style={{
-          marginTop: 14,
+          background:
+            "linear-gradient(135deg,#ed174d,#7020d0)",
+          color: "white",
+          borderRadius: 22,
+          padding: 24,
+          marginBottom: 20,
         }}
       >
+        <div style={{ fontSize: 12, opacity: 0.85 }}>
+          SHORASHOPP
+        </div>
+
         <h1
           style={{
-            marginBottom: 6,
+            margin: "6px 0",
+            fontSize: 30,
           }}
         >
-          Notificaciones
+          Ofertas exclusivas
+        </h1>
+
+        <p style={{ margin: 0 }}>
+          Descuentos increíbles por tiempo limitado.
+        </p>
+      </div>
+
+      <div className="products-grid">
+        {products.map((product) => (
+          <article
+            className="product-card"
+            key={product.name}
+            onClick={() =>
+              handleProductClick(product)
+            }
+          >
+            <div className="product-image">
+              <span className="product-label">
+                {product.discount}
+              </span>
+
+              <button
+                className="heart-button"
+                type="button"
+                aria-label="Favorito"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggleFavorite(product.name);
+                }}
+              >
+                {favorites.includes(product.name)
+                  ? "♥"
+                  : "♡"}
+              </button>
+
+              <div
+                className={`product-art ${product.type}`}
+              >
+                {product.type === "earbuds" && "🎧"}
+                {product.type === "bag" && "👜"}
+                {product.type === "watch" && "⌚"}
+                {product.type === "blender" && "🥤"}
+              </div>
+            </div>
+
+            <div className="product-info">
+              <h3>{product.name}</h3>
+
+              <div className="price-row">
+                <strong>{product.price}</strong>
+
+                {product.oldPrice && (
+                  <del>{product.oldPrice}</del>
+                )}
+              </div>
+
+              <div className="rating-row">
+                <span>★</span>
+                {product.rating}
+
+                <small>
+                  • {product.reviews}
+                </small>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* =========================================================
+     NOTIFICACIONES
+  ========================================================= */
+
+  const renderNotificationsPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <h1 style={{ marginBottom: 6 }}>
+        Notificaciones
+      </h1>
+
+      <p style={{ color: "#666", marginTop: 0 }}>
+        Aquí encontrarás las novedades y avisos de
+        SHORASHOPP.
+      </p>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 12,
+          marginTop: 20,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() =>
+            openPage("notification-offers")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>
+            🔥 Nuevas ofertas disponibles
+          </strong>
+
+          <span>
+            Revisa nuestras promociones y descuentos
+            especiales. ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            openPage("notification-orders")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>📦 Tus pedidos</strong>
+
+          <span>
+            Consulta información y actualizaciones
+            sobre tus compras. ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            openPage("notification-messages")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>💬 Mensajes</strong>
+
+          <span>
+            Consulta mensajes de vendedores y del
+            equipo de SHORASHOPP. ›
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderNotificationOffersPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div
+        style={{
+          background:
+            "linear-gradient(135deg,#ed174d,#7020d0)",
+          color: "white",
+          borderRadius: 22,
+          padding: 24,
+        }}
+      >
+        <div style={{ fontSize: 34 }}>🔥</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Nuevas ofertas disponibles
+        </h1>
+
+        <p style={{ margin: 0, opacity: 0.92 }}>
+          Descubre promociones especiales y productos
+          con descuentos.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        {products.map((product) => (
+          <button
+            key={product.name}
+            type="button"
+            onClick={() =>
+              handleProductClick(product)
+            }
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              width: "100%",
+              padding: 14,
+              border: "1px solid #ece7f3",
+              borderRadius: 16,
+              background: "white",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <span style={{ fontSize: 34 }}>
+              {product.type === "earbuds" && "🎧"}
+              {product.type === "bag" && "👜"}
+              {product.type === "watch" && "⌚"}
+              {product.type === "blender" && "🥤"}
+            </span>
+
+            <span
+              style={{
+                display: "grid",
+                gap: 4,
+              }}
+            >
+              <strong>{product.name}</strong>
+
+              <span
+                style={{
+                  color: "#7020d0",
+                  fontWeight: 800,
+                }}
+              >
+                {product.price} · {product.discount}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderNotificationOrdersPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 36 }}>📦</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Tus pedidos
         </h1>
 
         <p
           style={{
+            margin: 0,
             color: "#666",
-            marginTop: 0,
+            lineHeight: 1.6,
           }}
         >
-          Aquí encontrarás
-          las novedades y avisos
-          de SHORASHOPP.
+          Aquí podrás consultar el estado de tus
+          compras, entregas y actualizaciones de
+          pedidos.
         </p>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 12,
-            marginTop: 20,
-          }}
-        >
-
-          <button
-            type="button"
-            onClick={() =>
-              openPage(
-                "notification-offers"
-              )
-            }
-            style={{
-              ...securityPageButtonStyle,
-              cursor: "pointer",
-            }}
-          >
-            <strong>
-              🔥 Nuevas ofertas disponibles
-            </strong>
-
-            <span>
-              Revisa nuestras
-              promociones y
-              descuentos especiales.
-              ›
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              openPage(
-                "notification-orders"
-              )
-            }
-            style={{
-              ...securityPageButtonStyle,
-              cursor: "pointer",
-            }}
-          >
-            <strong>
-              📦 Tus pedidos
-            </strong>
-
-            <span>
-              Consulta información
-              y actualizaciones sobre
-              tus compras. ›
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              openPage(
-                "notification-messages"
-              )
-            }
-            style={{
-              ...securityPageButtonStyle,
-              cursor: "pointer",
-            }}
-          >
-            <strong>
-              💬 Mensajes
-            </strong>
-
-            <span>
-              Consulta mensajes de
-              vendedores y del equipo
-              de SHORASHOPP. ›
-            </span>
-          </button>
-
-        </div>
       </div>
-    );
 
-  /* =======================================================
-     NOTIFICACIÓN: OFERTAS
-  ======================================================= */
-
-  const renderNotificationOffersPage =
-    () => (
       <div
         style={{
-          marginTop: 14,
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
         }}
       >
-        <div
-          style={{
-            background:
-              "linear-gradient(135deg,#ed174d,#7020d0)",
-            color: "white",
-            borderRadius: 22,
-            padding: 24,
-          }}
+        <button
+          type="button"
+          onClick={() => openPage("orders-list")}
+          style={securityPageButtonStyle}
         >
-          <div
-            style={{
-              fontSize: 34,
-            }}
-          >
-            🔥
-          </div>
+          <strong>📦 Tus pedidos</strong>
 
-          <h1
-            style={{
-              margin:
-                "10px 0 6px",
-            }}
-          >
-            Nuevas ofertas
-            disponibles
-          </h1>
+          <span>
+            Consulta tus compras y el estado de cada
+            pedido. ›
+          </span>
+        </button>
 
-          <p
-            style={{
-              margin: 0,
-              opacity: 0.92,
-            }}
-          >
-            Descubre promociones
-            especiales y productos
-            con descuentos.
-          </p>
-        </div>
-
-        <div
-          style={{
-            marginTop: 18,
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          {products.map(
-            (product) => (
-              <button
-                key={
-                  product.name
-                }
-                type="button"
-                onClick={() =>
-                  handleProductClick(
-                    product
-                  )
-                }
-                style={{
-                  display:
-                    "flex",
-                  alignItems:
-                    "center",
-                  gap: 14,
-                  width:
-                    "100%",
-                  padding: 14,
-                  border:
-                    "1px solid #ece7f3",
-                  borderRadius:
-                    16,
-                  background:
-                    "white",
-                  cursor:
-                    "pointer",
-                  textAlign:
-                    "left",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 34,
-                  }}
-                >
-                  {product.type ===
-                    "earbuds" &&
-                    "🎧"}
-
-                  {product.type ===
-                    "bag" &&
-                    "👜"}
-
-                  {product.type ===
-                    "watch" &&
-                    "⌚"}
-
-                  {product.type ===
-                    "blender" &&
-                    "🥤"}
-                </span>
-
-                <span
-                  style={{
-                    display:
-                      "grid",
-                    gap: 4,
-                  }}
-                >
-                  <strong>
-                    {
-                      product.name
-                    }
-                  </strong>
-
-                  <span
-                    style={{
-                      color:
-                        "#7020d0",
-                      fontWeight:
-                        800,
-                    }}
-                  >
-                    {
-                      product.price
-                    }{" "}
-                    ·{" "}
-                    {
-                      product.discount
-                    }
-                  </span>
-                </span>
-              </button>
-            )
-          )}
-        </div>
-      </div>
-    );
-
-  /* =======================================================
-     NOTIFICACIÓN: PEDIDOS
-  ======================================================= */
-
-  const renderNotificationOrdersPage =
-    () => (
-      <div
-        style={{
-          marginTop: 14,
-        }}
-      >
-        <div
-          style={
-            infoCardStyle
+        <button
+          type="button"
+          onClick={() =>
+            openPage("orders-tracking")
           }
+          style={securityPageButtonStyle}
         >
-          <div
-            style={{
-              fontSize: 36,
-            }}
-          >
-            📦
-          </div>
+          <strong>🚚 Seguimiento</strong>
 
-          <h1
-            style={{
-              margin:
-                "10px 0 6px",
-            }}
-          >
-            Tus pedidos
-          </h1>
+          <span>
+            Revisa el progreso y ubicación de tus
+            entregas. ›
+          </span>
+        </button>
 
-          <p
-            style={{
-              margin: 0,
-              color: "#666",
-              lineHeight:
-                1.6,
-            }}
-          >
-            Aquí podrás consultar
-            el estado de tus
-            compras, entregas y
-            actualizaciones de
-            pedidos.
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={() =>
+            openPage("orders-confirmations")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>✅ Confirmaciones</strong>
 
-        <div
+          <span>
+            Consulta confirmaciones relacionadas con
+            tus compras. ›
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderNotificationMessagesPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 36 }}>💬</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Mensajes
+        </h1>
+
+        <p
           style={{
-            marginTop: 18,
-            display: "grid",
-            gap: 12,
+            margin: 0,
+            color: "#666",
+            lineHeight: 1.6,
           }}
         >
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              📦 Tus pedidos
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              Cuando realices una
-              compra, aquí
-              aparecerá su estado.
-            </p>
-          </div>
-
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              🚚 Seguimiento
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              Podrás consultar el
-              progreso de tus
-              entregas.
-            </p>
-          </div>
-
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              ✅ Confirmaciones
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              Recibirás avisos
-              relacionados con tus
-              pedidos.
-            </p>
-          </div>
-        </div>
+          Aquí podrás consultar mensajes de
+          vendedores y del equipo de SHORASHOPP.
+        </p>
       </div>
-    );
 
-  /* =======================================================
-     NOTIFICACIÓN: MENSAJES
-  ======================================================= */
-
-  const renderNotificationMessagesPage =
-    () => (
       <div
         style={{
-          marginTop: 14,
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
         }}
       >
-        <div
-          style={
-            infoCardStyle
+        <button
+          type="button"
+          onClick={() =>
+            openPage("messages-conversations")
           }
+          style={securityPageButtonStyle}
         >
-          <div
-            style={{
-              fontSize: 36,
-            }}
-          >
-            💬
-          </div>
+          <strong>💬 Conversaciones</strong>
 
-          <h1
-            style={{
-              margin:
-                "10px 0 6px",
-            }}
-          >
-            Mensajes
-          </h1>
+          <span>
+            Consulta y continúa tus conversaciones
+            dentro de SHORASHOPP. ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            openPage("messages-sellers")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>🏪 Vendedores</strong>
+
+          <span>
+            Revisa tus comunicaciones con vendedores.
+            ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            openPage("messages-support")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>🛟 Soporte SHORASHOPP</strong>
+
+          <span>
+            Comunícate con el equipo de soporte de
+            SHORASHOPP. ›
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  /* =========================================================
+     PÁGINAS INTERNAS DE MENSAJES
+  ========================================================= */
+
+  const renderMessagesConversationsPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 38 }}>💬</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Conversaciones
+        </h1>
+
+        <p
+          style={{
+            margin: 0,
+            color: "#666",
+            lineHeight: 1.6,
+          }}
+        >
+          Aquí aparecerán tus conversaciones
+          recientes dentro de SHORASHOPP.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>💬 Conversaciones recientes</strong>
 
           <p
             style={{
-              margin: 0,
+              margin: "7px 0 0",
               color: "#666",
-              lineHeight:
-                1.6,
             }}
           >
-            Aquí podrás consultar
-            mensajes de vendedores
-            y del equipo de
-            SHORASHOPP.
+            Tus conversaciones aparecerán aquí
+            conforme empieces a comunicarte.
           </p>
         </div>
 
-        <div
-          style={{
-            marginTop: 18,
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <div
-            style={
-              infoCardStyle
-            }
+        <div style={infoCardStyle}>
+          <strong>🔔 Nuevos mensajes</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
           >
-            <strong>
-              💬 Conversaciones
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              Tus conversaciones
-              aparecerán aquí.
-            </p>
-          </div>
-
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              🏪 Vendedores
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              Podrás comunicarte
-              con vendedores sobre
-              tus compras.
-            </p>
-          </div>
-
-          <div
-            style={
-              infoCardStyle
-            }
-          >
-            <strong>
-              🛟 Soporte SHORASHOPP
-            </strong>
-
-            <p
-              style={{
-                margin:
-                  "7px 0 0",
-                color:
-                  "#666",
-              }}
-            >
-              El equipo de
-              SHORASHOPP también
-              podrá comunicarse
-              contigo aquí.
-            </p>
-          </div>
+            Los nuevos mensajes podrán mostrarse
+            dentro de esta sección.
+          </p>
         </div>
       </div>
-    );
+    </div>
+  );
 
-  /*
-   * ========================================================
-   * RENDER
-   * ========================================================
-   */
+  const renderMessagesSellersPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 38 }}>🏪</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Vendedores
+        </h1>
+
+        <p
+          style={{
+            margin: 0,
+            color: "#666",
+            lineHeight: 1.6,
+          }}
+        >
+          Aquí podrás consultar las conversaciones
+          relacionadas con los vendedores.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>🏪 Mis vendedores</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Los vendedores con los que tengas
+            conversaciones aparecerán aquí.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>🛍️ Consultas de productos</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Podrás consultar información sobre
+            productos directamente con los vendedores.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMessagesSupportPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div
+        style={{
+          background:
+            "linear-gradient(135deg,#ed174d,#7020d0)",
+          color: "white",
+          borderRadius: 22,
+          padding: 24,
+        }}
+      >
+        <div style={{ fontSize: 38 }}>🛟</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Soporte SHORASHOPP
+        </h1>
+
+        <p style={{ margin: 0, opacity: 0.92 }}>
+          Estamos aquí para ayudarte con tus dudas.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>💬 Atención al cliente</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Esta será tu sección para comunicarte
+            con soporte.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>📋 Ayuda con tus compras</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Podrás consultar problemas relacionados
+            con productos y pedidos.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>🛡️ Ayuda con tu cuenta</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            También podrás solicitar ayuda con el
+            acceso y configuración de tu cuenta.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* =========================================================
+     PÁGINA PRINCIPAL DE PEDIDOS
+  ========================================================= */
+
+  const renderOrdersPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div
+        style={{
+          background:
+            "linear-gradient(135deg,#ed174d,#7020d0)",
+          color: "white",
+          borderRadius: 22,
+          padding: 24,
+          marginBottom: 18,
+        }}
+      >
+        <div style={{ fontSize: 36 }}>📦</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Mis pedidos
+        </h1>
+
+        <p style={{ margin: 0, opacity: 0.92 }}>
+          Consulta tus compras, entregas y
+          confirmaciones.
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => openPage("orders-list")}
+          style={securityPageButtonStyle}
+        >
+          <strong>📦 Tus pedidos</strong>
+
+          <span>
+            Consulta tus compras y el estado de cada
+            pedido. ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            openPage("orders-tracking")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>🚚 Seguimiento</strong>
+
+          <span>
+            Revisa el progreso y ubicación de tus
+            entregas. ›
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            openPage("orders-confirmations")
+          }
+          style={securityPageButtonStyle}
+        >
+          <strong>✅ Confirmaciones</strong>
+
+          <span>
+            Consulta confirmaciones relacionadas con
+            tus compras. ›
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  /* =========================================================
+     PÁGINAS INTERNAS DE PEDIDOS
+  ========================================================= */
+
+  const renderOrdersListPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 38 }}>📦</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Tus pedidos
+        </h1>
+
+        <p
+          style={{
+            margin: 0,
+            color: "#666",
+            lineHeight: 1.6,
+          }}
+        >
+          Aquí aparecerán tus compras y podrás
+          consultar el estado de cada pedido.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>🛍️ Compras realizadas</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Tus pedidos aparecerán aquí después de
+            realizar una compra.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>📋 Detalles del pedido</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Podrás consultar productos, cantidades y
+            datos de cada compra.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOrdersTrackingPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 38 }}>🚚</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Seguimiento
+        </h1>
+
+        <p
+          style={{
+            margin: 0,
+            color: "#666",
+            lineHeight: 1.6,
+          }}
+        >
+          Consulta el progreso de tus entregas y
+          revisa cuándo llegarán tus productos.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>📍 Ubicación del pedido</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            El seguimiento de cada envío aparecerá
+            aquí cuando exista una compra activa.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>🚚 Estado de entrega</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Podrás consultar si tu pedido está en
+            preparación, envío o entrega.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>📅 Fecha estimada</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            La fecha estimada de llegada se mostrará
+            cuando esté disponible.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOrdersConfirmationsPage = () => (
+    <div style={{ marginTop: 14 }}>
+      <div style={infoCardStyle}>
+        <div style={{ fontSize: 38 }}>✅</div>
+
+        <h1 style={{ margin: "10px 0 6px" }}>
+          Confirmaciones
+        </h1>
+
+        <p
+          style={{
+            margin: 0,
+            color: "#666",
+            lineHeight: 1.6,
+          }}
+        >
+          Aquí podrás consultar las confirmaciones
+          relacionadas con tus compras.
+        </p>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div style={infoCardStyle}>
+          <strong>✅ Compra confirmada</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Las confirmaciones de tus compras
+            aparecerán aquí.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>💳 Pago confirmado</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Podrás consultar las confirmaciones
+            relacionadas con los pagos.
+          </p>
+        </div>
+
+        <div style={infoCardStyle}>
+          <strong>📦 Pedido recibido</strong>
+
+          <p
+            style={{
+              margin: "7px 0 0",
+              color: "#666",
+            }}
+          >
+            Las confirmaciones de recepción también
+            podrán aparecer en esta sección.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="app">
-
       {/* =================================================
           HEADER
       ================================================= */}
 
       <header className="mobile-header">
-
         <button
           className="menu-button"
           type="button"
-          onClick={() =>
-            setMenuOpen(true)
-          }
+          onClick={() => setMenuOpen(true)}
         >
           ☰
         </button>
@@ -2154,28 +1850,20 @@ function App() {
           onClick={goHome}
         >
           <strong>
-            SHORA
-            <span>
-              SHOPP
-            </span>
+            SHORA<span>SHOPP</span>
           </strong>
 
           <small>
-            Compra.{" "}
-            <b>Vende.</b>{" "}
-            Descubre.
+            Compra. <b>Vende.</b> Descubre.
           </small>
         </button>
 
         <div className="header-icons">
-
           <button
             type="button"
             className="notification-button"
             onClick={() =>
-              openPage(
-                "notifications"
-              )
+              openPage("notifications")
             }
           >
             ♧
@@ -2194,7 +1882,6 @@ function App() {
             🛒
             <i>2</i>
           </button>
-
         </div>
       </header>
 
@@ -2204,7 +1891,6 @@ function App() {
 
       <div className="search-container">
         <div className="search-box">
-
           <span>⌕</span>
 
           <input
@@ -2212,110 +1898,100 @@ function App() {
             placeholder="¿Qué estás buscando hoy?"
             value={searchTerm}
             onChange={(event) =>
-              setSearchTerm(
-                event.target.value
-              )
+              setSearchTerm(event.target.value)
             }
-            onKeyDown={
-              handleSearchKeyDown
-            }
+            onKeyDown={handleSearchKeyDown}
           />
 
           <button
             type="button"
-            onClick={
-              handleSearch
-            }
+            onClick={handleSearch}
           >
             ⌕
           </button>
-
         </div>
       </div>
 
       {/* =================================================
-          PANTALLAS SECUNDARIAS
+          PÁGINAS SECUNDARIAS
       ================================================= */}
 
-      {currentPage !==
-        "home" && (
+      {currentPage !== "home" && (
         <section
           style={{
-            maxWidth:
-              "760px",
-            margin:
-              "0 auto",
-            padding:
-              "22px 16px 120px",
+            maxWidth: "760px",
+            margin: "0 auto",
+            padding: "22px 16px 120px",
           }}
         >
-
           <button
             type="button"
-            onClick={
-              goBack
-            }
+            onClick={goBack}
             style={{
               border: 0,
-              background:
-                "transparent",
-              color:
-                "#7020d0",
-              fontWeight:
-                800,
-              padding:
-                "8px 0",
-              cursor:
-                "pointer",
+              background: "transparent",
+              color: "#7020d0",
+              fontWeight: 800,
+              padding: "8px 0",
+              cursor: "pointer",
             }}
           >
             ← Volver
           </button>
 
-          {currentPage ===
-            "account" &&
+          {currentPage === "account" &&
             renderAccountPage()}
 
-          {currentPage ===
-            "privacy" &&
+          {currentPage === "privacy" &&
             renderPrivacyPage()}
 
-          {currentPage ===
-            "sessions" &&
+          {currentPage === "sessions" &&
             renderSessionsPage()}
 
-          {currentPage ===
-            "security" &&
+          {currentPage === "security" &&
             renderSecurityPage()}
 
-          {currentPage ===
-            "categories" &&
+          {currentPage === "categories" &&
             renderCategoriesPage()}
 
-          {currentPage ===
-            "favorites" &&
+          {currentPage === "favorites" &&
             renderFavoritesPage()}
 
-          {currentPage ===
-            "offers" &&
+          {currentPage === "offers" &&
             renderOffersPage()}
 
-          {currentPage ===
-            "notifications" &&
+          {currentPage === "notifications" &&
             renderNotificationsPage()}
 
-          {currentPage ===
-            "notification-offers" &&
+          {currentPage === "notification-offers" &&
             renderNotificationOffersPage()}
 
-          {currentPage ===
-            "notification-orders" &&
+          {currentPage === "notification-orders" &&
             renderNotificationOrdersPage()}
 
-          {currentPage ===
-            "notification-messages" &&
+          {currentPage === "notification-messages" &&
             renderNotificationMessagesPage()}
 
+          {currentPage === "messages-conversations" &&
+            renderMessagesConversationsPage()}
+
+          {currentPage === "messages-sellers" &&
+            renderMessagesSellersPage()}
+
+          {currentPage === "messages-support" &&
+            renderMessagesSupportPage()}
+
+          {currentPage === "orders" &&
+            renderOrdersPage()}
+
+          {currentPage === "orders-list" &&
+            renderOrdersListPage()}
+
+          {currentPage === "orders-tracking" &&
+            renderOrdersTrackingPage()}
+
+          {currentPage === "orders-confirmations" &&
+            renderOrdersConfirmationsPage()}
         </section>
       )}
 
@@ -2323,21 +1999,14 @@ function App() {
           INICIO
       ================================================= */}
 
-      {currentPage ===
-        "home" && (
+      {currentPage === "home" && (
         <main>
-
-          {/* SELL / ACCOUNT */}
-
           <section className="quick-cards">
-
             <button
               className="quick-card sell-card"
               type="button"
               onClick={() =>
-                openAuth(
-                  "register"
-                )
+                openAuth("register")
               }
             >
               <div className="quick-icon">
@@ -2345,7 +2014,6 @@ function App() {
               </div>
 
               <div className="quick-content">
-
                 <strong>
                   Vende en
                   <br />
@@ -2353,12 +2021,10 @@ function App() {
                 </strong>
 
                 <span>
-                  Únete y comienza a
-                  vender
+                  Únete y comienza a vender
                   <br />
                   tus productos hoy
                 </span>
-
               </div>
 
               <b className="round-arrow">
@@ -2369,20 +2035,14 @@ function App() {
             <button
               className="quick-card account-card"
               type="button"
-              onClick={
-                handleAccountAccess
-              }
+              onClick={handleAccountAccess}
             >
-
               <div className="quick-icon">
                 ♟
               </div>
 
               <div className="quick-content">
-
-                <strong>
-                  Mi cuenta
-                </strong>
+                <strong>Mi cuenta</strong>
 
                 <span>
                   {session
@@ -2395,82 +2055,51 @@ function App() {
                     ? "Cerrar sesión"
                     : "Ver perfil, pedidos y configuraciones"}
                 </small>
-
               </div>
 
               <b className="round-arrow">
                 ›
               </b>
-
             </button>
-
           </section>
 
-          {/* CATEGORÍAS */}
-
           <section className="content-section">
-
             <div className="section-title-row">
-
-              <h2>
-                Categorías
-              </h2>
+              <h2>Categorías</h2>
 
               <button
                 type="button"
-                onClick={
-                  handleShowAllCategories
-                }
+                onClick={handleShowAllCategories}
               >
-                Ver todas{" "}
-                <span>›</span>
+                Ver todas <span>›</span>
               </button>
-
             </div>
 
             <div className="categories-scroll">
-
-              {categories.map(
-                (category) => (
-                  <button
-                    className="category-item"
-                    key={
+              {categories.map((category) => (
+                <button
+                  className="category-item"
+                  key={category.name}
+                  type="button"
+                  onClick={() =>
+                    handleCategoryClick(
                       category.name
-                    }
-                    type="button"
-                    onClick={() =>
-                      handleCategoryClick(
-                        category.name
-                      )
-                    }
-                  >
-                    <div className="category-icon">
-                      {
-                        category.icon
-                      }
-                    </div>
+                    )
+                  }
+                >
+                  <div className="category-icon">
+                    {category.icon}
+                  </div>
 
-                    <span>
-                      {
-                        category.name
-                      }
-                    </span>
-                  </button>
-                )
-              )}
-
+                  <span>{category.name}</span>
+                </button>
+              ))}
             </div>
-
           </section>
 
-          {/* OFERTAS */}
-
           <section className="offer-section">
-
             <div className="offer-banner">
-
               <div className="offer-text">
-
                 <strong>
                   OFERTAS
                   <br />
@@ -2485,18 +2114,13 @@ function App() {
 
                 <button
                   type="button"
-                  onClick={
-                    handleOffers
-                  }
+                  onClick={handleOffers}
                 >
-                  Ver ofertas{" "}
-                  <b>›</b>
+                  Ver ofertas <b>›</b>
                 </button>
-
               </div>
 
               <div className="offer-products">
-
                 <div className="offer-bag">
                   🛍️
                 </div>
@@ -2512,19 +2136,12 @@ function App() {
                 <div className="offer-percent">
                   %
                 </div>
-
               </div>
-
             </div>
-
           </section>
 
-          {/* PRODUCTOS */}
-
           <section className="content-section products-section">
-
             <div className="section-title-row">
-
               <h2>
                 {selectedCategory
                   ? selectedCategory
@@ -2534,200 +2151,122 @@ function App() {
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedCategory(
-                    ""
-                  );
-
-                  setSearchTerm(
-                    ""
-                  );
+                  setSelectedCategory("");
+                  setSearchTerm("");
                 }}
               >
-                Ver todos{" "}
-                <span>›</span>
+                Ver todos <span>›</span>
               </button>
-
             </div>
 
             <div className="products-grid">
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <article
+                    className="product-card"
+                    key={product.name}
+                    onClick={() =>
+                      handleProductClick(product)
+                    }
+                  >
+                    <div className="product-image">
+                      <span className="product-label">
+                        {product.discount}
+                      </span>
 
-              {filteredProducts.length >
-              0 ? (
-                filteredProducts.map(
-                  (product) => (
-                    <article
-                      className="product-card"
-                      key={
-                        product.name
-                      }
-                      onClick={() =>
-                        handleProductClick(
-                          product
+                      <button
+                        className="heart-button"
+                        type="button"
+                        aria-label="Favorito"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleFavorite(
+                            product.name
+                          );
+                        }}
+                      >
+                        {favorites.includes(
+                          product.name
                         )
-                      }
-                    >
+                          ? "♥"
+                          : "♡"}
+                      </button>
 
-                      <div className="product-image">
+                      <div
+                        className={`product-art ${product.type}`}
+                      >
+                        {product.type ===
+                          "earbuds" && "🎧"}
+                        {product.type ===
+                          "bag" && "👜"}
+                        {product.type ===
+                          "watch" && "⌚"}
+                        {product.type ===
+                          "blender" && "🥤"}
+                      </div>
+                    </div>
 
-                        <span className="product-label">
-                          {
-                            product.discount
-                          }
-                        </span>
+                    <div className="product-info">
+                      <h3>{product.name}</h3>
 
-                        <button
-                          className="heart-button"
-                          type="button"
-                          aria-label="Favorito"
-                          onClick={(
-                            event
-                          ) => {
-                            event.stopPropagation();
+                      <div className="price-row">
+                        <strong>
+                          {product.price}
+                        </strong>
 
-                            toggleFavorite(
-                              product.name
-                            );
-                          }}
-                        >
-                          {favorites.includes(
-                            product.name
-                          )
-                            ? "♥"
-                            : "♡"}
-                        </button>
-
-                        <div
-                          className={`product-art ${product.type}`}
-                        >
-
-                          {product.type ===
-                            "earbuds" &&
-                            "🎧"}
-
-                          {product.type ===
-                            "bag" &&
-                            "👜"}
-
-                          {product.type ===
-                            "watch" &&
-                            "⌚"}
-
-                          {product.type ===
-                            "blender" &&
-                            "🥤"}
-
-                        </div>
-
+                        {product.oldPrice && (
+                          <del>
+                            {product.oldPrice}
+                          </del>
+                        )}
                       </div>
 
-                      <div className="product-info">
+                      <div className="rating-row">
+                        <span>★</span>
+                        {product.rating}
 
-                        <h3>
-                          {
-                            product.name
-                          }
-                        </h3>
-
-                        <div className="price-row">
-
-                          <strong>
-                            {
-                              product.price
-                            }
-                          </strong>
-
-                          {product.oldPrice && (
-                            <del>
-                              {
-                                product.oldPrice
-                              }
-                            </del>
-                          )}
-
-                        </div>
-
-                        <div className="rating-row">
-
-                          <span>
-                            ★
-                          </span>
-
-                          {
-                            product.rating
-                          }
-
-                          <small>
-                            •{" "}
-                            {
-                              product.reviews
-                            }
-                          </small>
-
-                        </div>
-
+                        <small>
+                          • {product.reviews}
+                        </small>
                       </div>
-
-                    </article>
-                  )
-                )
+                    </div>
+                  </article>
+                ))
               ) : (
                 <div
                   style={{
-                    width:
-                      "100%",
-                    textAlign:
-                      "center",
-                    padding:
-                      "30px",
+                    width: "100%",
+                    textAlign: "center",
+                    padding: "30px",
                   }}
                 >
-                  No encontramos
-                  productos con
-                  esa búsqueda.
+                  No encontramos productos con esa
+                  búsqueda.
                 </div>
               )}
-
             </div>
-
           </section>
 
-          {/* CONFIANZA */}
-
           <section className="trust-section">
-
             <div className="trust-item">
               <span>♢</span>
-
-              <strong>
-                Compra segura
-              </strong>
-
+              <strong>Compra segura</strong>
               <small>
-                Protegemos tus datos
-                y compras
+                Protegemos tus datos y compras
               </small>
             </div>
 
             <div className="trust-item">
               <span>♧</span>
-
-              <strong>
-                Envíos rápidos
-              </strong>
-
+              <strong>Envíos rápidos</strong>
               <small>
-                Recibe tus productos
-                en tiempo récord
+                Recibe tus productos en tiempo récord
               </small>
             </div>
 
             <div className="trust-item">
               <span>✿</span>
-
-              <strong>
-                Vendedores verificados
-              </strong>
-
+              <strong>Vendedores verificados</strong>
               <small>
                 Más confianza para ti
               </small>
@@ -2735,19 +2274,12 @@ function App() {
 
             <div className="trust-item">
               <span>☏</span>
-
-              <strong>
-                Soporte 24/7
-              </strong>
-
+              <strong>Soporte 24/7</strong>
               <small>
-                Estamos aquí para
-                ayudarte
+                Estamos aquí para ayudarte
               </small>
             </div>
-
           </section>
-
         </main>
       )}
 
@@ -2757,66 +2289,46 @@ function App() {
 
       {menuOpen && (
         <div
-          onMouseDown={(
-            event
-          ) => {
+          onMouseDown={(event) => {
             if (
               event.target ===
               event.currentTarget
             ) {
-              setMenuOpen(
-                false
-              );
+              setMenuOpen(false);
             }
           }}
           style={{
-            position:
-              "fixed",
+            position: "fixed",
             inset: 0,
-            background:
-              "rgba(0,0,0,.35)",
+            background: "rgba(0,0,0,.35)",
             zIndex: 10000,
           }}
         >
-
           <aside
             style={{
-              width:
-                "min(330px, 88vw)",
-              height:
-                "100%",
-              background:
-                "white",
-              padding:
-                "22px 18px",
+              width: "min(330px, 88vw)",
+              height: "100%",
+              background: "white",
+              padding: "22px 18px",
               boxShadow:
                 "8px 0 30px rgba(0,0,0,.15)",
             }}
           >
-
             <div
               style={{
-                display:
-                  "flex",
-                justifyContent:
-                  "space-between",
-                alignItems:
-                  "center",
-                marginBottom:
-                  22,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 22,
               }}
             >
-
               <strong
                 style={{
-                  fontSize:
-                    23,
+                  fontSize: 23,
                   background:
                     "linear-gradient(90deg,#ed174d,#7020d0)",
-                  WebkitBackgroundClip:
-                    "text",
-                  color:
-                    "transparent",
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
                 }}
               >
                 SHORASHOPP
@@ -2824,190 +2336,124 @@ function App() {
 
               <button
                 type="button"
-                onClick={() =>
-                  setMenuOpen(
-                    false
-                  )
-                }
+                onClick={() => setMenuOpen(false)}
                 style={{
                   border: 0,
-                  background:
-                    "#f5f5f7",
-                  borderRadius:
-                    12,
-                  width:
-                    40,
-                  height:
-                    40,
-                  fontSize:
-                    22,
-                  cursor:
-                    "pointer",
+                  background: "#f5f5f7",
+                  borderRadius: 12,
+                  width: 40,
+                  height: 40,
+                  fontSize: 22,
+                  cursor: "pointer",
                 }}
               >
                 ×
               </button>
-
             </div>
 
             <div
               style={{
-                display:
-                  "grid",
+                display: "grid",
                 gap: 8,
               }}
             >
-
               <button
                 type="button"
                 onClick={() =>
-                  openPage(
-                    "home"
-                  )
+                  openPage("home")
                 }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 ⌂
-                <span>
-                  Inicio
-                </span>
+                <span>Inicio</span>
               </button>
 
               <button
                 type="button"
-                onClick={
-                  handleAccountAccess
-                }
-                style={
-                  menuButtonStyle
-                }
+                onClick={handleAccountAccess}
+                style={menuButtonStyle}
               >
                 ✨
-                <span>
-                  Mi cuenta
-                </span>
+                <span>Mi cuenta</span>
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  openPage(
-                    "categories"
-                  )
+                  openPage("categories")
                 }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 ▦
-                <span>
-                  Categorías
-                </span>
+                <span>Categorías</span>
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  openPage(
-                    "favorites"
-                  )
+                  openPage("favorites")
                 }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 ♡
-                <span>
-                  Favoritos
-                </span>
+                <span>Favoritos</span>
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  openPage(
-                    "offers"
-                  )
+                  openPage("offers")
                 }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 🏷️
-                <span>
-                  Ofertas
-                </span>
+                <span>Ofertas</span>
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  openPage(
-                    "notifications"
-                  )
+                  openPage("notifications")
                 }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 🔔
-                <span>
-                  Notificaciones
-                </span>
+                <span>Notificaciones</span>
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  openPage(
-                    "privacy"
-                  )
+                  openPage("orders")
                 }
-                style={
-                  menuButtonStyle
+                style={menuButtonStyle}
+              >
+                📦
+                <span>Mis pedidos</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  openPage("privacy")
                 }
+                style={menuButtonStyle}
               >
                 🔐
                 <span>
-                  Privacidad y
-                  seguridad
+                  Privacidad y seguridad
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  showActionMessage(
-                    "Tus pedidos se conectarán aquí."
-                  )
+                  openPage("messages")
                 }
-                style={
-                  menuButtonStyle
-                }
-              >
-                📦
-                <span>
-                  Mis pedidos
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  showActionMessage(
-                    "Tus mensajes se conectarán aquí."
-                  )
-                }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 💬
-                <span>
-                  Mensajes
-                </span>
+                <span>Mensajes</span>
               </button>
 
               <button
@@ -3017,16 +2463,11 @@ function App() {
                     "Configuración próximamente."
                   )
                 }
-                style={
-                  menuButtonStyle
-                }
+                style={menuButtonStyle}
               >
                 ⚙️
-                <span>
-                  Configuración
-                </span>
+                <span>Configuración</span>
               </button>
-
             </div>
           </aside>
         </div>
@@ -3037,11 +2478,9 @@ function App() {
       ================================================= */}
 
       <nav className="bottom-nav">
-
         <button
           className={`bottom-item ${
-            currentPage ===
-            "home"
+            currentPage === "home"
               ? "active"
               : ""
           }`}
@@ -3050,100 +2489,63 @@ function App() {
             openPage("home")
           }
         >
-          <span>
-            ⌂
-          </span>
-
-          <small>
-            Inicio
-          </small>
+          <span>⌂</span>
+          <small>Inicio</small>
         </button>
 
         <button
           className={`bottom-item ${
-            currentPage ===
-              "categories"
+            currentPage === "categories"
               ? "active"
               : ""
           }`}
           type="button"
           onClick={() =>
-            openPage(
-              "categories"
-            )
+            openPage("categories")
           }
         >
-          <span>
-            ▦
-          </span>
-
-          <small>
-            Categorías
-          </small>
+          <span>▦</span>
+          <small>Categorías</small>
         </button>
 
         <button
           className="seller-button"
           type="button"
           onClick={() =>
-            openAuth(
-              "register"
-            )
+            openAuth("register")
           }
         >
-          <span>
-            ▰
-          </span>
-
-          <small>
-            Vender
-          </small>
+          <span>▰</span>
+          <small>Vender</small>
         </button>
 
         <button
           className={`bottom-item ${
-            currentPage ===
-              "favorites"
+            currentPage === "favorites"
               ? "active"
               : ""
           }`}
           type="button"
           onClick={() =>
-            openPage(
-              "favorites"
-            )
+            openPage("favorites")
           }
         >
-          <span>
-            ♡
-          </span>
-
-          <small>
-            Favoritos
-          </small>
+          <span>♡</span>
+          <small>Favoritos</small>
         </button>
 
         <button
           className={`bottom-item ${
-            currentPage ===
-              "account"
+            currentPage === "account"
               ? "active"
               : ""
           }`}
           type="button"
-          onClick={
-            handleAccountAccess
-          }
+          onClick={handleAccountAccess}
         >
-          <span>
-            ♙
-          </span>
-
-          <small>
-            Cuenta
-          </small>
+          <span>♙</span>
+          <small>Cuenta</small>
         </button>
-
       </nav>
 
       {/* =================================================
@@ -3153,31 +2555,20 @@ function App() {
       {actionMessage && (
         <div
           style={{
-            position:
-              "fixed",
-            bottom:
-              "90px",
+            position: "fixed",
+            bottom: "90px",
             left: "50%",
-            transform:
-              "translateX(-50%)",
-            background:
-              "#222",
+            transform: "translateX(-50%)",
+            background: "#222",
             color: "#fff",
-            padding:
-              "10px 18px",
-            borderRadius:
-              "20px",
-            zIndex:
-              9999,
-            fontSize:
-              "13px",
-            textAlign:
-              "center",
+            padding: "10px 18px",
+            borderRadius: "20px",
+            zIndex: 9999,
+            fontSize: "13px",
+            textAlign: "center",
           }}
         >
-          {
-            actionMessage
-          }
+          {actionMessage}
         </div>
       )}
 
@@ -3188,9 +2579,7 @@ function App() {
       {showAuth && (
         <div
           className="auth-overlay"
-          onMouseDown={(
-            event
-          ) => {
+          onMouseDown={(event) => {
             if (
               event.target ===
               event.currentTarget
@@ -3199,15 +2588,11 @@ function App() {
             }
           }}
         >
-
           <div className="auth-modal">
-
             <button
               className="auth-close"
               type="button"
-              onClick={
-                closeAuth
-              }
+              onClick={closeAuth}
             >
               ×
             </button>
@@ -3217,39 +2602,25 @@ function App() {
             </div>
 
             <h2>
-              {authMode ===
-              "login"
+              {authMode === "login"
                 ? "Bienvenido."
                 : "Crea tu cuenta."}
             </h2>
 
             <p>
-              {authMode ===
-              "login"
+              {authMode === "login"
                 ? "Inicia sesión en SHORASHOPP."
                 : "Únete a SHORASHOPP."}
             </p>
 
-            <form
-              onSubmit={
-                handleAuth
-              }
-            >
-
-              {authMode ===
-                "register" && (
+            <form onSubmit={handleAuth}>
+              {authMode === "register" && (
                 <input
                   type="text"
                   placeholder="Nombre completo"
                   value={name}
-                  onChange={(
-                    event
-                  ) =>
-                    setName(
-                      event
-                        .target
-                        .value
-                    )
+                  onChange={(event) =>
+                    setName(event.target.value)
                   }
                   required
                 />
@@ -3259,14 +2630,8 @@ function App() {
                 type="email"
                 placeholder="Correo electrónico"
                 value={email}
-                onChange={(
-                  event
-                ) =>
-                  setEmail(
-                    event
-                      .target
-                      .value
-                  )
+                onChange={(event) =>
+                  setEmail(event.target.value)
                 }
                 required
               />
@@ -3274,17 +2639,9 @@ function App() {
               <input
                 type="password"
                 placeholder="Contraseña"
-                value={
-                  password
-                }
-                onChange={(
-                  event
-                ) =>
-                  setPassword(
-                    event
-                      .target
-                      .value
-                  )
+                value={password}
+                onChange={(event) =>
+                  setPassword(event.target.value)
                 }
                 minLength={6}
                 required
@@ -3293,18 +2650,14 @@ function App() {
               <button
                 className="auth-submit"
                 type="submit"
-                disabled={
-                  loading
-                }
+                disabled={loading}
               >
                 {loading
                   ? "Procesando..."
-                  : authMode ===
-                    "login"
-                    ? "Iniciar sesión"
-                    : "Crear cuenta"}
+                  : authMode === "login"
+                  ? "Iniciar sesión"
+                  : "Crear cuenta"}
               </button>
-
             </form>
 
             {message && (
@@ -3314,22 +2667,14 @@ function App() {
             )}
 
             <div className="auth-switch">
-
-              {authMode ===
-              "login" ? (
+              {authMode === "login" ? (
                 <>
-                  ¿No tienes
-                  cuenta?{" "}
-
+                  ¿No tienes cuenta?{" "}
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthMode(
-                        "register"
-                      );
-                      setMessage(
-                        ""
-                      );
+                      setAuthMode("register");
+                      setMessage("");
                     }}
                   >
                     Regístrate
@@ -3337,32 +2682,22 @@ function App() {
                 </>
               ) : (
                 <>
-                  ¿Ya tienes
-                  cuenta?{" "}
-
+                  ¿Ya tienes cuenta?{" "}
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthMode(
-                        "login"
-                      );
-                      setMessage(
-                        ""
-                      );
+                      setAuthMode("login");
+                      setMessage("");
                     }}
                   >
                     Inicia sesión
                   </button>
                 </>
               )}
-
             </div>
-
           </div>
-
         </div>
       )}
-
     </div>
   );
 }
