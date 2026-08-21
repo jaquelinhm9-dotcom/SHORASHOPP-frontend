@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,27 +20,26 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
 
       - name: Crear variables de entorno
         run: |
           echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env
           echo "VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}" >> .env
 
-      - name: Construir aplicación
+      - name: Construir SHORASHOPP
         run: npm run build
 
-      - name: Publicar en GitHub Pages
+      - name: Preparar GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
   deploy:
-    needs: build-and-deploy
+    needs: build
     runs-on: ubuntu-latest
 
     permissions:
@@ -52,6 +51,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Publicar
+      - name: Publicar en GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
