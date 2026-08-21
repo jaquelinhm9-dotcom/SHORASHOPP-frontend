@@ -301,26 +301,53 @@ function App() {
     let mounted = true;
 
     const loadSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      try {
+        const { data, error } =
+          await supabase.auth.getSession();
 
-      if (mounted) {
-        setSession(data?.session ?? null);
+        if (error) {
+          console.error(
+            "Supabase getSession error:",
+            error
+          );
+
+          return;
+        }
+
+        if (mounted) {
+          setSession(data?.session ?? null);
+        }
+      } catch (error) {
+        console.error(
+          "SHORASHOPP session error:",
+          error
+        );
       }
     };
 
     loadSession();
 
     const {
-      data: { subscription },
+      data: authListener,
     } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
-        setSession(currentSession);
+      (event, currentSession) => {
+        console.log(
+          "SHORASHOPP auth event:",
+          event
+        );
+
+        if (mounted) {
+          setSession(
+            currentSession ?? null
+          );
+        }
       }
     );
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
@@ -363,8 +390,15 @@ function App() {
   ======================================================= */
 
   const openAuth = (mode = "login") => {
-    setAuthMode(mode);
+    setAuthMode(
+      mode === "register"
+        ? "register"
+        : "login"
+    );
+
     setMessage("");
+    setLoading(false);
+
     setShowAuth(true);
   };
 
@@ -377,55 +411,144 @@ function App() {
     setLoading(false);
   };
 
+  const getAuthErrorMessage = (error) => {
+    if (!error) {
+      return "";
+    }
+
+    const rawMessage =
+      error?.message ||
+      error?.error_description ||
+      error?.msg ||
+      "";
+
+    const normalized =
+      String(rawMessage)
+        .trim()
+        .toLowerCase();
+
+    if (
+      normalized.includes(
+        "invalid login credentials"
+      )
+    ) {
+      return "El correo electrónico o la contraseña no son correctos. Verifica exactamente los datos con los que creaste tu cuenta.";
+    }
+
+    if (
+      normalized.includes(
+        "email not confirmed"
+      )
+    ) {
+      return "Tu correo electrónico todavía no está confirmado. Revisa el correo de confirmación de SHORASHOPP y confirma tu cuenta.";
+    }
+
+    if (
+      normalized.includes(
+        "user already registered"
+      )
+    ) {
+      return "Este correo ya está registrado. Inicia sesión con tu contraseña.";
+    }
+
+    if (
+      normalized.includes(
+        "password should be at least"
+      ) ||
+      normalized.includes(
+        "password must be at least"
+      )
+    ) {
+      return "La contraseña debe tener al menos 6 caracteres.";
+    }
+
+    if (
+      normalized.includes(
+        "rate limit"
+      )
+    ) {
+      return "Se realizaron demasiados intentos. Espera unos minutos e inténtalo nuevamente.";
+    }
+
+    return (
+      rawMessage ||
+      "No se pudo completar la operación. Inténtalo nuevamente."
+    );
+  };
+
   const handleAuth = async (event) => {
     event.preventDefault();
 
-    if (loading) return;
+    if (loading) {
+      return;
+    }
 
     setLoading(true);
     setMessage("");
 
     try {
-      const cleanEmail = email.trim().toLowerCase();
+      const currentAuthMode = authMode;
+
+      const cleanEmail =
+        email.trim().toLowerCase();
+
+      const currentPassword =
+        password;
 
       if (!cleanEmail) {
         setMessage(
           "Por favor, escribe tu correo electrónico."
         );
+
         return;
       }
 
-      if (!password) {
+      if (!currentPassword) {
         setMessage(
           "Por favor, escribe tu contraseña."
         );
+
         return;
       }
 
-      if (password.length < 6) {
+      if (currentPassword.length < 6) {
         setMessage(
           "La contraseña debe tener al menos 6 caracteres."
         );
+
         return;
       }
 
-      if (authMode === "register") {
-        const cleanName = name.trim();
+      /* ===================================================
+         REGISTRO
+      =================================================== */
+
+      if (
+        currentAuthMode === "register"
+      ) {
+        const cleanName =
+          name.trim();
 
         if (!cleanName) {
           setMessage(
             "Por favor, escribe tu nombre completo."
           );
+
           return;
         }
 
-        const { data, error } =
+        const {
+          data,
+          error,
+        } =
           await supabase.auth.signUp({
             email: cleanEmail,
-            password,
+            password:
+              currentPassword,
             options: {
               data: {
-                full_name: cleanName,
+                full_name:
+                  cleanName,
               },
             },
           });
@@ -436,50 +559,66 @@ function App() {
             error
           );
 
-          const errorMessage =
-            error?.message ||
-            error?.error_description ||
-            error?.msg ||
-            (typeof error === "string"
-              ? error
-              : "");
-
           setMessage(
-            errorMessage ||
-              "No se pudo crear la cuenta. Inténtalo nuevamente."
+            getAuthErrorMessage(error)
           );
 
           return;
         }
 
+        /*
+         * Cuando la confirmación por correo está activada,
+         * Supabase normalmente devuelve user pero no session.
+         */
+
         if (data?.session) {
-          setSession(data.session);
-          closeAuth();
+          setSession(
+            data.session
+          );
+
+          setShowAuth(false);
+          setMessage("");
+          setName("");
+          setEmail("");
+          setPassword("");
+
           navigate("account");
+
           return;
         }
 
         if (data?.user) {
+          setPassword("");
+
           setMessage(
-            "¡Cuenta creada correctamente! Revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión."
+            "¡Cuenta creada correctamente! Revisa tu correo electrónico y confirma tu cuenta. Después vuelve a SHORASHOPP e inicia sesión con el mismo correo y contraseña."
           );
 
-          setPassword("");
           return;
         }
 
         setMessage(
-          "La cuenta fue procesada, pero Supabase no devolvió los datos esperados. Revisa tu correo e inténtalo nuevamente."
+          "La cuenta fue procesada, pero no recibimos una respuesta completa de Supabase. Revisa tu correo e inténtalo nuevamente."
         );
 
         return;
       }
 
-      const { data, error } =
-        await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
+      /* ===================================================
+         INICIO DE SESIÓN
+      =================================================== */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.auth.signInWithPassword(
+          {
+            email: cleanEmail,
+            password:
+              currentPassword,
+          }
+        );
 
       if (error) {
         console.error(
@@ -487,17 +626,8 @@ function App() {
           error
         );
 
-        const errorMessage =
-          error?.message ||
-          error?.error_description ||
-          error?.msg ||
-          (typeof error === "string"
-            ? error
-            : "");
-
         setMessage(
-          errorMessage ||
-            "No se pudo iniciar sesión. Revisa tu correo y contraseña."
+          getAuthErrorMessage(error)
         );
 
         return;
@@ -505,14 +635,23 @@ function App() {
 
       if (!data?.session) {
         setMessage(
-          "No se pudo iniciar sesión porque Supabase no devolvió una sesión."
+          "Supabase aceptó la solicitud, pero no devolvió una sesión. Cierra y vuelve a abrir SHORASHOPP e inténtalo nuevamente."
         );
 
         return;
       }
 
-      setSession(data.session);
-      closeAuth();
+      setSession(
+        data.session
+      );
+
+      setShowAuth(false);
+      setMessage("");
+      setName("");
+      setEmail("");
+      setPassword("");
+      setLoading(false);
+
       navigate("account");
 
     } catch (error) {
@@ -521,28 +660,36 @@ function App() {
         error
       );
 
-      const errorMessage =
-        error?.message ||
-        error?.error_description ||
-        error?.msg ||
-        (typeof error === "string"
-          ? error
-          : "");
-
       setMessage(
-        errorMessage ||
-          "Ocurrió un error inesperado al comunicarnos con Supabase. Inténtalo nuevamente."
+        getAuthErrorMessage(error)
       );
-
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    navigate("home");
+    try {
+      const { error } =
+        await supabase.auth.signOut();
+
+      if (error) {
+        console.error(
+          "Supabase logout error:",
+          error
+        );
+
+        return;
+      }
+    } catch (error) {
+      console.error(
+        "SHORASHOPP logout error:",
+        error
+      );
+    } finally {
+      setSession(null);
+      navigate("home");
+    }
   };
 
   /* =======================================================
@@ -552,8 +699,14 @@ function App() {
   const toggleFavorite = (productName) => {
     setFavorites((current) =>
       current.includes(productName)
-        ? current.filter((item) => item !== productName)
-        : [...current, productName]
+        ? current.filter(
+            (item) =>
+              item !== productName
+          )
+        : [
+            ...current,
+            productName,
+          ]
     );
   };
 
@@ -563,18 +716,25 @@ function App() {
 
   const addToCart = (product) => {
     setCart((current) => {
-      const existing = current.find(
-        (item) => item.name === product.name
-      );
+      const existing =
+        current.find(
+          (item) =>
+            item.name ===
+            product.name
+        );
 
       if (existing) {
-        return current.map((item) =>
-          item.name === product.name
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-              }
-            : item
+        return current.map(
+          (item) =>
+            item.name ===
+            product.name
+              ? {
+                  ...item,
+                  quantity:
+                    item.quantity +
+                    1,
+                }
+              : item
         );
       }
 
@@ -595,75 +755,92 @@ function App() {
     setCart((current) =>
       current
         .map((item) =>
-          item.name === productName
+          item.name ===
+          productName
             ? {
                 ...item,
-                quantity: item.quantity + amount,
+                quantity:
+                  item.quantity +
+                  amount,
               }
             : item
         )
         .filter(
-          (item) => item.quantity > 0
+          (item) =>
+            item.quantity > 0
         )
     );
   };
 
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  const cartCount =
+    cart.reduce(
+      (total, item) =>
+        total + item.quantity,
+      0
+    );
 
-  const cartTotal = cart.reduce(
-    (total, item) => {
-      const price = Number(
-        item.price
-          .replace("$", "")
-          .replace(",", "")
-      );
+  const cartTotal =
+    cart.reduce(
+      (total, item) => {
+        const price = Number(
+          item.price
+            .replace("$", "")
+            .replace(",", "")
+        );
 
-      return (
-        total +
-        price * item.quantity
-      );
-    },
-    0
-  );
+        return (
+          total +
+          price *
+            item.quantity
+        );
+      },
+      0
+    );
 
   /* =======================================================
      FILTROS
   ======================================================= */
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
+  const filteredProducts =
+    useMemo(() => {
+      let result = [
+        ...products,
+      ];
 
-    if (selectedCategory !== "Todas") {
-      result = result.filter(
-        (product) =>
-          product.category ===
-          selectedCategory
-      );
-    }
+      if (
+        selectedCategory !==
+        "Todas"
+      ) {
+        result =
+          result.filter(
+            (product) =>
+              product.category ===
+              selectedCategory
+          );
+      }
 
-    if (search.trim()) {
-      const query =
-        search.toLowerCase();
+      if (search.trim()) {
+        const query =
+          search
+            .toLowerCase();
 
-      result = result.filter(
-        (product) =>
-          product.name
-            .toLowerCase()
-            .includes(query) ||
-          product.category
-            .toLowerCase()
-            .includes(query)
-      );
-    }
+        result =
+          result.filter(
+            (product) =>
+              product.name
+                .toLowerCase()
+                .includes(query) ||
+              product.category
+                .toLowerCase()
+                .includes(query)
+          );
+      }
 
-    return result;
-  }, [
-    selectedCategory,
-    search,
-  ]);
+      return result;
+    }, [
+      selectedCategory,
+      search,
+    ]);
 
   /* =======================================================
      HEADER
@@ -674,7 +851,9 @@ function App() {
       <button
         className="menu-button"
         type="button"
-        onClick={() => navigate("menu")}
+        onClick={() =>
+          navigate("menu")
+        }
         aria-label="Menú"
       >
         <Icon
@@ -705,7 +884,9 @@ function App() {
           type="button"
           className="header-icon-button"
           onClick={() =>
-            navigate("notifications")
+            navigate(
+              "notifications"
+            )
           }
         >
           <Icon
@@ -756,7 +937,9 @@ function App() {
               event.target.value
             );
 
-            if (view !== "search") {
+            if (
+              view !== "search"
+            ) {
               setView("search");
             }
           }}
@@ -782,7 +965,9 @@ function App() {
      PAGE HEADER
   ======================================================= */
 
-  const PageHeader = ({ title }) => (
+  const PageHeader = ({
+    title,
+  }) => (
     <div className="page-header">
       <button
         type="button"
@@ -839,6 +1024,7 @@ function App() {
           type="button"
           onClick={(event) => {
             event.stopPropagation();
+
             toggleFavorite(
               product.name
             );
@@ -857,11 +1043,14 @@ function App() {
             <div className="earbuds-art">
               <span>◖</span>
               <span>◗</span>
-              <small>▱</small>
+              <small>
+                ▱
+              </small>
             </div>
           )}
 
-          {product.type === "bag" && (
+          {product.type ===
+            "bag" && (
             <div className="bag-art">
               👜
             </div>
@@ -884,7 +1073,9 @@ function App() {
       </div>
 
       <div className="product-info">
-        <h3>{product.name}</h3>
+        <h3>
+          {product.name}
+        </h3>
 
         <div className="price-row">
           <strong>
@@ -901,6 +1092,7 @@ function App() {
         <div className="rating-row">
           <span>★</span>
           {product.rating}
+
           <small>
             • {product.reviews}
           </small>
@@ -944,8 +1136,13 @@ function App() {
       </div>
 
       <div className="quick-content">
-        <strong>{title}</strong>
-        <span>{text}</span>
+        <strong>
+          {title}
+        </strong>
+
+        <span>
+          {text}
+        </span>
       </div>
 
       <b className="round-arrow">
@@ -1020,12 +1217,16 @@ function App() {
 
         <section className="content-section">
           <div className="section-title-row">
-            <h2>Categorías</h2>
+            <h2>
+              Categorías
+            </h2>
 
             <button
               type="button"
               onClick={() =>
-                navigate("categories")
+                navigate(
+                  "categories"
+                )
               }
             >
               Ver todas
@@ -1041,21 +1242,30 @@ function App() {
               (category) => (
                 <button
                   className="category-item"
-                  key={category.name}
+                  key={
+                    category.name
+                  }
                   type="button"
                   onClick={() => {
                     setSelectedCategory(
                       category.name
                     );
-                    navigate("category");
+
+                    navigate(
+                      "category"
+                    );
                   }}
                 >
                   <div className="category-icon">
-                    {category.icon}
+                    {
+                      category.icon
+                    }
                   </div>
 
                   <span>
-                    {category.name}
+                    {
+                      category.name
+                    }
                   </span>
                 </button>
               )
@@ -1081,7 +1291,9 @@ function App() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("offers")
+                  navigate(
+                    "offers"
+                  )
                 }
               >
                 Ver ofertas
@@ -1136,7 +1348,9 @@ function App() {
             <button
               type="button"
               onClick={() =>
-                navigate("products")
+                navigate(
+                  "products"
+                )
               }
             >
               Ver todos
@@ -1151,7 +1365,9 @@ function App() {
             {products.map(
               (product) => (
                 <ProductCard
-                  key={product.name}
+                  key={
+                    product.name
+                  }
                   product={product}
                 />
               )
@@ -1196,22 +1412,31 @@ function App() {
           (category) => (
             <button
               className="category-page-card"
-              key={category.name}
+              key={
+                category.name
+              }
               type="button"
               onClick={() => {
                 setSelectedCategory(
                   category.name
                 );
-                navigate("category");
+
+                navigate(
+                  "category"
+                );
               }}
             >
               <div className="category-icon">
-                {category.icon}
+                {
+                  category.icon
+                }
               </div>
 
               <div>
                 <strong>
-                  {category.name}
+                  {
+                    category.name
+                  }
                 </strong>
 
                 <span>
@@ -1237,19 +1462,29 @@ function App() {
   const CategoryPage = () => (
     <main className="page-content">
       <PageHeader
-        title={selectedCategory}
+        title={
+          selectedCategory
+        }
       />
 
       <div className="category-heading">
         <div>
-          <span>Categoría</span>
+          <span>
+            Categoría
+          </span>
+
           <h2>
-            {selectedCategory}
+            {
+              selectedCategory
+            }
           </h2>
         </div>
 
         <b>
-          {filteredProducts.length} productos
+          {
+            filteredProducts.length
+          }{" "}
+          productos
         </b>
       </div>
 
@@ -1259,7 +1494,9 @@ function App() {
           filteredProducts.map(
             (product) => (
               <ProductCard
-                key={product.name}
+                key={
+                  product.name
+                }
                 product={product}
               />
             )
@@ -1305,7 +1542,9 @@ function App() {
         {products.map(
           (product) => (
             <ProductCard
-              key={product.name}
+              key={
+                product.name
+              }
               product={product}
             />
           )
@@ -1326,7 +1565,9 @@ function App() {
 
       <div className="internal-offer-banner">
         <div>
-          <span>OFERTAS</span>
+          <span>
+            OFERTAS
+          </span>
 
           <strong>
             Precios especiales
@@ -1344,7 +1585,9 @@ function App() {
         {products.map(
           (product) => (
             <ProductCard
-              key={product.name}
+              key={
+                product.name
+              }
               product={product}
             />
           )
@@ -1382,7 +1625,9 @@ function App() {
 
       <div className="search-result-title">
         <div>
-          <span>Resultados</span>
+          <span>
+            Resultados
+          </span>
 
           <h2>
             {search
@@ -1392,7 +1637,9 @@ function App() {
         </div>
 
         <b>
-          {filteredProducts.length}
+          {
+            filteredProducts.length
+          }
         </b>
       </div>
 
@@ -1402,7 +1649,9 @@ function App() {
           filteredProducts.map(
             (product) => (
               <ProductCard
-                key={product.name}
+                key={
+                  product.name
+                }
                 product={product}
               />
             )
@@ -1424,7 +1673,9 @@ function App() {
 
   const CartPage = () => (
     <main className="page-content">
-      <PageHeader title="Mi carrito" />
+      <PageHeader
+        title="Mi carrito"
+      />
 
       {cart.length === 0 ? (
         <EmptyState
@@ -1433,7 +1684,9 @@ function App() {
           text="Agrega productos y aparecerán aquí."
           action="Explorar productos"
           onAction={() =>
-            navigate("products")
+            navigate(
+              "products"
+            )
           }
         />
       ) : (
@@ -1443,7 +1696,9 @@ function App() {
               (item) => (
                 <div
                   className="cart-page-item"
-                  key={item.name}
+                  key={
+                    item.name
+                  }
                 >
                   <div
                     className={`cart-item-art ${item.type}`}
@@ -1451,12 +1706,15 @@ function App() {
                     {item.type ===
                       "earbuds" &&
                       "🎧"}
+
                     {item.type ===
                       "bag" &&
                       "👜"}
+
                     {item.type ===
                       "watch" &&
                       "⌚"}
+
                     {item.type ===
                       "blender" &&
                       "🥤"}
@@ -1464,11 +1722,15 @@ function App() {
 
                   <div className="cart-item-info">
                     <h3>
-                      {item.name}
+                      {
+                        item.name
+                      }
                     </h3>
 
                     <strong>
-                      {item.price}
+                      {
+                        item.price
+                      }
                     </strong>
 
                     <div className="quantity-controls">
@@ -1485,7 +1747,9 @@ function App() {
                       </button>
 
                       <b>
-                        {item.quantity}
+                        {
+                          item.quantity
+                        }
                       </b>
 
                       <button
@@ -1511,13 +1775,16 @@ function App() {
               <span>
                 Productos
               </span>
+
               <b>
                 {cartCount}
               </b>
             </div>
 
             <div className="cart-total">
-              <span>Total</span>
+              <span>
+                Total
+              </span>
 
               <strong>
                 $
@@ -1535,10 +1802,13 @@ function App() {
             className="checkout-button"
             type="button"
             onClick={() =>
-              navigate("checkout")
+              navigate(
+                "checkout"
+              )
             }
           >
             Continuar compra
+
             <Icon
               name="arrow"
               size={22}
@@ -1553,50 +1823,51 @@ function App() {
      FAVORITOS
   ======================================================= */
 
-  const FavoritesPage =
-    () => {
-      const favoriteProducts =
-        products.filter(
-          (product) =>
-            favorites.includes(
-              product.name
-            )
-        );
-
-      return (
-        <main className="page-content">
-          <PageHeader
-            title="Mis favoritos"
-          />
-
-          {favoriteProducts.length ===
-          0 ? (
-            <EmptyState
-              icon="♡"
-              title="No tienes favoritos"
-              text="Toca el corazón de un producto para guardarlo."
-              action="Ver productos"
-              onAction={() =>
-                navigate(
-                  "products"
-                )
-              }
-            />
-          ) : (
-            <div className="products-grid">
-              {favoriteProducts.map(
-                (product) => (
-                  <ProductCard
-                    key={product.name}
-                    product={product}
-                  />
-                )
-              )}
-            </div>
-          )}
-        </main>
+  const FavoritesPage = () => {
+    const favoriteProducts =
+      products.filter(
+        (product) =>
+          favorites.includes(
+            product.name
+          )
       );
-    };
+
+    return (
+      <main className="page-content">
+        <PageHeader
+          title="Mis favoritos"
+        />
+
+        {favoriteProducts.length ===
+        0 ? (
+          <EmptyState
+            icon="♡"
+            title="No tienes favoritos"
+            text="Toca el corazón de un producto para guardarlo."
+            action="Ver productos"
+            onAction={() =>
+              navigate(
+                "products"
+              )
+            }
+          />
+        ) : (
+          <div className="products-grid">
+            {favoriteProducts.map(
+              (product) => (
+                <ProductCard
+                  key={
+                    product.name
+                  }
+                  product={product}
+                />
+              )
+            )}
+          </div>
+        )}
+      </main>
+    );
+  };
 
   /* =======================================================
      NOTIFICACIONES GENERALES
@@ -1651,7 +1922,9 @@ function App() {
 
         {session ? (
           <p>
-            {session.user.email}
+            {
+              session.user.email
+            }
           </p>
         ) : (
           <p>
@@ -1675,7 +1948,9 @@ function App() {
               className="panel-option"
               type="button"
               onClick={() =>
-                openAuth("register")
+                openAuth(
+                  "register"
+                )
               }
             >
               <span className="option-icon">
@@ -1703,7 +1978,9 @@ function App() {
               }
               text="Mis pedidos"
               onClick={() =>
-                navigate("orders")
+                navigate(
+                  "orders"
+                )
               }
             />
 
@@ -1716,7 +1993,9 @@ function App() {
               }
               text="Mensajes"
               onClick={() =>
-                navigate("messages")
+                navigate(
+                  "messages"
+                )
               }
             />
 
@@ -1729,7 +2008,9 @@ function App() {
               }
               text="Configuración"
               onClick={() =>
-                navigate("settings")
+                navigate(
+                  "settings"
+                )
               }
             />
 
@@ -1754,7 +2035,9 @@ function App() {
 
   const OrdersPage = () => (
     <main className="page-content">
-      <PageHeader title="Mis pedidos" />
+      <PageHeader
+        title="Mis pedidos"
+      />
 
       <EmptyState
         icon="📦"
@@ -1762,7 +2045,9 @@ function App() {
         text="Cuando realices una compra podrás consultar aquí el estado de tu pedido."
         action="Comprar ahora"
         onAction={() =>
-          navigate("products")
+          navigate(
+            "products"
+          )
         }
       />
     </main>
@@ -1895,6 +2180,7 @@ function App() {
             <strong>
               Administra tus avisos
             </strong>
+
             <small>
               Decide qué notificaciones quieres recibir.
             </small>
@@ -2102,25 +2388,31 @@ function App() {
             </div>
 
             <div className="preference-content">
-              <strong>País</strong>
+              <strong>
+                País
+              </strong>
 
               <select
                 value={country}
                 onChange={(event) =>
                   setCountry(
-                    event.target.value
+                    event.target
+                      .value
                   )
                 }
               >
                 <option>
                   México
                 </option>
+
                 <option>
                   Estados Unidos
                 </option>
+
                 <option>
                   Canadá
                 </option>
+
                 <option>
                   España
                 </option>
@@ -2142,7 +2434,8 @@ function App() {
                 value={currency}
                 onChange={(event) =>
                   setCurrency(
-                    event.target.value
+                    event.target
+                      .value
                   )
                 }
               >
@@ -2182,13 +2475,15 @@ function App() {
                 value={language}
                 onChange={(event) =>
                   setLanguage(
-                    event.target.value
+                    event.target
+                      .value
                   )
                 }
               >
                 <option>
                   Español
                 </option>
+
                 <option>
                   English
                 </option>
@@ -2203,7 +2498,9 @@ function App() {
           </span>
 
           <strong>
-            {country} · {currency} · {language}
+            {country} ·{" "}
+            {currency} ·{" "}
+            {language}
           </strong>
         </div>
       </main>
@@ -2372,24 +2669,42 @@ function App() {
 
         <div className="about-cards">
           <div className="about-card">
-            <span>🛍️</span>
-            <strong>Compra</strong>
+            <span>
+              🛍️
+            </span>
+
+            <strong>
+              Compra
+            </strong>
+
             <small>
               Descubre productos y ofertas.
             </small>
           </div>
 
           <div className="about-card">
-            <span>🏪</span>
-            <strong>Vende</strong>
+            <span>
+              🏪
+            </span>
+
+            <strong>
+              Vende
+            </strong>
+
             <small>
               Publica y llega a compradores.
             </small>
           </div>
 
           <div className="about-card">
-            <span>✨</span>
-            <strong>Descubre</strong>
+            <span>
+              ✨
+            </span>
+
+            <strong>
+              Descubre
+            </strong>
+
             <small>
               Encuentra nuevas oportunidades.
             </small>
@@ -2400,6 +2715,7 @@ function App() {
           <span>
             Aplicación
           </span>
+
           <strong>
             SHORASHOPP
           </strong>
@@ -2409,6 +2725,7 @@ function App() {
           <span>
             Versión
           </span>
+
           <strong>
             1.0.0
           </strong>
@@ -2418,6 +2735,7 @@ function App() {
           <span>
             Estado
           </span>
+
           <strong className="status-online">
             En desarrollo
           </strong>
@@ -2461,7 +2779,9 @@ function App() {
           className="panel-primary-button"
           type="button"
           onClick={() =>
-            openAuth("register")
+            openAuth(
+              "register"
+            )
           }
         >
           Crear cuenta de vendedor
@@ -2579,8 +2899,12 @@ function App() {
           text="Mi cuenta"
           onClick={() =>
             session
-              ? navigate("account")
-              : openAuth("login")
+              ? navigate(
+                  "account"
+                )
+              : openAuth(
+                  "login"
+                )
           }
         />
 
@@ -2619,7 +2943,9 @@ function App() {
           }
           text="Configuración"
           onClick={() =>
-            navigate("settings")
+            navigate(
+              "settings"
+            )
           }
         />
 
@@ -2632,7 +2958,9 @@ function App() {
           }
           text="Favoritos"
           onClick={() =>
-            navigate("favorites")
+            navigate(
+              "favorites"
+            )
           }
         />
 
@@ -2740,7 +3068,10 @@ function App() {
           name="home"
           size={25}
         />
-        <small>Inicio</small>
+
+        <small>
+          Inicio
+        </small>
       </button>
 
       <button
@@ -2752,13 +3083,16 @@ function App() {
         }`}
         type="button"
         onClick={() =>
-          navigate("categories")
+          navigate(
+            "categories"
+          )
         }
       >
         <Icon
           name="grid"
           size={25}
         />
+
         <small>
           Categorías
         </small>
@@ -2782,7 +3116,9 @@ function App() {
           />
         </span>
 
-        <small>Vender</small>
+        <small>
+          Vender
+        </small>
       </button>
 
       <button
@@ -2793,13 +3129,16 @@ function App() {
         }`}
         type="button"
         onClick={() =>
-          navigate("favorites")
+          navigate(
+            "favorites"
+          )
         }
       >
         <Icon
           name="heart"
           size={26}
         />
+
         <small>
           Favoritos
         </small>
@@ -2814,15 +3153,22 @@ function App() {
         type="button"
         onClick={() =>
           session
-            ? navigate("account")
-            : openAuth("login")
+            ? navigate(
+                "account"
+              )
+            : openAuth(
+                "login"
+              )
         }
       >
         <Icon
           name="user"
           size={26}
         />
-        <small>Cuenta</small>
+
+        <small>
+          Cuenta
+        </small>
       </button>
     </nav>
   );
@@ -2843,15 +3189,21 @@ function App() {
         {icon}
       </div>
 
-      <h2>{title}</h2>
+      <h2>
+        {title}
+      </h2>
 
-      <p>{text}</p>
+      <p>
+        {text}
+      </p>
 
       {action && (
         <button
           className="panel-primary-button"
           type="button"
-          onClick={onAction}
+          onClick={
+            onAction
+          }
         >
           {action}
         </button>
@@ -2865,12 +3217,15 @@ function App() {
     text,
   }) => (
     <div className="notification-item">
-      <span>{icon}</span>
+      <span>
+        {icon}
+      </span>
 
       <div>
         <strong>
           {title}
         </strong>
+
         <small>
           {text}
         </small>
@@ -3086,25 +3441,39 @@ function App() {
   const renderView = () => {
     switch (view) {
       case "categories":
-        return <CategoriesPage />;
+        return (
+          <CategoriesPage />
+        );
 
       case "category":
-        return <CategoryPage />;
+        return (
+          <CategoryPage />
+        );
 
       case "products":
-        return <ProductsPage />;
+        return (
+          <ProductsPage />
+        );
 
       case "offers":
-        return <OffersPage />;
+        return (
+          <OffersPage />
+        );
 
       case "search":
-        return <SearchPage />;
+        return (
+          <SearchPage />
+        );
 
       case "cart":
-        return <CartPage />;
+        return (
+          <CartPage />
+        );
 
       case "favorites":
-        return <FavoritesPage />;
+        return (
+          <FavoritesPage />
+        );
 
       case "notifications":
         return (
@@ -3112,16 +3481,24 @@ function App() {
         );
 
       case "account":
-        return <AccountPage />;
+        return (
+          <AccountPage />
+        );
 
       case "orders":
-        return <OrdersPage />;
+        return (
+          <OrdersPage />
+        );
 
       case "messages":
-        return <MessagesPage />;
+        return (
+          <MessagesPage />
+        );
 
       case "settings":
-        return <SettingsPage />;
+        return (
+          <SettingsPage />
+        );
 
       case "notification-settings":
         return (
@@ -3129,29 +3506,45 @@ function App() {
         );
 
       case "privacy":
-        return <PrivacyPage />;
+        return (
+          <PrivacyPage />
+        );
 
       case "preferences":
-        return <PreferencesPage />;
+        return (
+          <PreferencesPage />
+        );
 
       case "terms":
-        return <TermsPage />;
+        return (
+          <TermsPage />
+        );
 
       case "about":
-        return <AboutPage />;
+        return (
+          <AboutPage />
+        );
 
       case "sell":
-        return <SellPage />;
+        return (
+          <SellPage />
+        );
 
       case "checkout":
-        return <CheckoutPage />;
+        return (
+          <CheckoutPage />
+        );
 
       case "menu":
-        return <MenuPage />;
+        return (
+          <MenuPage />
+        );
 
       case "home":
       default:
-        return <HomePage />;
+        return (
+          <HomePage />
+        );
     }
   };
 
@@ -3189,6 +3582,7 @@ function App() {
               className="auth-close"
               type="button"
               onClick={closeAuth}
+              aria-label="Cerrar"
             >
               <Icon
                 name="close"
@@ -3215,7 +3609,10 @@ function App() {
             </p>
 
             <form
-              onSubmit={handleAuth}
+              onSubmit={
+                handleAuth
+              }
+              noValidate={false}
             >
               {authMode ===
                 "register" && (
@@ -3229,6 +3626,7 @@ function App() {
                         .value
                     )
                   }
+                  autoComplete="name"
                   required
                 />
               )}
@@ -3243,6 +3641,7 @@ function App() {
                       .value
                   )
                 }
+                autoComplete="email"
                 required
               />
 
@@ -3255,6 +3654,12 @@ function App() {
                     event.target
                       .value
                   )
+                }
+                autoComplete={
+                  authMode ===
+                  "login"
+                    ? "current-password"
+                    : "new-password"
                 }
                 minLength={6}
                 required
@@ -3275,7 +3680,10 @@ function App() {
             </form>
 
             {message && (
-              <div className="auth-message">
+              <div
+                className="auth-message"
+                role="alert"
+              >
                 {message}
               </div>
             )}
