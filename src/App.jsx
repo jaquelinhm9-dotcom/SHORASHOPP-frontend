@@ -271,9 +271,11 @@ function App() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [selectedCategory, setSelectedCategory] =
+    useState("Todas");
 
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
@@ -282,19 +284,25 @@ function App() {
      CONFIGURACIÓN
   ======================================================= */
 
-  const [notificationSettings, setNotificationSettings] = useState({
-    orders: true,
-    promotions: true,
-    messages: true,
-    news: true,
-  });
+  const [notificationSettings, setNotificationSettings] =
+    useState({
+      orders: true,
+      promotions: true,
+      messages: true,
+      news: true,
+    });
 
-  const [country, setCountry] = useState("México");
-  const [currency, setCurrency] = useState("MXN");
-  const [language, setLanguage] = useState("Español");
+  const [country, setCountry] =
+    useState("México");
+
+  const [currency, setCurrency] =
+    useState("MXN");
+
+  const [language, setLanguage] =
+    useState("Español");
 
   /* =======================================================
-     SESIÓN
+     SESIÓN / SUPABASE AUTH
   ======================================================= */
 
   useEffect(() => {
@@ -310,12 +318,13 @@ function App() {
             "Supabase getSession error:",
             error
           );
-
           return;
         }
 
         if (mounted) {
-          setSession(data?.session ?? null);
+          setSession(
+            data?.session ?? null
+          );
         }
       } catch (error) {
         console.error(
@@ -336,10 +345,25 @@ function App() {
           event
         );
 
-        if (mounted) {
-          setSession(
-            currentSession ?? null
-          );
+        if (!mounted) {
+          return;
+        }
+
+        setSession(
+          currentSession ?? null
+        );
+
+        /*
+         * Supabase emite PASSWORD_RECOVERY
+         * cuando el usuario llega a la app desde
+         * un enlace válido de recuperación.
+         */
+        if (event === "PASSWORD_RECOVERY") {
+          setAuthMode("updatePassword");
+          setMessage("");
+          setPassword("");
+          setConfirmPassword("");
+          setShowAuth(true);
         }
       }
     );
@@ -366,7 +390,9 @@ function App() {
   };
 
   const goBack = () => {
-    setView(previousView || "home");
+    setView(
+      previousView || "home"
+    );
 
     window.scrollTo({
       top: 0,
@@ -389,6 +415,10 @@ function App() {
      AUTENTICACIÓN
   ======================================================= */
 
+  const getAuthRedirectUrl = () => {
+    return window.location.href.split("#")[0];
+  };
+
   const openAuth = (mode = "login") => {
     setAuthMode(
       mode === "register"
@@ -398,6 +428,8 @@ function App() {
 
     setMessage("");
     setLoading(false);
+    setPassword("");
+    setConfirmPassword("");
 
     setShowAuth(true);
   };
@@ -408,7 +440,16 @@ function App() {
     setName("");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
     setLoading(false);
+  };
+
+  const switchAuthMode = (mode) => {
+    setAuthMode(mode);
+    setMessage("");
+    setLoading(false);
+    setPassword("");
+    setConfirmPassword("");
   };
 
   const getAuthErrorMessage = (error) => {
@@ -440,7 +481,7 @@ function App() {
         "email not confirmed"
       )
     ) {
-      return "Tu correo electrónico todavía no está confirmado. Revisa el correo de confirmación de SHORASHOPP y confirma tu cuenta.";
+      return "Tu correo electrónico todavía no está confirmado. Revisa el correo de confirmación y confirma tu cuenta.";
     }
 
     if (
@@ -470,11 +511,26 @@ function App() {
       return "Se realizaron demasiados intentos. Espera unos minutos e inténtalo nuevamente.";
     }
 
+    if (
+      normalized.includes(
+        "invalid or has expired"
+      ) ||
+      normalized.includes(
+        "otp_expired"
+      )
+    ) {
+      return "El enlace ya expiró o no es válido. Solicita un enlace nuevo.";
+    }
+
     return (
       rawMessage ||
       "No se pudo completar la operación. Inténtalo nuevamente."
     );
   };
+
+  /* =======================================================
+     REGISTRO / LOGIN
+  ======================================================= */
 
   const handleAuth = async (event) => {
     event.preventDefault();
@@ -487,7 +543,8 @@ function App() {
     setMessage("");
 
     try {
-      const currentAuthMode = authMode;
+      const currentAuthMode =
+        authMode;
 
       const cleanEmail =
         email.trim().toLowerCase();
@@ -495,67 +552,41 @@ function App() {
       const currentPassword =
         password;
 
-      if (!cleanEmail) {
-        setMessage(
-          "Por favor, escribe tu correo electrónico."
-        );
-
-        return;
-      }
-
-      if (!currentPassword) {
-        setMessage(
-          "Por favor, escribe tu contraseña."
-        );
-
-        return;
-      }
-
-      if (currentPassword.length < 6) {
-        setMessage(
-          "La contraseña debe tener al menos 6 caracteres."
-        );
-
-        return;
-      }
-
-      /* ===================================================
-         REGISTRO
-      =================================================== */
-
       if (
-        currentAuthMode === "register"
+        currentAuthMode ===
+        "updatePassword"
       ) {
-        const cleanName =
-          name.trim();
-
-        if (!cleanName) {
+        if (
+          currentPassword.length <
+          6
+        ) {
           setMessage(
-            "Por favor, escribe tu nombre completo."
+            "La nueva contraseña debe tener al menos 6 caracteres."
           );
-
           return;
         }
 
-        const {
-          data,
-          error,
-        } =
-          await supabase.auth.signUp({
-            email: cleanEmail,
-            password:
-              currentPassword,
-            options: {
-              data: {
-                full_name:
-                  cleanName,
-              },
-            },
-          });
+        if (
+          currentPassword !==
+          confirmPassword
+        ) {
+          setMessage(
+            "Las contraseñas no coinciden."
+          );
+          return;
+        }
+
+        const { error } =
+          await supabase.auth.updateUser(
+            {
+              password:
+                currentPassword,
+            }
+          );
 
         if (error) {
           console.error(
-            "Supabase signup error:",
+            "Supabase password update error:",
             error
           );
 
@@ -566,10 +597,99 @@ function App() {
           return;
         }
 
-        /*
-         * Cuando la confirmación por correo está activada,
-         * Supabase normalmente devuelve user pero no session.
-         */
+        setMessage(
+          "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión con tu nueva contraseña."
+        );
+
+        setPassword("");
+        setConfirmPassword("");
+
+        setTimeout(() => {
+          setShowAuth(false);
+          setAuthMode("login");
+          setMessage("");
+        }, 1200);
+
+        return;
+      }
+
+      if (!cleanEmail) {
+        setMessage(
+          "Por favor, escribe tu correo electrónico."
+        );
+        return;
+      }
+
+      if (!currentPassword) {
+        setMessage(
+          "Por favor, escribe tu contraseña."
+        );
+        return;
+      }
+
+      if (
+        currentPassword.length <
+        6
+      ) {
+        setMessage(
+          "La contraseña debe tener al menos 6 caracteres."
+        );
+        return;
+      }
+
+      /* ===================================================
+         REGISTRO
+      =================================================== */
+
+      if (
+        currentAuthMode ===
+        "register"
+      ) {
+        const cleanName =
+          name.trim();
+
+        if (!cleanName) {
+          setMessage(
+            "Por favor, escribe tu nombre completo."
+          );
+          return;
+        }
+
+        const {
+          data,
+          error,
+        } =
+          await supabase.auth.signUp(
+            {
+              email: cleanEmail,
+              password:
+                currentPassword,
+              options: {
+                emailRedirectTo:
+                  getAuthRedirectUrl(),
+
+                data: {
+                  full_name:
+                    cleanName,
+                },
+              },
+            }
+          );
+
+        if (error) {
+          console.error(
+            "Supabase signup error:",
+            error
+          );
+
+          setMessage(
+            getAuthErrorMessage(
+              error
+            )
+          );
+
+          return;
+        }
 
         if (data?.session) {
           setSession(
@@ -581,6 +701,7 @@ function App() {
           setName("");
           setEmail("");
           setPassword("");
+          setConfirmPassword("");
 
           navigate("account");
 
@@ -589,6 +710,7 @@ function App() {
 
         if (data?.user) {
           setPassword("");
+          setConfirmPassword("");
 
           setMessage(
             "¡Cuenta creada correctamente! Revisa tu correo electrónico y confirma tu cuenta. Después vuelve a SHORASHOPP e inicia sesión con el mismo correo y contraseña."
@@ -627,7 +749,9 @@ function App() {
         );
 
         setMessage(
-          getAuthErrorMessage(error)
+          getAuthErrorMessage(
+            error
+          )
         );
 
         return;
@@ -635,7 +759,7 @@ function App() {
 
       if (!data?.session) {
         setMessage(
-          "Supabase aceptó la solicitud, pero no devolvió una sesión. Cierra y vuelve a abrir SHORASHOPP e inténtalo nuevamente."
+          "Supabase aceptó la solicitud, pero no devolvió una sesión. Inténtalo nuevamente."
         );
 
         return;
@@ -650,7 +774,7 @@ function App() {
       setName("");
       setEmail("");
       setPassword("");
-      setLoading(false);
+      setConfirmPassword("");
 
       navigate("account");
 
@@ -668,6 +792,83 @@ function App() {
     }
   };
 
+  /* =======================================================
+     RECUPERAR CONTRASEÑA
+  ======================================================= */
+
+  const handlePasswordRecovery = async (
+    event
+  ) => {
+    event.preventDefault();
+
+    if (loading) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const cleanEmail =
+        email.trim().toLowerCase();
+
+      if (!cleanEmail) {
+        setMessage(
+          "Escribe el correo electrónico de tu cuenta."
+        );
+        return;
+      }
+
+      const redirectTo =
+        getAuthRedirectUrl();
+
+      const {
+        error,
+      } =
+        await supabase.auth.resetPasswordForEmail(
+          cleanEmail,
+          {
+            redirectTo,
+          }
+        );
+
+      if (error) {
+        console.error(
+          "Supabase password recovery error:",
+          error
+        );
+
+        setMessage(
+          getAuthErrorMessage(
+            error
+          )
+        );
+
+        return;
+      }
+
+      setMessage(
+        "Te enviamos un correo para recuperar tu contraseña. Abre el enlace y podrás crear una nueva contraseña."
+      );
+
+    } catch (error) {
+      console.error(
+        "SHORASHOPP recovery error:",
+        error
+      );
+
+      setMessage(
+        getAuthErrorMessage(error)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
+
   const handleLogout = async () => {
     try {
       const { error } =
@@ -678,7 +879,6 @@ function App() {
           "Supabase logout error:",
           error
         );
-
         return;
       }
     } catch (error) {
@@ -696,9 +896,13 @@ function App() {
      FAVORITOS
   ======================================================= */
 
-  const toggleFavorite = (productName) => {
+  const toggleFavorite = (
+    productName
+  ) => {
     setFavorites((current) =>
-      current.includes(productName)
+      current.includes(
+        productName
+      )
         ? current.filter(
             (item) =>
               item !== productName
@@ -821,8 +1025,7 @@ function App() {
 
       if (search.trim()) {
         const query =
-          search
-            .toLowerCase();
+          search.toLowerCase();
 
         result =
           result.filter(
@@ -1043,9 +1246,7 @@ function App() {
             <div className="earbuds-art">
               <span>◖</span>
               <span>◗</span>
-              <small>
-                ▱
-              </small>
+              <small>▱</small>
             </div>
           )}
 
@@ -1217,9 +1418,7 @@ function App() {
 
         <section className="content-section">
           <div className="section-title-row">
-            <h2>
-              Categorías
-            </h2>
+            <h2>Categorías</h2>
 
             <button
               type="button"
@@ -1291,9 +1490,7 @@ function App() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate(
-                    "offers"
-                  )
+                  navigate("offers")
                 }
               >
                 Ver ofertas
@@ -1348,9 +1545,7 @@ function App() {
             <button
               type="button"
               onClick={() =>
-                navigate(
-                  "products"
-                )
+                navigate("products")
               }
             >
               Ver todos
@@ -1462,21 +1657,14 @@ function App() {
   const CategoryPage = () => (
     <main className="page-content">
       <PageHeader
-        title={
-          selectedCategory
-        }
+        title={selectedCategory}
       />
 
       <div className="category-heading">
         <div>
-          <span>
-            Categoría
-          </span>
-
+          <span>Categoría</span>
           <h2>
-            {
-              selectedCategory
-            }
+            {selectedCategory}
           </h2>
         </div>
 
@@ -1565,9 +1753,7 @@ function App() {
 
       <div className="internal-offer-banner">
         <div>
-          <span>
-            OFERTAS
-          </span>
+          <span>OFERTAS</span>
 
           <strong>
             Precios especiales
@@ -1625,9 +1811,7 @@ function App() {
 
       <div className="search-result-title">
         <div>
-          <span>
-            Resultados
-          </span>
+          <span>Resultados</span>
 
           <h2>
             {search
@@ -1684,9 +1868,7 @@ function App() {
           text="Agrega productos y aparecerán aquí."
           action="Explorar productos"
           onAction={() =>
-            navigate(
-              "products"
-            )
+            navigate("products")
           }
         />
       ) : (
@@ -1696,9 +1878,7 @@ function App() {
               (item) => (
                 <div
                   className="cart-page-item"
-                  key={
-                    item.name
-                  }
+                  key={item.name}
                 >
                   <div
                     className={`cart-item-art ${item.type}`}
@@ -1722,15 +1902,11 @@ function App() {
 
                   <div className="cart-item-info">
                     <h3>
-                      {
-                        item.name
-                      }
+                      {item.name}
                     </h3>
 
                     <strong>
-                      {
-                        item.price
-                      }
+                      {item.price}
                     </strong>
 
                     <div className="quantity-controls">
@@ -1747,9 +1923,7 @@ function App() {
                       </button>
 
                       <b>
-                        {
-                          item.quantity
-                        }
+                        {item.quantity}
                       </b>
 
                       <button
@@ -1772,19 +1946,12 @@ function App() {
 
           <div className="cart-summary">
             <div>
-              <span>
-                Productos
-              </span>
-
-              <b>
-                {cartCount}
-              </b>
+              <span>Productos</span>
+              <b>{cartCount}</b>
             </div>
 
             <div className="cart-total">
-              <span>
-                Total
-              </span>
+              <span>Total</span>
 
               <strong>
                 $
@@ -1808,7 +1975,6 @@ function App() {
             }
           >
             Continuar compra
-
             <Icon
               name="arrow"
               size={22}
@@ -1870,7 +2036,7 @@ function App() {
   };
 
   /* =======================================================
-     NOTIFICACIONES GENERALES
+     NOTIFICACIONES
   ======================================================= */
 
   const NotificationsPage =
@@ -1922,9 +2088,7 @@ function App() {
 
         {session ? (
           <p>
-            {
-              session.user.email
-            }
+            {session.user.email}
           </p>
         ) : (
           <p>
@@ -2070,14 +2234,12 @@ function App() {
   );
 
   /* =======================================================
-     CONFIGURACIÓN PRINCIPAL
+     CONFIGURACIÓN
   ======================================================= */
 
   const SettingsPage = () => (
     <main className="page-content">
-      <PageHeader
-        title="Configuración"
-      />
+      <PageHeader title="Configuración" />
 
       <div className="settings-list">
         <SettingsOption
@@ -2158,7 +2320,7 @@ function App() {
   );
 
   /* =======================================================
-     CONFIGURACIÓN - NOTIFICACIONES
+     NOTIFICACIONES SETTINGS
   ======================================================= */
 
   const NotificationSettingsPage =
@@ -2261,7 +2423,7 @@ function App() {
     );
 
   /* =======================================================
-     CONFIGURACIÓN - PRIVACIDAD
+     PRIVACIDAD
   ======================================================= */
 
   const PrivacyPage = () => (
@@ -2299,11 +2461,20 @@ function App() {
           }
           title="Cambiar contraseña"
           description="Actualiza tu contraseña de acceso"
-          onClick={() =>
-            setMessage(
-              "La opción para cambiar contraseña se conectará aquí."
-            )
-          }
+          onClick={() => {
+            if (!session) {
+              openAuth("login");
+              return;
+            }
+
+            setAuthMode(
+              "updatePassword"
+            );
+            setPassword("");
+            setConfirmPassword("");
+            setMessage("");
+            setShowAuth(true);
+          }}
         />
 
         <SettingsAction
@@ -2349,7 +2520,7 @@ function App() {
   );
 
   /* =======================================================
-     CONFIGURACIÓN - PAÍS Y PREFERENCIAS
+     PREFERENCIAS
   ======================================================= */
 
   const PreferencesPage =
@@ -2388,31 +2559,25 @@ function App() {
             </div>
 
             <div className="preference-content">
-              <strong>
-                País
-              </strong>
+              <strong>País</strong>
 
               <select
                 value={country}
                 onChange={(event) =>
                   setCountry(
-                    event.target
-                      .value
+                    event.target.value
                   )
                 }
               >
                 <option>
                   México
                 </option>
-
                 <option>
                   Estados Unidos
                 </option>
-
                 <option>
                   Canadá
                 </option>
-
                 <option>
                   España
                 </option>
@@ -2434,8 +2599,7 @@ function App() {
                 value={currency}
                 onChange={(event) =>
                   setCurrency(
-                    event.target
-                      .value
+                    event.target.value
                   )
                 }
               >
@@ -2475,15 +2639,13 @@ function App() {
                 value={language}
                 onChange={(event) =>
                   setLanguage(
-                    event.target
-                      .value
+                    event.target.value
                   )
                 }
               >
                 <option>
                   Español
                 </option>
-
                 <option>
                   English
                 </option>
@@ -2498,8 +2660,7 @@ function App() {
           </span>
 
           <strong>
-            {country} ·{" "}
-            {currency} ·{" "}
+            {country} · {currency} ·{" "}
             {language}
           </strong>
         </div>
@@ -2507,7 +2668,7 @@ function App() {
     );
 
   /* =======================================================
-     CONFIGURACIÓN - TÉRMINOS
+     TÉRMINOS
   ======================================================= */
 
   const TermsPage = () => (
@@ -2631,7 +2792,7 @@ function App() {
   );
 
   /* =======================================================
-     CONFIGURACIÓN - ACERCA
+     ACERCA
   ======================================================= */
 
   const AboutPage = () => (
@@ -2669,42 +2830,24 @@ function App() {
 
         <div className="about-cards">
           <div className="about-card">
-            <span>
-              🛍️
-            </span>
-
-            <strong>
-              Compra
-            </strong>
-
+            <span>🛍️</span>
+            <strong>Compra</strong>
             <small>
               Descubre productos y ofertas.
             </small>
           </div>
 
           <div className="about-card">
-            <span>
-              🏪
-            </span>
-
-            <strong>
-              Vende
-            </strong>
-
+            <span>🏪</span>
+            <strong>Vende</strong>
             <small>
               Publica y llega a compradores.
             </small>
           </div>
 
           <div className="about-card">
-            <span>
-              ✨
-            </span>
-
-            <strong>
-              Descubre
-            </strong>
-
+            <span>✨</span>
+            <strong>Descubre</strong>
             <small>
               Encuentra nuevas oportunidades.
             </small>
@@ -2712,9 +2855,7 @@ function App() {
         </div>
 
         <div className="about-version">
-          <span>
-            Aplicación
-          </span>
+          <span>Aplicación</span>
 
           <strong>
             SHORASHOPP
@@ -2722,9 +2863,7 @@ function App() {
         </div>
 
         <div className="about-version">
-          <span>
-            Versión
-          </span>
+          <span>Versión</span>
 
           <strong>
             1.0.0
@@ -2732,9 +2871,7 @@ function App() {
         </div>
 
         <div className="about-version last">
-          <span>
-            Estado
-          </span>
+          <span>Estado</span>
 
           <strong className="status-online">
             En desarrollo
@@ -2779,9 +2916,7 @@ function App() {
           className="panel-primary-button"
           type="button"
           onClick={() =>
-            openAuth(
-              "register"
-            )
+            openAuth("register")
           }
         >
           Crear cuenta de vendedor
@@ -2834,9 +2969,7 @@ function App() {
         </h2>
 
         <div className="checkout-row">
-          <span>
-            Productos
-          </span>
+          <span>Productos</span>
 
           <strong>
             {cartCount}
@@ -2844,9 +2977,7 @@ function App() {
         </div>
 
         <div className="checkout-row total">
-          <span>
-            Total
-          </span>
+          <span>Total</span>
 
           <strong>
             $
@@ -3189,21 +3320,15 @@ function App() {
         {icon}
       </div>
 
-      <h2>
-        {title}
-      </h2>
+      <h2>{title}</h2>
 
-      <p>
-        {text}
-      </p>
+      <p>{text}</p>
 
       {action && (
         <button
           className="panel-primary-button"
           type="button"
-          onClick={
-            onAction
-          }
+          onClick={onAction}
         >
           {action}
         </button>
@@ -3217,14 +3342,10 @@ function App() {
     text,
   }) => (
     <div className="notification-item">
-      <span>
-        {icon}
-      </span>
+      <span>{icon}</span>
 
       <div>
-        <strong>
-          {title}
-        </strong>
+        <strong>{title}</strong>
 
         <small>
           {text}
@@ -3252,9 +3373,7 @@ function App() {
         {icon}
       </span>
 
-      <span>
-        {text}
-      </span>
+      <span>{text}</span>
 
       <Icon
         name="arrow"
@@ -3277,9 +3396,7 @@ function App() {
         {icon}
       </span>
 
-      <span>
-        {text}
-      </span>
+      <span>{text}</span>
 
       <Icon
         name="arrow"
@@ -3441,39 +3558,25 @@ function App() {
   const renderView = () => {
     switch (view) {
       case "categories":
-        return (
-          <CategoriesPage />
-        );
+        return <CategoriesPage />;
 
       case "category":
-        return (
-          <CategoryPage />
-        );
+        return <CategoryPage />;
 
       case "products":
-        return (
-          <ProductsPage />
-        );
+        return <ProductsPage />;
 
       case "offers":
-        return (
-          <OffersPage />
-        );
+        return <OffersPage />;
 
       case "search":
-        return (
-          <SearchPage />
-        );
+        return <SearchPage />;
 
       case "cart":
-        return (
-          <CartPage />
-        );
+        return <CartPage />;
 
       case "favorites":
-        return (
-          <FavoritesPage />
-        );
+        return <FavoritesPage />;
 
       case "notifications":
         return (
@@ -3481,24 +3584,16 @@ function App() {
         );
 
       case "account":
-        return (
-          <AccountPage />
-        );
+        return <AccountPage />;
 
       case "orders":
-        return (
-          <OrdersPage />
-        );
+        return <OrdersPage />;
 
       case "messages":
-        return (
-          <MessagesPage />
-        );
+        return <MessagesPage />;
 
       case "settings":
-        return (
-          <SettingsPage />
-        );
+        return <SettingsPage />;
 
       case "notification-settings":
         return (
@@ -3506,45 +3601,29 @@ function App() {
         );
 
       case "privacy":
-        return (
-          <PrivacyPage />
-        );
+        return <PrivacyPage />;
 
       case "preferences":
-        return (
-          <PreferencesPage />
-        );
+        return <PreferencesPage />;
 
       case "terms":
-        return (
-          <TermsPage />
-        );
+        return <TermsPage />;
 
       case "about":
-        return (
-          <AboutPage />
-        );
+        return <AboutPage />;
 
       case "sell":
-        return (
-          <SellPage />
-        );
+        return <SellPage />;
 
       case "checkout":
-        return (
-          <CheckoutPage />
-        );
+        return <CheckoutPage />;
 
       case "menu":
-        return (
-          <MenuPage />
-        );
+        return <MenuPage />;
 
       case "home":
       default:
-        return (
-          <HomePage />
-        );
+        return <HomePage />;
     }
   };
 
@@ -3557,7 +3636,7 @@ function App() {
       <BottomNav />
 
       {/* ===================================================
-          LOGIN / REGISTRO
+          LOGIN / REGISTRO / RECUPERACIÓN
       =================================================== */}
 
       {showAuth && (
@@ -3594,134 +3673,343 @@ function App() {
               S
             </div>
 
-            <h2>
-              {authMode ===
-              "login"
-                ? "Bienvenido."
-                : "Crea tu cuenta."}
-            </h2>
+            {/* =================================================
+                LOGIN
+            ================================================= */}
 
-            <p>
-              {authMode ===
-              "login"
-                ? "Inicia sesión en SHORASHOPP."
-                : "Únete a SHORASHOPP."}
-            </p>
+            {authMode === "login" && (
+              <>
+                <h2>
+                  Bienvenido.
+                </h2>
 
-            <form
-              onSubmit={
-                handleAuth
-              }
-              noValidate={false}
-            >
-              {authMode ===
-                "register" && (
-                <input
-                  type="text"
-                  placeholder="Nombre completo"
-                  value={name}
-                  onChange={(event) =>
-                    setName(
-                      event.target
-                        .value
-                    )
+                <p>
+                  Inicia sesión en SHORASHOPP.
+                </p>
+
+                <form
+                  onSubmit={
+                    handleAuth
                   }
-                  autoComplete="name"
-                  required
-                />
-              )}
+                >
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="email"
+                    required
+                  />
 
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(event) =>
-                  setEmail(
-                    event.target
-                      .value
-                  )
-                }
-                autoComplete="email"
-                required
-              />
+                  <input
+                    type="password"
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="current-password"
+                    minLength={6}
+                    required
+                  />
 
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(event) =>
-                  setPassword(
-                    event.target
-                      .value
-                  )
-                }
-                autoComplete={
-                  authMode ===
-                  "login"
-                    ? "current-password"
-                    : "new-password"
-                }
-                minLength={6}
-                required
-              />
+                  <button
+                    className="auth-submit"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Procesando..."
+                      : "Iniciar sesión"}
+                  </button>
+                </form>
 
-              <button
-                className="auth-submit"
-                type="submit"
-                disabled={loading}
-              >
-                {loading
-                  ? "Procesando..."
-                  : authMode ===
-                    "login"
-                  ? "Iniciar sesión"
-                  : "Crear cuenta"}
-              </button>
-            </form>
+                {message && (
+                  <div
+                    className="auth-message"
+                    role="alert"
+                  >
+                    {message}
+                  </div>
+                )}
 
-            {message && (
-              <div
-                className="auth-message"
-                role="alert"
-              >
-                {message}
-              </div>
-            )}
+                <button
+                  type="button"
+                  className="auth-forgot"
+                  onClick={() => {
+                    setAuthMode(
+                      "recover"
+                    );
+                    setMessage("");
+                    setLoading(false);
+                  }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
 
-            <div className="auth-switch">
-              {authMode ===
-              "login" ? (
-                <>
+                <div className="auth-switch">
                   ¿No tienes cuenta?{" "}
                   <button
                     type="button"
-                    onClick={() => {
-                      setAuthMode(
+                    onClick={() =>
+                      switchAuthMode(
                         "register"
-                      );
-                      setMessage("");
-                    }}
+                      )
+                    }
                   >
                     Regístrate
                   </button>
-                </>
-              ) : (
-                <>
+                </div>
+              </>
+            )}
+
+            {/* =================================================
+                REGISTRO
+            ================================================= */}
+
+            {authMode ===
+              "register" && (
+              <>
+                <h2>
+                  Crea tu cuenta.
+                </h2>
+
+                <p>
+                  Únete a SHORASHOPP.
+                </p>
+
+                <form
+                  onSubmit={
+                    handleAuth
+                  }
+                >
+                  <input
+                    type="text"
+                    placeholder="Nombre completo"
+                    value={name}
+                    onChange={(event) =>
+                      setName(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="name"
+                    required
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="email"
+                    required
+                  />
+
+                  <input
+                    type="password"
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="new-password"
+                    minLength={6}
+                    required
+                  />
+
+                  <button
+                    className="auth-submit"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Procesando..."
+                      : "Crear cuenta"}
+                  </button>
+                </form>
+
+                {message && (
+                  <div
+                    className="auth-message"
+                    role="alert"
+                  >
+                    {message}
+                  </div>
+                )}
+
+                <div className="auth-switch">
                   ¿Ya tienes cuenta?{" "}
                   <button
                     type="button"
-                    onClick={() => {
-                      setAuthMode(
+                    onClick={() =>
+                      switchAuthMode(
                         "login"
-                      );
-                      setMessage("");
-                    }}
+                      )
+                    }
                   >
                     Inicia sesión
                   </button>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
+
+            {/* =================================================
+                RECUPERAR CONTRASEÑA
+            ================================================= */}
+
+            {authMode ===
+              "recover" && (
+              <>
+                <h2>
+                  Recupera tu contraseña.
+                </h2>
+
+                <p>
+                  Escribe el correo de tu cuenta y te enviaremos un enlace para crear una nueva contraseña.
+                </p>
+
+                <form
+                  onSubmit={
+                    handlePasswordRecovery
+                  }
+                >
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="email"
+                    required
+                  />
+
+                  <button
+                    className="auth-submit"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Enviando..."
+                      : "Enviar enlace"}
+                  </button>
+                </form>
+
+                {message && (
+                  <div
+                    className="auth-message"
+                    role="alert"
+                  >
+                    {message}
+                  </div>
+                )}
+
+                <div className="auth-switch">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      switchAuthMode(
+                        "login"
+                      )
+                    }
+                  >
+                    Volver a iniciar sesión
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* =================================================
+                NUEVA CONTRASEÑA
+            ================================================= */}
+
+            {authMode ===
+              "updatePassword" && (
+              <>
+                <h2>
+                  Crea una nueva contraseña.
+                </h2>
+
+                <p>
+                  Escribe y confirma tu nueva contraseña para recuperar el acceso a tu cuenta.
+                </p>
+
+                <form
+                  onSubmit={
+                    handleAuth
+                  }
+                >
+                  <input
+                    type="password"
+                    placeholder="Nueva contraseña"
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="new-password"
+                    minLength={6}
+                    required
+                  />
+
+                  <input
+                    type="password"
+                    placeholder="Confirmar contraseña"
+                    value={confirmPassword}
+                    onChange={(event) =>
+                      setConfirmPassword(
+                        event.target
+                          .value
+                      )
+                    }
+                    autoComplete="new-password"
+                    minLength={6}
+                    required
+                  />
+
+                  <button
+                    className="auth-submit"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Guardando..."
+                      : "Guardar nueva contraseña"}
+                  </button>
+                </form>
+
+                {message && (
+                  <div
+                    className="auth-message"
+                    role="alert"
+                  >
+                    {message}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
