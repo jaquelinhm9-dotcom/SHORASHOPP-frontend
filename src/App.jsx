@@ -249,7 +249,7 @@ function Icon({ name, size = 24, stroke = 2 }) {
     ),
   };
 
-  return <svg {...common}>{paths[name]}</svg>;
+  return <svg {...common}>{paths[name] || null}</svg>;
 }
 
 /* =========================================================
@@ -274,15 +274,10 @@ function App() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState("Todas");
+  const [selectedCategory, setSelectedCategory] = useState("Todas");
 
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
-
-  /* =======================================================
-     CONFIGURACIÓN
-  ======================================================= */
 
   const [notificationSettings, setNotificationSettings] =
     useState({
@@ -297,21 +292,11 @@ function App() {
   const [language, setLanguage] = useState("Español");
 
   /* =======================================================
-     SESIÓN / SUPABASE AUTH
+     SESIÓN
   ======================================================= */
 
   useEffect(() => {
     let mounted = true;
-
-    if (!supabase) {
-      console.warn(
-        "SHORASHOPP: Supabase no está configurado. Revisa VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY."
-      );
-
-      return () => {
-        mounted = false;
-      };
-    }
 
     const loadSession = async () => {
       try {
@@ -339,30 +324,24 @@ function App() {
 
     loadSession();
 
-    const {
-      data: authListener,
-    } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log(
-          "SHORASHOPP auth event:",
-          event
-        );
+    const { data: authListener } =
+      supabase.auth.onAuthStateChange(
+        (event, currentSession) => {
+          if (!mounted) {
+            return;
+          }
 
-        if (!mounted) {
-          return;
+          setSession(currentSession ?? null);
+
+          if (event === "PASSWORD_RECOVERY") {
+            setAuthMode("updatePassword");
+            setMessage("");
+            setPassword("");
+            setConfirmPassword("");
+            setShowAuth(true);
+          }
         }
-
-        setSession(currentSession ?? null);
-
-        if (event === "PASSWORD_RECOVERY") {
-          setAuthMode("updatePassword");
-          setMessage("");
-          setPassword("");
-          setConfirmPassword("");
-          setShowAuth(true);
-        }
-      }
-    );
+      );
 
     return () => {
       mounted = false;
@@ -397,6 +376,7 @@ function App() {
 
   const goHome = () => {
     setView("home");
+    setPreviousView("home");
     setSelectedCategory("Todas");
     setSearch("");
     setMessage("");
@@ -419,13 +399,19 @@ function App() {
     setAuthMode(
       mode === "register"
         ? "register"
-        : "login"
+        : mode === "updatePassword"
+          ? "updatePassword"
+          : "login"
     );
 
     setMessage("");
     setLoading(false);
-    setPassword("");
-    setConfirmPassword("");
+
+    if (mode !== "updatePassword") {
+      setPassword("");
+      setConfirmPassword("");
+    }
+
     setShowAuth(true);
   };
 
@@ -458,10 +444,9 @@ function App() {
       error?.msg ||
       "";
 
-    const normalized =
-      String(rawMessage)
-        .trim()
-        .toLowerCase();
+    const normalized = String(rawMessage)
+      .trim()
+      .toLowerCase();
 
     if (
       normalized.includes(
@@ -499,9 +484,7 @@ function App() {
     }
 
     if (
-      normalized.includes(
-        "rate limit"
-      )
+      normalized.includes("rate limit")
     ) {
       return "Se realizaron demasiados intentos. Espera unos minutos e inténtalo nuevamente.";
     }
@@ -510,9 +493,7 @@ function App() {
       normalized.includes(
         "invalid or has expired"
       ) ||
-      normalized.includes(
-        "otp_expired"
-      )
+      normalized.includes("otp_expired")
     ) {
       return "El enlace ya expiró o no es válido. Solicita un enlace nuevo.";
     }
@@ -524,20 +505,13 @@ function App() {
   };
 
   /* =======================================================
-     REGISTRO / LOGIN
+     LOGIN / REGISTRO / CAMBIO DE CONTRASEÑA
   ======================================================= */
 
   const handleAuth = async (event) => {
     event.preventDefault();
 
     if (loading) {
-      return;
-    }
-
-    if (!supabase) {
-      setMessage(
-        "El servicio de autenticación no está disponible en este momento. Revisa la configuración de Supabase."
-      );
       return;
     }
 
@@ -551,6 +525,10 @@ function App() {
         email.trim().toLowerCase();
 
       const currentPassword = password;
+
+      /* -----------------------------------------------
+         CAMBIO DE CONTRASEÑA
+      ------------------------------------------------ */
 
       if (
         currentAuthMode ===
@@ -587,18 +565,17 @@ function App() {
           setMessage(
             getAuthErrorMessage(error)
           );
-
           return;
         }
 
         setMessage(
-          "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión con tu nueva contraseña."
+          "¡Contraseña actualizada correctamente!"
         );
 
         setPassword("");
         setConfirmPassword("");
 
-        setTimeout(() => {
+        window.setTimeout(() => {
           setShowAuth(false);
           setAuthMode("login");
           setMessage("");
@@ -606,6 +583,10 @@ function App() {
 
         return;
       }
+
+      /* -----------------------------------------------
+         VALIDACIONES
+      ------------------------------------------------ */
 
       if (!cleanEmail) {
         setMessage(
@@ -628,11 +609,16 @@ function App() {
         return;
       }
 
+      /* -----------------------------------------------
+         REGISTRO
+      ------------------------------------------------ */
+
       if (
         currentAuthMode ===
         "register"
       ) {
-        const cleanName = name.trim();
+        const cleanName =
+          name.trim();
 
         if (!cleanName) {
           setMessage(
@@ -641,20 +627,20 @@ function App() {
           return;
         }
 
-        const {
-          data,
-          error,
-        } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password: currentPassword,
-          options: {
-            emailRedirectTo:
-              getAuthRedirectUrl(),
-            data: {
-              full_name: cleanName,
+        const { data, error } =
+          await supabase.auth.signUp({
+            email: cleanEmail,
+            password:
+              currentPassword,
+            options: {
+              emailRedirectTo:
+                getAuthRedirectUrl(),
+              data: {
+                full_name:
+                  cleanName,
+              },
             },
-          },
-        });
+          });
 
         if (error) {
           console.error(
@@ -670,9 +656,11 @@ function App() {
         }
 
         if (data?.session) {
-          setSession(data.session);
+          setSession(
+            data.session
+          );
           setShowAuth(false);
-          setMessage("");
+
           setName("");
           setEmail("");
           setPassword("");
@@ -694,19 +682,22 @@ function App() {
         }
 
         setMessage(
-          "La cuenta fue procesada, pero no recibimos una respuesta completa de Supabase. Revisa tu correo e inténtalo nuevamente."
+          "La cuenta fue procesada, pero no recibimos una respuesta completa de Supabase."
         );
 
         return;
       }
 
-      const {
-        data,
-        error,
-      } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password: currentPassword,
-      });
+      /* -----------------------------------------------
+         LOGIN
+      ------------------------------------------------ */
+
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password:
+            currentPassword,
+        });
 
       if (error) {
         console.error(
@@ -731,7 +722,7 @@ function App() {
 
       setSession(data.session);
       setShowAuth(false);
-      setMessage("");
+
       setName("");
       setEmail("");
       setPassword("");
@@ -753,7 +744,7 @@ function App() {
   };
 
   /* =======================================================
-     RECUPERAR CONTRASEÑA
+     RECUPERACIÓN
   ======================================================= */
 
   const handlePasswordRecovery =
@@ -761,13 +752,6 @@ function App() {
       event.preventDefault();
 
       if (loading) {
-        return;
-      }
-
-      if (!supabase) {
-        setMessage(
-          "El servicio de recuperación de contraseña no está disponible en este momento. Revisa la configuración de Supabase."
-        );
         return;
       }
 
@@ -788,14 +772,10 @@ function App() {
         const redirectTo =
           getAuthRedirectUrl();
 
-        const {
-          error,
-        } =
+        const { error } =
           await supabase.auth.resetPasswordForEmail(
             cleanEmail,
-            {
-              redirectTo,
-            }
+            { redirectTo }
           );
 
         if (error) {
@@ -832,34 +812,28 @@ function App() {
      LOGOUT
   ======================================================= */
 
-  const handleLogout = async () => {
-    if (!supabase) {
-      setSession(null);
-      navigate("home");
-      return;
-    }
+  const handleLogout =
+    async () => {
+      try {
+        const { error } =
+          await supabase.auth.signOut();
 
-    try {
-      const { error } =
-        await supabase.auth.signOut();
-
-      if (error) {
+        if (error) {
+          console.error(
+            "Supabase logout error:",
+            error
+          );
+        }
+      } catch (error) {
         console.error(
-          "Supabase logout error:",
+          "SHORASHOPP logout error:",
           error
         );
-        return;
+      } finally {
+        setSession(null);
+        goHome();
       }
-    } catch (error) {
-      console.error(
-        "SHORASHOPP logout error:",
-        error
-      );
-    } finally {
-      setSession(null);
-      navigate("home");
-    }
-  };
+    };
 
   /* =======================================================
      INFORMACIÓN DEL DISPOSITIVO
@@ -890,7 +864,9 @@ function App() {
       browser =
         "Microsoft Edge";
     } else if (
-      userAgent.includes("Chrome/")
+      userAgent.includes(
+        "Chrome/"
+      )
     ) {
       browser =
         "Google Chrome";
@@ -914,7 +890,9 @@ function App() {
       "Dispositivo actual";
 
     if (
-      /Android/i.test(userAgent)
+      /Android/i.test(
+        userAgent
+      )
     ) {
       platform = "Android";
     } else if (
@@ -925,7 +903,9 @@ function App() {
       platform =
         "iPhone / iPad";
     } else if (
-      /Windows/i.test(userAgent)
+      /Windows/i.test(
+        userAgent
+      )
     ) {
       platform = "Windows";
     } else if (
@@ -951,16 +931,20 @@ function App() {
   const toggleFavorite = (
     productName
   ) => {
-    setFavorites((current) =>
-      current.includes(productName)
-        ? current.filter(
-            (item) =>
-              item !== productName
-          )
-        : [
-            ...current,
-            productName,
-          ]
+    setFavorites(
+      (current) =>
+        current.includes(
+          productName
+        )
+          ? current.filter(
+              (item) =>
+                item !==
+                productName
+            )
+          : [
+              ...current,
+              productName,
+            ]
     );
   };
 
@@ -968,7 +952,9 @@ function App() {
      CARRITO
   ======================================================= */
 
-  const addToCart = (product) => {
+  const addToCart = (
+    product
+  ) => {
     setCart((current) => {
       const existing =
         current.find(
@@ -1002,29 +988,31 @@ function App() {
     });
   };
 
-  const changeCartQuantity = (
-    productName,
-    amount
-  ) => {
-    setCart((current) =>
-      current
-        .map((item) =>
-          item.name ===
-          productName
-            ? {
-                ...item,
-                quantity:
-                  item.quantity +
-                  amount,
-              }
-            : item
-        )
-        .filter(
-          (item) =>
-            item.quantity > 0
-        )
-    );
-  };
+  const changeCartQuantity =
+    (
+      productName,
+      amount
+    ) => {
+      setCart((current) =>
+        current
+          .map((item) =>
+            item.name ===
+            productName
+              ? {
+                  ...item,
+                  quantity:
+                    item.quantity +
+                    amount,
+                }
+              : item
+          )
+          .filter(
+            (item) =>
+              item.quantity >
+              0
+          )
+      );
+    };
 
   const cartCount =
     cart.reduce(
@@ -1036,11 +1024,18 @@ function App() {
   const cartTotal =
     cart.reduce(
       (total, item) => {
-        const price = Number(
-          item.price
-            .replace("$", "")
-            .replace(",", "")
-        );
+        const price =
+          Number(
+            item.price
+              .replace(
+                "$",
+                ""
+              )
+              .replace(
+                ",",
+                ""
+              )
+          );
 
         return (
           total +
@@ -1057,7 +1052,9 @@ function App() {
 
   const filteredProducts =
     useMemo(() => {
-      let result = [...products];
+      let result = [
+        ...products,
+      ];
 
       if (
         selectedCategory !==
@@ -1073,7 +1070,9 @@ function App() {
 
       if (search.trim()) {
         const query =
-          search.toLowerCase();
+          search
+            .trim()
+            .toLowerCase();
 
         result =
           result.filter(
@@ -1120,7 +1119,9 @@ function App() {
         onClick={goHome}
       >
         <strong>
-          SHORA<span>SHOPP</span>
+          SHORA<span>
+            SHOPP
+          </span>
         </strong>
 
         <small>
@@ -1160,7 +1161,9 @@ function App() {
           />
 
           {cartCount > 0 && (
-            <i>{cartCount}</i>
+            <i>
+              {cartCount}
+            </i>
           )}
         </button>
       </div>
@@ -1168,7 +1171,7 @@ function App() {
   );
 
   /* =======================================================
-     BÚSQUEDA
+     SEARCH
   ======================================================= */
 
   const SearchBar = () => (
@@ -1189,8 +1192,12 @@ function App() {
             );
 
             if (
-              view !== "search"
+              view !==
+              "search"
             ) {
+              setPreviousView(
+                view
+              );
               setView("search");
             }
           }}
@@ -1256,9 +1263,6 @@ function App() {
     <article className="product-card">
       <div
         className={`product-image ${product.type}`}
-        onClick={() =>
-          addToCart(product)
-        }
       >
         <span className="product-label">
           {product.discount}
@@ -1273,13 +1277,12 @@ function App() {
               : ""
           }`}
           type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-
+          aria-label="Favorito"
+          onClick={() =>
             toggleFavorite(
               product.name
-            );
-          }}
+            )
+          }
         >
           <Icon
             name="heart"
@@ -1288,13 +1291,20 @@ function App() {
           />
         </button>
 
-        <div className="product-art">
+        <div
+          className="product-art"
+          onClick={() =>
+            addToCart(product)
+          }
+        >
           {product.type ===
             "earbuds" && (
             <div className="earbuds-art">
               <span>◖</span>
               <span>◗</span>
-              <small>▱</small>
+              <small>
+                ▱
+              </small>
             </div>
           )}
 
@@ -1322,7 +1332,9 @@ function App() {
       </div>
 
       <div className="product-info">
-        <h3>{product.name}</h3>
+        <h3>
+          {product.name}
+        </h3>
 
         <div className="price-row">
           <strong>
@@ -1384,6 +1396,7 @@ function App() {
 
       <div className="quick-content">
         <strong>{title}</strong>
+
         <span>{text}</span>
       </div>
 
@@ -1443,28 +1456,34 @@ function App() {
             }
             title="Mi cuenta"
             text={
-              <>
-                Inicia sesión
-                <br />
-                para ver tu perfil y pedidos
-              </>
+              session
+                ? "Sesión iniciada"
+                : "Inicia sesión"
             }
             onClick={() =>
               session
-                ? navigate("account")
-                : openAuth("login")
+                ? navigate(
+                    "account"
+                  )
+                : openAuth(
+                    "login"
+                  )
             }
           />
         </section>
 
         <section className="content-section">
           <div className="section-title-row">
-            <h2>Categorías</h2>
+            <h2>
+              Categorías
+            </h2>
 
             <button
               type="button"
               onClick={() =>
-                navigate("categories")
+                navigate(
+                  "categories"
+                )
               }
             >
               Ver todas
@@ -1480,21 +1499,30 @@ function App() {
               (category) => (
                 <button
                   className="category-item"
-                  key={category.name}
+                  key={
+                    category.name
+                  }
                   type="button"
                   onClick={() => {
                     setSelectedCategory(
                       category.name
                     );
-                    navigate("category");
+
+                    navigate(
+                      "category"
+                    );
                   }}
                 >
                   <div className="category-icon">
-                    {category.icon}
+                    {
+                      category.icon
+                    }
                   </div>
 
                   <span>
-                    {category.name}
+                    {
+                      category.name
+                    }
                   </span>
                 </button>
               )
@@ -1520,7 +1548,9 @@ function App() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("offers")
+                  navigate(
+                    "offers"
+                  )
                 }
               >
                 Ver ofertas
@@ -1575,7 +1605,9 @@ function App() {
             <button
               type="button"
               onClick={() =>
-                navigate("products")
+                navigate(
+                  "products"
+                )
               }
             >
               Ver todos
@@ -1590,7 +1622,9 @@ function App() {
             {products.map(
               (product) => (
                 <ProductCard
-                  key={product.name}
+                  key={
+                    product.name
+                  }
                   product={product}
                 />
               )
@@ -1635,22 +1669,31 @@ function App() {
           (category) => (
             <button
               className="category-page-card"
-              key={category.name}
+              key={
+                category.name
+              }
               type="button"
               onClick={() => {
                 setSelectedCategory(
                   category.name
                 );
-                navigate("category");
+
+                navigate(
+                  "category"
+                );
               }}
             >
               <div className="category-icon">
-                {category.icon}
+                {
+                  category.icon
+                }
               </div>
 
               <div>
                 <strong>
-                  {category.name}
+                  {
+                    category.name
+                  }
                 </strong>
 
                 <span>
@@ -1681,24 +1724,31 @@ function App() {
 
       <div className="category-heading">
         <div>
-          <span>Categoría</span>
+          <span>
+            Categoría
+          </span>
           <h2>
             {selectedCategory}
           </h2>
         </div>
 
         <b>
-          {filteredProducts.length}{" "}
+          {
+            filteredProducts.length
+          }{" "}
           productos
         </b>
       </div>
 
       <div className="products-grid">
-        {filteredProducts.length > 0 ? (
+        {filteredProducts.length >
+        0 ? (
           filteredProducts.map(
             (product) => (
               <ProductCard
-                key={product.name}
+                key={
+                  product.name
+                }
                 product={product}
               />
             )
@@ -1744,7 +1794,9 @@ function App() {
         {products.map(
           (product) => (
             <ProductCard
-              key={product.name}
+              key={
+                product.name
+              }
               product={product}
             />
           )
@@ -1765,7 +1817,9 @@ function App() {
 
       <div className="internal-offer-banner">
         <div>
-          <span>OFERTAS</span>
+          <span>
+            OFERTAS
+          </span>
 
           <strong>
             Precios especiales
@@ -1783,7 +1837,9 @@ function App() {
         {products.map(
           (product) => (
             <ProductCard
-              key={product.name}
+              key={
+                product.name
+              }
               product={product}
             />
           )
@@ -1821,7 +1877,9 @@ function App() {
 
       <div className="search-result-title">
         <div>
-          <span>Resultados</span>
+          <span>
+            Resultados
+          </span>
 
           <h2>
             {search
@@ -1831,16 +1889,21 @@ function App() {
         </div>
 
         <b>
-          {filteredProducts.length}
+          {
+            filteredProducts.length
+          }
         </b>
       </div>
 
       <div className="products-grid">
-        {filteredProducts.length > 0 ? (
+        {filteredProducts.length >
+        0 ? (
           filteredProducts.map(
             (product) => (
               <ProductCard
-                key={product.name}
+                key={
+                  product.name
+                }
                 product={product}
               />
             )
@@ -1873,7 +1936,9 @@ function App() {
           text="Agrega productos y aparecerán aquí."
           action="Explorar productos"
           onAction={() =>
-            navigate("products")
+            navigate(
+              "products"
+            )
           }
         />
       ) : (
@@ -1883,7 +1948,9 @@ function App() {
               (item) => (
                 <div
                   className="cart-page-item"
-                  key={item.name}
+                  key={
+                    item.name
+                  }
                 >
                   <div
                     className={`cart-item-art ${item.type}`}
@@ -1928,7 +1995,9 @@ function App() {
                       </button>
 
                       <b>
-                        {item.quantity}
+                        {
+                          item.quantity
+                        }
                       </b>
 
                       <button
@@ -1951,12 +2020,18 @@ function App() {
 
           <div className="cart-summary">
             <div>
-              <span>Productos</span>
-              <b>{cartCount}</b>
+              <span>
+                Productos
+              </span>
+              <b>
+                {cartCount}
+              </b>
             </div>
 
             <div className="cart-total">
-              <span>Total</span>
+              <span>
+                Total
+              </span>
 
               <strong>
                 $
@@ -2044,34 +2119,33 @@ function App() {
      NOTIFICACIONES
   ======================================================= */
 
-  const NotificationsPage =
-    () => (
-      <main className="page-content">
-        <PageHeader
-          title="Notificaciones"
+  const NotificationsPage = () => (
+    <main className="page-content">
+      <PageHeader
+        title="Notificaciones"
+      />
+
+      <div className="notification-list">
+        <Notification
+          icon="🎉"
+          title="¡Bienvenido a SHORASHOPP!"
+          text="Descubre productos increíbles."
         />
 
-        <div className="notification-list">
-          <Notification
-            icon="🎉"
-            title="¡Bienvenido a SHORASHOPP!"
-            text="Descubre productos increíbles."
-          />
+        <Notification
+          icon="🔥"
+          title="Nuevas ofertas disponibles"
+          text="Revisa nuestras promociones."
+        />
 
-          <Notification
-            icon="🔥"
-            title="Nuevas ofertas disponibles"
-            text="Revisa nuestras promociones."
-          />
-
-          <Notification
-            icon="📦"
-            title="Tus pedidos aparecerán aquí"
-            text="Podrás consultar el estado de tus compras."
-          />
-        </div>
-      </main>
-    );
+        <Notification
+          icon="📦"
+          title="Tus pedidos aparecerán aquí"
+          text="Podrás consultar el estado de tus compras."
+        />
+      </div>
+    </main>
+  );
 
   /* =======================================================
      CUENTA
@@ -2079,7 +2153,9 @@ function App() {
 
   const AccountPage = () => (
     <main className="page-content">
-      <PageHeader title="Mi cuenta" />
+      <PageHeader
+        title="Mi cuenta"
+      />
 
       <div className="account-page">
         <div className="account-avatar">
@@ -2089,7 +2165,9 @@ function App() {
           />
         </div>
 
-        <h2>Mi cuenta</h2>
+        <h2>
+          Mi cuenta
+        </h2>
 
         {session ? (
           <p>
@@ -2107,7 +2185,9 @@ function App() {
               className="panel-primary-button"
               type="button"
               onClick={() =>
-                openAuth("login")
+                openAuth(
+                  "login"
+                )
               }
             >
               Iniciar sesión
@@ -2186,7 +2266,9 @@ function App() {
             <button
               className="panel-primary-button logout-button"
               type="button"
-              onClick={handleLogout}
+              onClick={
+                handleLogout
+              }
             >
               Cerrar sesión
             </button>
@@ -2212,7 +2294,9 @@ function App() {
         text="Cuando realices una compra podrás consultar aquí el estado de tu pedido."
         action="Comprar ahora"
         onAction={() =>
-          navigate("products")
+          navigate(
+            "products"
+          )
         }
       />
     </main>
@@ -2224,7 +2308,9 @@ function App() {
 
   const MessagesPage = () => (
     <main className="page-content">
-      <PageHeader title="Mensajes" />
+      <PageHeader
+        title="Mensajes"
+      />
 
       <EmptyState
         icon="💬"
@@ -2240,7 +2326,9 @@ function App() {
 
   const SettingsPage = () => (
     <main className="page-content">
-      <PageHeader title="Configuración" />
+      <PageHeader
+        title="Configuración"
+      />
 
       <div className="settings-list">
         <SettingsOption
@@ -2283,7 +2371,9 @@ function App() {
           title="País y preferencias"
           description="Idioma, moneda y país"
           onClick={() =>
-            navigate("preferences")
+            navigate(
+              "preferences"
+            )
           }
         />
 
@@ -2462,17 +2552,15 @@ function App() {
           description="Actualiza tu contraseña de acceso"
           onClick={() => {
             if (!session) {
-              openAuth("login");
+              openAuth(
+                "login"
+              );
               return;
             }
 
-            setAuthMode(
+            openAuth(
               "updatePassword"
             );
-            setPassword("");
-            setConfirmPassword("");
-            setMessage("");
-            setShowAuth(true);
           }}
         />
 
@@ -2522,160 +2610,183 @@ function App() {
      SESIONES ACTIVAS
   ======================================================= */
 
-  const ActiveSessionsPage = () => {
-    if (!session) {
+  const ActiveSessionsPage =
+    () => {
+      if (!session) {
+        return (
+          <main className="page-content">
+            <PageHeader
+              title="Sesiones activas"
+            />
+
+            <EmptyState
+              icon="🔐"
+              title="Inicia sesión"
+              text="Necesitas iniciar sesión para consultar la seguridad de tu cuenta."
+              action="Iniciar sesión"
+              onAction={() =>
+                openAuth(
+                  "login"
+                )
+              }
+            />
+          </main>
+        );
+      }
+
       return (
         <main className="page-content">
           <PageHeader
             title="Sesiones activas"
           />
 
-          <EmptyState
-            icon="🔐"
-            title="Inicia sesión"
-            text="Necesitas iniciar sesión para consultar la seguridad de tu cuenta."
-            action="Iniciar sesión"
-            onAction={() =>
-              openAuth("login")
-            }
-          />
-        </main>
-      );
-    }
-
-    return (
-      <main className="page-content">
-        <PageHeader
-          title="Sesiones activas"
-        />
-
-        <div className="settings-page-intro">
-          <div className="settings-large-icon">
-            <Icon
-              name="devices"
-              size={33}
-            />
-          </div>
-
-          <div>
-            <strong>
-              Revisa dónde tienes abierta tu cuenta
-            </strong>
-
-            <small>
-              Aquí se muestra tu sesión actual. La administración real de otras sesiones se conectará con Supabase.
-            </small>
-          </div>
-        </div>
-
-        <div className="session-card">
-          <div className="session-card-header">
-            <div className="session-device-icon">
+          <div className="settings-page-intro">
+            <div className="settings-large-icon">
               <Icon
                 name="devices"
-                size={27}
+                size={33}
               />
             </div>
 
             <div>
               <strong>
-                {deviceInfo.platform}
+                Revisa dónde tienes abierta tu cuenta
               </strong>
 
               <small>
-                {deviceInfo.browser}
+                Aquí se muestra tu sesión actual. La administración real de otras sesiones se conectará con Supabase.
               </small>
             </div>
-
-            <span className="session-current-badge">
-              Este dispositivo
-            </span>
           </div>
 
-          <div className="session-details">
-            <div className="session-detail-row">
-              <span>Cuenta</span>
+          <div className="session-card">
+            <div className="session-card-header">
+              <div className="session-device-icon">
+                <Icon
+                  name="devices"
+                  size={27}
+                />
+              </div>
 
+              <div>
+                <strong>
+                  {
+                    deviceInfo.platform
+                  }
+                </strong>
+
+                <small>
+                  {
+                    deviceInfo.browser
+                  }
+                </small>
+              </div>
+
+              <span className="session-current-badge">
+                Este dispositivo
+              </span>
+            </div>
+
+            <div className="session-details">
+              <div className="session-detail-row">
+                <span>
+                  Cuenta
+                </span>
+
+                <strong>
+                  {
+                    session
+                      .user
+                      .email
+                  }
+                </strong>
+              </div>
+
+              <div className="session-detail-row">
+                <span>
+                  Dispositivo
+                </span>
+
+                <strong>
+                  {
+                    deviceInfo.platform
+                  }
+                </strong>
+              </div>
+
+              <div className="session-detail-row">
+                <span>
+                  Navegador
+                </span>
+
+                <strong>
+                  {
+                    deviceInfo.browser
+                  }
+                </strong>
+              </div>
+
+              <div className="session-detail-row last">
+                <span>
+                  Estado
+                </span>
+
+                <strong className="status-online">
+                  Sesión activa
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="security-action-card">
+            <div className="security-action-icon">
+              <Icon
+                name="shield"
+                size={25}
+              />
+            </div>
+
+            <div className="security-action-content">
               <strong>
-                {session.user.email}
+                Cerrar sesión en otros dispositivos
               </strong>
-            </div>
 
-            <div className="session-detail-row">
-              <span>Dispositivo</span>
+              <small>
+                Esta función queda preparada para conectarse con la administración real de sesiones de Supabase.
+              </small>
 
-              <strong>
-                {deviceInfo.platform}
-              </strong>
-            </div>
-
-            <div className="session-detail-row">
-              <span>Navegador</span>
-
-              <strong>
-                {deviceInfo.browser}
-              </strong>
-            </div>
-
-            <div className="session-detail-row last">
-              <span>Estado</span>
-
-              <strong className="status-online">
-                Sesión activa
-              </strong>
+              <button
+                type="button"
+                className="security-secondary-button"
+                onClick={() =>
+                  setMessage(
+                    "La administración de sesiones se conectará aquí."
+                  )
+                }
+              >
+                Cerrar sesiones
+              </button>
             </div>
           </div>
-        </div>
 
-        <div className="security-action-card">
-          <div className="security-action-icon">
-            <Icon
-              name="shield"
-              size={25}
-            />
-          </div>
+          {message && (
+            <div className="settings-feedback">
+              {message}
+            </div>
+          )}
 
-          <div className="security-action-content">
-            <strong>
-              Cerrar sesión en otros dispositivos
-            </strong>
-
-            <small>
-              Esta función queda preparada para conectarse con la administración real de sesiones de Supabase.
-            </small>
-
-            <button
-              type="button"
-              className="security-secondary-button"
-              onClick={() =>
-                setMessage(
-                  "La administración de sesiones se conectará aquí."
-                )
-              }
-            >
-              Cerrar sesiones
-            </button>
-          </div>
-        </div>
-
-        {message && (
-          <div className="settings-feedback">
-            {message}
-          </div>
-        )}
-
-        <button
-          type="button"
-          className="security-back-button"
-          onClick={() =>
-            navigate("privacy")
-          }
-        >
-          Volver a Privacidad y seguridad
-        </button>
-      </main>
-    );
-  };
+          <button
+            type="button"
+            className="security-back-button"
+            onClick={() =>
+              navigate("privacy")
+            }
+          >
+            Volver a Privacidad y seguridad
+          </button>
+        </main>
+      );
+    };
 
   /* =======================================================
      VERIFICACIÓN DE SEGURIDAD
@@ -2696,7 +2807,9 @@ function App() {
               text="Necesitas iniciar sesión para revisar la seguridad de tu cuenta."
               action="Iniciar sesión"
               onAction={() =>
-                openAuth("login")
+                openAuth(
+                  "login"
+                )
               }
             />
           </main>
@@ -2749,7 +2862,10 @@ function App() {
                 </strong>
 
                 <small>
-                  {session.user.email}
+                  {
+                    session.user
+                      .email
+                  }
                 </small>
               </div>
 
@@ -2870,15 +2986,11 @@ function App() {
           <button
             type="button"
             className="panel-primary-button"
-            onClick={() => {
-              setAuthMode(
+            onClick={() =>
+              openAuth(
                 "updatePassword"
-              );
-              setPassword("");
-              setConfirmPassword("");
-              setMessage("");
-              setShowAuth(true);
-            }}
+              )
+            }
           >
             <Icon
               name="key"
@@ -2904,150 +3016,154 @@ function App() {
      PREFERENCIAS
   ======================================================= */
 
-  const PreferencesPage =
-    () => (
-      <main className="page-content">
-        <PageHeader
-          title="País y preferencias"
-        />
+  const PreferencesPage = () => (
+    <main className="page-content">
+      <PageHeader
+        title="País y preferencias"
+      />
 
-        <div className="settings-page-intro">
-          <div className="settings-large-icon">
+      <div className="settings-page-intro">
+        <div className="settings-large-icon">
+          <Icon
+            name="globe"
+            size={33}
+          />
+        </div>
+
+        <div>
+          <strong>
+            Personaliza tu experiencia
+          </strong>
+
+          <small>
+            Estas opciones afectan cómo ves SHORASHOPP.
+          </small>
+        </div>
+      </div>
+
+      <div className="settings-section-card">
+        <div className="preference-row">
+          <div className="preference-icon">
             <Icon
               name="globe"
-              size={33}
+              size={22}
             />
           </div>
 
-          <div>
+          <div className="preference-content">
             <strong>
-              Personaliza tu experiencia
+              País
             </strong>
 
-            <small>
-              Estas opciones afectan cómo ves SHORASHOPP.
-            </small>
+            <select
+              value={country}
+              onChange={(event) =>
+                setCountry(
+                  event.target.value
+                )
+              }
+            >
+              <option>
+                México
+              </option>
+
+              <option>
+                Estados Unidos
+              </option>
+
+              <option>
+                Canadá
+              </option>
+
+              <option>
+                España
+              </option>
+            </select>
           </div>
         </div>
 
-        <div className="settings-section-card">
-          <div className="preference-row">
-            <div className="preference-icon">
-              <Icon
-                name="globe"
-                size={22}
-              />
-            </div>
-
-            <div className="preference-content">
-              <strong>País</strong>
-
-              <select
-                value={country}
-                onChange={(event) =>
-                  setCountry(
-                    event.target.value
-                  )
-                }
-              >
-                <option>
-                  México
-                </option>
-                <option>
-                  Estados Unidos
-                </option>
-                <option>
-                  Canadá
-                </option>
-                <option>
-                  España
-                </option>
-              </select>
-            </div>
+        <div className="preference-row">
+          <div className="preference-icon">
+            $
           </div>
 
-          <div className="preference-row">
-            <div className="preference-icon">
-              $
-            </div>
+          <div className="preference-content">
+            <strong>
+              Moneda
+            </strong>
 
-            <div className="preference-content">
-              <strong>
-                Moneda
-              </strong>
+            <select
+              value={currency}
+              onChange={(event) =>
+                setCurrency(
+                  event.target.value
+                )
+              }
+            >
+              <option value="MXN">
+                MXN — Peso mexicano
+              </option>
 
-              <select
-                value={currency}
-                onChange={(event) =>
-                  setCurrency(
-                    event.target.value
-                  )
-                }
-              >
-                <option value="MXN">
-                  MXN — Peso mexicano
-                </option>
+              <option value="USD">
+                USD — Dólar estadounidense
+              </option>
 
-                <option value="USD">
-                  USD — Dólar estadounidense
-                </option>
+              <option value="CAD">
+                CAD — Dólar canadiense
+              </option>
 
-                <option value="CAD">
-                  CAD — Dólar canadiense
-                </option>
-
-                <option value="EUR">
-                  EUR — Euro
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div className="preference-row last">
-            <div className="preference-icon">
-              <Icon
-                name="language"
-                size={22}
-              />
-            </div>
-
-            <div className="preference-content">
-              <strong>
-                Idioma
-              </strong>
-
-              <select
-                value={language}
-                onChange={(event) =>
-                  setLanguage(
-                    event.target.value
-                  )
-                }
-              >
-                <option>
-                  Español
-                </option>
-
-                <option>
-                  English
-                </option>
-              </select>
-            </div>
+              <option value="EUR">
+                EUR — Euro
+              </option>
+            </select>
           </div>
         </div>
 
-        <div className="preference-summary">
-          <span>
-            Configuración actual
-          </span>
+        <div className="preference-row last">
+          <div className="preference-icon">
+            <Icon
+              name="language"
+              size={22}
+            />
+          </div>
 
-          <strong>
-            {country} · {currency} ·{" "}
-            {language}
-          </strong>
+          <div className="preference-content">
+            <strong>
+              Idioma
+            </strong>
+
+            <select
+              value={language}
+              onChange={(event) =>
+                setLanguage(
+                  event.target.value
+                )
+              }
+            >
+              <option>
+                Español
+              </option>
+
+              <option>
+                English
+              </option>
+            </select>
+          </div>
         </div>
-      </main>
-    );
+      </div>
+
+      <div className="preference-summary">
+        <span>
+          Configuración actual
+        </span>
+
+        <strong>
+          {country} · {currency} ·{" "}
+          {language}
+        </strong>
+      </div>
+    </main>
+  );
 
   /* =======================================================
      TÉRMINOS
@@ -3186,7 +3302,9 @@ function App() {
       <div className="about-page">
         <div className="about-logo">
           <strong>
-            SHORA<span>SHOPP</span>
+            SHORA<span>
+              SHOPP
+            </span>
           </strong>
 
           <small>
@@ -3213,7 +3331,9 @@ function App() {
         <div className="about-cards">
           <div className="about-card">
             <span>🛍️</span>
-            <strong>Compra</strong>
+            <strong>
+              Compra
+            </strong>
             <small>
               Descubre productos y ofertas.
             </small>
@@ -3221,7 +3341,9 @@ function App() {
 
           <div className="about-card">
             <span>🏪</span>
-            <strong>Vende</strong>
+            <strong>
+              Vende
+            </strong>
             <small>
               Publica y llega a compradores.
             </small>
@@ -3229,7 +3351,9 @@ function App() {
 
           <div className="about-card">
             <span>✨</span>
-            <strong>Descubre</strong>
+            <strong>
+              Descubre
+            </strong>
             <small>
               Encuentra nuevas oportunidades.
             </small>
@@ -3237,21 +3361,29 @@ function App() {
         </div>
 
         <div className="about-version">
-          <span>Aplicación</span>
+          <span>
+            Aplicación
+          </span>
+
           <strong>
             SHORASHOPP
           </strong>
         </div>
 
         <div className="about-version">
-          <span>Versión</span>
+          <span>
+            Versión
+          </span>
+
           <strong>
             1.0.0
           </strong>
         </div>
 
         <div className="about-version last">
-          <span>Estado</span>
+          <span>
+            Estado
+          </span>
 
           <strong className="status-online">
             En desarrollo
@@ -3296,7 +3428,9 @@ function App() {
           className="panel-primary-button"
           type="button"
           onClick={() =>
-            openAuth("register")
+            openAuth(
+              "register"
+            )
           }
         >
           Crear cuenta de vendedor
@@ -3349,7 +3483,9 @@ function App() {
         </h2>
 
         <div className="checkout-row">
-          <span>Productos</span>
+          <span>
+            Productos
+          </span>
 
           <strong>
             {cartCount}
@@ -3357,7 +3493,9 @@ function App() {
         </div>
 
         <div className="checkout-row total">
-          <span>Total</span>
+          <span>
+            Total
+          </span>
 
           <strong>
             $
@@ -3397,7 +3535,9 @@ function App() {
 
   const MenuPage = () => (
     <main className="page-content">
-      <PageHeader title="Menú" />
+      <PageHeader
+        title="Menú"
+      />
 
       <div className="main-menu-page">
         <MenuOption
@@ -3410,8 +3550,12 @@ function App() {
           text="Mi cuenta"
           onClick={() =>
             session
-              ? navigate("account")
-              : openAuth("login")
+              ? navigate(
+                  "account"
+                )
+              : openAuth(
+                  "login"
+                )
           }
         />
 
@@ -3450,7 +3594,9 @@ function App() {
           }
           text="Configuración"
           onClick={() =>
-            navigate("settings")
+            navigate(
+              "settings"
+            )
           }
         />
 
@@ -3463,7 +3609,9 @@ function App() {
           }
           text="Favoritos"
           onClick={() =>
-            navigate("favorites")
+            navigate(
+              "favorites"
+            )
           }
         />
 
@@ -3489,7 +3637,9 @@ function App() {
           }
           text="Notificaciones"
           onClick={() =>
-            navigate("notifications")
+            navigate(
+              "notifications"
+            )
           }
         />
 
@@ -3497,7 +3647,9 @@ function App() {
           <button
             className="menu-logout"
             type="button"
-            onClick={handleLogout}
+            onClick={
+              handleLogout
+            }
           >
             Cerrar sesión
           </button>
@@ -3582,7 +3734,9 @@ function App() {
         }`}
         type="button"
         onClick={() =>
-          navigate("categories")
+          navigate(
+            "categories"
+          )
         }
       >
         <Icon
@@ -3626,7 +3780,9 @@ function App() {
         }`}
         type="button"
         onClick={() =>
-          navigate("favorites")
+          navigate(
+            "favorites"
+          )
         }
       >
         <Icon
@@ -3648,8 +3804,12 @@ function App() {
         type="button"
         onClick={() =>
           session
-            ? navigate("account")
-            : openAuth("login")
+            ? navigate(
+                "account"
+              )
+            : openAuth(
+                "login"
+              )
         }
       >
         <Icon
@@ -3680,9 +3840,13 @@ function App() {
         {icon}
       </div>
 
-      <h2>{title}</h2>
+      <h2>
+        {title}
+      </h2>
 
-      <p>{text}</p>
+      <p>
+        {text}
+      </p>
 
       {action && (
         <button
@@ -3705,7 +3869,9 @@ function App() {
       <span>{icon}</span>
 
       <div>
-        <strong>{title}</strong>
+        <strong>
+          {title}
+        </strong>
 
         <small>
           {text}
@@ -3733,7 +3899,9 @@ function App() {
         {icon}
       </span>
 
-      <span>{text}</span>
+      <span>
+        {text}
+      </span>
 
       <Icon
         name="arrow"
@@ -3756,7 +3924,9 @@ function App() {
         {icon}
       </span>
 
-      <span>{text}</span>
+      <span>
+        {text}
+      </span>
 
       <Icon
         name="arrow"
@@ -3776,7 +3946,9 @@ function App() {
       </span>
 
       <div>
-        <strong>{title}</strong>
+        <strong>
+          {title}
+        </strong>
 
         <small>
           {text}
@@ -3801,7 +3973,9 @@ function App() {
       </span>
 
       <span className="settings-option-content">
-        <strong>{title}</strong>
+        <strong>
+          {title}
+        </strong>
 
         <small>
           {description}
@@ -3828,7 +4002,9 @@ function App() {
       }`}
     >
       <div>
-        <strong>{title}</strong>
+        <strong>
+          {title}
+        </strong>
 
         <small>
           {description}
@@ -3867,7 +4043,9 @@ function App() {
       </span>
 
       <span className="settings-action-content">
-        <strong>{title}</strong>
+        <strong>
+          {title}
+        </strong>
 
         <small>
           {description}
@@ -3892,7 +4070,9 @@ function App() {
       </div>
 
       <div>
-        <h3>{title}</h3>
+        <h3>
+          {title}
+        </h3>
 
         <p>
           {children}
@@ -3908,40 +4088,64 @@ function App() {
   const renderView = () => {
     switch (view) {
       case "categories":
-        return <CategoriesPage />;
+        return (
+          <CategoriesPage />
+        );
 
       case "category":
-        return <CategoryPage />;
+        return (
+          <CategoryPage />
+        );
 
       case "products":
-        return <ProductsPage />;
+        return (
+          <ProductsPage />
+        );
 
       case "offers":
-        return <OffersPage />;
+        return (
+          <OffersPage />
+        );
 
       case "search":
-        return <SearchPage />;
+        return (
+          <SearchPage />
+        );
 
       case "cart":
-        return <CartPage />;
+        return (
+          <CartPage />
+        );
 
       case "favorites":
-        return <FavoritesPage />;
+        return (
+          <FavoritesPage />
+        );
 
       case "notifications":
-        return <NotificationsPage />;
+        return (
+          <NotificationsPage />
+        );
 
       case "account":
-        return <AccountPage />;
+        return (
+          <AccountPage />
+        );
 
       case "orders":
-        return <OrdersPage />;
+        return (
+          <OrdersPage />
+        );
 
       case "messages":
-        return <MessagesPage />;
+        return (
+          <MessagesPage />
+        );
 
       case "settings":
-        return <SettingsPage />;
+        return (
+          <SettingsPage />
+        );
 
       case "notification-settings":
         return (
@@ -3949,7 +4153,9 @@ function App() {
         );
 
       case "privacy":
-        return <PrivacyPage />;
+        return (
+          <PrivacyPage />
+        );
 
       case "active-sessions":
         return (
@@ -3962,26 +4168,40 @@ function App() {
         );
 
       case "preferences":
-        return <PreferencesPage />;
+        return (
+          <PreferencesPage />
+        );
 
       case "terms":
-        return <TermsPage />;
+        return (
+          <TermsPage />
+        );
 
       case "about":
-        return <AboutPage />;
+        return (
+          <AboutPage />
+        );
 
       case "sell":
-        return <SellPage />;
+        return (
+          <SellPage />
+        );
 
       case "checkout":
-        return <CheckoutPage />;
+        return (
+          <CheckoutPage />
+        );
 
       case "menu":
-        return <MenuPage />;
+        return (
+          <MenuPage />
+        );
 
       case "home":
       default:
-        return <HomePage />;
+        return (
+          <HomePage />
+        );
     }
   };
 
@@ -3994,7 +4214,7 @@ function App() {
       <BottomNav />
 
       {/* ===================================================
-          LOGIN / REGISTRO / RECUPERACIÓN
+          AUTH
       =================================================== */}
 
       {showAuth && (
@@ -4033,7 +4253,8 @@ function App() {
 
             {/* LOGIN */}
 
-            {authMode === "login" && (
+            {authMode ===
+              "login" && (
               <>
                 <h2>
                   Bienvenido.
@@ -4044,7 +4265,9 @@ function App() {
                 </p>
 
                 <form
-                  onSubmit={handleAuth}
+                  onSubmit={
+                    handleAuth
+                  }
                 >
                   <input
                     type="email"
@@ -4062,7 +4285,9 @@ function App() {
                   <input
                     type="password"
                     placeholder="Contraseña"
-                    value={password}
+                    value={
+                      password
+                    }
                     onChange={(event) =>
                       setPassword(
                         event.target.value
@@ -4076,7 +4301,9 @@ function App() {
                   <button
                     className="auth-submit"
                     type="submit"
-                    disabled={loading}
+                    disabled={
+                      loading
+                    }
                   >
                     {loading
                       ? "Procesando..."
@@ -4101,7 +4328,6 @@ function App() {
                       "recover"
                     );
                     setMessage("");
-                    setLoading(false);
                   }}
                 >
                   ¿Olvidaste tu contraseña?
@@ -4125,7 +4351,8 @@ function App() {
 
             {/* REGISTRO */}
 
-            {authMode === "register" && (
+            {authMode ===
+              "register" && (
               <>
                 <h2>
                   Crea tu cuenta.
@@ -4136,7 +4363,9 @@ function App() {
                 </p>
 
                 <form
-                  onSubmit={handleAuth}
+                  onSubmit={
+                    handleAuth
+                  }
                 >
                   <input
                     type="text"
@@ -4167,7 +4396,9 @@ function App() {
                   <input
                     type="password"
                     placeholder="Contraseña"
-                    value={password}
+                    value={
+                      password
+                    }
                     onChange={(event) =>
                       setPassword(
                         event.target.value
@@ -4181,7 +4412,9 @@ function App() {
                   <button
                     className="auth-submit"
                     type="submit"
-                    disabled={loading}
+                    disabled={
+                      loading
+                    }
                   >
                     {loading
                       ? "Procesando..."
@@ -4216,7 +4449,8 @@ function App() {
 
             {/* RECUPERACIÓN */}
 
-            {authMode === "recover" && (
+            {authMode ===
+              "recover" && (
               <>
                 <h2>
                   Recupera tu contraseña.
@@ -4247,7 +4481,9 @@ function App() {
                   <button
                     className="auth-submit"
                     type="submit"
-                    disabled={loading}
+                    disabled={
+                      loading
+                    }
                   >
                     {loading
                       ? "Enviando..."
@@ -4293,12 +4529,16 @@ function App() {
                 </p>
 
                 <form
-                  onSubmit={handleAuth}
+                  onSubmit={
+                    handleAuth
+                  }
                 >
                   <input
                     type="password"
                     placeholder="Nueva contraseña"
-                    value={password}
+                    value={
+                      password
+                    }
                     onChange={(event) =>
                       setPassword(
                         event.target.value
@@ -4328,7 +4568,9 @@ function App() {
                   <button
                     className="auth-submit"
                     type="submit"
-                    disabled={loading}
+                    disabled={
+                      loading
+                    }
                   >
                     {loading
                       ? "Guardando..."
