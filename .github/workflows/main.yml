@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -17,10 +19,15 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js
+      - name: Configurar Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
+
+      - name: Verificar Node y npm
+        run: |
+          node --version
+          npm --version
 
       - name: Instalar dependencias
         run: npm install
@@ -33,7 +40,7 @@ jobs:
       - name: Construir SHORASHOPP
         run: npm run build
 
-      - name: Preparar GitHub Pages
+      - name: Preparar archivos para GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
@@ -42,15 +49,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    permissions:
-      pages: write
-      id-token: write
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Publicar en GitHub Pages
+      - name: Publicar SHORASHOPP
         id: deployment
         uses: actions/deploy-pages@v4
