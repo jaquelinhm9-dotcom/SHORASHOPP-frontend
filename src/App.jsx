@@ -292,14 +292,9 @@ function App() {
       news: true,
     });
 
-  const [country, setCountry] =
-    useState("México");
-
-  const [currency, setCurrency] =
-    useState("MXN");
-
-  const [language, setLanguage] =
-    useState("Español");
+  const [country, setCountry] = useState("México");
+  const [currency, setCurrency] = useState("MXN");
+  const [language, setLanguage] = useState("Español");
 
   /* =======================================================
      SESIÓN / SUPABASE AUTH
@@ -322,9 +317,7 @@ function App() {
         }
 
         if (mounted) {
-          setSession(
-            data?.session ?? null
-          );
+          setSession(data?.session ?? null);
         }
       } catch (error) {
         console.error(
@@ -349,15 +342,8 @@ function App() {
           return;
         }
 
-        setSession(
-          currentSession ?? null
-        );
+        setSession(currentSession ?? null);
 
-        /*
-         * Supabase emite PASSWORD_RECOVERY
-         * cuando el usuario llega a la app desde
-         * un enlace válido de recuperación.
-         */
         if (event === "PASSWORD_RECOVERY") {
           setAuthMode("updatePassword");
           setMessage("");
@@ -370,7 +356,6 @@ function App() {
 
     return () => {
       mounted = false;
-
       authListener?.subscription?.unsubscribe();
     };
   }, []);
@@ -383,6 +368,8 @@ function App() {
     setPreviousView(view);
     setView(newView);
 
+    setMessage("");
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -390,9 +377,8 @@ function App() {
   };
 
   const goBack = () => {
-    setView(
-      previousView || "home"
-    );
+    setView(previousView || "home");
+    setMessage("");
 
     window.scrollTo({
       top: 0,
@@ -404,6 +390,7 @@ function App() {
     setView("home");
     setSelectedCategory("Todas");
     setSearch("");
+    setMessage("");
 
     window.scrollTo({
       top: 0,
@@ -543,33 +530,22 @@ function App() {
     setMessage("");
 
     try {
-      const currentAuthMode =
-        authMode;
+      const currentAuthMode = authMode;
 
       const cleanEmail =
         email.trim().toLowerCase();
 
-      const currentPassword =
-        password;
+      const currentPassword = password;
 
-      if (
-        currentAuthMode ===
-        "updatePassword"
-      ) {
-        if (
-          currentPassword.length <
-          6
-        ) {
+      if (currentAuthMode === "updatePassword") {
+        if (currentPassword.length < 6) {
           setMessage(
             "La nueva contraseña debe tener al menos 6 caracteres."
           );
           return;
         }
 
-        if (
-          currentPassword !==
-          confirmPassword
-        ) {
+        if (currentPassword !== confirmPassword) {
           setMessage(
             "Las contraseñas no coinciden."
           );
@@ -577,12 +553,9 @@ function App() {
         }
 
         const { error } =
-          await supabase.auth.updateUser(
-            {
-              password:
-                currentPassword,
-            }
-          );
+          await supabase.auth.updateUser({
+            password: currentPassword,
+          });
 
         if (error) {
           console.error(
@@ -627,26 +600,15 @@ function App() {
         return;
       }
 
-      if (
-        currentPassword.length <
-        6
-      ) {
+      if (currentPassword.length < 6) {
         setMessage(
           "La contraseña debe tener al menos 6 caracteres."
         );
         return;
       }
 
-      /* ===================================================
-         REGISTRO
-      =================================================== */
-
-      if (
-        currentAuthMode ===
-        "register"
-      ) {
-        const cleanName =
-          name.trim();
+      if (currentAuthMode === "register") {
+        const cleanName = name.trim();
 
         if (!cleanName) {
           setMessage(
@@ -658,23 +620,17 @@ function App() {
         const {
           data,
           error,
-        } =
-          await supabase.auth.signUp(
-            {
-              email: cleanEmail,
-              password:
-                currentPassword,
-              options: {
-                emailRedirectTo:
-                  getAuthRedirectUrl(),
-
-                data: {
-                  full_name:
-                    cleanName,
-                },
-              },
-            }
-          );
+        } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: currentPassword,
+          options: {
+            emailRedirectTo:
+              getAuthRedirectUrl(),
+            data: {
+              full_name: cleanName,
+            },
+          },
+        });
 
         if (error) {
           console.error(
@@ -683,19 +639,14 @@ function App() {
           );
 
           setMessage(
-            getAuthErrorMessage(
-              error
-            )
+            getAuthErrorMessage(error)
           );
 
           return;
         }
 
         if (data?.session) {
-          setSession(
-            data.session
-          );
-
+          setSession(data.session);
           setShowAuth(false);
           setMessage("");
           setName("");
@@ -704,7 +655,6 @@ function App() {
           setConfirmPassword("");
 
           navigate("account");
-
           return;
         }
 
@@ -726,21 +676,13 @@ function App() {
         return;
       }
 
-      /* ===================================================
-         INICIO DE SESIÓN
-      =================================================== */
-
       const {
         data,
         error,
-      } =
-        await supabase.auth.signInWithPassword(
-          {
-            email: cleanEmail,
-            password:
-              currentPassword,
-          }
-        );
+      } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: currentPassword,
+      });
 
       if (error) {
         console.error(
@@ -749,9 +691,7 @@ function App() {
         );
 
         setMessage(
-          getAuthErrorMessage(
-            error
-          )
+          getAuthErrorMessage(error)
         );
 
         return;
@@ -765,9 +705,7 @@ function App() {
         return;
       }
 
-      setSession(
-        data.session
-      );
+      setSession(data.session);
 
       setShowAuth(false);
       setMessage("");
@@ -777,7 +715,6 @@ function App() {
       setConfirmPassword("");
 
       navigate("account");
-
     } catch (error) {
       console.error(
         "SHORASHOPP authentication error:",
@@ -796,9 +733,7 @@ function App() {
      RECUPERAR CONTRASEÑA
   ======================================================= */
 
-  const handlePasswordRecovery = async (
-    event
-  ) => {
+  const handlePasswordRecovery = async (event) => {
     event.preventDefault();
 
     if (loading) {
@@ -819,8 +754,7 @@ function App() {
         return;
       }
 
-      const redirectTo =
-        getAuthRedirectUrl();
+      const redirectTo = getAuthRedirectUrl();
 
       const {
         error,
@@ -839,9 +773,7 @@ function App() {
         );
 
         setMessage(
-          getAuthErrorMessage(
-            error
-          )
+          getAuthErrorMessage(error)
         );
 
         return;
@@ -850,7 +782,6 @@ function App() {
       setMessage(
         "Te enviamos un correo para recuperar tu contraseña. Abre el enlace y podrás crear una nueva contraseña."
       );
-
     } catch (error) {
       console.error(
         "SHORASHOPP recovery error:",
@@ -893,6 +824,75 @@ function App() {
   };
 
   /* =======================================================
+     INFORMACIÓN DEL DISPOSITIVO
+  ======================================================= */
+
+  const deviceInfo = useMemo(() => {
+    if (typeof navigator === "undefined") {
+      return {
+        browser: "Navegador actual",
+        platform: "Dispositivo actual",
+      };
+    }
+
+    const userAgent =
+      navigator.userAgent || "";
+
+    let browser = "Navegador web";
+
+    if (
+      userAgent.includes("Edg/")
+    ) {
+      browser = "Microsoft Edge";
+    } else if (
+      userAgent.includes("Chrome/")
+    ) {
+      browser = "Google Chrome";
+    } else if (
+      userAgent.includes("Firefox/")
+    ) {
+      browser = "Mozilla Firefox";
+    } else if (
+      userAgent.includes("Safari/")
+    ) {
+      browser = "Safari";
+    }
+
+    let platform =
+      navigator.platform ||
+      "Dispositivo actual";
+
+    if (
+      /Android/i.test(userAgent)
+    ) {
+      platform = "Android";
+    } else if (
+      /iPhone|iPad|iPod/i.test(
+        userAgent
+      )
+    ) {
+      platform = "iPhone / iPad";
+    } else if (
+      /Windows/i.test(userAgent)
+    ) {
+      platform = "Windows";
+    } else if (
+      /Mac/i.test(userAgent)
+    ) {
+      platform = "macOS";
+    } else if (
+      /Linux/i.test(userAgent)
+    ) {
+      platform = "Linux";
+    }
+
+    return {
+      browser,
+      platform,
+    };
+  }, []);
+
+  /* =======================================================
      FAVORITOS
   ======================================================= */
 
@@ -900,9 +900,7 @@ function App() {
     productName
   ) => {
     setFavorites((current) =>
-      current.includes(
-        productName
-      )
+      current.includes(productName)
         ? current.filter(
             (item) =>
               item !== productName
@@ -1007,9 +1005,7 @@ function App() {
 
   const filteredProducts =
     useMemo(() => {
-      let result = [
-        ...products,
-      ];
+      let result = [...products];
 
       if (
         selectedCategory !==
@@ -1087,9 +1083,7 @@ function App() {
           type="button"
           className="header-icon-button"
           onClick={() =>
-            navigate(
-              "notifications"
-            )
+            navigate("notifications")
           }
         >
           <Icon
@@ -1274,9 +1268,7 @@ function App() {
       </div>
 
       <div className="product-info">
-        <h3>
-          {product.name}
-        </h3>
+        <h3>{product.name}</h3>
 
         <div className="price-row">
           <strong>
@@ -1337,13 +1329,9 @@ function App() {
       </div>
 
       <div className="quick-content">
-        <strong>
-          {title}
-        </strong>
+        <strong>{title}</strong>
 
-        <span>
-          {text}
-        </span>
+        <span>{text}</span>
       </div>
 
       <b className="round-arrow">
@@ -1669,9 +1657,7 @@ function App() {
         </div>
 
         <b>
-          {
-            filteredProducts.length
-          }{" "}
+          {filteredProducts.length}{" "}
           productos
         </b>
       </div>
@@ -1821,9 +1807,7 @@ function App() {
         </div>
 
         <b>
-          {
-            filteredProducts.length
-          }
+          {filteredProducts.length}
         </b>
       </div>
 
@@ -2487,8 +2471,8 @@ function App() {
           title="Sesiones activas"
           description="Revisa dónde tienes abierta tu cuenta"
           onClick={() =>
-            setMessage(
-              "La administración de sesiones se conectará aquí."
+            navigate(
+              "active-sessions"
             )
           }
         />
@@ -2503,8 +2487,8 @@ function App() {
           title="Verificación de seguridad"
           description="Revisa las medidas de protección de tu cuenta"
           onClick={() =>
-            setMessage(
-              "La verificación de seguridad se conectará aquí."
+            navigate(
+              "security-verification"
             )
           }
           last
@@ -2518,6 +2502,385 @@ function App() {
       )}
     </main>
   );
+
+  /* =======================================================
+     SESIONES ACTIVAS
+  ======================================================= */
+
+  const ActiveSessionsPage = () => {
+    if (!session) {
+      return (
+        <main className="page-content">
+          <PageHeader
+            title="Sesiones activas"
+          />
+
+          <EmptyState
+            icon="🔐"
+            title="Inicia sesión"
+            text="Necesitas iniciar sesión para consultar la seguridad de tu cuenta."
+            action="Iniciar sesión"
+            onAction={() =>
+              openAuth("login")
+            }
+          />
+        </main>
+      );
+    }
+
+    return (
+      <main className="page-content">
+        <PageHeader
+          title="Sesiones activas"
+        />
+
+        <div className="settings-page-intro">
+          <div className="settings-large-icon">
+            <Icon
+              name="devices"
+              size={33}
+            />
+          </div>
+
+          <div>
+            <strong>
+              Revisa dónde tienes abierta tu cuenta
+            </strong>
+
+            <small>
+              Aquí se muestra tu sesión actual. La administración real de otras sesiones se conectará con Supabase.
+            </small>
+          </div>
+        </div>
+
+        <div className="session-card">
+          <div className="session-card-header">
+            <div className="session-device-icon">
+              <Icon
+                name="devices"
+                size={27}
+              />
+            </div>
+
+            <div>
+              <strong>
+                {deviceInfo.platform}
+              </strong>
+
+              <small>
+                {deviceInfo.browser}
+              </small>
+            </div>
+
+            <span className="session-current-badge">
+              Este dispositivo
+            </span>
+          </div>
+
+          <div className="session-details">
+            <div className="session-detail-row">
+              <span>Cuenta</span>
+
+              <strong>
+                {session.user.email}
+              </strong>
+            </div>
+
+            <div className="session-detail-row">
+              <span>Dispositivo</span>
+
+              <strong>
+                {deviceInfo.platform}
+              </strong>
+            </div>
+
+            <div className="session-detail-row">
+              <span>Navegador</span>
+
+              <strong>
+                {deviceInfo.browser}
+              </strong>
+            </div>
+
+            <div className="session-detail-row last">
+              <span>Estado</span>
+
+              <strong className="status-online">
+                Sesión activa
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="security-action-card">
+          <div className="security-action-icon">
+            <Icon
+              name="shield"
+              size={25}
+            />
+          </div>
+
+          <div className="security-action-content">
+            <strong>
+              Cerrar sesión en otros dispositivos
+            </strong>
+
+            <small>
+              Esta función queda preparada para conectarse con la administración real de sesiones de Supabase.
+            </small>
+
+            <button
+              type="button"
+              className="security-secondary-button"
+              onClick={() =>
+                setMessage(
+                  "La administración de sesiones se conectará aquí."
+                )
+              }
+            >
+              Cerrar sesiones
+            </button>
+          </div>
+        </div>
+
+        {message && (
+          <div className="settings-feedback">
+            {message}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="security-back-button"
+          onClick={() =>
+            navigate("privacy")
+          }
+        >
+          Volver a Privacidad y seguridad
+        </button>
+      </main>
+    );
+  };
+
+  /* =======================================================
+     VERIFICACIÓN DE SEGURIDAD
+  ======================================================= */
+
+  const SecurityVerificationPage = () => {
+    if (!session) {
+      return (
+        <main className="page-content">
+          <PageHeader
+            title="Verificación de seguridad"
+          />
+
+          <EmptyState
+            icon="🛡️"
+            title="Inicia sesión"
+            text="Necesitas iniciar sesión para revisar la seguridad de tu cuenta."
+            action="Iniciar sesión"
+            onAction={() =>
+              openAuth("login")
+            }
+          />
+        </main>
+      );
+    }
+
+    const emailConfirmed = Boolean(
+      session.user.email_confirmed_at
+    );
+
+    return (
+      <main className="page-content">
+        <PageHeader
+          title="Verificación de seguridad"
+        />
+
+        <div className="settings-page-intro">
+          <div className="settings-large-icon">
+            <Icon
+              name="shield"
+              size={33}
+            />
+          </div>
+
+          <div>
+            <strong>
+              Revisa las medidas de protección de tu cuenta
+            </strong>
+
+            <small>
+              Mantén tus datos y acceso protegidos.
+            </small>
+          </div>
+        </div>
+
+        <div className="security-check-list">
+          <div className="security-check-item">
+            <div className="security-check-icon">
+              <Icon
+                name="message"
+                size={23}
+              />
+            </div>
+
+            <div className="security-check-content">
+              <strong>
+                Correo electrónico
+              </strong>
+
+              <small>
+                {session.user.email}
+              </small>
+            </div>
+
+            <span
+              className={`security-status ${
+                emailConfirmed
+                  ? "success"
+                  : "warning"
+              }`}
+            >
+              {emailConfirmed
+                ? "Confirmado"
+                : "Pendiente"}
+            </span>
+          </div>
+
+          <div className="security-check-item">
+            <div className="security-check-icon">
+              <Icon
+                name="key"
+                size={23}
+              />
+            </div>
+
+            <div className="security-check-content">
+              <strong>
+                Contraseña
+              </strong>
+
+              <small>
+                Tu cuenta utiliza una contraseña de acceso.
+              </small>
+            </div>
+
+            <span className="security-status success">
+              Configurada
+            </span>
+          </div>
+
+          <div className="security-check-item">
+            <div className="security-check-icon">
+              <Icon
+                name="shield"
+                size={23}
+              />
+            </div>
+
+            <div className="security-check-content">
+              <strong>
+                Protección de la cuenta
+              </strong>
+
+              <small>
+                Tu sesión está protegida mediante Supabase Auth.
+              </small>
+            </div>
+
+            <span className="security-status success">
+              Activa
+            </span>
+          </div>
+
+          <div className="security-check-item last">
+            <div className="security-check-icon">
+              <Icon
+                name="lock"
+                size={23}
+              />
+            </div>
+
+            <div className="security-check-content">
+              <strong>
+                Verificación en dos pasos
+              </strong>
+
+              <small>
+                Área preparada para integrar MFA/2FA posteriormente.
+              </small>
+            </div>
+
+            <span className="security-status neutral">
+              Preparada
+            </span>
+          </div>
+        </div>
+
+        <div className="security-recommendations">
+          <div className="security-recommendation-header">
+            <Icon
+              name="info"
+              size={24}
+            />
+
+            <strong>
+              Recomendaciones de seguridad
+            </strong>
+          </div>
+
+          <ul>
+            <li>
+              Utiliza una contraseña única y difícil de adivinar.
+            </li>
+
+            <li>
+              No compartas tu contraseña con otras personas.
+            </li>
+
+            <li>
+              Revisa tus sesiones activas periódicamente.
+            </li>
+
+            <li>
+              Considera activar MFA/2FA cuando esté disponible.
+            </li>
+          </ul>
+        </div>
+
+        <button
+          type="button"
+          className="panel-primary-button"
+          onClick={() => {
+            setAuthMode(
+              "updatePassword"
+            );
+            setPassword("");
+            setConfirmPassword("");
+            setMessage("");
+            setShowAuth(true);
+          }}
+        >
+          <Icon
+            name="key"
+            size={20}
+          />
+          Cambiar contraseña
+        </button>
+
+        <button
+          type="button"
+          className="security-back-button"
+          onClick={() =>
+            navigate("privacy")
+          }
+        >
+          Volver a Privacidad y seguridad
+        </button>
+      </main>
+    );
+  };
 
   /* =======================================================
      PREFERENCIAS
@@ -2572,12 +2935,15 @@ function App() {
                 <option>
                   México
                 </option>
+
                 <option>
                   Estados Unidos
                 </option>
+
                 <option>
                   Canadá
                 </option>
+
                 <option>
                   España
                 </option>
@@ -2646,6 +3012,7 @@ function App() {
                 <option>
                   Español
                 </option>
+
                 <option>
                   English
                 </option>
@@ -3416,9 +3783,7 @@ function App() {
       </span>
 
       <div>
-        <strong>
-          {title}
-        </strong>
+        <strong>{title}</strong>
 
         <small>
           {text}
@@ -3443,9 +3808,7 @@ function App() {
       </span>
 
       <span className="settings-option-content">
-        <strong>
-          {title}
-        </strong>
+        <strong>{title}</strong>
 
         <small>
           {description}
@@ -3472,9 +3835,7 @@ function App() {
       }`}
     >
       <div>
-        <strong>
-          {title}
-        </strong>
+        <strong>{title}</strong>
 
         <small>
           {description}
@@ -3513,9 +3874,7 @@ function App() {
       </span>
 
       <span className="settings-action-content">
-        <strong>
-          {title}
-        </strong>
+        <strong>{title}</strong>
 
         <small>
           {description}
@@ -3540,9 +3899,7 @@ function App() {
       </div>
 
       <div>
-        <h3>
-          {title}
-        </h3>
+        <h3>{title}</h3>
 
         <p>
           {children}
@@ -3602,6 +3959,16 @@ function App() {
 
       case "privacy":
         return <PrivacyPage />;
+
+      case "active-sessions":
+        return (
+          <ActiveSessionsPage />
+        );
+
+      case "security-verification":
+        return (
+          <SecurityVerificationPage />
+        );
 
       case "preferences":
         return <PreferencesPage />;
