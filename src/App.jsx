@@ -5,12 +5,12 @@ import { supabase } from "./lib/supabase";
 import "./App.css";
 
 const categories = [
-  { icon: "👕", name: "Ropa y Moda" },
-  { icon: "📱", name: "Tecnología" },
-  { icon: "🏠", name: "Hogar y Vida" },
-  { icon: "👩", name: "Belleza y Salud" },
-  { icon: "🎧", name: "Accesorios" },
-  { icon: "🎮", name: "Juguetes y Más" },
+  ["👕", "Ropa y Moda"],
+  ["📱", "Tecnología"],
+  ["🏠", "Hogar y Vida"],
+  ["💄", "Belleza y Salud"],
+  ["🎧", "Accesorios"],
+  ["🎮", "Juguetes y Más"],
 ];
 
 const products = [
@@ -19,9 +19,9 @@ const products = [
     price: "$399.00",
     oldPrice: "$499.00",
     rating: "4.8",
-    reviews: "120 ventas",
+    sales: "120 ventas",
     discount: "-20%",
-    type: "earbuds",
+    icon: "🎧",
     category: "Tecnología",
   },
   {
@@ -29,9 +29,9 @@ const products = [
     price: "$599.00",
     oldPrice: "$799.00",
     rating: "4.9",
-    reviews: "85 ventas",
+    sales: "85 ventas",
     discount: "Nuevo",
-    type: "bag",
+    icon: "👜",
     category: "Ropa y Moda",
   },
   {
@@ -39,9 +39,9 @@ const products = [
     price: "$1,699.00",
     oldPrice: "$1,999.00",
     rating: "4.7",
-    reviews: "64 ventas",
+    sales: "64 ventas",
     discount: "-15%",
-    type: "watch",
+    icon: "⌚",
     category: "Tecnología",
   },
   {
@@ -49,199 +49,156 @@ const products = [
     price: "$899.00",
     oldPrice: "",
     rating: "4.6",
-    reviews: "45 ventas",
+    sales: "45 ventas",
     discount: "Nuevo",
-    type: "blender",
+    icon: "🥤",
     category: "Hogar y Vida",
   },
 ];
 
-const VALID_PAGES = [
+const pages = [
   "home",
   "account",
-  "privacy",
-  "sessions",
-  "security",
+  "profile",
+  "edit-profile",
   "categories",
   "favorites",
   "offers",
   "notifications",
-
-  // Notificaciones
   "notification-offers",
   "notification-orders",
   "notification-messages",
-
-  // Mensajes
-  "messages",
-  "messages-conversations",
-  "messages-sellers",
-  "messages-support",
-
-  // Pedidos
   "orders",
   "orders-list",
   "orders-tracking",
   "orders-confirmations",
+  "order-detail",
+  "messages",
+  "messages-conversations",
+  "messages-sellers",
+  "messages-support",
+  "conversation",
+  "cart",
+  "checkout",
+  "payment",
+  "addresses",
+  "add-address",
+  "payment-methods",
+  "add-payment-method",
+  "coupons",
+  "wallet",
+  "returns",
+  "return-detail",
+  "help",
+  "support",
+  "referrals",
+  "privacy",
+  "sessions",
+  "security",
+  "settings",
+  "seller",
+  "seller-dashboard",
+  "seller-products",
+  "seller-add-product",
+  "seller-sales",
+  "seller-reviews",
+  "seller-commissions",
 ];
 
-function getPageFromUrl() {
+function getPage() {
   const hash = window.location.hash.replace("#", "");
-
-  if (VALID_PAGES.includes(hash)) {
-    return hash;
-  }
-
-  return "home";
+  return pages.includes(hash) ? hash : "home";
 }
 
 function App() {
   const [session, setSession] = useState(null);
-
-  const [showAuth, setShowAuth] = useState(false);
+  const [currentPage, setCurrentPage] = useState(getPage());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
   const [favorites, setFavorites] = useState([]);
-  const [actionMessage, setActionMessage] = useState("");
-
-  const [currentPage, setCurrentPage] = useState(
-    getPageFromUrl()
-  );
-
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
-    let mounted = true;
-
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (mounted) {
-        setSession(data?.session ?? null);
-      }
-    };
-
-    getSession();
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data?.session || null);
+    });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
-        setSession(currentSession);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    const initialPage = getPageFromUrl();
-
-    window.history.replaceState(
-      { shorashoppPage: initialPage },
-      "",
-      initialPage === "home"
-        ? window.location.pathname
-        : `#${initialPage}`
-    );
-
-    const handlePopState = () => {
-      const page = getPageFromUrl();
-
-      setCurrentPage(page);
+    const onPopState = () => {
+      setCurrentPage(getPage());
       setMenuOpen(false);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "auto",
-      });
+      window.scrollTo({ top: 0, behavior: "auto" });
     };
 
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", onPopState);
 
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
+    return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const openPage = (page) => {
-    if (!VALID_PAGES.includes(page)) {
-      return;
-    }
+  const go = (page) => {
+    if (!pages.includes(page)) return;
 
     if (page === currentPage) {
       setMenuOpen(false);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-
       return;
     }
 
-    window.history.pushState(
-      { shorashoppPage: page },
-      "",
-      page === "home"
-        ? window.location.pathname
-        : `#${page}`
-    );
-
+    window.history.pushState({}, "", page === "home" ? window.location.pathname : `#${page}`);
     setCurrentPage(page);
     setMenuOpen(false);
-    setSelectedCategory("");
-
-    if (page !== "favorites") {
-      setSearchTerm("");
-    }
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const goBack = () => {
+  const back = () => {
     if (window.history.length > 1) {
       window.history.back();
-      return;
+    } else {
+      go("home");
     }
-
-    openPage("home");
   };
 
-  const openAuth = (mode = "login") => {
+  const notify = (text) => {
+    setToast(text);
+    setTimeout(() => setToast(""), 2200);
+  };
+
+  const openAuth = (mode) => {
     setAuthMode(mode);
-    setMessage("");
-    setShowAuth(true);
+    setAuthMessage("");
+    setAuthOpen(true);
   };
 
   const closeAuth = () => {
-    setShowAuth(false);
-    setMessage("");
-    setName("");
+    setAuthOpen(false);
+    setAuthMessage("");
     setEmail("");
     setPassword("");
-    setLoading(false);
+    setName("");
   };
 
-  const handleAuth = async (event) => {
-    event.preventDefault();
-
+  const authenticate = async (e) => {
+    e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setAuthMessage("");
 
     try {
       if (authMode === "register") {
@@ -249,1592 +206,840 @@ function App() {
           email: email.trim(),
           password,
           options: {
-            data: {
-              full_name: name.trim(),
-            },
+            data: { full_name: name.trim() },
           },
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         if (data?.session) {
           closeAuth();
-          openPage("account");
+          go("account");
         } else {
-          setMessage(
-            "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
-          );
+          setAuthMessage("Cuenta creada. Revisa tu correo para confirmar.");
         }
       } else {
-        const { error } =
-          await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-          });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         closeAuth();
-        openPage("account");
+        go("account");
       }
     } catch (error) {
-      setMessage(error?.message || "Ocurrió un error.");
+      setAuthMessage(error?.message || "Ocurrió un error.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
+  const logout = async () => {
     await supabase.auth.signOut();
-    setSession(null);
-    openPage("home");
+    go("home");
   };
 
-  const showActionMessage = (text) => {
-    setActionMessage(text);
-
-    window.setTimeout(() => {
-      setActionMessage("");
-    }, 2000);
-  };
-
-  const goHome = () => {
-    setSelectedCategory("");
-    setSearchTerm("");
-
-    if (currentPage === "home") {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-
-      return;
-    }
-
-    openPage("home");
-  };
-
-  const handleAccountAccess = () => {
-    if (session) {
-      openPage("account");
-    } else {
-      openAuth("login");
-    }
-  };
-
-  const handleCategoryClick = (categoryName) => {
-    setSelectedCategory(categoryName);
-    setSearchTerm("");
-    openPage("categories");
-  };
-
-  const handleShowAllCategories = () => {
-    setSelectedCategory("");
-    setSearchTerm("");
-    openPage("categories");
-  };
-
-  const handleSearch = () => {
-    const cleanSearch = searchTerm.trim();
-
-    if (!cleanSearch) {
-      setSelectedCategory("");
-      return;
-    }
-
-    setSelectedCategory("");
-
-    if (currentPage !== "home") {
-      openPage("home");
-    }
-
-    window.setTimeout(() => {
-      const element = document.querySelector(".products-section");
-
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
-    }, 50);
-  };
-
-  const handleSearchKeyDown = (event) => {
-    if (event.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  const toggleFavorite = (productName) => {
-    setFavorites((currentFavorites) => {
-      if (currentFavorites.includes(productName)) {
-        showActionMessage(
-          "Producto eliminado de favoritos."
-        );
-
-        return currentFavorites.filter(
-          (name) => name !== productName
-        );
+  const toggleFavorite = (name) => {
+    setFavorites((old) => {
+      if (old.includes(name)) {
+        notify("Eliminado de favoritos.");
+        return old.filter((x) => x !== name);
       }
 
-      showActionMessage(
-        "Producto agregado a favoritos."
-      );
-
-      return [...currentFavorites, productName];
+      notify("Agregado a favoritos.");
+      return [...old, name];
     });
   };
 
-  const handleProductClick = (product) => {
-    showActionMessage(
-      `Seleccionaste: ${product.name}`
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory = !category || p.category === category;
+    const q = search.trim().toLowerCase();
+
+    return (
+      matchesCategory &&
+      (!q || p.name.toLowerCase().includes(q))
     );
-  };
-
-  const handleOffers = () => {
-    setSelectedCategory("");
-    setSearchTerm("");
-    openPage("offers");
-  };
-
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      !selectedCategory ||
-      product.category === selectedCategory;
-
-    const search = searchTerm.trim().toLowerCase();
-
-    const matchesSearch =
-      !search ||
-      product.name.toLowerCase().includes(search);
-
-    return matchesCategory && matchesSearch;
   });
 
-  const favoriteProducts = products.filter((product) =>
-    favorites.includes(product.name)
-  );
-
-  const accountPageButtonStyle = {
+  const button = {
     width: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    padding: "16px",
-    border: "1px solid #ece7f3",
-    borderRadius: 16,
-    background: "white",
-    color: "#24152f",
-    fontWeight: 800,
-    textAlign: "left",
-    cursor: "pointer",
-    boxShadow: "0 5px 18px rgba(50,16,74,.05)",
-  };
-
-  const securityPageButtonStyle = {
-    width: "100%",
-    display: "grid",
-    gap: 6,
-    padding: "18px",
+    padding: 17,
     border: "1px solid #ece7f3",
     borderRadius: 17,
-    background: "white",
+    background: "#fff",
     color: "#24152f",
     textAlign: "left",
     cursor: "pointer",
     boxShadow: "0 5px 18px rgba(50,16,74,.05)",
   };
 
-  const infoCardStyle = {
-    background: "white",
+  const card = {
+    background: "#fff",
     border: "1px solid #ece7f3",
     borderRadius: 18,
-    padding: "22px",
+    padding: 20,
     boxShadow: "0 5px 18px rgba(50,16,74,.05)",
   };
 
-  const menuButtonStyle = {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    gap: 14,
-    padding: "14px 12px",
-    border: 0,
-    borderRadius: 13,
-    background: "white",
-    color: "#24152f",
-    fontSize: 16,
-    fontWeight: 700,
-    textAlign: "left",
-    cursor: "pointer",
+  const PageHeader = ({ icon, title, text }) => (
+    <div
+      style={{
+        background: "linear-gradient(135deg,#ed174d,#7020d0)",
+        color: "#fff",
+        borderRadius: 22,
+        padding: 24,
+        marginBottom: 18,
+      }}
+    >
+      <div style={{ fontSize: 36 }}>{icon}</div>
+      <h1 style={{ margin: "8px 0 5px" }}>{title}</h1>
+      <p style={{ margin: 0, opacity: 0.92 }}>{text}</p>
+    </div>
+  );
+
+  const Option = ({ icon, title, text, page }) => (
+    <button type="button" onClick={() => go(page)} style={button}>
+      <strong style={{ display: "block", fontSize: 16 }}>
+        {icon} {title}
+      </strong>
+      <span style={{ display: "block", marginTop: 7, color: "#666" }}>
+        {text} ›
+      </span>
+    </button>
+  );
+
+  const Info = ({ icon, title, text }) => (
+    <div style={card}>
+      <div style={{ fontSize: 30 }}>{icon}</div>
+      <strong>{title}</strong>
+      <p style={{ margin: "7px 0 0", color: "#666", lineHeight: 1.6 }}>
+        {text}
+      </p>
+    </div>
+  );
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case "account":
+        return (
+          <>
+            <PageHeader
+              icon="👤"
+              title="Mi cuenta"
+              text="Gestiona tu perfil, pedidos y configuración."
+            />
+            <div style={{ display: "grid", gap: 12 }}>
+              <Option icon="👤" title="Perfil" text="Consulta tu información personal." page="profile" />
+              <Option icon="📦" title="Mis pedidos" text="Consulta tus compras." page="orders" />
+              <Option icon="📍" title="Direcciones" text="Administra tus direcciones." page="addresses" />
+              <Option icon="💳" title="Métodos de pago" text="Administra tus formas de pago." page="payment-methods" />
+              <Option icon="🎟️" title="Cupones" text="Consulta tus cupones y descuentos." page="coupons" />
+              <Option icon="💰" title="Monedero" text="Consulta tu saldo y movimientos." page="wallet" />
+              <Option icon="🔐" title="Privacidad y seguridad" text="Protege tu cuenta." page="privacy" />
+              <Option icon="⚙️" title="Configuración" text="Configura tu experiencia." page="settings" />
+              <button
+                type="button"
+                onClick={logout}
+                style={{ ...button, color: "#d41452" }}
+              >
+                🚪 Cerrar sesión
+              </button>
+            </div>
+          </>
+        );
+
+      case "profile":
+        return (
+          <>
+            <PageHeader icon="👤" title="Perfil" text="Tu información personal." />
+            <Info icon="👤" title={session?.user?.user_metadata?.full_name || "Mi perfil"} text={session?.user?.email || "Usuario de SHORASHOPP"} />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="✏️" title="Editar perfil" text="Modifica tus datos personales." page="edit-profile" />
+            </div>
+          </>
+        );
+
+      case "edit-profile":
+        return (
+          <>
+            <PageHeader icon="✏️" title="Editar perfil" text="Actualiza tu información." />
+            <Info icon="📝" title="Datos personales" text="Aquí quedará la edición de nombre, fotografía y demás información de tu perfil." />
+          </>
+        );
+
+      case "categories":
+        return (
+          <>
+            <PageHeader icon="▦" title="Categorías" text="Explora productos por categoría." />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 12 }}>
+              {categories.map(([icon, name]) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => {
+                    setCategory(name);
+                    go("home");
+                  }}
+                  style={{ ...button, textAlign: "center" }}
+                >
+                  <div style={{ fontSize: 34 }}>{icon}</div>
+                  <strong>{name}</strong>
+                </button>
+              ))}
+            </div>
+          </>
+        );
+
+      case "favorites":
+        return (
+          <>
+            <PageHeader icon="♡" title="Favoritos" text="Tus productos guardados." />
+            {favorites.length === 0 ? (
+              <Info icon="♡" title="No tienes favoritos" text="Toca el corazón de cualquier producto para guardarlo aquí." />
+            ) : (
+              <ProductGrid />
+            )}
+          </>
+        );
+
+      case "offers":
+        return (
+          <>
+            <PageHeader icon="🏷️" title="Ofertas exclusivas" text="Descuentos especiales de SHORASHOPP." />
+            <ProductGrid />
+          </>
+        );
+
+      case "notifications":
+        return (
+          <>
+            <PageHeader icon="🔔" title="Notificaciones" text="Novedades y avisos de SHORASHOPP." />
+            <div style={{ display: "grid", gap: 12 }}>
+              <Option icon="🔥" title="Nuevas ofertas disponibles" text="Revisa promociones y descuentos." page="notification-offers" />
+              <Option icon="📦" title="Tus pedidos" text="Consulta actualizaciones de tus compras." page="notification-orders" />
+              <Option icon="💬" title="Mensajes" text="Consulta mensajes de vendedores y soporte." page="notification-messages" />
+            </div>
+          </>
+        );
+
+      case "notification-offers":
+        return (
+          <>
+            <PageHeader icon="🔥" title="Nuevas ofertas" text="Promociones y descuentos disponibles." />
+            <ProductGrid />
+          </>
+        );
+
+      case "notification-orders":
+        return (
+          <>
+            <PageHeader icon="📦" title="Tus pedidos" text="Actualizaciones de tus compras." />
+            <div style={{ display: "grid", gap: 12 }}>
+              <Option icon="📦" title="Tus pedidos" text="Consulta tus compras." page="orders-list" />
+              <Option icon="🚚" title="Seguimiento" text="Consulta el avance de tus entregas." page="orders-tracking" />
+              <Option icon="✅" title="Confirmaciones" text="Consulta tus confirmaciones." page="orders-confirmations" />
+            </div>
+          </>
+        );
+
+      case "notification-messages":
+        return <MessagesPage />;
+
+      case "messages":
+        return <MessagesPage />;
+
+      case "messages-conversations":
+        return (
+          <>
+            <PageHeader icon="💬" title="Conversaciones" text="Tus conversaciones recientes." />
+            <Info icon="💬" title="Conversaciones recientes" text="Aquí aparecerán tus conversaciones conforme comiences a comunicarte dentro de SHORASHOPP." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💬" title="Abrir conversaciones" text="Consulta tus conversaciones." page="conversation" />
+            </div>
+          </>
+        );
+
+      case "messages-sellers":
+        return (
+          <>
+            <PageHeader icon="🏪" title="Vendedores" text="Comunicación con vendedores." />
+            <Info icon="🏪" title="Mis vendedores" text="Los vendedores con los que tengas conversaciones aparecerán aquí." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💬" title="Conversar con un vendedor" text="Consulta tus conversaciones." page="conversation" />
+            </div>
+          </>
+        );
+
+      case "messages-support":
+        return (
+          <>
+            <PageHeader icon="🛟" title="Soporte SHORASHOPP" text="Estamos aquí para ayudarte." />
+            <Info icon="🛟" title="Atención al cliente" text="Aquí podrás comunicarte con el equipo de soporte." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💬" title="Abrir soporte" text="Inicia una conversación con soporte." page="support" />
+            </div>
+          </>
+        );
+
+      case "conversation":
+        return (
+          <>
+            <PageHeader icon="💬" title="Conversación" text="Tu conversación dentro de SHORASHOPP." />
+            <Info icon="💬" title="Sin mensajes todavía" text="Esta pantalla queda preparada para conectar las conversaciones reales posteriormente." />
+          </>
+        );
+
+      case "orders":
+        return <OrdersPage />;
+
+      case "orders-list":
+        return (
+          <>
+            <PageHeader icon="📦" title="Tus pedidos" text="Tus compras y detalles." />
+            <Info icon="📦" title="Pedidos realizados" text="Tus pedidos aparecerán aquí después de realizar una compra." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="📋" title="Detalle de pedido" text="Consulta la información de un pedido." page="order-detail" />
+            </div>
+          </>
+        );
+
+      case "orders-tracking":
+        return (
+          <>
+            <PageHeader icon="🚚" title="Seguimiento" text="Consulta el avance de tus entregas." />
+            <Info icon="📍" title="Ubicación del pedido" text="El seguimiento de tus envíos aparecerá aquí cuando exista una compra activa." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="📦" title="Ver pedido" text="Consulta los detalles del pedido." page="order-detail" />
+            </div>
+          </>
+        );
+
+      case "orders-confirmations":
+        return (
+          <>
+            <PageHeader icon="✅" title="Confirmaciones" text="Confirmaciones de tus compras." />
+            <Info icon="✅" title="Compra confirmada" text="Las confirmaciones de tus compras aparecerán aquí." />
+            <Info icon="💳" title="Pago confirmado" text="Aquí podrán mostrarse las confirmaciones relacionadas con tus pagos." />
+            <Info icon="📦" title="Pedido recibido" text="Las confirmaciones de recepción podrán aparecer aquí." />
+          </>
+        );
+
+      case "order-detail":
+        return (
+          <>
+            <PageHeader icon="📋" title="Detalle del pedido" text="Información completa de tu pedido." />
+            <Info icon="📦" title="Productos" text="Aquí se mostrarán los productos incluidos en el pedido." />
+            <Info icon="💳" title="Pago" text="Aquí aparecerá la información correspondiente al pago." />
+            <Info icon="🚚" title="Entrega" text="Aquí aparecerá la información de envío y seguimiento." />
+          </>
+        );
+
+      case "cart":
+        return (
+          <>
+            <PageHeader icon="🛒" title="Carrito" text="Productos que estás por comprar." />
+            <Info icon="🛒" title="Tu carrito está vacío" text="Los productos que agregues aparecerán aquí." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💳" title="Continuar al pago" text="Pasar al proceso de compra." page="checkout" />
+            </div>
+          </>
+        );
+
+      case "checkout":
+        return (
+          <>
+            <PageHeader icon="🧾" title="Finalizar compra" text="Revisa tu compra antes de pagar." />
+            <Option icon="📍" title="Dirección" text="Selecciona dónde recibir tu pedido." page="addresses" />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💳" title="Método de pago" text="Selecciona cómo pagar." page="payment" />
+            </div>
+          </>
+        );
+
+      case "payment":
+        return (
+          <>
+            <PageHeader icon="💳" title="Pago" text="Selecciona tu método de pago." />
+            <Option icon="💳" title="Métodos de pago" text="Administra tus tarjetas y métodos." page="payment-methods" />
+            <div style={{ marginTop: 12 }}>
+              <Info icon="🔒" title="Pago seguro" text="La información de pago se manejará mediante el sistema de pagos conectado a tu aplicación." />
+            </div>
+          </>
+        );
+
+      case "addresses":
+        return (
+          <>
+            <PageHeader icon="📍" title="Direcciones" text="Administra tus direcciones de entrega." />
+            <Info icon="📍" title="Mis direcciones" text="Tus direcciones guardadas aparecerán aquí." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="➕" title="Agregar dirección" text="Añade una nueva dirección." page="add-address" />
+            </div>
+          </>
+        );
+
+      case "add-address":
+        return (
+          <>
+            <PageHeader icon="📍" title="Agregar dirección" text="Añade una dirección de entrega." />
+            <Info icon="📝" title="Nueva dirección" text="Esta pantalla queda preparada para conectar el formulario de dirección." />
+          </>
+        );
+
+      case "payment-methods":
+        return (
+          <>
+            <PageHeader icon="💳" title="Métodos de pago" text="Administra tus formas de pago." />
+            <Info icon="💳" title="Métodos guardados" text="Tus métodos de pago aparecerán aquí." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="➕" title="Agregar método" text="Añade una nueva forma de pago." page="add-payment-method" />
+            </div>
+          </>
+        );
+
+      case "add-payment-method":
+        return (
+          <>
+            <PageHeader icon="💳" title="Agregar método de pago" text="Añade una nueva forma de pago." />
+            <Info icon="🔒" title="Pago protegido" text="Esta pantalla queda preparada para conectar el formulario de pago." />
+          </>
+        );
+
+      case "coupons":
+        return (
+          <>
+            <PageHeader icon="🎟️" title="Cupones" text="Tus descuentos disponibles." />
+            <Info icon="🎟️" title="Mis cupones" text="Aquí aparecerán tus cupones y códigos de descuento." />
+          </>
+        );
+
+      case "wallet":
+        return (
+          <>
+            <PageHeader icon="💰" title="Monedero" text="Saldo y movimientos." />
+            <Info icon="💰" title="Saldo disponible" text="$0.00 — esta sección queda preparada para conectar el monedero." />
+            <Info icon="📋" title="Movimientos" text="Aquí aparecerán tus movimientos." />
+          </>
+        );
+
+      case "returns":
+        return (
+          <>
+            <PageHeader icon="↩️" title="Devoluciones" text="Gestiona tus devoluciones." />
+            <Option icon="📦" title="Mis devoluciones" text="Consulta tus solicitudes." page="return-detail" />
+          </>
+        );
+
+      case "return-detail":
+        return (
+          <>
+            <PageHeader icon="↩️" title="Detalle de devolución" text="Información de tu devolución." />
+            <Info icon="📋" title="Solicitud" text="Aquí aparecerán los detalles de la devolución." />
+            <Info icon="🚚" title="Estado" text="Aquí aparecerá el avance de tu devolución." />
+          </>
+        );
+
+      case "help":
+        return (
+          <>
+            <PageHeader icon="❓" title="Centro de ayuda" text="Encuentra respuestas a tus preguntas." />
+            <Option icon="🛟" title="Soporte SHORASHOPP" text="Contacta con nuestro equipo." page="support" />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="↩️" title="Devoluciones" text="Consulta devoluciones." page="returns" />
+            </div>
+          </>
+        );
+
+      case "support":
+        return (
+          <>
+            <PageHeader icon="🛟" title="Soporte SHORASHOPP" text="Ayuda y atención al cliente." />
+            <Info icon="💬" title="Atención al cliente" text="Esta pantalla queda preparada para conectar el chat de soporte." />
+            <Info icon="📋" title="Mis solicitudes" text="Aquí aparecerán tus solicitudes de soporte." />
+          </>
+        );
+
+      case "referrals":
+        return (
+          <>
+            <PageHeader icon="🎁" title="Programa de referidos" text="Invita personas y obtén beneficios." />
+            <Info icon="🎁" title="Tu código de invitación" text="Aquí aparecerá tu código personal para compartir." />
+            <Info icon="👥" title="Personas invitadas" text="Aquí aparecerán tus referencias." />
+          </>
+        );
+
+      case "privacy":
+        return (
+          <>
+            <PageHeader icon="🔐" title="Privacidad y seguridad" text="Protege tu cuenta y tus datos." />
+            <Option icon="📱" title="Sesiones activas" text="Revisa dónde está iniciada tu cuenta." page="sessions" />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="🛡️" title="Verificación de seguridad" text="Consulta el estado de seguridad." page="security" />
+            </div>
+          </>
+        );
+
+      case "sessions":
+        return (
+          <>
+            <PageHeader icon="📱" title="Sesiones activas" text="Dispositivos conectados a tu cuenta." />
+            <Info icon="📱" title="Sesión actual" text="Este dispositivo está utilizando tu cuenta actualmente." />
+            <Info icon="🔒" title="Cerrar sesiones" text="La administración de sesiones queda preparada para conectarse a tu sistema de autenticación." />
+          </>
+        );
+
+      case "security":
+        return (
+          <>
+            <PageHeader icon="🛡️" title="Verificación de seguridad" text="Estado de protección de tu cuenta." />
+            <Info icon="🔑" title="Contraseña" text="Tu contraseña se administra mediante el sistema de autenticación." />
+            <Info icon="✉️" title="Correo electrónico" text={session?.user?.email || "Correo de la cuenta"} />
+            <Info icon="🛡️" title="Cuenta protegida" text="Tu flujo actual de acceso permanece conectado." />
+          </>
+        );
+
+      case "settings":
+        return (
+          <>
+            <PageHeader icon="⚙️" title="Configuración" text="Personaliza tu experiencia." />
+            <Info icon="🔔" title="Preferencias de notificaciones" text="Aquí podrás controlar qué avisos quieres recibir." />
+            <Info icon="🌐" title="Preferencias generales" text="Aquí quedarán las configuraciones generales de la aplicación." />
+          </>
+        );
+
+      case "seller":
+        return (
+          <>
+            <PageHeader icon="🏪" title="Vende en SHORASHOPP" text="Comienza a vender tus productos." />
+            <Option icon="📊" title="Panel del vendedor" text="Administra tu tienda." page="seller-dashboard" />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="➕" title="Agregar producto" text="Publica un nuevo producto." page="seller-add-product" />
+            </div>
+          </>
+        );
+
+      case "seller-dashboard":
+        return (
+          <>
+            <PageHeader icon="📊" title="Panel del vendedor" text="Administra tu tienda SHORASHOPP." />
+            <Option icon="📦" title="Productos publicados" text="Consulta tus productos." page="seller-products" />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="➕" title="Agregar producto" text="Publica un producto." page="seller-add-product" />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💰" title="Ventas" text="Consulta tus ventas." page="seller-sales" />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <Option icon="⭐" title="Reseñas" text="Consulta las reseñas." page="seller-reviews" />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <Option icon="💳" title="Comisiones" text="Consulta tus comisiones." page="seller-commissions" />
+            </div>
+          </>
+        );
+
+      case "seller-products":
+        return (
+          <>
+            <PageHeader icon="📦" title="Productos publicados" text="Administra tus productos." />
+            <Info icon="📦" title="Mis productos" text="Aquí aparecerán los productos que publiques." />
+            <div style={{ marginTop: 12 }}>
+              <Option icon="➕" title="Agregar producto" text="Publica un nuevo producto." page="seller-add-product" />
+            </div>
+          </>
+        );
+
+      case "seller-add-product":
+        return (
+          <>
+            <PageHeader icon="➕" title="Agregar producto" text="Publica un producto en SHORASHOPP." />
+            <Info icon="📝" title="Información del producto" text="Esta pantalla queda preparada para conectar el formulario de publicación: fotografías, nombre, descripción, precio, categoría, inventario y envío." />
+          </>
+        );
+
+      case "seller-sales":
+        return (
+          <>
+            <PageHeader icon="💰" title="Ventas" text="Consulta el rendimiento de tu tienda." />
+            <Info icon="💰" title="Ventas totales" text="$0.00 — aquí aparecerán tus ventas cuando estén conectadas." />
+            <Info icon="📊" title="Estadísticas" text="Aquí se mostrarán tus estadísticas de ventas." />
+          </>
+        );
+
+      case "seller-reviews":
+        return (
+          <>
+            <PageHeader icon="⭐" title="Reseñas" text="Opiniones de tus compradores." />
+            <Info icon="⭐" title="Mis reseñas" text="Aquí aparecerán las reseñas recibidas en tus productos." />
+          </>
+        );
+
+      case "seller-commissions":
+        return (
+          <>
+            <PageHeader icon="💳" title="Comisiones" text="Consulta las comisiones de tu tienda." />
+            <Info icon="💳" title="Comisiones" text="Aquí aparecerá el detalle de las comisiones correspondientes a tus ventas." />
+          </>
+        );
+
+      default:
+        return <Home />;
+    }
   };
 
-  const renderAccountPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg,#ed174d,#7020d0)",
-          color: "white",
-          borderRadius: 22,
-          padding: "24px",
-          marginBottom: 16,
-        }}
-      >
-        <div style={{ fontSize: 12, opacity: 0.85 }}>
-          SHORASHOPP
-        </div>
-
-        <h1 style={{ margin: "6px 0", fontSize: 28 }}>
-          Mi cuenta
-        </h1>
-
-        <p style={{ margin: 0, opacity: 0.92 }}>
-          Gestiona tu perfil, pedidos y seguridad.
-        </p>
-      </div>
-
-      <div style={{ display: "grid", gap: 12 }}>
-        <button
-          type="button"
-          onClick={() =>
-            showActionMessage("Perfil próximamente.")
-          }
-          style={accountPageButtonStyle}
+  const ProductGrid = () => (
+    <div className="products-grid">
+      {filteredProducts.map((product) => (
+        <article
+          className="product-card"
+          key={product.name}
+          onClick={() => notify(`Seleccionaste ${product.name}`)}
         >
-          👤 Perfil
-          <span>›</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => openPage("orders")}
-          style={accountPageButtonStyle}
-        >
-          📦 Mis pedidos
-          <span>›</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            showActionMessage(
-              "Tus direcciones se conectarán aquí."
-            )
-          }
-          style={accountPageButtonStyle}
-        >
-          📍 Direcciones
-          <span>›</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => openPage("privacy")}
-          style={accountPageButtonStyle}
-        >
-          🔐 Privacidad y seguridad
-          <span>›</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          style={{
-            ...accountPageButtonStyle,
-            color: "#d41452",
-          }}
-        >
-          🚪 Cerrar sesión
-          <span>›</span>
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderPrivacyPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <h1 style={{ marginBottom: 6 }}>
-        Privacidad y seguridad
-      </h1>
-
-      <p style={{ color: "#666", marginTop: 0 }}>
-        Administra las opciones relacionadas con la
-        protección de tu cuenta.
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-          marginTop: 18,
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => openPage("sessions")}
-          style={securityPageButtonStyle}
-        >
-          <strong>📱 Sesiones activas</strong>
-
-          <span>
-            Revisa las sesiones de tu cuenta y su
-            administración. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => openPage("security")}
-          style={securityPageButtonStyle}
-        >
-          <strong>🛡️ Verificación de seguridad</strong>
-
-          <span>
-            Consulta el estado de seguridad de tu
-            cuenta. ›
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderSessionsPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <h1 style={{ marginBottom: 6 }}>
-        Sesiones activas
-      </h1>
-
-      <p style={{ color: "#666" }}>
-        Administra los dispositivos y sesiones
-        asociados a tu cuenta.
-      </p>
-
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 34 }}>📱</div>
-
-        <h2 style={{ margin: "10px 0 6px" }}>
-          Sesiones de tu cuenta
-        </h2>
-
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          La administración de sesiones se conectará
-          aquí.
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderSecurityPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <h1 style={{ marginBottom: 6 }}>
-        Verificación de seguridad
-      </h1>
-
-      <p style={{ color: "#666" }}>
-        Revisa las medidas básicas de protección de
-        tu cuenta SHORASHOPP.
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-          marginTop: 18,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>🔑 Contraseña</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Tu contraseña se gestiona de forma segura
-            mediante Supabase.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>✉️ Correo electrónico</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            La cuenta utiliza tu correo electrónico
-            para la autenticación.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>🛡️ Estado de seguridad</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Tu flujo actual de inicio de sesión y
-            registro permanece sin cambios.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderCategoriesPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <h1 style={{ marginBottom: 6 }}>
-        Categorías
-      </h1>
-
-      <p style={{ color: "#666", marginTop: 0 }}>
-        Explora productos por categoría.
-      </p>
-
-      <div
-        className="categories-scroll"
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(2, minmax(0, 1fr))",
-          gap: 12,
-          marginTop: 18,
-        }}
-      >
-        {categories.map((category) => (
-          <button
-            className="category-item"
-            key={category.name}
-            type="button"
-            onClick={() =>
-              handleCategoryClick(category.name)
-            }
-            style={{
-              border: "1px solid #ece7f3",
-              borderRadius: 18,
-              background: "white",
-              padding: 18,
-              cursor: "pointer",
-            }}
-          >
-            <div
-              className="category-icon"
-              style={{ fontSize: 34 }}
-            >
-              {category.icon}
-            </div>
-
-            <span>{category.name}</span>
-          </button>
-        ))}
-      </div>
-
-      {selectedCategory && (
-        <div style={{ marginTop: 28 }}>
-          <h2>{selectedCategory}</h2>
-
-          <div className="products-grid">
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <article
-                  className="product-card"
-                  key={product.name}
-                  onClick={() =>
-                    handleProductClick(product)
-                  }
-                >
-                  <div className="product-image">
-                    <span className="product-label">
-                      {product.discount}
-                    </span>
-
-                    <button
-                      className="heart-button"
-                      type="button"
-                      aria-label="Favorito"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        toggleFavorite(product.name);
-                      }}
-                    >
-                      {favorites.includes(product.name)
-                        ? "♥"
-                        : "♡"}
-                    </button>
-
-                    <div
-                      className={`product-art ${product.type}`}
-                    >
-                      {product.type === "earbuds" &&
-                        "🎧"}
-                      {product.type === "bag" && "👜"}
-                      {product.type === "watch" && "⌚"}
-                      {product.type === "blender" && "🥤"}
-                    </div>
-                  </div>
-
-                  <div className="product-info">
-                    <h3>{product.name}</h3>
-
-                    <div className="price-row">
-                      <strong>{product.price}</strong>
-
-                      {product.oldPrice && (
-                        <del>{product.oldPrice}</del>
-                      )}
-                    </div>
-
-                    <div className="rating-row">
-                      <span>★</span>
-                      {product.rating}
-
-                      <small>
-                        • {product.reviews}
-                      </small>
-                    </div>
-                  </div>
-                </article>
-              ))
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  textAlign: "center",
-                  padding: "30px",
-                }}
-              >
-                No encontramos productos con esa
-                búsqueda.
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderFavoritesPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <h1 style={{ marginBottom: 6 }}>
-        Favoritos
-      </h1>
-
-      <p style={{ color: "#666", marginTop: 0 }}>
-        Aquí encontrarás los productos que hayas
-        guardado.
-      </p>
-
-      {favoriteProducts.length > 0 ? (
-        <div
-          className="products-grid"
-          style={{ marginTop: 20 }}
-        >
-          {favoriteProducts.map((product) => (
-            <article
-              className="product-card"
-              key={product.name}
-              onClick={() =>
-                handleProductClick(product)
-              }
-            >
-              <div className="product-image">
-                <span className="product-label">
-                  {product.discount}
-                </span>
-
-                <button
-                  className="heart-button"
-                  type="button"
-                  aria-label="Eliminar favorito"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    toggleFavorite(product.name);
-                  }}
-                >
-                  ♥
-                </button>
-
-                <div
-                  className={`product-art ${product.type}`}
-                >
-                  {product.type === "earbuds" && "🎧"}
-                  {product.type === "bag" && "👜"}
-                  {product.type === "watch" && "⌚"}
-                  {product.type === "blender" && "🥤"}
-                </div>
-              </div>
-
-              <div className="product-info">
-                <h3>{product.name}</h3>
-
-                <div className="price-row">
-                  <strong>{product.price}</strong>
-
-                  {product.oldPrice && (
-                    <del>{product.oldPrice}</del>
-                  )}
-                </div>
-
-                <div className="rating-row">
-                  <span>★</span>
-                  {product.rating}
-
-                  <small>
-                    • {product.reviews}
-                  </small>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div
-          style={{
-            background: "white",
-            border: "1px solid #ece7f3",
-            borderRadius: 18,
-            padding: 30,
-            marginTop: 20,
-            textAlign: "center",
-          }}
-        >
-          <div style={{ fontSize: 42 }}>♡</div>
-
-          <h2>Aún no tienes favoritos</h2>
-
-          <p style={{ color: "#666" }}>
-            Guarda productos tocando el corazón para
-            encontrarlos fácilmente aquí.
-          </p>
-
-          <button
-            type="button"
-            onClick={goHome}
-            style={{
-              border: 0,
-              borderRadius: 12,
-              padding: "12px 20px",
-              background:
-                "linear-gradient(90deg,#ed174d,#7020d0)",
-              color: "white",
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
-            Explorar productos
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderOffersPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg,#ed174d,#7020d0)",
-          color: "white",
-          borderRadius: 22,
-          padding: 24,
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ fontSize: 12, opacity: 0.85 }}>
-          SHORASHOPP
-        </div>
-
-        <h1
-          style={{
-            margin: "6px 0",
-            fontSize: 30,
-          }}
-        >
-          Ofertas exclusivas
-        </h1>
-
-        <p style={{ margin: 0 }}>
-          Descuentos increíbles por tiempo limitado.
-        </p>
-      </div>
-
-      <div className="products-grid">
-        {products.map((product) => (
-          <article
-            className="product-card"
-            key={product.name}
-            onClick={() =>
-              handleProductClick(product)
-            }
-          >
-            <div className="product-image">
-              <span className="product-label">
-                {product.discount}
-              </span>
-
-              <button
-                className="heart-button"
-                type="button"
-                aria-label="Favorito"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleFavorite(product.name);
-                }}
-              >
-                {favorites.includes(product.name)
-                  ? "♥"
-                  : "♡"}
-              </button>
-
-              <div
-                className={`product-art ${product.type}`}
-              >
-                {product.type === "earbuds" && "🎧"}
-                {product.type === "bag" && "👜"}
-                {product.type === "watch" && "⌚"}
-                {product.type === "blender" && "🥤"}
-              </div>
-            </div>
-
-            <div className="product-info">
-              <h3>{product.name}</h3>
-
-              <div className="price-row">
-                <strong>{product.price}</strong>
-
-                {product.oldPrice && (
-                  <del>{product.oldPrice}</del>
-                )}
-              </div>
-
-              <div className="rating-row">
-                <span>★</span>
-                {product.rating}
-
-                <small>
-                  • {product.reviews}
-                </small>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-
-  /* =========================================================
-     NOTIFICACIONES
-  ========================================================= */
-
-  const renderNotificationsPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <h1 style={{ marginBottom: 6 }}>
-        Notificaciones
-      </h1>
-
-      <p style={{ color: "#666", marginTop: 0 }}>
-        Aquí encontrarás las novedades y avisos de
-        SHORASHOPP.
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-          marginTop: 20,
-        }}
-      >
-        <button
-          type="button"
-          onClick={() =>
-            openPage("notification-offers")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>
-            🔥 Nuevas ofertas disponibles
-          </strong>
-
-          <span>
-            Revisa nuestras promociones y descuentos
-            especiales. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("notification-orders")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>📦 Tus pedidos</strong>
-
-          <span>
-            Consulta información y actualizaciones
-            sobre tus compras. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("notification-messages")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>💬 Mensajes</strong>
-
-          <span>
-            Consulta mensajes de vendedores y del
-            equipo de SHORASHOPP. ›
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderNotificationOffersPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg,#ed174d,#7020d0)",
-          color: "white",
-          borderRadius: 22,
-          padding: 24,
-        }}
-      >
-        <div style={{ fontSize: 34 }}>🔥</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Nuevas ofertas disponibles
-        </h1>
-
-        <p style={{ margin: 0, opacity: 0.92 }}>
-          Descubre promociones especiales y productos
-          con descuentos.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        {products.map((product) => (
-          <button
-            key={product.name}
-            type="button"
-            onClick={() =>
-              handleProductClick(product)
-            }
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              width: "100%",
-              padding: 14,
-              border: "1px solid #ece7f3",
-              borderRadius: 16,
-              background: "white",
-              cursor: "pointer",
-              textAlign: "left",
-            }}
-          >
-            <span style={{ fontSize: 34 }}>
-              {product.type === "earbuds" && "🎧"}
-              {product.type === "bag" && "👜"}
-              {product.type === "watch" && "⌚"}
-              {product.type === "blender" && "🥤"}
-            </span>
-
-            <span
-              style={{
-                display: "grid",
-                gap: 4,
+          <div className="product-image">
+            <span className="product-label">{product.discount}</span>
+
+            <button
+              className="heart-button"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(product.name);
               }}
             >
-              <strong>{product.name}</strong>
+              {favorites.includes(product.name) ? "♥" : "♡"}
+            </button>
 
-              <span
-                style={{
-                  color: "#7020d0",
-                  fontWeight: 800,
-                }}
-              >
-                {product.price} · {product.discount}
-              </span>
-            </span>
+            <div className="product-art">{product.icon}</div>
+          </div>
+
+          <div className="product-info">
+            <h3>{product.name}</h3>
+
+            <div className="price-row">
+              <strong>{product.price}</strong>
+              {product.oldPrice && <del>{product.oldPrice}</del>}
+            </div>
+
+            <div className="rating-row">
+              <span>★</span> {product.rating}
+              <small>• {product.sales}</small>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+
+  const Home = () => (
+    <main>
+      <section className="quick-cards">
+        <button
+          className="quick-card sell-card"
+          type="button"
+          onClick={() => {
+            if (session) go("seller");
+            else openAuth("register");
+          }}
+        >
+          <div className="quick-icon">▣</div>
+          <div className="quick-content">
+            <strong>
+              Vende en
+              <br />
+              SHORASHOPP
+            </strong>
+            <span>Únete y comienza a vender tus productos hoy.</span>
+          </div>
+          <b className="round-arrow">›</b>
+        </button>
+
+        <button
+          className="quick-card account-card"
+          type="button"
+          onClick={() => (session ? go("account") : openAuth("login"))}
+        >
+          <div className="quick-icon">♙</div>
+          <div className="quick-content">
+            <strong>Mi cuenta</strong>
+            <span>{session ? "Sesión iniciada" : "Hola, Jacqueline"}</span>
+            <small>Perfil, pedidos y configuraciones</small>
+          </div>
+          <b className="round-arrow">›</b>
+        </button>
+      </section>
+
+      <section className="content-section">
+        <div className="section-title-row">
+          <h2>Categorías</h2>
+          <button type="button" onClick={() => go("categories")}>
+            Ver todas <span>›</span>
           </button>
-        ))}
-      </div>
-    </div>
+        </div>
+
+        <div className="categories-scroll">
+          {categories.map(([icon, name]) => (
+            <button
+              className="category-item"
+              key={name}
+              type="button"
+              onClick={() => {
+                setCategory(name);
+                setSearch("");
+                go("home");
+              }}
+            >
+              <div className="category-icon">{icon}</div>
+              <span>{name}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="offer-section">
+        <div className="offer-banner">
+          <div className="offer-text">
+            <strong>
+              OFERTAS
+              <br />
+              EXCLUSIVAS
+            </strong>
+
+            <span>
+              Descuentos increíbles
+              <br />
+              por tiempo limitado
+            </span>
+
+            <button type="button" onClick={() => go("offers")}>
+              Ver ofertas <b>›</b>
+            </button>
+          </div>
+
+          <div className="offer-products">
+            <div className="offer-bag">🛍️</div>
+            <div className="offer-watch">⌚</div>
+            <div className="offer-shoe">👟</div>
+            <div className="offer-percent">%</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="content-section products-section">
+        <div className="section-title-row">
+          <h2>{category || "Productos destacados"}</h2>
+
+          <button
+            type="button"
+            onClick={() => {
+              setCategory("");
+              setSearch("");
+            }}
+          >
+            Ver todos <span>›</span>
+          </button>
+        </div>
+
+        <ProductGrid />
+      </section>
+
+      <section className="trust-section">
+        <div className="trust-item">
+          <span>♢</span>
+          <strong>Compra segura</strong>
+          <small>Protegemos tus datos y compras</small>
+        </div>
+
+        <div className="trust-item">
+          <span>♧</span>
+          <strong>Envíos rápidos</strong>
+          <small>Recibe tus productos rápidamente</small>
+        </div>
+
+        <div className="trust-item">
+          <span>✿</span>
+          <strong>Vendedores verificados</strong>
+          <small>Más confianza para ti</small>
+        </div>
+
+        <div className="trust-item">
+          <span>☏</span>
+          <strong>Soporte 24/7</strong>
+          <small>Estamos aquí para ayudarte</small>
+        </div>
+      </section>
+    </main>
   );
 
-  const renderNotificationOrdersPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 36 }}>📦</div>
+  const OrdersPage = () => (
+    <>
+      <PageHeader
+        icon="📦"
+        title="Mis pedidos"
+        text="Consulta tus compras, entregas y confirmaciones."
+      />
 
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Tus pedidos
-        </h1>
+      <div style={{ display: "grid", gap: 12 }}>
+        <Option
+          icon="📦"
+          title="Tus pedidos"
+          text="Consulta tus compras y el estado de cada pedido."
+          page="orders-list"
+        />
 
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Aquí podrás consultar el estado de tus
-          compras, entregas y actualizaciones de
-          pedidos.
-        </p>
+        <Option
+          icon="🚚"
+          title="Seguimiento"
+          text="Revisa el progreso y ubicación de tus entregas."
+          page="orders-tracking"
+        />
+
+        <Option
+          icon="✅"
+          title="Confirmaciones"
+          text="Consulta confirmaciones relacionadas con tus compras."
+          page="orders-confirmations"
+        />
       </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => openPage("orders-list")}
-          style={securityPageButtonStyle}
-        >
-          <strong>📦 Tus pedidos</strong>
-
-          <span>
-            Consulta tus compras y el estado de cada
-            pedido. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("orders-tracking")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>🚚 Seguimiento</strong>
-
-          <span>
-            Revisa el progreso y ubicación de tus
-            entregas. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("orders-confirmations")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>✅ Confirmaciones</strong>
-
-          <span>
-            Consulta confirmaciones relacionadas con
-            tus compras. ›
-          </span>
-        </button>
-      </div>
-    </div>
+    </>
   );
 
-  const renderNotificationMessagesPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 36 }}>💬</div>
+  const MessagesPage = () => (
+    <>
+      <PageHeader
+        icon="💬"
+        title="Mensajes"
+        text="Comunícate con vendedores y con SHORASHOPP."
+      />
 
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Mensajes
-        </h1>
+      <div style={{ display: "grid", gap: 12 }}>
+        <Option
+          icon="💬"
+          title="Conversaciones"
+          text="Consulta tus conversaciones."
+          page="messages-conversations"
+        />
 
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Aquí podrás consultar mensajes de
-          vendedores y del equipo de SHORASHOPP.
-        </p>
+        <Option
+          icon="🏪"
+          title="Vendedores"
+          text="Consulta tus conversaciones con vendedores."
+          page="messages-sellers"
+        />
+
+        <Option
+          icon="🛟"
+          title="Soporte SHORASHOPP"
+          text="Comunícate con nuestro equipo de soporte."
+          page="messages-support"
+        />
       </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <button
-          type="button"
-          onClick={() =>
-            openPage("messages-conversations")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>💬 Conversaciones</strong>
-
-          <span>
-            Consulta y continúa tus conversaciones
-            dentro de SHORASHOPP. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("messages-sellers")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>🏪 Vendedores</strong>
-
-          <span>
-            Revisa tus comunicaciones con vendedores.
-            ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("messages-support")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>🛟 Soporte SHORASHOPP</strong>
-
-          <span>
-            Comunícate con el equipo de soporte de
-            SHORASHOPP. ›
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-
-  /* =========================================================
-     PÁGINAS INTERNAS DE MENSAJES
-  ========================================================= */
-
-  const renderMessagesConversationsPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 38 }}>💬</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Conversaciones
-        </h1>
-
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Aquí aparecerán tus conversaciones
-          recientes dentro de SHORASHOPP.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>💬 Conversaciones recientes</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Tus conversaciones aparecerán aquí
-            conforme empieces a comunicarte.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>🔔 Nuevos mensajes</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Los nuevos mensajes podrán mostrarse
-            dentro de esta sección.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMessagesSellersPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 38 }}>🏪</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Vendedores
-        </h1>
-
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Aquí podrás consultar las conversaciones
-          relacionadas con los vendedores.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>🏪 Mis vendedores</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Los vendedores con los que tengas
-            conversaciones aparecerán aquí.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>🛍️ Consultas de productos</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Podrás consultar información sobre
-            productos directamente con los vendedores.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMessagesSupportPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg,#ed174d,#7020d0)",
-          color: "white",
-          borderRadius: 22,
-          padding: 24,
-        }}
-      >
-        <div style={{ fontSize: 38 }}>🛟</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Soporte SHORASHOPP
-        </h1>
-
-        <p style={{ margin: 0, opacity: 0.92 }}>
-          Estamos aquí para ayudarte con tus dudas.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>💬 Atención al cliente</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Esta será tu sección para comunicarte
-            con soporte.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>📋 Ayuda con tus compras</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Podrás consultar problemas relacionados
-            con productos y pedidos.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>🛡️ Ayuda con tu cuenta</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            También podrás solicitar ayuda con el
-            acceso y configuración de tu cuenta.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  /* =========================================================
-     PÁGINA PRINCIPAL DE PEDIDOS
-  ========================================================= */
-
-  const renderOrdersPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg,#ed174d,#7020d0)",
-          color: "white",
-          borderRadius: 22,
-          padding: 24,
-          marginBottom: 18,
-        }}
-      >
-        <div style={{ fontSize: 36 }}>📦</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Mis pedidos
-        </h1>
-
-        <p style={{ margin: 0, opacity: 0.92 }}>
-          Consulta tus compras, entregas y
-          confirmaciones.
-        </p>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => openPage("orders-list")}
-          style={securityPageButtonStyle}
-        >
-          <strong>📦 Tus pedidos</strong>
-
-          <span>
-            Consulta tus compras y el estado de cada
-            pedido. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("orders-tracking")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>🚚 Seguimiento</strong>
-
-          <span>
-            Revisa el progreso y ubicación de tus
-            entregas. ›
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            openPage("orders-confirmations")
-          }
-          style={securityPageButtonStyle}
-        >
-          <strong>✅ Confirmaciones</strong>
-
-          <span>
-            Consulta confirmaciones relacionadas con
-            tus compras. ›
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-
-  /* =========================================================
-     PÁGINAS INTERNAS DE PEDIDOS
-  ========================================================= */
-
-  const renderOrdersListPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 38 }}>📦</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Tus pedidos
-        </h1>
-
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Aquí aparecerán tus compras y podrás
-          consultar el estado de cada pedido.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>🛍️ Compras realizadas</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Tus pedidos aparecerán aquí después de
-            realizar una compra.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>📋 Detalles del pedido</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Podrás consultar productos, cantidades y
-            datos de cada compra.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderOrdersTrackingPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 38 }}>🚚</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Seguimiento
-        </h1>
-
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Consulta el progreso de tus entregas y
-          revisa cuándo llegarán tus productos.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>📍 Ubicación del pedido</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            El seguimiento de cada envío aparecerá
-            aquí cuando exista una compra activa.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>🚚 Estado de entrega</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Podrás consultar si tu pedido está en
-            preparación, envío o entrega.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>📅 Fecha estimada</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            La fecha estimada de llegada se mostrará
-            cuando esté disponible.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderOrdersConfirmationsPage = () => (
-    <div style={{ marginTop: 14 }}>
-      <div style={infoCardStyle}>
-        <div style={{ fontSize: 38 }}>✅</div>
-
-        <h1 style={{ margin: "10px 0 6px" }}>
-          Confirmaciones
-        </h1>
-
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-            lineHeight: 1.6,
-          }}
-        >
-          Aquí podrás consultar las confirmaciones
-          relacionadas con tus compras.
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div style={infoCardStyle}>
-          <strong>✅ Compra confirmada</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Las confirmaciones de tus compras
-            aparecerán aquí.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>💳 Pago confirmado</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Podrás consultar las confirmaciones
-            relacionadas con los pagos.
-          </p>
-        </div>
-
-        <div style={infoCardStyle}>
-          <strong>📦 Pedido recibido</strong>
-
-          <p
-            style={{
-              margin: "7px 0 0",
-              color: "#666",
-            }}
-          >
-            Las confirmaciones de recepción también
-            podrán aparecer en esta sección.
-          </p>
-        </div>
-      </div>
-    </div>
+    </>
   );
 
   return (
     <div className="app">
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
       <header className="mobile-header">
         <button
           className="menu-button"
@@ -1844,15 +1049,10 @@ function App() {
           ☰
         </button>
 
-        <button
-          className="logo"
-          type="button"
-          onClick={goHome}
-        >
+        <button className="logo" type="button" onClick={() => go("home")}>
           <strong>
             SHORA<span>SHOPP</span>
           </strong>
-
           <small>
             Compra. <b>Vende.</b> Descubre.
           </small>
@@ -1862,32 +1062,22 @@ function App() {
           <button
             type="button"
             className="notification-button"
-            onClick={() =>
-              openPage("notifications")
-            }
+            onClick={() => go("notifications")}
           >
-            ♧
+            🔔
             <i>3</i>
           </button>
 
           <button
             type="button"
             className="cart-button"
-            onClick={() =>
-              showActionMessage(
-                "Tu carrito está listo."
-              )
-            }
+            onClick={() => go("cart")}
           >
             🛒
             <i>2</i>
           </button>
         </div>
       </header>
-
-      {/* =================================================
-          BÚSQUEDA
-      ================================================= */}
 
       <div className="search-container">
         <div className="search-box">
@@ -1896,406 +1086,54 @@ function App() {
           <input
             type="text"
             placeholder="¿Qué estás buscando hoy?"
-            value={searchTerm}
-            onChange={(event) =>
-              setSearchTerm(event.target.value)
-            }
-            onKeyDown={handleSearchKeyDown}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                go("home");
+              }
+            }}
           />
 
-          <button
-            type="button"
-            onClick={handleSearch}
-          >
+          <button type="button" onClick={() => go("home")}>
             ⌕
           </button>
         </div>
       </div>
 
-      {/* =================================================
-          PÁGINAS SECUNDARIAS
-      ================================================= */}
-
-      {currentPage !== "home" && (
+      {currentPage === "home" ? (
+        <Home />
+      ) : (
         <section
           style={{
-            maxWidth: "760px",
+            maxWidth: 760,
             margin: "0 auto",
-            padding: "22px 16px 120px",
+            padding: "20px 16px 120px",
           }}
         >
           <button
             type="button"
-            onClick={goBack}
+            onClick={back}
             style={{
               border: 0,
               background: "transparent",
               color: "#7020d0",
               fontWeight: 800,
-              padding: "8px 0",
+              padding: "8px 0 16px",
               cursor: "pointer",
             }}
           >
             ← Volver
           </button>
 
-          {currentPage === "account" &&
-            renderAccountPage()}
-
-          {currentPage === "privacy" &&
-            renderPrivacyPage()}
-
-          {currentPage === "sessions" &&
-            renderSessionsPage()}
-
-          {currentPage === "security" &&
-            renderSecurityPage()}
-
-          {currentPage === "categories" &&
-            renderCategoriesPage()}
-
-          {currentPage === "favorites" &&
-            renderFavoritesPage()}
-
-          {currentPage === "offers" &&
-            renderOffersPage()}
-
-          {currentPage === "notifications" &&
-            renderNotificationsPage()}
-
-          {currentPage === "notification-offers" &&
-            renderNotificationOffersPage()}
-
-          {currentPage === "notification-orders" &&
-            renderNotificationOrdersPage()}
-
-          {currentPage === "notification-messages" &&
-            renderNotificationMessagesPage()}
-
-          {currentPage === "messages-conversations" &&
-            renderMessagesConversationsPage()}
-
-          {currentPage === "messages-sellers" &&
-            renderMessagesSellersPage()}
-
-          {currentPage === "messages-support" &&
-            renderMessagesSupportPage()}
-
-          {currentPage === "orders" &&
-            renderOrdersPage()}
-
-          {currentPage === "orders-list" &&
-            renderOrdersListPage()}
-
-          {currentPage === "orders-tracking" &&
-            renderOrdersTrackingPage()}
-
-          {currentPage === "orders-confirmations" &&
-            renderOrdersConfirmationsPage()}
+          {renderPage()}
         </section>
       )}
 
-      {/* =================================================
-          INICIO
-      ================================================= */}
-
-      {currentPage === "home" && (
-        <main>
-          <section className="quick-cards">
-            <button
-              className="quick-card sell-card"
-              type="button"
-              onClick={() =>
-                openAuth("register")
-              }
-            >
-              <div className="quick-icon">
-                ▣
-              </div>
-
-              <div className="quick-content">
-                <strong>
-                  Vende en
-                  <br />
-                  SHORASHOPP
-                </strong>
-
-                <span>
-                  Únete y comienza a vender
-                  <br />
-                  tus productos hoy
-                </span>
-              </div>
-
-              <b className="round-arrow">
-                ›
-              </b>
-            </button>
-
-            <button
-              className="quick-card account-card"
-              type="button"
-              onClick={handleAccountAccess}
-            >
-              <div className="quick-icon">
-                ♟
-              </div>
-
-              <div className="quick-content">
-                <strong>Mi cuenta</strong>
-
-                <span>
-                  {session
-                    ? "Sesión iniciada"
-                    : "Hola, Jacqueline"}
-                </span>
-
-                <small>
-                  {session
-                    ? "Cerrar sesión"
-                    : "Ver perfil, pedidos y configuraciones"}
-                </small>
-              </div>
-
-              <b className="round-arrow">
-                ›
-              </b>
-            </button>
-          </section>
-
-          <section className="content-section">
-            <div className="section-title-row">
-              <h2>Categorías</h2>
-
-              <button
-                type="button"
-                onClick={handleShowAllCategories}
-              >
-                Ver todas <span>›</span>
-              </button>
-            </div>
-
-            <div className="categories-scroll">
-              {categories.map((category) => (
-                <button
-                  className="category-item"
-                  key={category.name}
-                  type="button"
-                  onClick={() =>
-                    handleCategoryClick(
-                      category.name
-                    )
-                  }
-                >
-                  <div className="category-icon">
-                    {category.icon}
-                  </div>
-
-                  <span>{category.name}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="offer-section">
-            <div className="offer-banner">
-              <div className="offer-text">
-                <strong>
-                  OFERTAS
-                  <br />
-                  EXCLUSIVAS
-                </strong>
-
-                <span>
-                  Descuentos increíbles
-                  <br />
-                  por tiempo limitado
-                </span>
-
-                <button
-                  type="button"
-                  onClick={handleOffers}
-                >
-                  Ver ofertas <b>›</b>
-                </button>
-              </div>
-
-              <div className="offer-products">
-                <div className="offer-bag">
-                  🛍️
-                </div>
-
-                <div className="offer-watch">
-                  ⌚
-                </div>
-
-                <div className="offer-shoe">
-                  👟
-                </div>
-
-                <div className="offer-percent">
-                  %
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="content-section products-section">
-            <div className="section-title-row">
-              <h2>
-                {selectedCategory
-                  ? selectedCategory
-                  : "Productos destacados"}
-              </h2>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCategory("");
-                  setSearchTerm("");
-                }}
-              >
-                Ver todos <span>›</span>
-              </button>
-            </div>
-
-            <div className="products-grid">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <article
-                    className="product-card"
-                    key={product.name}
-                    onClick={() =>
-                      handleProductClick(product)
-                    }
-                  >
-                    <div className="product-image">
-                      <span className="product-label">
-                        {product.discount}
-                      </span>
-
-                      <button
-                        className="heart-button"
-                        type="button"
-                        aria-label="Favorito"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggleFavorite(
-                            product.name
-                          );
-                        }}
-                      >
-                        {favorites.includes(
-                          product.name
-                        )
-                          ? "♥"
-                          : "♡"}
-                      </button>
-
-                      <div
-                        className={`product-art ${product.type}`}
-                      >
-                        {product.type ===
-                          "earbuds" && "🎧"}
-                        {product.type ===
-                          "bag" && "👜"}
-                        {product.type ===
-                          "watch" && "⌚"}
-                        {product.type ===
-                          "blender" && "🥤"}
-                      </div>
-                    </div>
-
-                    <div className="product-info">
-                      <h3>{product.name}</h3>
-
-                      <div className="price-row">
-                        <strong>
-                          {product.price}
-                        </strong>
-
-                        {product.oldPrice && (
-                          <del>
-                            {product.oldPrice}
-                          </del>
-                        )}
-                      </div>
-
-                      <div className="rating-row">
-                        <span>★</span>
-                        {product.rating}
-
-                        <small>
-                          • {product.reviews}
-                        </small>
-                      </div>
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    textAlign: "center",
-                    padding: "30px",
-                  }}
-                >
-                  No encontramos productos con esa
-                  búsqueda.
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="trust-section">
-            <div className="trust-item">
-              <span>♢</span>
-              <strong>Compra segura</strong>
-              <small>
-                Protegemos tus datos y compras
-              </small>
-            </div>
-
-            <div className="trust-item">
-              <span>♧</span>
-              <strong>Envíos rápidos</strong>
-              <small>
-                Recibe tus productos en tiempo récord
-              </small>
-            </div>
-
-            <div className="trust-item">
-              <span>✿</span>
-              <strong>Vendedores verificados</strong>
-              <small>
-                Más confianza para ti
-              </small>
-            </div>
-
-            <div className="trust-item">
-              <span>☏</span>
-              <strong>Soporte 24/7</strong>
-              <small>
-                Estamos aquí para ayudarte
-              </small>
-            </div>
-          </section>
-        </main>
-      )}
-
-      {/* =================================================
-          MENÚ LATERAL
-      ================================================= */}
-
       {menuOpen && (
         <div
-          onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setMenuOpen(false);
-            }
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setMenuOpen(false);
           }}
           style={{
             position: "fixed",
@@ -2306,12 +1144,12 @@ function App() {
         >
           <aside
             style={{
-              width: "min(330px, 88vw)",
+              width: "min(330px,88vw)",
               height: "100%",
-              background: "white",
-              padding: "22px 18px",
-              boxShadow:
-                "8px 0 30px rgba(0,0,0,.15)",
+              background: "#fff",
+              padding: 20,
+              overflowY: "auto",
+              boxShadow: "8px 0 30px rgba(0,0,0,.15)",
             }}
           >
             <div
@@ -2319,14 +1157,13 @@ function App() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 22,
+                marginBottom: 18,
               }}
             >
               <strong
                 style={{
-                  fontSize: 23,
-                  background:
-                    "linear-gradient(90deg,#ed174d,#7020d0)",
+                  fontSize: 22,
+                  background: "linear-gradient(90deg,#ed174d,#7020d0)",
                   WebkitBackgroundClip: "text",
                   color: "transparent",
                 }}
@@ -2339,170 +1176,56 @@ function App() {
                 onClick={() => setMenuOpen(false)}
                 style={{
                   border: 0,
-                  background: "#f5f5f7",
-                  borderRadius: 12,
+                  background: "#f4f4f6",
+                  borderRadius: 10,
                   width: 40,
                   height: 40,
                   fontSize: 22,
-                  cursor: "pointer",
                 }}
               >
                 ×
               </button>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gap: 8,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("home")
-                }
-                style={menuButtonStyle}
-              >
-                ⌂
-                <span>Inicio</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleAccountAccess}
-                style={menuButtonStyle}
-              >
-                ✨
-                <span>Mi cuenta</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("categories")
-                }
-                style={menuButtonStyle}
-              >
-                ▦
-                <span>Categorías</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("favorites")
-                }
-                style={menuButtonStyle}
-              >
-                ♡
-                <span>Favoritos</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("offers")
-                }
-                style={menuButtonStyle}
-              >
-                🏷️
-                <span>Ofertas</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("notifications")
-                }
-                style={menuButtonStyle}
-              >
-                🔔
-                <span>Notificaciones</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("orders")
-                }
-                style={menuButtonStyle}
-              >
-                📦
-                <span>Mis pedidos</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("privacy")
-                }
-                style={menuButtonStyle}
-              >
-                🔐
-                <span>
-                  Privacidad y seguridad
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("messages")
-                }
-                style={menuButtonStyle}
-              >
-                💬
-                <span>Mensajes</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  showActionMessage(
-                    "Configuración próximamente."
-                  )
-                }
-                style={menuButtonStyle}
-              >
-                ⚙️
-                <span>Configuración</span>
-              </button>
+            <div style={{ display: "grid", gap: 7 }}>
+              <MenuItem icon="⌂" text="Inicio" onClick={() => go("home")} />
+              <MenuItem icon="👤" text="Mi cuenta" onClick={() => (session ? go("account") : openAuth("login"))} />
+              <MenuItem icon="▦" text="Categorías" onClick={() => go("categories")} />
+              <MenuItem icon="♡" text="Favoritos" onClick={() => go("favorites")} />
+              <MenuItem icon="🏷️" text="Ofertas" onClick={() => go("offers")} />
+              <MenuItem icon="🔔" text="Notificaciones" onClick={() => go("notifications")} />
+              <MenuItem icon="📦" text="Mis pedidos" onClick={() => go("orders")} />
+              <MenuItem icon="💬" text="Mensajes" onClick={() => go("messages")} />
+              <MenuItem icon="🛒" text="Carrito" onClick={() => go("cart")} />
+              <MenuItem icon="📍" text="Direcciones" onClick={() => go("addresses")} />
+              <MenuItem icon="💳" text="Métodos de pago" onClick={() => go("payment-methods")} />
+              <MenuItem icon="🎟️" text="Cupones" onClick={() => go("coupons")} />
+              <MenuItem icon="💰" text="Monedero" onClick={() => go("wallet")} />
+              <MenuItem icon="↩️" text="Devoluciones" onClick={() => go("returns")} />
+              <MenuItem icon="❓" text="Centro de ayuda" onClick={() => go("help")} />
+              <MenuItem icon="🎁" text="Referidos" onClick={() => go("referrals")} />
+              <MenuItem icon="🔐" text="Privacidad y seguridad" onClick={() => go("privacy")} />
+              <MenuItem icon="⚙️" text="Configuración" onClick={() => go("settings")} />
+              <MenuItem icon="🏪" text="Vender en SHORASHOPP" onClick={() => (session ? go("seller") : openAuth("register"))} />
             </div>
           </aside>
         </div>
       )}
 
-      {/* =================================================
-          BARRA INFERIOR
-      ================================================= */}
-
       <nav className="bottom-nav">
         <button
-          className={`bottom-item ${
-            currentPage === "home"
-              ? "active"
-              : ""
-          }`}
+          className={`bottom-item ${currentPage === "home" ? "active" : ""}`}
           type="button"
-          onClick={() =>
-            openPage("home")
-          }
+          onClick={() => go("home")}
         >
           <span>⌂</span>
           <small>Inicio</small>
         </button>
 
         <button
-          className={`bottom-item ${
-            currentPage === "categories"
-              ? "active"
-              : ""
-          }`}
+          className={`bottom-item ${currentPage === "categories" ? "active" : ""}`}
           type="button"
-          onClick={() =>
-            openPage("categories")
-          }
+          onClick={() => go("categories")}
         >
           <span>▦</span>
           <small>Categorías</small>
@@ -2511,95 +1234,64 @@ function App() {
         <button
           className="seller-button"
           type="button"
-          onClick={() =>
-            openAuth("register")
-          }
+          onClick={() => (session ? go("seller") : openAuth("register"))}
         >
           <span>▰</span>
           <small>Vender</small>
         </button>
 
         <button
-          className={`bottom-item ${
-            currentPage === "favorites"
-              ? "active"
-              : ""
-          }`}
+          className={`bottom-item ${currentPage === "favorites" ? "active" : ""}`}
           type="button"
-          onClick={() =>
-            openPage("favorites")
-          }
+          onClick={() => go("favorites")}
         >
           <span>♡</span>
           <small>Favoritos</small>
         </button>
 
         <button
-          className={`bottom-item ${
-            currentPage === "account"
-              ? "active"
-              : ""
-          }`}
+          className={`bottom-item ${currentPage === "account" ? "active" : ""}`}
           type="button"
-          onClick={handleAccountAccess}
+          onClick={() => (session ? go("account") : openAuth("login"))}
         >
           <span>♙</span>
           <small>Cuenta</small>
         </button>
       </nav>
 
-      {/* =================================================
-          MENSAJE
-      ================================================= */}
-
-      {actionMessage && (
+      {toast && (
         <div
           style={{
             position: "fixed",
-            bottom: "90px",
             left: "50%",
+            bottom: 90,
             transform: "translateX(-50%)",
+            zIndex: 11000,
             background: "#222",
             color: "#fff",
-            padding: "10px 18px",
-            borderRadius: "20px",
-            zIndex: 9999,
-            fontSize: "13px",
-            textAlign: "center",
+            padding: "11px 18px",
+            borderRadius: 20,
+            fontSize: 13,
+            whiteSpace: "nowrap",
           }}
         >
-          {actionMessage}
+          {toast}
         </div>
       )}
 
-      {/* =================================================
-          AUTENTICACIÓN
-      ================================================= */}
-
-      {showAuth && (
+      {authOpen && (
         <div
           className="auth-overlay"
-          onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              closeAuth();
-            }
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeAuth();
           }}
         >
           <div className="auth-modal">
-            <button
-              className="auth-close"
-              type="button"
-              onClick={closeAuth}
-            >
+            <button className="auth-close" type="button" onClick={closeAuth}>
               ×
             </button>
 
-            <div className="auth-logo">
-              S
-            </div>
+            <div className="auth-logo">S</div>
 
             <h2>
               {authMode === "login"
@@ -2613,15 +1305,13 @@ function App() {
                 : "Únete a SHORASHOPP."}
             </p>
 
-            <form onSubmit={handleAuth}>
+            <form onSubmit={authenticate}>
               {authMode === "register" && (
                 <input
                   type="text"
                   placeholder="Nombre completo"
                   value={name}
-                  onChange={(event) =>
-                    setName(event.target.value)
-                  }
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               )}
@@ -2630,9 +1320,7 @@ function App() {
                 type="email"
                 placeholder="Correo electrónico"
                 value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
 
@@ -2640,18 +1328,12 @@ function App() {
                 type="password"
                 placeholder="Contraseña"
                 value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
+                onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
                 required
               />
 
-              <button
-                className="auth-submit"
-                type="submit"
-                disabled={loading}
-              >
+              <button className="auth-submit" type="submit" disabled={loading}>
                 {loading
                   ? "Procesando..."
                   : authMode === "login"
@@ -2660,10 +1342,8 @@ function App() {
               </button>
             </form>
 
-            {message && (
-              <div className="auth-message">
-                {message}
-              </div>
+            {authMessage && (
+              <div className="auth-message">{authMessage}</div>
             )}
 
             <div className="auth-switch">
@@ -2674,7 +1354,7 @@ function App() {
                     type="button"
                     onClick={() => {
                       setAuthMode("register");
-                      setMessage("");
+                      setAuthMessage("");
                     }}
                   >
                     Regístrate
@@ -2687,7 +1367,7 @@ function App() {
                     type="button"
                     onClick={() => {
                       setAuthMode("login");
-                      setMessage("");
+                      setAuthMessage("");
                     }}
                   >
                     Inicia sesión
@@ -2699,6 +1379,32 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function MenuItem({ icon, text, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: 13,
+        padding: 13,
+        border: 0,
+        borderRadius: 12,
+        background: "#fff",
+        color: "#24152f",
+        fontWeight: 700,
+        textAlign: "left",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ fontSize: 20 }}>{icon}</span>
+      <span>{text}</span>
+    </button>
   );
 }
 
