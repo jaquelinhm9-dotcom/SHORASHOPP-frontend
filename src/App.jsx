@@ -380,45 +380,160 @@ function App() {
   const handleAuth = async (event) => {
     event.preventDefault();
 
+    if (loading) return;
+
     setLoading(true);
     setMessage("");
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
+
+      if (!cleanEmail) {
+        setMessage(
+          "Por favor, escribe tu correo electrónico."
+        );
+        return;
+      }
+
+      if (!password) {
+        setMessage(
+          "Por favor, escribe tu contraseña."
+        );
+        return;
+      }
+
+      if (password.length < 6) {
+        setMessage(
+          "La contraseña debe tener al menos 6 caracteres."
+        );
+        return;
+      }
+
       if (authMode === "register") {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              full_name: name.trim(),
-            },
-          },
-        });
+        const cleanName = name.trim();
 
-        if (error) throw error;
-
-        if (data?.session) {
-          closeAuth();
-          navigate("account");
-        } else {
+        if (!cleanName) {
           setMessage(
-            "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
+            "Por favor, escribe tu nombre completo."
           );
+          return;
         }
-      } else {
-        const { error } =
-          await supabase.auth.signInWithPassword({
-            email: email.trim(),
+
+        const { data, error } =
+          await supabase.auth.signUp({
+            email: cleanEmail,
             password,
+            options: {
+              data: {
+                full_name: cleanName,
+              },
+            },
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error(
+            "Supabase signup error:",
+            error
+          );
 
-        closeAuth();
-        navigate("account");
+          const errorMessage =
+            error?.message ||
+            error?.error_description ||
+            error?.msg ||
+            (typeof error === "string"
+              ? error
+              : "");
+
+          setMessage(
+            errorMessage ||
+              "No se pudo crear la cuenta. Inténtalo nuevamente."
+          );
+
+          return;
+        }
+
+        if (data?.session) {
+          setSession(data.session);
+          closeAuth();
+          navigate("account");
+          return;
+        }
+
+        if (data?.user) {
+          setMessage(
+            "¡Cuenta creada correctamente! Revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión."
+          );
+
+          setPassword("");
+          return;
+        }
+
+        setMessage(
+          "La cuenta fue procesada, pero Supabase no devolvió los datos esperados. Revisa tu correo e inténtalo nuevamente."
+        );
+
+        return;
       }
+
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+
+      if (error) {
+        console.error(
+          "Supabase login error:",
+          error
+        );
+
+        const errorMessage =
+          error?.message ||
+          error?.error_description ||
+          error?.msg ||
+          (typeof error === "string"
+            ? error
+            : "");
+
+        setMessage(
+          errorMessage ||
+            "No se pudo iniciar sesión. Revisa tu correo y contraseña."
+        );
+
+        return;
+      }
+
+      if (!data?.session) {
+        setMessage(
+          "No se pudo iniciar sesión porque Supabase no devolvió una sesión."
+        );
+
+        return;
+      }
+
+      setSession(data.session);
+      closeAuth();
+      navigate("account");
+
     } catch (error) {
-      setMessage(error?.message || "Ocurrió un error.");
+      console.error(
+        "SHORASHOPP authentication error:",
+        error
+      );
+
+      const errorMessage =
+        error?.message ||
+        error?.error_description ||
+        error?.msg ||
+        (typeof error === "string"
+          ? error
+          : "");
+
+      setMessage(
+        errorMessage ||
+          "Ocurrió un error inesperado al comunicarnos con Supabase. Inténtalo nuevamente."
+      );
+
     } finally {
       setLoading(false);
     }
@@ -473,7 +588,10 @@ function App() {
     });
   };
 
-  const changeCartQuantity = (productName, amount) => {
+  const changeCartQuantity = (
+    productName,
+    amount
+  ) => {
     setCart((current) =>
       current
         .map((item) =>
@@ -484,7 +602,9 @@ function App() {
               }
             : item
         )
-        .filter((item) => item.quantity > 0)
+        .filter(
+          (item) => item.quantity > 0
+        )
     );
   };
 
@@ -493,13 +613,21 @@ function App() {
     0
   );
 
-  const cartTotal = cart.reduce((total, item) => {
-    const price = Number(
-      item.price.replace("$", "").replace(",", "")
-    );
+  const cartTotal = cart.reduce(
+    (total, item) => {
+      const price = Number(
+        item.price
+          .replace("$", "")
+          .replace(",", "")
+      );
 
-    return total + price * item.quantity;
-  }, 0);
+      return (
+        total +
+        price * item.quantity
+      );
+    },
+    0
+  );
 
   /* =======================================================
      FILTROS
@@ -511,22 +639,31 @@ function App() {
     if (selectedCategory !== "Todas") {
       result = result.filter(
         (product) =>
-          product.category === selectedCategory
+          product.category ===
+          selectedCategory
       );
     }
 
     if (search.trim()) {
-      const query = search.toLowerCase();
+      const query =
+        search.toLowerCase();
 
       result = result.filter(
         (product) =>
-          product.name.toLowerCase().includes(query) ||
-          product.category.toLowerCase().includes(query)
+          product.name
+            .toLowerCase()
+            .includes(query) ||
+          product.category
+            .toLowerCase()
+            .includes(query)
       );
     }
 
     return result;
-  }, [selectedCategory, search]);
+  }, [
+    selectedCategory,
+    search,
+  ]);
 
   /* =======================================================
      HEADER
@@ -540,7 +677,11 @@ function App() {
         onClick={() => navigate("menu")}
         aria-label="Menú"
       >
-        <Icon name="menu" size={32} stroke={2} />
+        <Icon
+          name="menu"
+          size={32}
+          stroke={2}
+        />
       </button>
 
       <button
@@ -563,18 +704,28 @@ function App() {
         <button
           type="button"
           className="header-icon-button"
-          onClick={() => navigate("notifications")}
+          onClick={() =>
+            navigate("notifications")
+          }
         >
-          <Icon name="bell" size={28} />
+          <Icon
+            name="bell"
+            size={28}
+          />
           <i>3</i>
         </button>
 
         <button
           type="button"
           className="header-icon-button"
-          onClick={() => navigate("cart")}
+          onClick={() =>
+            navigate("cart")
+          }
         >
-          <Icon name="cart" size={29} />
+          <Icon
+            name="cart"
+            size={29}
+          />
 
           {cartCount > 0 && (
             <i>{cartCount}</i>
@@ -591,14 +742,19 @@ function App() {
   const SearchBar = () => (
     <div className="search-container">
       <div className="search-box">
-        <Icon name="search" size={30} />
+        <Icon
+          name="search"
+          size={30}
+        />
 
         <input
           type="text"
           placeholder="¿Qué estás buscando hoy?"
           value={search}
           onChange={(event) => {
-            setSearch(event.target.value);
+            setSearch(
+              event.target.value
+            );
 
             if (view !== "search") {
               setView("search");
@@ -608,10 +764,15 @@ function App() {
 
         <button
           type="button"
-          onClick={() => navigate("search")}
+          onClick={() =>
+            navigate("search")
+          }
           aria-label="Buscar"
         >
-          <Icon name="search" size={28} />
+          <Icon
+            name="search"
+            size={28}
+          />
         </button>
       </div>
     </div>
@@ -628,7 +789,10 @@ function App() {
         onClick={goBack}
         className="page-back"
       >
-        <Icon name="back" size={28} />
+        <Icon
+          name="back"
+          size={28}
+        />
       </button>
 
       <h1>{title}</h1>
@@ -638,7 +802,10 @@ function App() {
         className="page-home"
         onClick={goHome}
       >
-        <Icon name="home" size={23} />
+        <Icon
+          name="home"
+          size={23}
+        />
       </button>
     </div>
   );
@@ -647,11 +814,15 @@ function App() {
      PRODUCT CARD
   ======================================================= */
 
-  const ProductCard = ({ product }) => (
+  const ProductCard = ({
+    product,
+  }) => (
     <article className="product-card">
       <div
         className={`product-image ${product.type}`}
-        onClick={() => addToCart(product)}
+        onClick={() =>
+          addToCart(product)
+        }
       >
         <span className="product-label">
           {product.discount}
@@ -659,21 +830,30 @@ function App() {
 
         <button
           className={`heart-button ${
-            favorites.includes(product.name)
+            favorites.includes(
+              product.name
+            )
               ? "favorite"
               : ""
           }`}
           type="button"
           onClick={(event) => {
             event.stopPropagation();
-            toggleFavorite(product.name);
+            toggleFavorite(
+              product.name
+            );
           }}
         >
-          <Icon name="heart" size={24} stroke={1.8} />
+          <Icon
+            name="heart"
+            size={24}
+            stroke={1.8}
+          />
         </button>
 
         <div className="product-art">
-          {product.type === "earbuds" && (
+          {product.type ===
+            "earbuds" && (
             <div className="earbuds-art">
               <span>◖</span>
               <span>◗</span>
@@ -687,13 +867,15 @@ function App() {
             </div>
           )}
 
-          {product.type === "watch" && (
+          {product.type ===
+            "watch" && (
             <div className="watch-art">
               ⌚
             </div>
           )}
 
-          {product.type === "blender" && (
+          {product.type ===
+            "blender" && (
             <div className="blender-art">
               🥤
             </div>
@@ -727,9 +909,14 @@ function App() {
         <button
           className="add-cart-button"
           type="button"
-          onClick={() => addToCart(product)}
+          onClick={() =>
+            addToCart(product)
+          }
         >
-          <Icon name="cart" size={18} />
+          <Icon
+            name="cart"
+            size={18}
+          />
           Agregar
         </button>
       </div>
@@ -762,7 +949,10 @@ function App() {
       </div>
 
       <b className="round-arrow">
-        <Icon name="arrow" size={23} />
+        <Icon
+          name="arrow"
+          size={23}
+        />
       </b>
     </button>
   );
@@ -779,7 +969,12 @@ function App() {
         <section className="quick-cards">
           <QuickCard
             type="sell-card"
-            icon={<Icon name="store" size={38} />}
+            icon={
+              <Icon
+                name="store"
+                size={38}
+              />
+            }
             title={
               <>
                 Vende en
@@ -794,12 +989,19 @@ function App() {
                 tus productos hoy
               </>
             }
-            onClick={() => navigate("sell")}
+            onClick={() =>
+              navigate("sell")
+            }
           />
 
           <QuickCard
             type="account-card"
-            icon={<Icon name="user" size={38} />}
+            icon={
+              <Icon
+                name="user"
+                size={38}
+              />
+            }
             title="Mi cuenta"
             text={
               <>
@@ -822,31 +1024,42 @@ function App() {
 
             <button
               type="button"
-              onClick={() => navigate("categories")}
+              onClick={() =>
+                navigate("categories")
+              }
             >
               Ver todas
-              <Icon name="arrow" size={22} />
+              <Icon
+                name="arrow"
+                size={22}
+              />
             </button>
           </div>
 
           <div className="categories-scroll">
-            {categories.map((category) => (
-              <button
-                className="category-item"
-                key={category.name}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(category.name);
-                  navigate("category");
-                }}
-              >
-                <div className="category-icon">
-                  {category.icon}
-                </div>
+            {categories.map(
+              (category) => (
+                <button
+                  className="category-item"
+                  key={category.name}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(
+                      category.name
+                    );
+                    navigate("category");
+                  }}
+                >
+                  <div className="category-icon">
+                    {category.icon}
+                  </div>
 
-                <span>{category.name}</span>
-              </button>
-            ))}
+                  <span>
+                    {category.name}
+                  </span>
+                </button>
+              )
+            )}
           </div>
         </section>
 
@@ -867,10 +1080,15 @@ function App() {
 
               <button
                 type="button"
-                onClick={() => navigate("offers")}
+                onClick={() =>
+                  navigate("offers")
+                }
               >
                 Ver ofertas
-                <Icon name="arrow" size={20} />
+                <Icon
+                  name="arrow"
+                  size={20}
+                />
               </button>
             </div>
 
@@ -911,24 +1129,33 @@ function App() {
 
         <section className="content-section products-section">
           <div className="section-title-row">
-            <h2>Productos destacados</h2>
+            <h2>
+              Productos destacados
+            </h2>
 
             <button
               type="button"
-              onClick={() => navigate("products")}
+              onClick={() =>
+                navigate("products")
+              }
             >
               Ver todos
-              <Icon name="arrow" size={22} />
+              <Icon
+                name="arrow"
+                size={22}
+              />
             </button>
           </div>
 
           <div className="products-grid">
-            {products.map((product) => (
-              <ProductCard
-                key={product.name}
-                product={product}
-              />
-            ))}
+            {products.map(
+              (product) => (
+                <ProductCard
+                  key={product.name}
+                  product={product}
+                />
+              )
+            )}
           </div>
         </section>
 
@@ -947,7 +1174,10 @@ function App() {
 
       <div className="page-intro">
         <span className="page-intro-icon">
-          <Icon name="grid" size={30} />
+          <Icon
+            name="grid"
+            size={30}
+          />
         </span>
 
         <div>
@@ -962,31 +1192,40 @@ function App() {
       </div>
 
       <div className="all-categories">
-        {categories.map((category) => (
-          <button
-            className="category-page-card"
-            key={category.name}
-            type="button"
-            onClick={() => {
-              setSelectedCategory(category.name);
-              navigate("category");
-            }}
-          >
-            <div className="category-icon">
-              {category.icon}
-            </div>
+        {categories.map(
+          (category) => (
+            <button
+              className="category-page-card"
+              key={category.name}
+              type="button"
+              onClick={() => {
+                setSelectedCategory(
+                  category.name
+                );
+                navigate("category");
+              }}
+            >
+              <div className="category-icon">
+                {category.icon}
+              </div>
 
-            <div>
-              <strong>{category.name}</strong>
+              <div>
+                <strong>
+                  {category.name}
+                </strong>
 
-              <span>
-                Explorar productos
-              </span>
-            </div>
+                <span>
+                  Explorar productos
+                </span>
+              </div>
 
-            <Icon name="arrow" size={22} />
-          </button>
-        ))}
+              <Icon
+                name="arrow"
+                size={22}
+              />
+            </button>
+          )
+        )}
       </div>
     </main>
   );
@@ -997,12 +1236,16 @@ function App() {
 
   const CategoryPage = () => (
     <main className="page-content">
-      <PageHeader title={selectedCategory} />
+      <PageHeader
+        title={selectedCategory}
+      />
 
       <div className="category-heading">
         <div>
           <span>Categoría</span>
-          <h2>{selectedCategory}</h2>
+          <h2>
+            {selectedCategory}
+          </h2>
         </div>
 
         <b>
@@ -1011,13 +1254,16 @@ function App() {
       </div>
 
       <div className="products-grid">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <ProductCard
-              key={product.name}
-              product={product}
-            />
-          ))
+        {filteredProducts.length >
+        0 ? (
+          filteredProducts.map(
+            (product) => (
+              <ProductCard
+                key={product.name}
+                product={product}
+              />
+            )
+          )
         ) : (
           <EmptyState
             icon="🔎"
@@ -1035,7 +1281,9 @@ function App() {
 
   const ProductsPage = () => (
     <main className="page-content">
-      <PageHeader title="Todos los productos" />
+      <PageHeader
+        title="Todos los productos"
+      />
 
       <div className="page-intro">
         <span className="page-intro-icon">
@@ -1054,12 +1302,14 @@ function App() {
       </div>
 
       <div className="products-grid">
-        {products.map((product) => (
-          <ProductCard
-            key={product.name}
-            product={product}
-          />
-        ))}
+        {products.map(
+          (product) => (
+            <ProductCard
+              key={product.name}
+              product={product}
+            />
+          )
+        )}
       </div>
     </main>
   );
@@ -1070,7 +1320,9 @@ function App() {
 
   const OffersPage = () => (
     <main className="page-content">
-      <PageHeader title="Ofertas exclusivas" />
+      <PageHeader
+        title="Ofertas exclusivas"
+      />
 
       <div className="internal-offer-banner">
         <div>
@@ -1089,12 +1341,14 @@ function App() {
       </div>
 
       <div className="products-grid">
-        {products.map((product) => (
-          <ProductCard
-            key={product.name}
-            product={product}
-          />
-        ))}
+        {products.map(
+          (product) => (
+            <ProductCard
+              key={product.name}
+              product={product}
+            />
+          )
+        )}
       </div>
     </main>
   );
@@ -1108,14 +1362,19 @@ function App() {
       <PageHeader title="Buscar" />
 
       <div className="search-page-box">
-        <Icon name="search" size={24} />
+        <Icon
+          name="search"
+          size={24}
+        />
 
         <input
           type="text"
           placeholder="Buscar productos..."
           value={search}
           onChange={(event) =>
-            setSearch(event.target.value)
+            setSearch(
+              event.target.value
+            )
           }
           autoFocus
         />
@@ -1138,13 +1397,16 @@ function App() {
       </div>
 
       <div className="products-grid">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <ProductCard
-              key={product.name}
-              product={product}
-            />
-          ))
+        {filteredProducts.length >
+        0 ? (
+          filteredProducts.map(
+            (product) => (
+              <ProductCard
+                key={product.name}
+                product={product}
+              />
+            )
+          )
         ) : (
           <EmptyState
             icon="🔎"
@@ -1170,66 +1432,88 @@ function App() {
           title="Tu carrito está vacío"
           text="Agrega productos y aparecerán aquí."
           action="Explorar productos"
-          onAction={() => navigate("products")}
+          onAction={() =>
+            navigate("products")
+          }
         />
       ) : (
         <>
           <div className="cart-page-list">
-            {cart.map((item) => (
-              <div
-                className="cart-page-item"
-                key={item.name}
-              >
-                <div className={`cart-item-art ${item.type}`}>
-                  {item.type === "earbuds" && "🎧"}
-                  {item.type === "bag" && "👜"}
-                  {item.type === "watch" && "⌚"}
-                  {item.type === "blender" && "🥤"}
-                </div>
+            {cart.map(
+              (item) => (
+                <div
+                  className="cart-page-item"
+                  key={item.name}
+                >
+                  <div
+                    className={`cart-item-art ${item.type}`}
+                  >
+                    {item.type ===
+                      "earbuds" &&
+                      "🎧"}
+                    {item.type ===
+                      "bag" &&
+                      "👜"}
+                    {item.type ===
+                      "watch" &&
+                      "⌚"}
+                    {item.type ===
+                      "blender" &&
+                      "🥤"}
+                  </div>
 
-                <div className="cart-item-info">
-                  <h3>{item.name}</h3>
+                  <div className="cart-item-info">
+                    <h3>
+                      {item.name}
+                    </h3>
 
-                  <strong>
-                    {item.price}
-                  </strong>
+                    <strong>
+                      {item.price}
+                    </strong>
 
-                  <div className="quantity-controls">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        changeCartQuantity(
-                          item.name,
-                          -1
-                        )
-                      }
-                    >
-                      −
-                    </button>
+                    <div className="quantity-controls">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeCartQuantity(
+                            item.name,
+                            -1
+                          )
+                        }
+                      >
+                        −
+                      </button>
 
-                    <b>{item.quantity}</b>
+                      <b>
+                        {item.quantity}
+                      </b>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        changeCartQuantity(
-                          item.name,
-                          1
-                        )
-                      }
-                    >
-                      +
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeCartQuantity(
+                            item.name,
+                            1
+                          )
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
 
           <div className="cart-summary">
             <div>
-              <span>Productos</span>
-              <b>{cartCount}</b>
+              <span>
+                Productos
+              </span>
+              <b>
+                {cartCount}
+              </b>
             </div>
 
             <div className="cart-total">
@@ -1250,10 +1534,15 @@ function App() {
           <button
             className="checkout-button"
             type="button"
-            onClick={() => navigate("checkout")}
+            onClick={() =>
+              navigate("checkout")
+            }
           >
             Continuar compra
-            <Icon name="arrow" size={22} />
+            <Icon
+              name="arrow"
+              size={22}
+            />
           </button>
         </>
       )}
@@ -1264,67 +1553,83 @@ function App() {
      FAVORITOS
   ======================================================= */
 
-  const FavoritesPage = () => {
-    const favoriteProducts = products.filter(
-      (product) =>
-        favorites.includes(product.name)
-    );
+  const FavoritesPage =
+    () => {
+      const favoriteProducts =
+        products.filter(
+          (product) =>
+            favorites.includes(
+              product.name
+            )
+        );
 
-    return (
-      <main className="page-content">
-        <PageHeader title="Mis favoritos" />
-
-        {favoriteProducts.length === 0 ? (
-          <EmptyState
-            icon="♡"
-            title="No tienes favoritos"
-            text="Toca el corazón de un producto para guardarlo."
-            action="Ver productos"
-            onAction={() => navigate("products")}
+      return (
+        <main className="page-content">
+          <PageHeader
+            title="Mis favoritos"
           />
-        ) : (
-          <div className="products-grid">
-            {favoriteProducts.map((product) => (
-              <ProductCard
-                key={product.name}
-                product={product}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-    );
-  };
+
+          {favoriteProducts.length ===
+          0 ? (
+            <EmptyState
+              icon="♡"
+              title="No tienes favoritos"
+              text="Toca el corazón de un producto para guardarlo."
+              action="Ver productos"
+              onAction={() =>
+                navigate(
+                  "products"
+                )
+              }
+            />
+          ) : (
+            <div className="products-grid">
+              {favoriteProducts.map(
+                (product) => (
+                  <ProductCard
+                    key={product.name}
+                    product={product}
+                  />
+                )
+              )}
+            </div>
+          )}
+        </main>
+      );
+    };
 
   /* =======================================================
      NOTIFICACIONES GENERALES
   ======================================================= */
 
-  const NotificationsPage = () => (
-    <main className="page-content">
-      <PageHeader title="Notificaciones" />
-
-      <div className="notification-list">
-        <Notification
-          icon="🎉"
-          title="¡Bienvenido a SHORASHOPP!"
-          text="Descubre productos increíbles."
+  const NotificationsPage =
+    () => (
+      <main className="page-content">
+        <PageHeader
+          title="Notificaciones"
         />
 
-        <Notification
-          icon="🔥"
-          title="Nuevas ofertas disponibles"
-          text="Revisa nuestras promociones."
-        />
+        <div className="notification-list">
+          <Notification
+            icon="🎉"
+            title="¡Bienvenido a SHORASHOPP!"
+            text="Descubre productos increíbles."
+          />
 
-        <Notification
-          icon="📦"
-          title="Tus pedidos aparecerán aquí"
-          text="Podrás consultar el estado de tus compras."
-        />
-      </div>
-    </main>
-  );
+          <Notification
+            icon="🔥"
+            title="Nuevas ofertas disponibles"
+            text="Revisa nuestras promociones."
+          />
+
+          <Notification
+            icon="📦"
+            title="Tus pedidos aparecerán aquí"
+            text="Podrás consultar el estado de tus compras."
+          />
+        </div>
+      </main>
+    );
 
   /* =======================================================
      CUENTA
@@ -1336,13 +1641,18 @@ function App() {
 
       <div className="account-page">
         <div className="account-avatar">
-          <Icon name="user" size={46} />
+          <Icon
+            name="user"
+            size={46}
+          />
         </div>
 
         <h2>Mi cuenta</h2>
 
         {session ? (
-          <p>{session.user.email}</p>
+          <p>
+            {session.user.email}
+          </p>
         ) : (
           <p>
             Inicia sesión para acceder a tus funciones.
@@ -1354,7 +1664,9 @@ function App() {
             <button
               className="panel-primary-button"
               type="button"
-              onClick={() => openAuth("login")}
+              onClick={() =>
+                openAuth("login")
+              }
             >
               Iniciar sesión
             </button>
@@ -1362,41 +1674,71 @@ function App() {
             <button
               className="panel-option"
               type="button"
-              onClick={() => openAuth("register")}
+              onClick={() =>
+                openAuth("register")
+              }
             >
               <span className="option-icon">
                 ✨
               </span>
 
-              <span>Crear una cuenta</span>
+              <span>
+                Crear una cuenta
+              </span>
 
-              <Icon name="arrow" size={21} />
+              <Icon
+                name="arrow"
+                size={21}
+              />
             </button>
           </>
         ) : (
           <>
             <AccountOption
-              icon={<Icon name="box" size={23} />}
+              icon={
+                <Icon
+                  name="box"
+                  size={23}
+                />
+              }
               text="Mis pedidos"
-              onClick={() => navigate("orders")}
+              onClick={() =>
+                navigate("orders")
+              }
             />
 
             <AccountOption
-              icon={<Icon name="message" size={23} />}
+              icon={
+                <Icon
+                  name="message"
+                  size={23}
+                />
+              }
               text="Mensajes"
-              onClick={() => navigate("messages")}
+              onClick={() =>
+                navigate("messages")
+              }
             />
 
             <AccountOption
-              icon={<Icon name="settings" size={23} />}
+              icon={
+                <Icon
+                  name="settings"
+                  size={23}
+                />
+              }
               text="Configuración"
-              onClick={() => navigate("settings")}
+              onClick={() =>
+                navigate("settings")
+              }
             />
 
             <button
               className="panel-primary-button logout-button"
               type="button"
-              onClick={handleLogout}
+              onClick={
+                handleLogout
+              }
             >
               Cerrar sesión
             </button>
@@ -1419,7 +1761,9 @@ function App() {
         title="Todavía no tienes pedidos"
         text="Cuando realices una compra podrás consultar aquí el estado de tu pedido."
         action="Comprar ahora"
-        onAction={() => navigate("products")}
+        onAction={() =>
+          navigate("products")
+        }
       />
     </main>
   );
@@ -1446,45 +1790,84 @@ function App() {
 
   const SettingsPage = () => (
     <main className="page-content">
-      <PageHeader title="Configuración" />
+      <PageHeader
+        title="Configuración"
+      />
 
       <div className="settings-list">
-
         <SettingsOption
-          icon={<Icon name="bell" size={24} />}
+          icon={
+            <Icon
+              name="bell"
+              size={24}
+            />
+          }
           title="Notificaciones"
           description="Controla qué avisos quieres recibir"
-          onClick={() => navigate("notification-settings")}
+          onClick={() =>
+            navigate(
+              "notification-settings"
+            )
+          }
         />
 
         <SettingsOption
-          icon={<Icon name="lock" size={24} />}
+          icon={
+            <Icon
+              name="lock"
+              size={24}
+            />
+          }
           title="Privacidad y seguridad"
           description="Protege tu cuenta y administra tus sesiones"
-          onClick={() => navigate("privacy")}
+          onClick={() =>
+            navigate("privacy")
+          }
         />
 
         <SettingsOption
-          icon={<Icon name="globe" size={24} />}
+          icon={
+            <Icon
+              name="globe"
+              size={24}
+            />
+          }
           title="País y preferencias"
           description="Idioma, moneda y país"
-          onClick={() => navigate("preferences")}
+          onClick={() =>
+            navigate(
+              "preferences"
+            )
+          }
         />
 
         <SettingsOption
-          icon={<Icon name="document" size={24} />}
+          icon={
+            <Icon
+              name="document"
+              size={24}
+            />
+          }
           title="Términos y condiciones"
           description="Conoce las reglas de SHORASHOPP"
-          onClick={() => navigate("terms")}
+          onClick={() =>
+            navigate("terms")
+          }
         />
 
         <SettingsOption
-          icon={<Icon name="info" size={24} />}
+          icon={
+            <Icon
+              name="info"
+              size={24}
+            />
+          }
           title="Acerca de SHORASHOPP"
           description="Información de la aplicación"
-          onClick={() => navigate("about")}
+          onClick={() =>
+            navigate("about")
+          }
         />
-
       </div>
     </main>
   );
@@ -1493,78 +1876,103 @@ function App() {
      CONFIGURACIÓN - NOTIFICACIONES
   ======================================================= */
 
-  const NotificationSettingsPage = () => (
-    <main className="page-content">
-      <PageHeader title="Notificaciones" />
+  const NotificationSettingsPage =
+    () => (
+      <main className="page-content">
+        <PageHeader
+          title="Notificaciones"
+        />
 
-      <div className="settings-page-intro">
-        <div className="settings-large-icon">
-          <Icon name="bell" size={33} />
+        <div className="settings-page-intro">
+          <div className="settings-large-icon">
+            <Icon
+              name="bell"
+              size={33}
+            />
+          </div>
+
+          <div>
+            <strong>
+              Administra tus avisos
+            </strong>
+            <small>
+              Decide qué notificaciones quieres recibir.
+            </small>
+          </div>
         </div>
 
-        <div>
-          <strong>Administra tus avisos</strong>
-          <small>
-            Decide qué notificaciones quieres recibir.
-          </small>
+        <div className="settings-section-card">
+          <SettingsToggle
+            title="Pedidos"
+            description="Actualizaciones sobre tus compras y entregas"
+            value={
+              notificationSettings.orders
+            }
+            onChange={() =>
+              setNotificationSettings(
+                (current) => ({
+                  ...current,
+                  orders:
+                    !current.orders,
+                })
+              )
+            }
+          />
+
+          <SettingsToggle
+            title="Ofertas y promociones"
+            description="Descuentos, promociones y oportunidades especiales"
+            value={
+              notificationSettings.promotions
+            }
+            onChange={() =>
+              setNotificationSettings(
+                (current) => ({
+                  ...current,
+                  promotions:
+                    !current.promotions,
+                })
+              )
+            }
+          />
+
+          <SettingsToggle
+            title="Mensajes"
+            description="Avisos cuando recibas mensajes"
+            value={
+              notificationSettings.messages
+            }
+            onChange={() =>
+              setNotificationSettings(
+                (current) => ({
+                  ...current,
+                  messages:
+                    !current.messages,
+                })
+              )
+            }
+          />
+
+          <SettingsToggle
+            title="Novedades de SHORASHOPP"
+            description="Noticias, novedades y nuevas funciones"
+            value={
+              notificationSettings.news
+            }
+            onChange={() =>
+              setNotificationSettings(
+                (current) => ({
+                  ...current,
+                  news:
+                    !current.news,
+                })
+              )
+            }
+            last
+          />
         </div>
-      </div>
-
-      <div className="settings-section-card">
-
-        <SettingsToggle
-          title="Pedidos"
-          description="Actualizaciones sobre tus compras y entregas"
-          value={notificationSettings.orders}
-          onChange={() =>
-            setNotificationSettings((current) => ({
-              ...current,
-              orders: !current.orders,
-            }))
-          }
-        />
-
-        <SettingsToggle
-          title="Ofertas y promociones"
-          description="Descuentos, promociones y oportunidades especiales"
-          value={notificationSettings.promotions}
-          onChange={() =>
-            setNotificationSettings((current) => ({
-              ...current,
-              promotions: !current.promotions,
-            }))
-          }
-        />
-
-        <SettingsToggle
-          title="Mensajes"
-          description="Avisos cuando recibas mensajes"
-          value={notificationSettings.messages}
-          onChange={() =>
-            setNotificationSettings((current) => ({
-              ...current,
-              messages: !current.messages,
-            }))
-          }
-        />
-
-        <SettingsToggle
-          title="Novedades de SHORASHOPP"
-          description="Noticias, novedades y nuevas funciones"
-          value={notificationSettings.news}
-          onChange={() =>
-            setNotificationSettings((current) => ({
-              ...current,
-              news: !current.news,
-            }))
-          }
-          last
-        />
-
-      </div>
-
-    </main>
-  );
+      </main>
+    );
 
   /* =======================================================
      CONFIGURACIÓN - PRIVACIDAD
@@ -1572,15 +1980,23 @@ function App() {
 
   const PrivacyPage = () => (
     <main className="page-content">
-      <PageHeader title="Privacidad y seguridad" />
+      <PageHeader
+        title="Privacidad y seguridad"
+      />
 
       <div className="settings-page-intro">
         <div className="settings-large-icon">
-          <Icon name="shield" size={33} />
+          <Icon
+            name="shield"
+            size={33}
+          />
         </div>
 
         <div>
-          <strong>Protege tu cuenta</strong>
+          <strong>
+            Protege tu cuenta
+          </strong>
+
           <small>
             Administra tu seguridad y privacidad.
           </small>
@@ -1588,9 +2004,13 @@ function App() {
       </div>
 
       <div className="settings-section-card">
-
         <SettingsAction
-          icon={<Icon name="key" size={23} />}
+          icon={
+            <Icon
+              name="key"
+              size={23}
+            />
+          }
           title="Cambiar contraseña"
           description="Actualiza tu contraseña de acceso"
           onClick={() =>
@@ -1601,7 +2021,12 @@ function App() {
         />
 
         <SettingsAction
-          icon={<Icon name="devices" size={23} />}
+          icon={
+            <Icon
+              name="devices"
+              size={23}
+            />
+          }
           title="Sesiones activas"
           description="Revisa dónde tienes abierta tu cuenta"
           onClick={() =>
@@ -1612,7 +2037,12 @@ function App() {
         />
 
         <SettingsAction
-          icon={<Icon name="shield" size={23} />}
+          icon={
+            <Icon
+              name="shield"
+              size={23}
+            />
+          }
           title="Verificación de seguridad"
           description="Revisa las medidas de protección de tu cuenta"
           onClick={() =>
@@ -1622,7 +2052,6 @@ function App() {
           }
           last
         />
-
       </div>
 
       {message && (
@@ -1630,7 +2059,6 @@ function App() {
           {message}
         </div>
       )}
-
     </main>
   );
 
@@ -1638,112 +2066,148 @@ function App() {
      CONFIGURACIÓN - PAÍS Y PREFERENCIAS
   ======================================================= */
 
-  const PreferencesPage = () => (
-    <main className="page-content">
-      <PageHeader title="País y preferencias" />
+  const PreferencesPage =
+    () => (
+      <main className="page-content">
+        <PageHeader
+          title="País y preferencias"
+        />
 
-      <div className="settings-page-intro">
-        <div className="settings-large-icon">
-          <Icon name="globe" size={33} />
-        </div>
-
-        <div>
-          <strong>Personaliza tu experiencia</strong>
-          <small>
-            Estas opciones afectan cómo ves SHORASHOPP.
-          </small>
-        </div>
-      </div>
-
-      <div className="settings-section-card">
-
-        <div className="preference-row">
-          <div className="preference-icon">
-            <Icon name="globe" size={22} />
+        <div className="settings-page-intro">
+          <div className="settings-large-icon">
+            <Icon
+              name="globe"
+              size={33}
+            />
           </div>
 
-          <div className="preference-content">
-            <strong>País</strong>
+          <div>
+            <strong>
+              Personaliza tu experiencia
+            </strong>
 
-            <select
-              value={country}
-              onChange={(event) =>
-                setCountry(event.target.value)
-              }
-            >
-              <option>México</option>
-              <option>Estados Unidos</option>
-              <option>Canadá</option>
-              <option>España</option>
-            </select>
+            <small>
+              Estas opciones afectan cómo ves SHORASHOPP.
+            </small>
           </div>
         </div>
 
-        <div className="preference-row">
-          <div className="preference-icon">
-            $
+        <div className="settings-section-card">
+          <div className="preference-row">
+            <div className="preference-icon">
+              <Icon
+                name="globe"
+                size={22}
+              />
+            </div>
+
+            <div className="preference-content">
+              <strong>País</strong>
+
+              <select
+                value={country}
+                onChange={(event) =>
+                  setCountry(
+                    event.target.value
+                  )
+                }
+              >
+                <option>
+                  México
+                </option>
+                <option>
+                  Estados Unidos
+                </option>
+                <option>
+                  Canadá
+                </option>
+                <option>
+                  España
+                </option>
+              </select>
+            </div>
           </div>
 
-          <div className="preference-content">
-            <strong>Moneda</strong>
+          <div className="preference-row">
+            <div className="preference-icon">
+              $
+            </div>
 
-            <select
-              value={currency}
-              onChange={(event) =>
-                setCurrency(event.target.value)
-              }
-            >
-              <option value="MXN">
-                MXN — Peso mexicano
-              </option>
+            <div className="preference-content">
+              <strong>
+                Moneda
+              </strong>
 
-              <option value="USD">
-                USD — Dólar estadounidense
-              </option>
+              <select
+                value={currency}
+                onChange={(event) =>
+                  setCurrency(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="MXN">
+                  MXN — Peso mexicano
+                </option>
 
-              <option value="CAD">
-                CAD — Dólar canadiense
-              </option>
+                <option value="USD">
+                  USD — Dólar estadounidense
+                </option>
 
-              <option value="EUR">
-                EUR — Euro
-              </option>
-            </select>
+                <option value="CAD">
+                  CAD — Dólar canadiense
+                </option>
+
+                <option value="EUR">
+                  EUR — Euro
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div className="preference-row last">
+            <div className="preference-icon">
+              <Icon
+                name="language"
+                size={22}
+              />
+            </div>
+
+            <div className="preference-content">
+              <strong>
+                Idioma
+              </strong>
+
+              <select
+                value={language}
+                onChange={(event) =>
+                  setLanguage(
+                    event.target.value
+                  )
+                }
+              >
+                <option>
+                  Español
+                </option>
+                <option>
+                  English
+                </option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div className="preference-row last">
-          <div className="preference-icon">
-            <Icon name="language" size={22} />
-          </div>
+        <div className="preference-summary">
+          <span>
+            Configuración actual
+          </span>
 
-          <div className="preference-content">
-            <strong>Idioma</strong>
-
-            <select
-              value={language}
-              onChange={(event) =>
-                setLanguage(event.target.value)
-              }
-            >
-              <option>Español</option>
-              <option>English</option>
-            </select>
-          </div>
+          <strong>
+            {country} · {currency} · {language}
+          </strong>
         </div>
-
-      </div>
-
-      <div className="preference-summary">
-        <span>Configuración actual</span>
-
-        <strong>
-          {country} · {currency} · {language}
-        </strong>
-      </div>
-
-    </main>
-  );
+      </main>
+    );
 
   /* =======================================================
      CONFIGURACIÓN - TÉRMINOS
@@ -1751,13 +2215,17 @@ function App() {
 
   const TermsPage = () => (
     <main className="page-content">
-      <PageHeader title="Términos y condiciones" />
+      <PageHeader
+        title="Términos y condiciones"
+      />
 
       <article className="legal-page">
-
         <div className="legal-header">
           <div className="legal-icon">
-            <Icon name="document" size={32} />
+            <Icon
+              name="document"
+              size={32}
+            />
           </div>
 
           <div>
@@ -1861,7 +2329,6 @@ function App() {
             condiciones específicas de operación.
           </p>
         </div>
-
       </article>
     </main>
   );
@@ -1872,10 +2339,11 @@ function App() {
 
   const AboutPage = () => (
     <main className="page-content">
-      <PageHeader title="Acerca de SHORASHOPP" />
+      <PageHeader
+        title="Acerca de SHORASHOPP"
+      />
 
       <div className="about-page">
-
         <div className="about-logo">
           <strong>
             SHORA<span>SHOPP</span>
@@ -1903,7 +2371,6 @@ function App() {
         </p>
 
         <div className="about-cards">
-
           <div className="about-card">
             <span>🛍️</span>
             <strong>Compra</strong>
@@ -1927,26 +2394,34 @@ function App() {
               Encuentra nuevas oportunidades.
             </small>
           </div>
-
         </div>
 
         <div className="about-version">
-          <span>Aplicación</span>
-          <strong>SHORASHOPP</strong>
+          <span>
+            Aplicación
+          </span>
+          <strong>
+            SHORASHOPP
+          </strong>
         </div>
 
         <div className="about-version">
-          <span>Versión</span>
-          <strong>1.0.0</strong>
+          <span>
+            Versión
+          </span>
+          <strong>
+            1.0.0
+          </strong>
         </div>
 
         <div className="about-version last">
-          <span>Estado</span>
+          <span>
+            Estado
+          </span>
           <strong className="status-online">
             En desarrollo
           </strong>
         </div>
-
       </div>
     </main>
   );
@@ -1957,12 +2432,16 @@ function App() {
 
   const SellPage = () => (
     <main className="page-content">
-      <PageHeader title="Vende en SHORASHOPP" />
+      <PageHeader
+        title="Vende en SHORASHOPP"
+      />
 
       <div className="sell-page">
-
         <div className="sell-hero-icon">
-          <Icon name="store" size={55} />
+          <Icon
+            name="store"
+            size={55}
+          />
         </div>
 
         <span className="sell-kicker">
@@ -1981,7 +2460,9 @@ function App() {
         <button
           className="panel-primary-button"
           type="button"
-          onClick={() => openAuth("register")}
+          onClick={() =>
+            openAuth("register")
+          }
         >
           Crear cuenta de vendedor
         </button>
@@ -1989,12 +2470,19 @@ function App() {
         <button
           className="panel-option"
           type="button"
-          onClick={() => openAuth("login")}
+          onClick={() =>
+            openAuth("login")
+          }
         >
-          <span>Ya tengo una cuenta</span>
-          <Icon name="arrow" size={20} />
-        </button>
+          <span>
+            Ya tengo una cuenta
+          </span>
 
+          <Icon
+            name="arrow"
+            size={20}
+          />
+        </button>
       </div>
     </main>
   );
@@ -2005,27 +2493,40 @@ function App() {
 
   const CheckoutPage = () => (
     <main className="page-content">
-      <PageHeader title="Finalizar compra" />
+      <PageHeader
+        title="Finalizar compra"
+      />
 
       <div className="checkout-page">
-
         <div className="checkout-icon">
-          <Icon name="cart" size={45} />
+          <Icon
+            name="cart"
+            size={45}
+          />
         </div>
 
         <span className="checkout-kicker">
           RESUMEN
         </span>
 
-        <h2>Tu compra</h2>
+        <h2>
+          Tu compra
+        </h2>
 
         <div className="checkout-row">
-          <span>Productos</span>
-          <strong>{cartCount}</strong>
+          <span>
+            Productos
+          </span>
+
+          <strong>
+            {cartCount}
+          </strong>
         </div>
 
         <div className="checkout-row total">
-          <span>Total</span>
+          <span>
+            Total
+          </span>
 
           <strong>
             $
@@ -2055,7 +2556,6 @@ function App() {
             {message}
           </div>
         )}
-
       </div>
     </main>
   );
@@ -2069,9 +2569,13 @@ function App() {
       <PageHeader title="Menú" />
 
       <div className="main-menu-page">
-
         <MenuOption
-          icon={<Icon name="user" size={25} />}
+          icon={
+            <Icon
+              name="user"
+              size={25}
+            />
+          }
           text="Mi cuenta"
           onClick={() =>
             session
@@ -2081,51 +2585,96 @@ function App() {
         />
 
         <MenuOption
-          icon={<Icon name="box" size={25} />}
+          icon={
+            <Icon
+              name="box"
+              size={25}
+            />
+          }
           text="Mis pedidos"
-          onClick={() => navigate("orders")}
+          onClick={() =>
+            navigate("orders")
+          }
         />
 
         <MenuOption
-          icon={<Icon name="message" size={25} />}
+          icon={
+            <Icon
+              name="message"
+              size={25}
+            />
+          }
           text="Mensajes"
-          onClick={() => navigate("messages")}
+          onClick={() =>
+            navigate("messages")
+          }
         />
 
         <MenuOption
-          icon={<Icon name="settings" size={25} />}
+          icon={
+            <Icon
+              name="settings"
+              size={25}
+            />
+          }
           text="Configuración"
-          onClick={() => navigate("settings")}
+          onClick={() =>
+            navigate("settings")
+          }
         />
 
         <MenuOption
-          icon={<Icon name="heart" size={25} />}
+          icon={
+            <Icon
+              name="heart"
+              size={25}
+            />
+          }
           text="Favoritos"
-          onClick={() => navigate("favorites")}
+          onClick={() =>
+            navigate("favorites")
+          }
         />
 
         <MenuOption
-          icon={<Icon name="store" size={25} />}
+          icon={
+            <Icon
+              name="store"
+              size={25}
+            />
+          }
           text="Vender en SHORASHOPP"
-          onClick={() => navigate("sell")}
+          onClick={() =>
+            navigate("sell")
+          }
         />
 
         <MenuOption
-          icon={<Icon name="bell" size={25} />}
+          icon={
+            <Icon
+              name="bell"
+              size={25}
+            />
+          }
           text="Notificaciones"
-          onClick={() => navigate("notifications")}
+          onClick={() =>
+            navigate(
+              "notifications"
+            )
+          }
         />
 
         {session && (
           <button
             className="menu-logout"
             type="button"
-            onClick={handleLogout}
+            onClick={
+              handleLogout
+            }
           >
             Cerrar sesión
           </button>
         )}
-
       </div>
     </main>
   );
@@ -2136,15 +2685,24 @@ function App() {
 
   const TrustSection = () => (
     <section className="trust-section">
-
       <TrustItem
-        icon={<Icon name="shield" size={34} />}
+        icon={
+          <Icon
+            name="shield"
+            size={34}
+          />
+        }
         title="Compra segura"
         text="Protegemos tus datos y compras"
       />
 
       <TrustItem
-        icon={<Icon name="truck" size={34} />}
+        icon={
+          <Icon
+            name="truck"
+            size={34}
+          />
+        }
         title="Envíos rápidos"
         text="Recibe tus productos en tiempo récord"
       />
@@ -2160,7 +2718,6 @@ function App() {
         title="Soporte 24/7"
         text="Estamos aquí para ayudarte"
       />
-
     </section>
   );
 
@@ -2170,15 +2727,19 @@ function App() {
 
   const BottomNav = () => (
     <nav className="bottom-nav">
-
       <button
         className={`bottom-item ${
-          view === "home" ? "active" : ""
+          view === "home"
+            ? "active"
+            : ""
         }`}
         type="button"
         onClick={goHome}
       >
-        <Icon name="home" size={25} />
+        <Icon
+          name="home"
+          size={25}
+        />
         <small>Inicio</small>
       </button>
 
@@ -2190,21 +2751,35 @@ function App() {
             : ""
         }`}
         type="button"
-        onClick={() => navigate("categories")}
+        onClick={() =>
+          navigate("categories")
+        }
       >
-        <Icon name="grid" size={25} />
-        <small>Categorías</small>
+        <Icon
+          name="grid"
+          size={25}
+        />
+        <small>
+          Categorías
+        </small>
       </button>
 
       <button
         className={`seller-button ${
-          view === "sell" ? "active" : ""
+          view === "sell"
+            ? "active"
+            : ""
         }`}
         type="button"
-        onClick={() => navigate("sell")}
+        onClick={() =>
+          navigate("sell")
+        }
       >
         <span className="seller-circle">
-          <Icon name="store" size={29} />
+          <Icon
+            name="store"
+            size={29}
+          />
         </span>
 
         <small>Vender</small>
@@ -2212,18 +2787,29 @@ function App() {
 
       <button
         className={`bottom-item ${
-          view === "favorites" ? "active" : ""
+          view === "favorites"
+            ? "active"
+            : ""
         }`}
         type="button"
-        onClick={() => navigate("favorites")}
+        onClick={() =>
+          navigate("favorites")
+        }
       >
-        <Icon name="heart" size={26} />
-        <small>Favoritos</small>
+        <Icon
+          name="heart"
+          size={26}
+        />
+        <small>
+          Favoritos
+        </small>
       </button>
 
       <button
         className={`bottom-item ${
-          view === "account" ? "active" : ""
+          view === "account"
+            ? "active"
+            : ""
         }`}
         type="button"
         onClick={() =>
@@ -2232,10 +2818,12 @@ function App() {
             : openAuth("login")
         }
       >
-        <Icon name="user" size={26} />
+        <Icon
+          name="user"
+          size={26}
+        />
         <small>Cuenta</small>
       </button>
-
     </nav>
   );
 
@@ -2280,11 +2868,18 @@ function App() {
       <span>{icon}</span>
 
       <div>
-        <strong>{title}</strong>
-        <small>{text}</small>
+        <strong>
+          {title}
+        </strong>
+        <small>
+          {text}
+        </small>
       </div>
 
-      <Icon name="arrow" size={20} />
+      <Icon
+        name="arrow"
+        size={20}
+      />
     </div>
   );
 
@@ -2302,9 +2897,14 @@ function App() {
         {icon}
       </span>
 
-      <span>{text}</span>
+      <span>
+        {text}
+      </span>
 
-      <Icon name="arrow" size={20} />
+      <Icon
+        name="arrow"
+        size={20}
+      />
     </button>
   );
 
@@ -2322,9 +2922,14 @@ function App() {
         {icon}
       </span>
 
-      <span>{text}</span>
+      <span>
+        {text}
+      </span>
 
-      <Icon name="arrow" size={21} />
+      <Icon
+        name="arrow"
+        size={21}
+      />
     </button>
   );
 
@@ -2339,8 +2944,13 @@ function App() {
       </span>
 
       <div>
-        <strong>{title}</strong>
-        <small>{text}</small>
+        <strong>
+          {title}
+        </strong>
+
+        <small>
+          {text}
+        </small>
       </div>
     </div>
   );
@@ -2361,11 +2971,19 @@ function App() {
       </span>
 
       <span className="settings-option-content">
-        <strong>{title}</strong>
-        <small>{description}</small>
+        <strong>
+          {title}
+        </strong>
+
+        <small>
+          {description}
+        </small>
       </span>
 
-      <Icon name="arrow" size={21} />
+      <Icon
+        name="arrow"
+        size={21}
+      />
     </button>
   );
 
@@ -2382,8 +3000,13 @@ function App() {
       }`}
     >
       <div>
-        <strong>{title}</strong>
-        <small>{description}</small>
+        <strong>
+          {title}
+        </strong>
+
+        <small>
+          {description}
+        </small>
       </div>
 
       <button
@@ -2418,11 +3041,19 @@ function App() {
       </span>
 
       <span className="settings-action-content">
-        <strong>{title}</strong>
-        <small>{description}</small>
+        <strong>
+          {title}
+        </strong>
+
+        <small>
+          {description}
+        </small>
       </span>
 
-      <Icon name="arrow" size={20} />
+      <Icon
+        name="arrow"
+        size={20}
+      />
     </button>
   );
 
@@ -2437,8 +3068,13 @@ function App() {
       </div>
 
       <div>
-        <h3>{title}</h3>
-        <p>{children}</p>
+        <h3>
+          {title}
+        </h3>
+
+        <p>
+          {children}
+        </p>
       </div>
     </section>
   );
@@ -2471,7 +3107,9 @@ function App() {
         return <FavoritesPage />;
 
       case "notifications":
-        return <NotificationsPage />;
+        return (
+          <NotificationsPage />
+        );
 
       case "account":
         return <AccountPage />;
@@ -2486,7 +3124,9 @@ function App() {
         return <SettingsPage />;
 
       case "notification-settings":
-        return <NotificationSettingsPage />;
+        return (
+          <NotificationSettingsPage />
+        );
 
       case "privacy":
         return <PrivacyPage />;
@@ -2517,7 +3157,6 @@ function App() {
 
   return (
     <div className="app">
-
       <Header />
 
       {renderView()}
@@ -2533,7 +3172,8 @@ function App() {
           className="auth-overlay"
           onMouseDown={(event) => {
             if (
-              event.target === event.currentTarget
+              event.target ===
+              event.currentTarget
             ) {
               closeAuth();
             }
@@ -2550,7 +3190,10 @@ function App() {
               type="button"
               onClick={closeAuth}
             >
-              <Icon name="close" size={22} />
+              <Icon
+                name="close"
+                size={22}
+              />
             </button>
 
             <div className="auth-logo">
@@ -2558,26 +3201,33 @@ function App() {
             </div>
 
             <h2>
-              {authMode === "login"
+              {authMode ===
+              "login"
                 ? "Bienvenido."
                 : "Crea tu cuenta."}
             </h2>
 
             <p>
-              {authMode === "login"
+              {authMode ===
+              "login"
                 ? "Inicia sesión en SHORASHOPP."
                 : "Únete a SHORASHOPP."}
             </p>
 
-            <form onSubmit={handleAuth}>
-
-              {authMode === "register" && (
+            <form
+              onSubmit={handleAuth}
+            >
+              {authMode ===
+                "register" && (
                 <input
                   type="text"
                   placeholder="Nombre completo"
                   value={name}
                   onChange={(event) =>
-                    setName(event.target.value)
+                    setName(
+                      event.target
+                        .value
+                    )
                   }
                   required
                 />
@@ -2588,7 +3238,10 @@ function App() {
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(event) =>
-                  setEmail(event.target.value)
+                  setEmail(
+                    event.target
+                      .value
+                  )
                 }
                 required
               />
@@ -2598,7 +3251,10 @@ function App() {
                 placeholder="Contraseña"
                 value={password}
                 onChange={(event) =>
-                  setPassword(event.target.value)
+                  setPassword(
+                    event.target
+                      .value
+                  )
                 }
                 minLength={6}
                 required
@@ -2611,7 +3267,8 @@ function App() {
               >
                 {loading
                   ? "Procesando..."
-                  : authMode === "login"
+                  : authMode ===
+                    "login"
                   ? "Iniciar sesión"
                   : "Crear cuenta"}
               </button>
@@ -2624,13 +3281,16 @@ function App() {
             )}
 
             <div className="auth-switch">
-              {authMode === "login" ? (
+              {authMode ===
+              "login" ? (
                 <>
                   ¿No tienes cuenta?{" "}
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthMode("register");
+                      setAuthMode(
+                        "register"
+                      );
                       setMessage("");
                     }}
                   >
@@ -2643,7 +3303,9 @@ function App() {
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthMode("login");
+                      setAuthMode(
+                        "login"
+                      );
                       setMessage("");
                     }}
                   >
@@ -2655,7 +3317,6 @@ function App() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
