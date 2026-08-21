@@ -303,6 +303,16 @@ function App() {
   useEffect(() => {
     let mounted = true;
 
+    if (!supabase) {
+      console.warn(
+        "SHORASHOPP: Supabase no está configurado. Revisa VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY."
+      );
+
+      return () => {
+        mounted = false;
+      };
+    }
+
     const loadSession = async () => {
       try {
         const { data, error } =
@@ -367,7 +377,6 @@ function App() {
   const navigate = (newView) => {
     setPreviousView(view);
     setView(newView);
-
     setMessage("");
 
     window.scrollTo({
@@ -417,7 +426,6 @@ function App() {
     setLoading(false);
     setPassword("");
     setConfirmPassword("");
-
     setShowAuth(true);
   };
 
@@ -526,6 +534,13 @@ function App() {
       return;
     }
 
+    if (!supabase) {
+      setMessage(
+        "El servicio de autenticación no está disponible en este momento. Revisa la configuración de Supabase."
+      );
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
@@ -537,7 +552,10 @@ function App() {
 
       const currentPassword = password;
 
-      if (currentAuthMode === "updatePassword") {
+      if (
+        currentAuthMode ===
+        "updatePassword"
+      ) {
         if (currentPassword.length < 6) {
           setMessage(
             "La nueva contraseña debe tener al menos 6 caracteres."
@@ -545,7 +563,10 @@ function App() {
           return;
         }
 
-        if (currentPassword !== confirmPassword) {
+        if (
+          currentPassword !==
+          confirmPassword
+        ) {
           setMessage(
             "Las contraseñas no coinciden."
           );
@@ -607,7 +628,10 @@ function App() {
         return;
       }
 
-      if (currentAuthMode === "register") {
+      if (
+        currentAuthMode ===
+        "register"
+      ) {
         const cleanName = name.trim();
 
         if (!cleanName) {
@@ -706,7 +730,6 @@ function App() {
       }
 
       setSession(data.session);
-
       setShowAuth(false);
       setMessage("");
       setName("");
@@ -733,74 +756,89 @@ function App() {
      RECUPERAR CONTRASEÑA
   ======================================================= */
 
-  const handlePasswordRecovery = async (event) => {
-    event.preventDefault();
+  const handlePasswordRecovery =
+    async (event) => {
+      event.preventDefault();
 
-    if (loading) {
-      return;
-    }
+      if (loading) {
+        return;
+      }
 
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const cleanEmail =
-        email.trim().toLowerCase();
-
-      if (!cleanEmail) {
+      if (!supabase) {
         setMessage(
-          "Escribe el correo electrónico de tu cuenta."
+          "El servicio de recuperación de contraseña no está disponible en este momento. Revisa la configuración de Supabase."
         );
         return;
       }
 
-      const redirectTo = getAuthRedirectUrl();
+      setLoading(true);
+      setMessage("");
 
-      const {
-        error,
-      } =
-        await supabase.auth.resetPasswordForEmail(
-          cleanEmail,
-          {
-            redirectTo,
-          }
+      try {
+        const cleanEmail =
+          email.trim().toLowerCase();
+
+        if (!cleanEmail) {
+          setMessage(
+            "Escribe el correo electrónico de tu cuenta."
+          );
+          return;
+        }
+
+        const redirectTo =
+          getAuthRedirectUrl();
+
+        const {
+          error,
+        } =
+          await supabase.auth.resetPasswordForEmail(
+            cleanEmail,
+            {
+              redirectTo,
+            }
+          );
+
+        if (error) {
+          console.error(
+            "Supabase password recovery error:",
+            error
+          );
+
+          setMessage(
+            getAuthErrorMessage(error)
+          );
+
+          return;
+        }
+
+        setMessage(
+          "Te enviamos un correo para recuperar tu contraseña. Abre el enlace y podrás crear una nueva contraseña."
         );
-
-      if (error) {
+      } catch (error) {
         console.error(
-          "Supabase password recovery error:",
+          "SHORASHOPP recovery error:",
           error
         );
 
         setMessage(
           getAuthErrorMessage(error)
         );
-
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      setMessage(
-        "Te enviamos un correo para recuperar tu contraseña. Abre el enlace y podrás crear una nueva contraseña."
-      );
-    } catch (error) {
-      console.error(
-        "SHORASHOPP recovery error:",
-        error
-      );
-
-      setMessage(
-        getAuthErrorMessage(error)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   /* =======================================================
      LOGOUT
   ======================================================= */
 
   const handleLogout = async () => {
+    if (!supabase) {
+      setSession(null);
+      navigate("home");
+      return;
+    }
+
     try {
       const { error } =
         await supabase.auth.signOut();
@@ -828,32 +866,45 @@ function App() {
   ======================================================= */
 
   const deviceInfo = useMemo(() => {
-    if (typeof navigator === "undefined") {
+    if (
+      typeof navigator ===
+      "undefined"
+    ) {
       return {
-        browser: "Navegador actual",
-        platform: "Dispositivo actual",
+        browser:
+          "Navegador actual",
+        platform:
+          "Dispositivo actual",
       };
     }
 
     const userAgent =
       navigator.userAgent || "";
 
-    let browser = "Navegador web";
+    let browser =
+      "Navegador web";
 
     if (
       userAgent.includes("Edg/")
     ) {
-      browser = "Microsoft Edge";
+      browser =
+        "Microsoft Edge";
     } else if (
       userAgent.includes("Chrome/")
     ) {
-      browser = "Google Chrome";
+      browser =
+        "Google Chrome";
     } else if (
-      userAgent.includes("Firefox/")
+      userAgent.includes(
+        "Firefox/"
+      )
     ) {
-      browser = "Mozilla Firefox";
+      browser =
+        "Mozilla Firefox";
     } else if (
-      userAgent.includes("Safari/")
+      userAgent.includes(
+        "Safari/"
+      )
     ) {
       browser = "Safari";
     }
@@ -871,7 +922,8 @@ function App() {
         userAgent
       )
     ) {
-      platform = "iPhone / iPad";
+      platform =
+        "iPhone / iPad";
     } else if (
       /Windows/i.test(userAgent)
     ) {
@@ -1083,7 +1135,9 @@ function App() {
           type="button"
           className="header-icon-button"
           onClick={() =>
-            navigate("notifications")
+            navigate(
+              "notifications"
+            )
           }
         >
           <Icon
@@ -1330,7 +1384,6 @@ function App() {
 
       <div className="quick-content">
         <strong>{title}</strong>
-
         <span>{text}</span>
       </div>
 
@@ -1411,9 +1464,7 @@ function App() {
             <button
               type="button"
               onClick={() =>
-                navigate(
-                  "categories"
-                )
+                navigate("categories")
               }
             >
               Ver todas
@@ -1429,30 +1480,21 @@ function App() {
               (category) => (
                 <button
                   className="category-item"
-                  key={
-                    category.name
-                  }
+                  key={category.name}
                   type="button"
                   onClick={() => {
                     setSelectedCategory(
                       category.name
                     );
-
-                    navigate(
-                      "category"
-                    );
+                    navigate("category");
                   }}
                 >
                   <div className="category-icon">
-                    {
-                      category.icon
-                    }
+                    {category.icon}
                   </div>
 
                   <span>
-                    {
-                      category.name
-                    }
+                    {category.name}
                   </span>
                 </button>
               )
@@ -1548,9 +1590,7 @@ function App() {
             {products.map(
               (product) => (
                 <ProductCard
-                  key={
-                    product.name
-                  }
+                  key={product.name}
                   product={product}
                 />
               )
@@ -1595,31 +1635,22 @@ function App() {
           (category) => (
             <button
               className="category-page-card"
-              key={
-                category.name
-              }
+              key={category.name}
               type="button"
               onClick={() => {
                 setSelectedCategory(
                   category.name
                 );
-
-                navigate(
-                  "category"
-                );
+                navigate("category");
               }}
             >
               <div className="category-icon">
-                {
-                  category.icon
-                }
+                {category.icon}
               </div>
 
               <div>
                 <strong>
-                  {
-                    category.name
-                  }
+                  {category.name}
                 </strong>
 
                 <span>
@@ -1663,14 +1694,11 @@ function App() {
       </div>
 
       <div className="products-grid">
-        {filteredProducts.length >
-        0 ? (
+        {filteredProducts.length > 0 ? (
           filteredProducts.map(
             (product) => (
               <ProductCard
-                key={
-                  product.name
-                }
+                key={product.name}
                 product={product}
               />
             )
@@ -1716,9 +1744,7 @@ function App() {
         {products.map(
           (product) => (
             <ProductCard
-              key={
-                product.name
-              }
+              key={product.name}
               product={product}
             />
           )
@@ -1757,9 +1783,7 @@ function App() {
         {products.map(
           (product) => (
             <ProductCard
-              key={
-                product.name
-              }
+              key={product.name}
               product={product}
             />
           )
@@ -1812,14 +1836,11 @@ function App() {
       </div>
 
       <div className="products-grid">
-        {filteredProducts.length >
-        0 ? (
+        {filteredProducts.length > 0 ? (
           filteredProducts.map(
             (product) => (
               <ProductCard
-                key={
-                  product.name
-                }
+                key={product.name}
                 product={product}
               />
             )
@@ -2165,9 +2186,7 @@ function App() {
             <button
               className="panel-primary-button logout-button"
               type="button"
-              onClick={
-                handleLogout
-              }
+              onClick={handleLogout}
             >
               Cerrar sesión
             </button>
@@ -2193,9 +2212,7 @@ function App() {
         text="Cuando realices una compra podrás consultar aquí el estado de tu pedido."
         action="Comprar ahora"
         onAction={() =>
-          navigate(
-            "products"
-          )
+          navigate("products")
         }
       />
     </main>
@@ -2266,9 +2283,7 @@ function App() {
           title="País y preferencias"
           description="Idioma, moneda y país"
           onClick={() =>
-            navigate(
-              "preferences"
-            )
+            navigate("preferences")
           }
         />
 
@@ -2666,221 +2681,224 @@ function App() {
      VERIFICACIÓN DE SEGURIDAD
   ======================================================= */
 
-  const SecurityVerificationPage = () => {
-    if (!session) {
+  const SecurityVerificationPage =
+    () => {
+      if (!session) {
+        return (
+          <main className="page-content">
+            <PageHeader
+              title="Verificación de seguridad"
+            />
+
+            <EmptyState
+              icon="🛡️"
+              title="Inicia sesión"
+              text="Necesitas iniciar sesión para revisar la seguridad de tu cuenta."
+              action="Iniciar sesión"
+              onAction={() =>
+                openAuth("login")
+              }
+            />
+          </main>
+        );
+      }
+
+      const emailConfirmed =
+        Boolean(
+          session.user
+            .email_confirmed_at
+        );
+
       return (
         <main className="page-content">
           <PageHeader
             title="Verificación de seguridad"
           />
 
-          <EmptyState
-            icon="🛡️"
-            title="Inicia sesión"
-            text="Necesitas iniciar sesión para revisar la seguridad de tu cuenta."
-            action="Iniciar sesión"
-            onAction={() =>
-              openAuth("login")
-            }
-          />
-        </main>
-      );
-    }
-
-    const emailConfirmed = Boolean(
-      session.user.email_confirmed_at
-    );
-
-    return (
-      <main className="page-content">
-        <PageHeader
-          title="Verificación de seguridad"
-        />
-
-        <div className="settings-page-intro">
-          <div className="settings-large-icon">
-            <Icon
-              name="shield"
-              size={33}
-            />
-          </div>
-
-          <div>
-            <strong>
-              Revisa las medidas de protección de tu cuenta
-            </strong>
-
-            <small>
-              Mantén tus datos y acceso protegidos.
-            </small>
-          </div>
-        </div>
-
-        <div className="security-check-list">
-          <div className="security-check-item">
-            <div className="security-check-icon">
-              <Icon
-                name="message"
-                size={23}
-              />
-            </div>
-
-            <div className="security-check-content">
-              <strong>
-                Correo electrónico
-              </strong>
-
-              <small>
-                {session.user.email}
-              </small>
-            </div>
-
-            <span
-              className={`security-status ${
-                emailConfirmed
-                  ? "success"
-                  : "warning"
-              }`}
-            >
-              {emailConfirmed
-                ? "Confirmado"
-                : "Pendiente"}
-            </span>
-          </div>
-
-          <div className="security-check-item">
-            <div className="security-check-icon">
-              <Icon
-                name="key"
-                size={23}
-              />
-            </div>
-
-            <div className="security-check-content">
-              <strong>
-                Contraseña
-              </strong>
-
-              <small>
-                Tu cuenta utiliza una contraseña de acceso.
-              </small>
-            </div>
-
-            <span className="security-status success">
-              Configurada
-            </span>
-          </div>
-
-          <div className="security-check-item">
-            <div className="security-check-icon">
+          <div className="settings-page-intro">
+            <div className="settings-large-icon">
               <Icon
                 name="shield"
-                size={23}
+                size={33}
               />
             </div>
 
-            <div className="security-check-content">
+            <div>
               <strong>
-                Protección de la cuenta
+                Revisa las medidas de protección de tu cuenta
               </strong>
 
               <small>
-                Tu sesión está protegida mediante Supabase Auth.
+                Mantén tus datos y acceso protegidos.
               </small>
             </div>
-
-            <span className="security-status success">
-              Activa
-            </span>
           </div>
 
-          <div className="security-check-item last">
-            <div className="security-check-icon">
+          <div className="security-check-list">
+            <div className="security-check-item">
+              <div className="security-check-icon">
+                <Icon
+                  name="message"
+                  size={23}
+                />
+              </div>
+
+              <div className="security-check-content">
+                <strong>
+                  Correo electrónico
+                </strong>
+
+                <small>
+                  {session.user.email}
+                </small>
+              </div>
+
+              <span
+                className={`security-status ${
+                  emailConfirmed
+                    ? "success"
+                    : "warning"
+                }`}
+              >
+                {emailConfirmed
+                  ? "Confirmado"
+                  : "Pendiente"}
+              </span>
+            </div>
+
+            <div className="security-check-item">
+              <div className="security-check-icon">
+                <Icon
+                  name="key"
+                  size={23}
+                />
+              </div>
+
+              <div className="security-check-content">
+                <strong>
+                  Contraseña
+                </strong>
+
+                <small>
+                  Tu cuenta utiliza una contraseña de acceso.
+                </small>
+              </div>
+
+              <span className="security-status success">
+                Configurada
+              </span>
+            </div>
+
+            <div className="security-check-item">
+              <div className="security-check-icon">
+                <Icon
+                  name="shield"
+                  size={23}
+                />
+              </div>
+
+              <div className="security-check-content">
+                <strong>
+                  Protección de la cuenta
+                </strong>
+
+                <small>
+                  Tu sesión está protegida mediante Supabase Auth.
+                </small>
+              </div>
+
+              <span className="security-status success">
+                Activa
+              </span>
+            </div>
+
+            <div className="security-check-item last">
+              <div className="security-check-icon">
+                <Icon
+                  name="lock"
+                  size={23}
+                />
+              </div>
+
+              <div className="security-check-content">
+                <strong>
+                  Verificación en dos pasos
+                </strong>
+
+                <small>
+                  Área preparada para integrar MFA/2FA posteriormente.
+                </small>
+              </div>
+
+              <span className="security-status neutral">
+                Preparada
+              </span>
+            </div>
+          </div>
+
+          <div className="security-recommendations">
+            <div className="security-recommendation-header">
               <Icon
-                name="lock"
-                size={23}
+                name="info"
+                size={24}
               />
-            </div>
 
-            <div className="security-check-content">
               <strong>
-                Verificación en dos pasos
+                Recomendaciones de seguridad
               </strong>
-
-              <small>
-                Área preparada para integrar MFA/2FA posteriormente.
-              </small>
             </div>
 
-            <span className="security-status neutral">
-              Preparada
-            </span>
-          </div>
-        </div>
+            <ul>
+              <li>
+                Utiliza una contraseña única y difícil de adivinar.
+              </li>
 
-        <div className="security-recommendations">
-          <div className="security-recommendation-header">
+              <li>
+                No compartas tu contraseña con otras personas.
+              </li>
+
+              <li>
+                Revisa tus sesiones activas periódicamente.
+              </li>
+
+              <li>
+                Considera activar MFA/2FA cuando esté disponible.
+              </li>
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            className="panel-primary-button"
+            onClick={() => {
+              setAuthMode(
+                "updatePassword"
+              );
+              setPassword("");
+              setConfirmPassword("");
+              setMessage("");
+              setShowAuth(true);
+            }}
+          >
             <Icon
-              name="info"
-              size={24}
+              name="key"
+              size={20}
             />
+            Cambiar contraseña
+          </button>
 
-            <strong>
-              Recomendaciones de seguridad
-            </strong>
-          </div>
-
-          <ul>
-            <li>
-              Utiliza una contraseña única y difícil de adivinar.
-            </li>
-
-            <li>
-              No compartas tu contraseña con otras personas.
-            </li>
-
-            <li>
-              Revisa tus sesiones activas periódicamente.
-            </li>
-
-            <li>
-              Considera activar MFA/2FA cuando esté disponible.
-            </li>
-          </ul>
-        </div>
-
-        <button
-          type="button"
-          className="panel-primary-button"
-          onClick={() => {
-            setAuthMode(
-              "updatePassword"
-            );
-            setPassword("");
-            setConfirmPassword("");
-            setMessage("");
-            setShowAuth(true);
-          }}
-        >
-          <Icon
-            name="key"
-            size={20}
-          />
-          Cambiar contraseña
-        </button>
-
-        <button
-          type="button"
-          className="security-back-button"
-          onClick={() =>
-            navigate("privacy")
-          }
-        >
-          Volver a Privacidad y seguridad
-        </button>
-      </main>
-    );
-  };
+          <button
+            type="button"
+            className="security-back-button"
+            onClick={() =>
+              navigate("privacy")
+            }
+          >
+            Volver a Privacidad y seguridad
+          </button>
+        </main>
+      );
+    };
 
   /* =======================================================
      PREFERENCIAS
@@ -2935,15 +2953,12 @@ function App() {
                 <option>
                   México
                 </option>
-
                 <option>
                   Estados Unidos
                 </option>
-
                 <option>
                   Canadá
                 </option>
-
                 <option>
                   España
                 </option>
@@ -3223,7 +3238,6 @@ function App() {
 
         <div className="about-version">
           <span>Aplicación</span>
-
           <strong>
             SHORASHOPP
           </strong>
@@ -3231,7 +3245,6 @@ function App() {
 
         <div className="about-version">
           <span>Versión</span>
-
           <strong>
             1.0.0
           </strong>
@@ -3397,12 +3410,8 @@ function App() {
           text="Mi cuenta"
           onClick={() =>
             session
-              ? navigate(
-                  "account"
-                )
-              : openAuth(
-                  "login"
-                )
+              ? navigate("account")
+              : openAuth("login")
           }
         />
 
@@ -3441,9 +3450,7 @@ function App() {
           }
           text="Configuración"
           onClick={() =>
-            navigate(
-              "settings"
-            )
+            navigate("settings")
           }
         />
 
@@ -3456,9 +3463,7 @@ function App() {
           }
           text="Favoritos"
           onClick={() =>
-            navigate(
-              "favorites"
-            )
+            navigate("favorites")
           }
         />
 
@@ -3484,9 +3489,7 @@ function App() {
           }
           text="Notificaciones"
           onClick={() =>
-            navigate(
-              "notifications"
-            )
+            navigate("notifications")
           }
         />
 
@@ -3494,9 +3497,7 @@ function App() {
           <button
             className="menu-logout"
             type="button"
-            onClick={
-              handleLogout
-            }
+            onClick={handleLogout}
           >
             Cerrar sesión
           </button>
@@ -3581,9 +3582,7 @@ function App() {
         }`}
         type="button"
         onClick={() =>
-          navigate(
-            "categories"
-          )
+          navigate("categories")
         }
       >
         <Icon
@@ -3627,9 +3626,7 @@ function App() {
         }`}
         type="button"
         onClick={() =>
-          navigate(
-            "favorites"
-          )
+          navigate("favorites")
         }
       >
         <Icon
@@ -3651,12 +3648,8 @@ function App() {
         type="button"
         onClick={() =>
           session
-            ? navigate(
-                "account"
-              )
-            : openAuth(
-                "login"
-              )
+            ? navigate("account")
+            : openAuth("login")
         }
       >
         <Icon
@@ -3936,9 +3929,7 @@ function App() {
         return <FavoritesPage />;
 
       case "notifications":
-        return (
-          <NotificationsPage />
-        );
+        return <NotificationsPage />;
 
       case "account":
         return <AccountPage />;
@@ -4040,9 +4031,7 @@ function App() {
               S
             </div>
 
-            {/* =================================================
-                LOGIN
-            ================================================= */}
+            {/* LOGIN */}
 
             {authMode === "login" && (
               <>
@@ -4055,9 +4044,7 @@ function App() {
                 </p>
 
                 <form
-                  onSubmit={
-                    handleAuth
-                  }
+                  onSubmit={handleAuth}
                 >
                   <input
                     type="email"
@@ -4065,8 +4052,7 @@ function App() {
                     value={email}
                     onChange={(event) =>
                       setEmail(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="email"
@@ -4079,8 +4065,7 @@ function App() {
                     value={password}
                     onChange={(event) =>
                       setPassword(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="current-password"
@@ -4138,12 +4123,9 @@ function App() {
               </>
             )}
 
-            {/* =================================================
-                REGISTRO
-            ================================================= */}
+            {/* REGISTRO */}
 
-            {authMode ===
-              "register" && (
+            {authMode === "register" && (
               <>
                 <h2>
                   Crea tu cuenta.
@@ -4154,9 +4136,7 @@ function App() {
                 </p>
 
                 <form
-                  onSubmit={
-                    handleAuth
-                  }
+                  onSubmit={handleAuth}
                 >
                   <input
                     type="text"
@@ -4164,8 +4144,7 @@ function App() {
                     value={name}
                     onChange={(event) =>
                       setName(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="name"
@@ -4178,8 +4157,7 @@ function App() {
                     value={email}
                     onChange={(event) =>
                       setEmail(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="email"
@@ -4192,8 +4170,7 @@ function App() {
                     value={password}
                     onChange={(event) =>
                       setPassword(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="new-password"
@@ -4237,12 +4214,9 @@ function App() {
               </>
             )}
 
-            {/* =================================================
-                RECUPERAR CONTRASEÑA
-            ================================================= */}
+            {/* RECUPERACIÓN */}
 
-            {authMode ===
-              "recover" && (
+            {authMode === "recover" && (
               <>
                 <h2>
                   Recupera tu contraseña.
@@ -4263,8 +4237,7 @@ function App() {
                     value={email}
                     onChange={(event) =>
                       setEmail(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="email"
@@ -4306,9 +4279,7 @@ function App() {
               </>
             )}
 
-            {/* =================================================
-                NUEVA CONTRASEÑA
-            ================================================= */}
+            {/* NUEVA CONTRASEÑA */}
 
             {authMode ===
               "updatePassword" && (
@@ -4322,9 +4293,7 @@ function App() {
                 </p>
 
                 <form
-                  onSubmit={
-                    handleAuth
-                  }
+                  onSubmit={handleAuth}
                 >
                   <input
                     type="password"
@@ -4332,8 +4301,7 @@ function App() {
                     value={password}
                     onChange={(event) =>
                       setPassword(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="new-password"
@@ -4344,11 +4312,12 @@ function App() {
                   <input
                     type="password"
                     placeholder="Confirmar contraseña"
-                    value={confirmPassword}
+                    value={
+                      confirmPassword
+                    }
                     onChange={(event) =>
                       setConfirmPassword(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     autoComplete="new-password"
