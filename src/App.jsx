@@ -61,6 +61,7 @@ function App() {
   const [previousView, setPreviousView] = useState("home");
 
   const [showAuth, setShowAuth] = useState(false);
+  const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
   const [loading, setLoading] = useState(false);
@@ -144,6 +145,7 @@ function App() {
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setMessage("");
+    setShowAccountPanel(false);
     setShowAuth(true);
   };
 
@@ -154,6 +156,20 @@ function App() {
     setEmail("");
     setPassword("");
     setLoading(false);
+  };
+
+  /* =========================
+     PANEL MI CUENTA
+  ========================= */
+
+  const openAccountPanel = () => {
+    setShowAuth(false);
+    setMessage("");
+    setShowAccountPanel(true);
+  };
+
+  const closeAccountPanel = () => {
+    setShowAccountPanel(false);
   };
 
   const handleAuth = async (event) => {
@@ -532,11 +548,7 @@ function App() {
           <button
             className="quick-card account-card"
             type="button"
-            onClick={() =>
-              session
-                ? navigate("account")
-                : openAuth("login")
-            }
+            onClick={openAccountPanel}
           >
             <div className="quick-icon">✨</div>
 
@@ -1385,11 +1397,7 @@ function App() {
 
         <button
           type="button"
-          onClick={() =>
-            session
-              ? navigate("account")
-              : openAuth("login")
-          }
+          onClick={openAccountPanel}
         >
           ✨
           <span>Mi cuenta</span>
@@ -1626,11 +1634,7 @@ function App() {
           view === "account" ? "active" : ""
         }`}
         type="button"
-        onClick={() =>
-          session
-            ? navigate("account")
-            : openAuth("login")
-        }
+        onClick={openAccountPanel}
       >
         <span>✨</span>
         <small>Cuenta</small>
@@ -1777,6 +1781,126 @@ function App() {
               )}
 
             </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* =========================
+          PANEL MI CUENTA
+      ========================= */}
+
+      {showAccountPanel && (
+        <div
+          className="auth-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget
+            ) {
+              closeAccountPanel();
+            }
+          }}
+        >
+          <div className="auth-modal">
+
+            <button
+              className="auth-close"
+              type="button"
+              onClick={closeAccountPanel}
+            >
+              ×
+            </button>
+
+            <div className="auth-logo">
+              ✨
+            </div>
+
+            <h2>
+              {session
+                ? "Mi cuenta"
+                : "Hola, Jacqueline"}
+            </h2>
+
+            <p>
+              {session
+                ? session.user.email
+                : "Accede a tu cuenta de SHORASHOPP."}
+            </p>
+
+            {!session ? (
+              <>
+                <button
+                  className="auth-submit"
+                  type="button"
+                  onClick={() => {
+                    closeAccountPanel();
+                    openAuth("login");
+                  }}
+                >
+                  Iniciar sesión
+                </button>
+
+                <button
+                  className="panel-option"
+                  type="button"
+                  onClick={() => {
+                    closeAccountPanel();
+                    openAuth("register");
+                  }}
+                >
+                  Crear una cuenta
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="panel-option"
+                  type="button"
+                  onClick={() => {
+                    closeAccountPanel();
+                    navigate("orders");
+                  }}
+                >
+                  📦 Mis pedidos
+                  <span>›</span>
+                </button>
+
+                <button
+                  className="panel-option"
+                  type="button"
+                  onClick={() => {
+                    closeAccountPanel();
+                    navigate("messages");
+                  }}
+                >
+                  💬 Mensajes
+                  <span>›</span>
+                </button>
+
+                <button
+                  className="panel-option"
+                  type="button"
+                  onClick={() => {
+                    closeAccountPanel();
+                    navigate("settings");
+                  }}
+                >
+                  ⚙️ Configuración
+                  <span>›</span>
+                </button>
+
+                <button
+                  className="panel-primary-button"
+                  type="button"
+                  onClick={() => {
+                    closeAccountPanel();
+                    handleLogout();
+                  }}
+                >
+                  Cerrar sesión
+                </button>
+              </>
+            )}
 
           </div>
         </div>
