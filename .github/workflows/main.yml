@@ -8,20 +8,12 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
-
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Descargar código
         uses: actions/checkout@v4
 
@@ -29,35 +21,37 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Instalar dependencias
-        run: npm install
+        run: npm ci
 
-      - name: Compilar SHORASHOPP
+      - name: Crear variables de entorno
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env
+          echo "VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}" >> .env
+
+      - name: Construir aplicación
         run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Preparar archivos
+      - name: Publicar en GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
   deploy:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    needs: build
-
-    runs-on: ubuntu-latest
-
     steps:
-
-      - name: Publicar SHORASHOPP
+      - name: Publicar
         id: deployment
         uses: actions/deploy-pages@v4
