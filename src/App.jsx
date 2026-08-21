@@ -146,12 +146,6 @@ function Icon({ name, size = 24, stroke = 2 }) {
       </>
     ),
 
-    check: (
-      <>
-        <path d="m5 12 4 4L19 6" />
-      </>
-    ),
-
     box: (
       <>
         <path d="m21 8-9-5-9 5 9 5 9-5Z" />
@@ -161,9 +155,7 @@ function Icon({ name, size = 24, stroke = 2 }) {
     ),
 
     message: (
-      <>
-        <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.8 8.8 0 0 1-3.2-.6L4 20l1.5-4.1A7.2 7.2 0 0 1 4.5 12 7.5 7.5 0 0 1 12 4.5a7.5 7.5 0 0 1 8 7Z" />
-      </>
+      <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.8 8.8 0 0 1-3.2-.6L4 20l1.5-4.1A7.2 7.2 0 0 1 4.5 12 7.5 7.5 0 0 1 12 4.5a7.5 7.5 0 0 1 8 7Z" />
     ),
 
     settings: (
@@ -196,6 +188,65 @@ function Icon({ name, size = 24, stroke = 2 }) {
         <circle cx="18" cy="19" r="2" />
       </>
     ),
+
+    lock: (
+      <>
+        <rect x="5" y="10" width="14" height="10" rx="2" />
+        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      </>
+    ),
+
+    globe: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18" />
+        <path d="M12 3a14 14 0 0 1 0 18" />
+        <path d="M12 3a14 14 0 0 0 0 18" />
+      </>
+    ),
+
+    info: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 10v6" />
+        <path d="M12 7h.01" />
+      </>
+    ),
+
+    document: (
+      <>
+        <path d="M7 3h7l4 4v14H7z" />
+        <path d="M14 3v5h4" />
+        <path d="M10 13h5" />
+        <path d="M10 17h5" />
+      </>
+    ),
+
+    key: (
+      <>
+        <circle cx="8" cy="15" r="4" />
+        <path d="m11 12 8-8" />
+        <path d="m16 5 3 3" />
+        <path d="m14 7 3 3" />
+      </>
+    ),
+
+    devices: (
+      <>
+        <rect x="3" y="4" width="13" height="16" rx="2" />
+        <path d="M8 17h3" />
+        <path d="M19 8h2v11a1 1 0 0 1-1 1h-7" />
+      </>
+    ),
+
+    language: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18" />
+        <path d="M12 3a14 14 0 0 1 0 18" />
+        <path d="M12 3a14 14 0 0 0 0 18" />
+      </>
+    ),
   };
 
   return <svg {...common}>{paths[name]}</svg>;
@@ -226,6 +277,21 @@ function App() {
 
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
+
+  /* =======================================================
+     CONFIGURACIÓN
+  ======================================================= */
+
+  const [notificationSettings, setNotificationSettings] = useState({
+    orders: true,
+    promotions: true,
+    messages: true,
+    news: true,
+  });
+
+  const [country, setCountry] = useState("México");
+  const [currency, setCurrency] = useState("MXN");
+  const [language, setLanguage] = useState("Español");
 
   /* =======================================================
      SESIÓN
@@ -468,7 +534,6 @@ function App() {
 
   const Header = () => (
     <header className="mobile-header">
-
       <button
         className="menu-button"
         type="button"
@@ -495,7 +560,6 @@ function App() {
       </button>
 
       <div className="header-icons">
-
         <button
           type="button"
           className="header-icon-button"
@@ -516,7 +580,6 @@ function App() {
             <i>{cartCount}</i>
           )}
         </button>
-
       </div>
     </header>
   );
@@ -527,9 +590,7 @@ function App() {
 
   const SearchBar = () => (
     <div className="search-container">
-
       <div className="search-box">
-
         <Icon name="search" size={30} />
 
         <input
@@ -552,9 +613,7 @@ function App() {
         >
           <Icon name="search" size={28} />
         </button>
-
       </div>
-
     </div>
   );
 
@@ -564,7 +623,6 @@ function App() {
 
   const PageHeader = ({ title }) => (
     <div className="page-header">
-
       <button
         type="button"
         onClick={goBack}
@@ -582,7 +640,6 @@ function App() {
       >
         <Icon name="home" size={23} />
       </button>
-
     </div>
   );
 
@@ -592,12 +649,10 @@ function App() {
 
   const ProductCard = ({ product }) => (
     <article className="product-card">
-
       <div
         className={`product-image ${product.type}`}
         onClick={() => addToCart(product)}
       >
-
         <span className="product-label">
           {product.discount}
         </span>
@@ -618,7 +673,6 @@ function App() {
         </button>
 
         <div className="product-art">
-
           {product.type === "earbuds" && (
             <div className="earbuds-art">
               <span>◖</span>
@@ -644,17 +698,13 @@ function App() {
               🥤
             </div>
           )}
-
         </div>
-
       </div>
 
       <div className="product-info">
-
         <h3>{product.name}</h3>
 
         <div className="price-row">
-
           <strong>
             {product.price}
           </strong>
@@ -664,7 +714,6 @@ function App() {
               {product.oldPrice}
             </del>
           )}
-
         </div>
 
         <div className="rating-row">
@@ -683,9 +732,7 @@ function App() {
           <Icon name="cart" size={18} />
           Agregar
         </button>
-
       </div>
-
     </article>
   );
 
@@ -705,23 +752,18 @@ function App() {
       type="button"
       onClick={onClick}
     >
-
       <div className="quick-icon">
         {icon}
       </div>
 
       <div className="quick-content">
-
         <strong>{title}</strong>
-
         <span>{text}</span>
-
       </div>
 
       <b className="round-arrow">
         <Icon name="arrow" size={23} />
       </b>
-
     </button>
   );
 
@@ -734,9 +776,7 @@ function App() {
       <SearchBar />
 
       <main>
-
         <section className="quick-cards">
-
           <QuickCard
             type="sell-card"
             icon={<Icon name="store" size={38} />}
@@ -774,13 +814,10 @@ function App() {
                 : openAuth("login")
             }
           />
-
         </section>
 
         <section className="content-section">
-
           <div className="section-title-row">
-
             <h2>Categorías</h2>
 
             <button
@@ -790,11 +827,9 @@ function App() {
               Ver todas
               <Icon name="arrow" size={22} />
             </button>
-
           </div>
 
           <div className="categories-scroll">
-
             {categories.map((category) => (
               <button
                 className="category-item"
@@ -805,26 +840,19 @@ function App() {
                   navigate("category");
                 }}
               >
-
                 <div className="category-icon">
                   {category.icon}
                 </div>
 
                 <span>{category.name}</span>
-
               </button>
             ))}
-
           </div>
-
         </section>
 
         <section className="offer-section">
-
           <div className="offer-banner">
-
             <div className="offer-text">
-
               <strong>
                 OFERTAS
                 <br />
@@ -844,11 +872,9 @@ function App() {
                 Ver ofertas
                 <Icon name="arrow" size={20} />
               </button>
-
             </div>
 
             <div className="offer-products">
-
               <div className="offer-decoration percent-one">
                 %
               </div>
@@ -872,9 +898,7 @@ function App() {
               <div className="offer-decoration percent-two">
                 %
               </div>
-
             </div>
-
           </div>
 
           <div className="offer-dots">
@@ -883,13 +907,10 @@ function App() {
             <i></i>
             <i></i>
           </div>
-
         </section>
 
         <section className="content-section products-section">
-
           <div className="section-title-row">
-
             <h2>Productos destacados</h2>
 
             <button
@@ -899,24 +920,19 @@ function App() {
               Ver todos
               <Icon name="arrow" size={22} />
             </button>
-
           </div>
 
           <div className="products-grid">
-
             {products.map((product) => (
               <ProductCard
                 key={product.name}
                 product={product}
               />
             ))}
-
           </div>
-
         </section>
 
         <TrustSection />
-
       </main>
     </>
   );
@@ -927,7 +943,6 @@ function App() {
 
   const CategoriesPage = () => (
     <main className="page-content">
-
       <PageHeader title="Categorías" />
 
       <div className="page-intro">
@@ -947,7 +962,6 @@ function App() {
       </div>
 
       <div className="all-categories">
-
         {categories.map((category) => (
           <button
             className="category-page-card"
@@ -958,25 +972,22 @@ function App() {
               navigate("category");
             }}
           >
-
             <div className="category-icon">
               {category.icon}
             </div>
 
             <div>
               <strong>{category.name}</strong>
+
               <span>
                 Explorar productos
               </span>
             </div>
 
             <Icon name="arrow" size={22} />
-
           </button>
         ))}
-
       </div>
-
     </main>
   );
 
@@ -986,11 +997,9 @@ function App() {
 
   const CategoryPage = () => (
     <main className="page-content">
-
       <PageHeader title={selectedCategory} />
 
       <div className="category-heading">
-
         <div>
           <span>Categoría</span>
           <h2>{selectedCategory}</h2>
@@ -999,11 +1008,9 @@ function App() {
         <b>
           {filteredProducts.length} productos
         </b>
-
       </div>
 
       <div className="products-grid">
-
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <ProductCard
@@ -1018,9 +1025,7 @@ function App() {
             text="Todavía no hay productos en esta categoría."
           />
         )}
-
       </div>
-
     </main>
   );
 
@@ -1030,7 +1035,6 @@ function App() {
 
   const ProductsPage = () => (
     <main className="page-content">
-
       <PageHeader title="Todos los productos" />
 
       <div className="page-intro">
@@ -1050,16 +1054,13 @@ function App() {
       </div>
 
       <div className="products-grid">
-
         {products.map((product) => (
           <ProductCard
             key={product.name}
             product={product}
           />
         ))}
-
       </div>
-
     </main>
   );
 
@@ -1069,36 +1070,32 @@ function App() {
 
   const OffersPage = () => (
     <main className="page-content">
-
       <PageHeader title="Ofertas exclusivas" />
 
       <div className="internal-offer-banner">
-
         <div>
           <span>OFERTAS</span>
+
           <strong>
             Precios especiales
           </strong>
+
           <small>
             Aprovecha antes de que terminen.
           </small>
         </div>
 
         <b>%</b>
-
       </div>
 
       <div className="products-grid">
-
         {products.map((product) => (
           <ProductCard
             key={product.name}
             product={product}
           />
         ))}
-
       </div>
-
     </main>
   );
 
@@ -1108,7 +1105,6 @@ function App() {
 
   const SearchPage = () => (
     <main className="page-content">
-
       <PageHeader title="Buscar" />
 
       <div className="search-page-box">
@@ -1126,7 +1122,6 @@ function App() {
       </div>
 
       <div className="search-result-title">
-
         <div>
           <span>Resultados</span>
 
@@ -1140,11 +1135,9 @@ function App() {
         <b>
           {filteredProducts.length}
         </b>
-
       </div>
 
       <div className="products-grid">
-
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <ProductCard
@@ -1159,9 +1152,7 @@ function App() {
             text="Prueba con otra palabra."
           />
         )}
-
       </div>
-
     </main>
   );
 
@@ -1171,7 +1162,6 @@ function App() {
 
   const CartPage = () => (
     <main className="page-content">
-
       <PageHeader title="Mi carrito" />
 
       {cart.length === 0 ? (
@@ -1184,15 +1174,12 @@ function App() {
         />
       ) : (
         <>
-
           <div className="cart-page-list">
-
             {cart.map((item) => (
               <div
                 className="cart-page-item"
                 key={item.name}
               >
-
                 <div className={`cart-item-art ${item.type}`}>
                   {item.type === "earbuds" && "🎧"}
                   {item.type === "bag" && "👜"}
@@ -1201,7 +1188,6 @@ function App() {
                 </div>
 
                 <div className="cart-item-info">
-
                   <h3>{item.name}</h3>
 
                   <strong>
@@ -1209,7 +1195,6 @@ function App() {
                   </strong>
 
                   <div className="quantity-controls">
-
                     <button
                       type="button"
                       onClick={() =>
@@ -1235,25 +1220,19 @@ function App() {
                     >
                       +
                     </button>
-
                   </div>
-
                 </div>
-
               </div>
             ))}
-
           </div>
 
           <div className="cart-summary">
-
             <div>
               <span>Productos</span>
               <b>{cartCount}</b>
             </div>
 
             <div className="cart-total">
-
               <span>Total</span>
 
               <strong>
@@ -1265,9 +1244,7 @@ function App() {
                   }
                 )}
               </strong>
-
             </div>
-
           </div>
 
           <button
@@ -1278,10 +1255,8 @@ function App() {
             Continuar compra
             <Icon name="arrow" size={22} />
           </button>
-
         </>
       )}
-
     </main>
   );
 
@@ -1297,7 +1272,6 @@ function App() {
 
     return (
       <main className="page-content">
-
         <PageHeader title="Mis favoritos" />
 
         {favoriteProducts.length === 0 ? (
@@ -1318,22 +1292,19 @@ function App() {
             ))}
           </div>
         )}
-
       </main>
     );
   };
 
   /* =======================================================
-     NOTIFICACIONES
+     NOTIFICACIONES GENERALES
   ======================================================= */
 
   const NotificationsPage = () => (
     <main className="page-content">
-
       <PageHeader title="Notificaciones" />
 
       <div className="notification-list">
-
         <Notification
           icon="🎉"
           title="¡Bienvenido a SHORASHOPP!"
@@ -1351,9 +1322,7 @@ function App() {
           title="Tus pedidos aparecerán aquí"
           text="Podrás consultar el estado de tus compras."
         />
-
       </div>
-
     </main>
   );
 
@@ -1363,11 +1332,9 @@ function App() {
 
   const AccountPage = () => (
     <main className="page-content">
-
       <PageHeader title="Mi cuenta" />
 
       <div className="account-page">
-
         <div className="account-avatar">
           <Icon name="user" size={46} />
         </div>
@@ -1375,9 +1342,7 @@ function App() {
         <h2>Mi cuenta</h2>
 
         {session ? (
-          <p>
-            {session.user.email}
-          </p>
+          <p>{session.user.email}</p>
         ) : (
           <p>
             Inicia sesión para acceder a tus funciones.
@@ -1386,7 +1351,6 @@ function App() {
 
         {!session ? (
           <>
-
             <button
               className="panel-primary-button"
               type="button"
@@ -1400,14 +1364,17 @@ function App() {
               type="button"
               onClick={() => openAuth("register")}
             >
-              Crear una cuenta
+              <span className="option-icon">
+                ✨
+              </span>
+
+              <span>Crear una cuenta</span>
+
               <Icon name="arrow" size={21} />
             </button>
-
           </>
         ) : (
           <>
-
             <AccountOption
               icon={<Icon name="box" size={23} />}
               text="Mis pedidos"
@@ -1433,12 +1400,9 @@ function App() {
             >
               Cerrar sesión
             </button>
-
           </>
         )}
-
       </div>
-
     </main>
   );
 
@@ -1448,7 +1412,6 @@ function App() {
 
   const OrdersPage = () => (
     <main className="page-content">
-
       <PageHeader title="Mis pedidos" />
 
       <EmptyState
@@ -1458,7 +1421,6 @@ function App() {
         action="Comprar ahora"
         onAction={() => navigate("products")}
       />
-
     </main>
   );
 
@@ -1468,7 +1430,6 @@ function App() {
 
   const MessagesPage = () => (
     <main className="page-content">
-
       <PageHeader title="Mensajes" />
 
       <EmptyState
@@ -1476,48 +1437,517 @@ function App() {
         title="No tienes mensajes"
         text="Aquí podrás comunicarte con vendedores y con el equipo de SHORASHOPP."
       />
+    </main>
+  );
+
+  /* =======================================================
+     CONFIGURACIÓN PRINCIPAL
+  ======================================================= */
+
+  const SettingsPage = () => (
+    <main className="page-content">
+      <PageHeader title="Configuración" />
+
+      <div className="settings-list">
+
+        <SettingsOption
+          icon={<Icon name="bell" size={24} />}
+          title="Notificaciones"
+          description="Controla qué avisos quieres recibir"
+          onClick={() => navigate("notification-settings")}
+        />
+
+        <SettingsOption
+          icon={<Icon name="lock" size={24} />}
+          title="Privacidad y seguridad"
+          description="Protege tu cuenta y administra tus sesiones"
+          onClick={() => navigate("privacy")}
+        />
+
+        <SettingsOption
+          icon={<Icon name="globe" size={24} />}
+          title="País y preferencias"
+          description="Idioma, moneda y país"
+          onClick={() => navigate("preferences")}
+        />
+
+        <SettingsOption
+          icon={<Icon name="document" size={24} />}
+          title="Términos y condiciones"
+          description="Conoce las reglas de SHORASHOPP"
+          onClick={() => navigate("terms")}
+        />
+
+        <SettingsOption
+          icon={<Icon name="info" size={24} />}
+          title="Acerca de SHORASHOPP"
+          description="Información de la aplicación"
+          onClick={() => navigate("about")}
+        />
+
+      </div>
+    </main>
+  );
+
+  /* =======================================================
+     CONFIGURACIÓN - NOTIFICACIONES
+  ======================================================= */
+
+  const NotificationSettingsPage = () => (
+    <main className="page-content">
+      <PageHeader title="Notificaciones" />
+
+      <div className="settings-page-intro">
+        <div className="settings-large-icon">
+          <Icon name="bell" size={33} />
+        </div>
+
+        <div>
+          <strong>Administra tus avisos</strong>
+          <small>
+            Decide qué notificaciones quieres recibir.
+          </small>
+        </div>
+      </div>
+
+      <div className="settings-section-card">
+
+        <SettingsToggle
+          title="Pedidos"
+          description="Actualizaciones sobre tus compras y entregas"
+          value={notificationSettings.orders}
+          onChange={() =>
+            setNotificationSettings((current) => ({
+              ...current,
+              orders: !current.orders,
+            }))
+          }
+        />
+
+        <SettingsToggle
+          title="Ofertas y promociones"
+          description="Descuentos, promociones y oportunidades especiales"
+          value={notificationSettings.promotions}
+          onChange={() =>
+            setNotificationSettings((current) => ({
+              ...current,
+              promotions: !current.promotions,
+            }))
+          }
+        />
+
+        <SettingsToggle
+          title="Mensajes"
+          description="Avisos cuando recibas mensajes"
+          value={notificationSettings.messages}
+          onChange={() =>
+            setNotificationSettings((current) => ({
+              ...current,
+              messages: !current.messages,
+            }))
+          }
+        />
+
+        <SettingsToggle
+          title="Novedades de SHORASHOPP"
+          description="Noticias, novedades y nuevas funciones"
+          value={notificationSettings.news}
+          onChange={() =>
+            setNotificationSettings((current) => ({
+              ...current,
+              news: !current.news,
+            }))
+          }
+          last
+        />
+
+      </div>
 
     </main>
   );
 
   /* =======================================================
-     CONFIGURACIÓN
+     CONFIGURACIÓN - PRIVACIDAD
   ======================================================= */
 
-  const SettingsPage = () => (
+  const PrivacyPage = () => (
     <main className="page-content">
+      <PageHeader title="Privacidad y seguridad" />
 
-      <PageHeader title="Configuración" />
+      <div className="settings-page-intro">
+        <div className="settings-large-icon">
+          <Icon name="shield" size={33} />
+        </div>
 
-      <div className="settings-list">
+        <div>
+          <strong>Protege tu cuenta</strong>
+          <small>
+            Administra tu seguridad y privacidad.
+          </small>
+        </div>
+      </div>
 
-        <AccountOption
-          icon="🔔"
-          text="Notificaciones"
+      <div className="settings-section-card">
+
+        <SettingsAction
+          icon={<Icon name="key" size={23} />}
+          title="Cambiar contraseña"
+          description="Actualiza tu contraseña de acceso"
+          onClick={() =>
+            setMessage(
+              "La opción para cambiar contraseña se conectará aquí."
+            )
+          }
         />
 
-        <AccountOption
-          icon="🔐"
-          text="Privacidad y seguridad"
+        <SettingsAction
+          icon={<Icon name="devices" size={23} />}
+          title="Sesiones activas"
+          description="Revisa dónde tienes abierta tu cuenta"
+          onClick={() =>
+            setMessage(
+              "La administración de sesiones se conectará aquí."
+            )
+          }
         />
 
-        <AccountOption
-          icon="🌎"
-          text="País y preferencias"
-        />
-
-        <AccountOption
-          icon="📄"
-          text="Términos y condiciones"
-        />
-
-        <AccountOption
-          icon="ℹ️"
-          text="Acerca de SHORASHOPP"
+        <SettingsAction
+          icon={<Icon name="shield" size={23} />}
+          title="Verificación de seguridad"
+          description="Revisa las medidas de protección de tu cuenta"
+          onClick={() =>
+            setMessage(
+              "La verificación de seguridad se conectará aquí."
+            )
+          }
+          last
         />
 
       </div>
 
+      {message && (
+        <div className="settings-feedback">
+          {message}
+        </div>
+      )}
+
+    </main>
+  );
+
+  /* =======================================================
+     CONFIGURACIÓN - PAÍS Y PREFERENCIAS
+  ======================================================= */
+
+  const PreferencesPage = () => (
+    <main className="page-content">
+      <PageHeader title="País y preferencias" />
+
+      <div className="settings-page-intro">
+        <div className="settings-large-icon">
+          <Icon name="globe" size={33} />
+        </div>
+
+        <div>
+          <strong>Personaliza tu experiencia</strong>
+          <small>
+            Estas opciones afectan cómo ves SHORASHOPP.
+          </small>
+        </div>
+      </div>
+
+      <div className="settings-section-card">
+
+        <div className="preference-row">
+          <div className="preference-icon">
+            <Icon name="globe" size={22} />
+          </div>
+
+          <div className="preference-content">
+            <strong>País</strong>
+
+            <select
+              value={country}
+              onChange={(event) =>
+                setCountry(event.target.value)
+              }
+            >
+              <option>México</option>
+              <option>Estados Unidos</option>
+              <option>Canadá</option>
+              <option>España</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="preference-row">
+          <div className="preference-icon">
+            $
+          </div>
+
+          <div className="preference-content">
+            <strong>Moneda</strong>
+
+            <select
+              value={currency}
+              onChange={(event) =>
+                setCurrency(event.target.value)
+              }
+            >
+              <option value="MXN">
+                MXN — Peso mexicano
+              </option>
+
+              <option value="USD">
+                USD — Dólar estadounidense
+              </option>
+
+              <option value="CAD">
+                CAD — Dólar canadiense
+              </option>
+
+              <option value="EUR">
+                EUR — Euro
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div className="preference-row last">
+          <div className="preference-icon">
+            <Icon name="language" size={22} />
+          </div>
+
+          <div className="preference-content">
+            <strong>Idioma</strong>
+
+            <select
+              value={language}
+              onChange={(event) =>
+                setLanguage(event.target.value)
+              }
+            >
+              <option>Español</option>
+              <option>English</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div className="preference-summary">
+        <span>Configuración actual</span>
+
+        <strong>
+          {country} · {currency} · {language}
+        </strong>
+      </div>
+
+    </main>
+  );
+
+  /* =======================================================
+     CONFIGURACIÓN - TÉRMINOS
+  ======================================================= */
+
+  const TermsPage = () => (
+    <main className="page-content">
+      <PageHeader title="Términos y condiciones" />
+
+      <article className="legal-page">
+
+        <div className="legal-header">
+          <div className="legal-icon">
+            <Icon name="document" size={32} />
+          </div>
+
+          <div>
+            <strong>
+              Términos y condiciones de SHORASHOPP
+            </strong>
+
+            <small>
+              Información general para compradores y vendedores.
+            </small>
+          </div>
+        </div>
+
+        <LegalSection
+          number="1"
+          title="Uso de SHORASHOPP"
+        >
+          SHORASHOPP es una plataforma de comercio electrónico
+          que permite a compradores y vendedores ofrecer,
+          descubrir y adquirir productos dentro de la aplicación.
+          Al utilizar la plataforma aceptas utilizarla de manera
+          responsable y conforme a la legislación aplicable.
+        </LegalSection>
+
+        <LegalSection
+          number="2"
+          title="Cuentas"
+        >
+          Cada usuario es responsable de proporcionar información
+          correcta y de mantener protegidos sus datos de acceso.
+          No debes utilizar una cuenta de otra persona ni
+          proporcionar información falsa.
+        </LegalSection>
+
+        <LegalSection
+          number="3"
+          title="Productos publicados"
+        >
+          Los vendedores son responsables de que sus publicaciones
+          sean legítimas, completas y precisas. Los productos y
+          servicios ofrecidos deben cumplir las normas de
+          SHORASHOPP y las leyes aplicables.
+        </LegalSection>
+
+        <LegalSection
+          number="4"
+          title="Compras"
+        >
+          Los compradores deben revisar cuidadosamente la
+          información del producto antes de confirmar una compra.
+          Los precios, disponibilidad y condiciones pueden variar.
+        </LegalSection>
+
+        <LegalSection
+          number="5"
+          title="Pagos"
+        >
+          Los pagos se procesarán mediante los métodos habilitados
+          en SHORASHOPP. La plataforma podrá mostrar información
+          relacionada con el pago y el estado de la operación.
+        </LegalSection>
+
+        <LegalSection
+          number="6"
+          title="Envíos"
+        >
+          Las condiciones de envío pueden variar según el vendedor,
+          el producto y la zona de entrega. El vendedor deberá
+          proporcionar información correcta sobre la preparación y
+          envío del pedido.
+        </LegalSection>
+
+        <LegalSection
+          number="7"
+          title="Conducta"
+        >
+          No está permitido utilizar SHORASHOPP para actividades
+          fraudulentas, ilegales, engañosas o que puedan perjudicar
+          a otros usuarios o a la plataforma.
+        </LegalSection>
+
+        <LegalSection
+          number="8"
+          title="Cambios"
+        >
+          SHORASHOPP podrá actualizar estos términos para reflejar
+          cambios en sus servicios, funcionamiento o requisitos
+          legales. Las nuevas versiones sustituirán a las
+          anteriores cuando entren en vigor.
+        </LegalSection>
+
+        <div className="legal-note">
+          <strong>
+            Información importante
+          </strong>
+
+          <p>
+            Este contenido es una base informativa para la aplicación.
+            Antes del lanzamiento comercial de SHORASHOPP debe
+            revisarse y adaptarse con asesoría legal a las leyes y
+            condiciones específicas de operación.
+          </p>
+        </div>
+
+      </article>
+    </main>
+  );
+
+  /* =======================================================
+     CONFIGURACIÓN - ACERCA
+  ======================================================= */
+
+  const AboutPage = () => (
+    <main className="page-content">
+      <PageHeader title="Acerca de SHORASHOPP" />
+
+      <div className="about-page">
+
+        <div className="about-logo">
+          <strong>
+            SHORA<span>SHOPP</span>
+          </strong>
+
+          <small>
+            Compra. Vende. Descubre.
+          </small>
+        </div>
+
+        <span className="about-badge">
+          TU MARKETPLACE
+        </span>
+
+        <h2>
+          Todo lo que buscas,
+          <br />
+          en un solo lugar.
+        </h2>
+
+        <p>
+          SHORASHOPP es una plataforma pensada para conectar
+          compradores y vendedores y facilitar una experiencia
+          de compra sencilla, moderna y segura.
+        </p>
+
+        <div className="about-cards">
+
+          <div className="about-card">
+            <span>🛍️</span>
+            <strong>Compra</strong>
+            <small>
+              Descubre productos y ofertas.
+            </small>
+          </div>
+
+          <div className="about-card">
+            <span>🏪</span>
+            <strong>Vende</strong>
+            <small>
+              Publica y llega a compradores.
+            </small>
+          </div>
+
+          <div className="about-card">
+            <span>✨</span>
+            <strong>Descubre</strong>
+            <small>
+              Encuentra nuevas oportunidades.
+            </small>
+          </div>
+
+        </div>
+
+        <div className="about-version">
+          <span>Aplicación</span>
+          <strong>SHORASHOPP</strong>
+        </div>
+
+        <div className="about-version">
+          <span>Versión</span>
+          <strong>1.0.0</strong>
+        </div>
+
+        <div className="about-version last">
+          <span>Estado</span>
+          <strong className="status-online">
+            En desarrollo
+          </strong>
+        </div>
+
+      </div>
     </main>
   );
 
@@ -1527,7 +1957,6 @@ function App() {
 
   const SellPage = () => (
     <main className="page-content">
-
       <PageHeader title="Vende en SHORASHOPP" />
 
       <div className="sell-page">
@@ -1562,12 +1991,11 @@ function App() {
           type="button"
           onClick={() => openAuth("login")}
         >
-          Ya tengo una cuenta
+          <span>Ya tengo una cuenta</span>
           <Icon name="arrow" size={20} />
         </button>
 
       </div>
-
     </main>
   );
 
@@ -1577,7 +2005,6 @@ function App() {
 
   const CheckoutPage = () => (
     <main className="page-content">
-
       <PageHeader title="Finalizar compra" />
 
       <div className="checkout-page">
@@ -1590,9 +2017,7 @@ function App() {
           RESUMEN
         </span>
 
-        <h2>
-          Tu compra
-        </h2>
+        <h2>Tu compra</h2>
 
         <div className="checkout-row">
           <span>Productos</span>
@@ -1632,7 +2057,6 @@ function App() {
         )}
 
       </div>
-
     </main>
   );
 
@@ -1642,7 +2066,6 @@ function App() {
 
   const MenuPage = () => (
     <main className="page-content">
-
       <PageHeader title="Menú" />
 
       <div className="main-menu-page">
@@ -1704,7 +2127,6 @@ function App() {
         )}
 
       </div>
-
     </main>
   );
 
@@ -1784,6 +2206,7 @@ function App() {
         <span className="seller-circle">
           <Icon name="store" size={29} />
         </span>
+
         <small>Vender</small>
       </button>
 
@@ -1828,7 +2251,6 @@ function App() {
     onAction,
   }) => (
     <div className="empty-page">
-
       <div className="empty-icon">
         {icon}
       </div>
@@ -1846,7 +2268,6 @@ function App() {
           {action}
         </button>
       )}
-
     </div>
   );
 
@@ -1856,7 +2277,6 @@ function App() {
     text,
   }) => (
     <div className="notification-item">
-
       <span>{icon}</span>
 
       <div>
@@ -1865,7 +2285,6 @@ function App() {
       </div>
 
       <Icon name="arrow" size={20} />
-
     </div>
   );
 
@@ -1915,7 +2334,6 @@ function App() {
     text,
   }) => (
     <div className="trust-item">
-
       <span className="trust-icon">
         {icon}
       </span>
@@ -1924,8 +2342,105 @@ function App() {
         <strong>{title}</strong>
         <small>{text}</small>
       </div>
-
     </div>
+  );
+
+  const SettingsOption = ({
+    icon,
+    title,
+    description,
+    onClick,
+  }) => (
+    <button
+      type="button"
+      className="settings-option"
+      onClick={onClick}
+    >
+      <span className="settings-option-icon">
+        {icon}
+      </span>
+
+      <span className="settings-option-content">
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </span>
+
+      <Icon name="arrow" size={21} />
+    </button>
+  );
+
+  const SettingsToggle = ({
+    title,
+    description,
+    value,
+    onChange,
+    last = false,
+  }) => (
+    <div
+      className={`settings-toggle ${
+        last ? "last" : ""
+      }`}
+    >
+      <div>
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </div>
+
+      <button
+        type="button"
+        className={`toggle ${
+          value ? "on" : ""
+        }`}
+        onClick={onChange}
+        aria-pressed={value}
+      >
+        <span />
+      </button>
+    </div>
+  );
+
+  const SettingsAction = ({
+    icon,
+    title,
+    description,
+    onClick,
+    last = false,
+  }) => (
+    <button
+      type="button"
+      className={`settings-action ${
+        last ? "last" : ""
+      }`}
+      onClick={onClick}
+    >
+      <span className="settings-action-icon">
+        {icon}
+      </span>
+
+      <span className="settings-action-content">
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </span>
+
+      <Icon name="arrow" size={20} />
+    </button>
+  );
+
+  const LegalSection = ({
+    number,
+    title,
+    children,
+  }) => (
+    <section className="legal-section">
+      <div className="legal-number">
+        {number}
+      </div>
+
+      <div>
+        <h3>{title}</h3>
+        <p>{children}</p>
+      </div>
+    </section>
   );
 
   /* =======================================================
@@ -1970,6 +2485,21 @@ function App() {
       case "settings":
         return <SettingsPage />;
 
+      case "notification-settings":
+        return <NotificationSettingsPage />;
+
+      case "privacy":
+        return <PrivacyPage />;
+
+      case "preferences":
+        return <PreferencesPage />;
+
+      case "terms":
+        return <TermsPage />;
+
+      case "about":
+        return <AboutPage />;
+
       case "sell":
         return <SellPage />;
 
@@ -2009,14 +2539,12 @@ function App() {
             }
           }}
         >
-
           <div
             className="auth-modal"
             onMouseDown={(event) =>
               event.stopPropagation()
             }
           >
-
             <button
               className="auth-close"
               type="button"
@@ -2087,7 +2615,6 @@ function App() {
                   ? "Iniciar sesión"
                   : "Crear cuenta"}
               </button>
-
             </form>
 
             {message && (
@@ -2097,11 +2624,9 @@ function App() {
             )}
 
             <div className="auth-switch">
-
               {authMode === "login" ? (
                 <>
                   ¿No tienes cuenta?{" "}
-
                   <button
                     type="button"
                     onClick={() => {
@@ -2115,7 +2640,6 @@ function App() {
               ) : (
                 <>
                   ¿Ya tienes cuenta?{" "}
-
                   <button
                     type="button"
                     onClick={() => {
@@ -2127,11 +2651,8 @@ function App() {
                   </button>
                 </>
               )}
-
             </div>
-
           </div>
-
         </div>
       )}
 
