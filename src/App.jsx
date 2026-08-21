@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./lib/supabase";
 import "./App.css";
 
+/* =========================================================
+   DATOS
+========================================================= */
+
 const categories = [
   { icon: "👕", name: "Ropa y Moda" },
   { icon: "📱", name: "Tecnología" },
@@ -54,6 +58,153 @@ const products = [
   },
 ];
 
+/* =========================================================
+   ICONOS
+========================================================= */
+
+function Icon({ name, size = 24, stroke = 2 }) {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: stroke,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true,
+  };
+
+  const paths = {
+    search: (
+      <>
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-4-4" />
+      </>
+    ),
+
+    bell: (
+      <>
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+        <path d="M10 21h4" />
+      </>
+    ),
+
+    cart: (
+      <>
+        <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20 8H6" />
+        <circle cx="10" cy="20" r="1" />
+        <circle cx="18" cy="20" r="1" />
+      </>
+    ),
+
+    user: (
+      <>
+        <circle cx="12" cy="7" r="4" />
+        <path d="M4 21c.8-4.1 3.5-6 8-6s7.2 1.9 8 6" />
+      </>
+    ),
+
+    home: (
+      <>
+        <path d="m3 10 9-7 9 7" />
+        <path d="M5 9v11h14V9" />
+        <path d="M9 20v-6h6v6" />
+      </>
+    ),
+
+    grid: (
+      <>
+        <rect x="4" y="4" width="6" height="6" rx="1" />
+        <rect x="14" y="4" width="6" height="6" rx="1" />
+        <rect x="4" y="14" width="6" height="6" rx="1" />
+        <rect x="14" y="14" width="6" height="6" rx="1" />
+      </>
+    ),
+
+    heart: (
+      <path d="M20.8 8.8c0 5.4-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.8A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.5Z" />
+    ),
+
+    store: (
+      <>
+        <path d="M4 10v10h16V10" />
+        <path d="M3 10 5 4h14l2 6" />
+        <path d="M3 10c1.7 2 3.5 2 5.2 0 1.7 2 3.5 2 5.2 0 1.7 2 3.5 2 5.2 0 1.7 2 3.5 2 5.2 0" />
+        <path d="M9 20v-5h6v5" />
+      </>
+    ),
+
+    arrow: <path d="m9 18 6-6-6-6" />,
+
+    back: <path d="m15 18-6-6 6-6" />,
+
+    close: (
+      <>
+        <path d="m6 6 12 12" />
+        <path d="m18 6-12 12" />
+      </>
+    ),
+
+    check: (
+      <>
+        <path d="m5 12 4 4L19 6" />
+      </>
+    ),
+
+    box: (
+      <>
+        <path d="m21 8-9-5-9 5 9 5 9-5Z" />
+        <path d="M3 8v9l9 5 9-5V8" />
+        <path d="M12 13v9" />
+      </>
+    ),
+
+    message: (
+      <>
+        <path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.8 8.8 0 0 1-3.2-.6L4 20l1.5-4.1A7.2 7.2 0 0 1 4.5 12 7.5 7.5 0 0 1 12 4.5a7.5 7.5 0 0 1 8 7Z" />
+      </>
+    ),
+
+    settings: (
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z" />
+      </>
+    ),
+
+    menu: (
+      <>
+        <path d="M4 7h16" />
+        <path d="M4 12h16" />
+        <path d="M4 17h16" />
+      </>
+    ),
+
+    shield: (
+      <>
+        <path d="M12 3 20 6v6c0 5-3.3 8.3-8 10-4.7-1.7-8-5-8-10V6l8-3Z" />
+        <path d="m8.5 12 2.2 2.2 4.8-5" />
+      </>
+    ),
+
+    truck: (
+      <>
+        <path d="M3 6h11v11H3z" />
+        <path d="M14 10h4l3 3v4h-7" />
+        <circle cx="7" cy="19" r="2" />
+        <circle cx="18" cy="19" r="2" />
+      </>
+    ),
+  };
+
+  return <svg {...common}>{paths[name]}</svg>;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
 function App() {
   const [session, setSession] = useState(null);
 
@@ -61,7 +212,6 @@ function App() {
   const [previousView, setPreviousView] = useState("home");
 
   const [showAuth, setShowAuth] = useState(false);
-  const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
   const [loading, setLoading] = useState(false);
@@ -77,10 +227,14 @@ function App() {
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
 
+  /* =======================================================
+     SESIÓN
+  ======================================================= */
+
   useEffect(() => {
     let mounted = true;
 
-    const getSession = async () => {
+    const loadSession = async () => {
       const { data } = await supabase.auth.getSession();
 
       if (mounted) {
@@ -88,7 +242,7 @@ function App() {
       }
     };
 
-    getSession();
+    loadSession();
 
     const {
       data: { subscription },
@@ -104,9 +258,9 @@ function App() {
     };
   }, []);
 
-  /* =========================
+  /* =======================================================
      NAVEGACIÓN
-  ========================= */
+  ======================================================= */
 
   const navigate = (newView) => {
     setPreviousView(view);
@@ -138,14 +292,13 @@ function App() {
     });
   };
 
-  /* =========================
+  /* =======================================================
      AUTENTICACIÓN
-  ========================= */
+  ======================================================= */
 
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setMessage("");
-    setShowAccountPanel(false);
     setShowAuth(true);
   };
 
@@ -156,20 +309,6 @@ function App() {
     setEmail("");
     setPassword("");
     setLoading(false);
-  };
-
-  /* =========================
-     PANEL MI CUENTA
-  ========================= */
-
-  const openAccountPanel = () => {
-    setShowAuth(false);
-    setMessage("");
-    setShowAccountPanel(true);
-  };
-
-  const closeAccountPanel = () => {
-    setShowAccountPanel(false);
   };
 
   const handleAuth = async (event) => {
@@ -225,9 +364,9 @@ function App() {
     navigate("home");
   };
 
-  /* =========================
+  /* =======================================================
      FAVORITOS
-  ========================= */
+  ======================================================= */
 
   const toggleFavorite = (productName) => {
     setFavorites((current) =>
@@ -237,9 +376,9 @@ function App() {
     );
   };
 
-  /* =========================
+  /* =======================================================
      CARRITO
-  ========================= */
+  ======================================================= */
 
   const addToCart = (product) => {
     setCart((current) => {
@@ -296,9 +435,9 @@ function App() {
     return total + price * item.quantity;
   }, 0);
 
-  /* =========================
-     PRODUCTOS FILTRADOS
-  ========================= */
+  /* =======================================================
+     FILTROS
+  ======================================================= */
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -323,9 +462,9 @@ function App() {
     return result;
   }, [selectedCategory, search]);
 
-  /* =========================
+  /* =======================================================
      HEADER
-  ========================= */
+  ======================================================= */
 
   const Header = () => (
     <header className="mobile-header">
@@ -334,8 +473,9 @@ function App() {
         className="menu-button"
         type="button"
         onClick={() => navigate("menu")}
+        aria-label="Menú"
       >
-        ☰
+        <Icon name="menu" size={32} stroke={2} />
       </button>
 
       <button
@@ -348,7 +488,9 @@ function App() {
         </strong>
 
         <small>
-          Compra. <b>Vende.</b> Descubre.
+          <b>Compra.</b>{" "}
+          <em>Vende.</em>{" "}
+          <i>Descubre.</i>
         </small>
       </button>
 
@@ -356,35 +498,39 @@ function App() {
 
         <button
           type="button"
-          className="notification-button"
+          className="header-icon-button"
           onClick={() => navigate("notifications")}
         >
-          ♧
+          <Icon name="bell" size={28} />
           <i>3</i>
         </button>
 
         <button
           type="button"
-          className="cart-button"
+          className="header-icon-button"
           onClick={() => navigate("cart")}
         >
-          🛒
-          {cartCount > 0 && <i>{cartCount}</i>}
+          <Icon name="cart" size={29} />
+
+          {cartCount > 0 && (
+            <i>{cartCount}</i>
+          )}
         </button>
 
       </div>
     </header>
   );
 
-  /* =========================
-     BARRA DE BÚSQUEDA
-  ========================= */
+  /* =======================================================
+     BÚSQUEDA
+  ======================================================= */
 
   const SearchBar = () => (
     <div className="search-container">
+
       <div className="search-box">
 
-        <span>⌕</span>
+        <Icon name="search" size={30} />
 
         <input
           type="text"
@@ -402,19 +548,21 @@ function App() {
         <button
           type="button"
           onClick={() => navigate("search")}
+          aria-label="Buscar"
         >
-          ⌕
+          <Icon name="search" size={28} />
         </button>
 
       </div>
+
     </div>
   );
 
-  /* =========================
-     CABECERA DE PÁGINA
-  ========================= */
+  /* =======================================================
+     PAGE HEADER
+  ======================================================= */
 
-  const PageHeader = ({ title, icon = "‹" }) => (
+  const PageHeader = ({ title }) => (
     <div className="page-header">
 
       <button
@@ -422,7 +570,7 @@ function App() {
         onClick={goBack}
         className="page-back"
       >
-        {icon}
+        <Icon name="back" size={28} />
       </button>
 
       <h1>{title}</h1>
@@ -432,21 +580,21 @@ function App() {
         className="page-home"
         onClick={goHome}
       >
-        ⌂
+        <Icon name="home" size={23} />
       </button>
 
     </div>
   );
 
-  /* =========================
-     TARJETA DE PRODUCTO
-  ========================= */
+  /* =======================================================
+     PRODUCT CARD
+  ======================================================= */
 
   const ProductCard = ({ product }) => (
     <article className="product-card">
 
       <div
-        className="product-image"
+        className={`product-image ${product.type}`}
         onClick={() => addToCart(product)}
       >
 
@@ -455,25 +603,48 @@ function App() {
         </span>
 
         <button
-          className="heart-button"
+          className={`heart-button ${
+            favorites.includes(product.name)
+              ? "favorite"
+              : ""
+          }`}
           type="button"
           onClick={(event) => {
             event.stopPropagation();
             toggleFavorite(product.name);
           }}
         >
-          {favorites.includes(product.name)
-            ? "♥"
-            : "♡"}
+          <Icon name="heart" size={24} stroke={1.8} />
         </button>
 
-        <div
-          className={`product-art ${product.type}`}
-        >
-          {product.type === "earbuds" && "🎧"}
-          {product.type === "bag" && "👜"}
-          {product.type === "watch" && "⌚"}
-          {product.type === "blender" && "🥤"}
+        <div className="product-art">
+
+          {product.type === "earbuds" && (
+            <div className="earbuds-art">
+              <span>◖</span>
+              <span>◗</span>
+              <small>▱</small>
+            </div>
+          )}
+
+          {product.type === "bag" && (
+            <div className="bag-art">
+              👜
+            </div>
+          )}
+
+          {product.type === "watch" && (
+            <div className="watch-art">
+              ⌚
+            </div>
+          )}
+
+          {product.type === "blender" && (
+            <div className="blender-art">
+              🥤
+            </div>
+          )}
+
         </div>
 
       </div>
@@ -483,17 +654,25 @@ function App() {
         <h3>{product.name}</h3>
 
         <div className="price-row">
-          <strong>{product.price}</strong>
+
+          <strong>
+            {product.price}
+          </strong>
 
           {product.oldPrice && (
-            <del>{product.oldPrice}</del>
+            <del>
+              {product.oldPrice}
+            </del>
           )}
+
         </div>
 
         <div className="rating-row">
           <span>★</span>
           {product.rating}
-          <small>• {product.reviews}</small>
+          <small>
+            • {product.reviews}
+          </small>
         </div>
 
         <button
@@ -501,7 +680,8 @@ function App() {
           type="button"
           onClick={() => addToCart(product)}
         >
-          🛒 Agregar al carrito
+          <Icon name="cart" size={18} />
+          Agregar
         </button>
 
       </div>
@@ -509,9 +689,45 @@ function App() {
     </article>
   );
 
-  /* =========================
-     PÁGINA INICIO
-  ========================= */
+  /* =======================================================
+     QUICK CARD
+  ======================================================= */
+
+  const QuickCard = ({
+    type,
+    icon,
+    title,
+    text,
+    onClick,
+  }) => (
+    <button
+      className={`quick-card ${type}`}
+      type="button"
+      onClick={onClick}
+    >
+
+      <div className="quick-icon">
+        {icon}
+      </div>
+
+      <div className="quick-content">
+
+        <strong>{title}</strong>
+
+        <span>{text}</span>
+
+      </div>
+
+      <b className="round-arrow">
+        <Icon name="arrow" size={23} />
+      </b>
+
+    </button>
+  );
+
+  /* =======================================================
+     HOME
+  ======================================================= */
 
   const HomePage = () => (
     <>
@@ -521,72 +737,65 @@ function App() {
 
         <section className="quick-cards">
 
-          <button
-            className="quick-card sell-card"
-            type="button"
-            onClick={() => navigate("sell")}
-          >
-            <div className="quick-icon">▣</div>
-
-            <div className="quick-content">
-              <strong>
+          <QuickCard
+            type="sell-card"
+            icon={<Icon name="store" size={38} />}
+            title={
+              <>
                 Vende en
                 <br />
                 SHORASHOPP
-              </strong>
-
-              <span>
+              </>
+            }
+            text={
+              <>
                 Únete y comienza a vender
                 <br />
                 tus productos hoy
-              </span>
-            </div>
+              </>
+            }
+            onClick={() => navigate("sell")}
+          />
 
-            <b className="round-arrow">›</b>
-          </button>
-
-          <button
-            className="quick-card account-card"
-            type="button"
-            onClick={openAccountPanel}
-          >
-            <div className="quick-icon">✨</div>
-
-            <div className="quick-content">
-              <strong>Mi cuenta</strong>
-
-              <span>
-                {session
-                  ? "Sesión iniciada"
-                  : "Hola, Jacqueline"}
-              </span>
-
-              <small>
-                Ver perfil, pedidos y configuraciones
-              </small>
-            </div>
-
-            <b className="round-arrow">›</b>
-          </button>
+          <QuickCard
+            type="account-card"
+            icon={<Icon name="user" size={38} />}
+            title="Mi cuenta"
+            text={
+              <>
+                Inicia sesión
+                <br />
+                para ver tu perfil y pedidos
+              </>
+            }
+            onClick={() =>
+              session
+                ? navigate("account")
+                : openAuth("login")
+            }
+          />
 
         </section>
 
         <section className="content-section">
 
           <div className="section-title-row">
+
             <h2>Categorías</h2>
 
             <button
               type="button"
               onClick={() => navigate("categories")}
             >
-              Ver todas <span>›</span>
+              Ver todas
+              <Icon name="arrow" size={22} />
             </button>
+
           </div>
 
           <div className="categories-scroll">
 
-            {categories.slice(0, 4).map((category) => (
+            {categories.map((category) => (
               <button
                 className="category-item"
                 key={category.name}
@@ -596,11 +805,13 @@ function App() {
                   navigate("category");
                 }}
               >
+
                 <div className="category-icon">
                   {category.icon}
                 </div>
 
                 <span>{category.name}</span>
+
               </button>
             ))}
 
@@ -630,18 +841,47 @@ function App() {
                 type="button"
                 onClick={() => navigate("offers")}
               >
-                Ver ofertas <b>›</b>
+                Ver ofertas
+                <Icon name="arrow" size={20} />
               </button>
 
             </div>
 
             <div className="offer-products">
-              <div className="offer-bag">🛍️</div>
-              <div className="offer-watch">⌚</div>
-              <div className="offer-shoe">👟</div>
-              <div className="offer-percent">%</div>
+
+              <div className="offer-decoration percent-one">
+                %
+              </div>
+
+              <div className="offer-bag">
+                🛍️
+              </div>
+
+              <div className="offer-headphones">
+                🎧
+              </div>
+
+              <div className="offer-watch">
+                ⌚
+              </div>
+
+              <div className="offer-shoe">
+                👟
+              </div>
+
+              <div className="offer-decoration percent-two">
+                %
+              </div>
+
             </div>
 
+          </div>
+
+          <div className="offer-dots">
+            <b></b>
+            <i></i>
+            <i></i>
+            <i></i>
           </div>
 
         </section>
@@ -656,7 +896,8 @@ function App() {
               type="button"
               onClick={() => navigate("products")}
             >
-              Ver todos <span>›</span>
+              Ver todos
+              <Icon name="arrow" size={22} />
             </button>
 
           </div>
@@ -680,20 +921,36 @@ function App() {
     </>
   );
 
-  /* =========================
+  /* =======================================================
      CATEGORÍAS
-  ========================= */
+  ======================================================= */
 
   const CategoriesPage = () => (
     <main className="page-content">
 
       <PageHeader title="Categorías" />
 
+      <div className="page-intro">
+        <span className="page-intro-icon">
+          <Icon name="grid" size={30} />
+        </span>
+
+        <div>
+          <strong>
+            Explora por categoría
+          </strong>
+
+          <small>
+            Encuentra exactamente lo que buscas.
+          </small>
+        </div>
+      </div>
+
       <div className="all-categories">
 
         {categories.map((category) => (
           <button
-            className="category-item"
+            className="category-page-card"
             key={category.name}
             type="button"
             onClick={() => {
@@ -701,13 +958,20 @@ function App() {
               navigate("category");
             }}
           >
+
             <div className="category-icon">
               {category.icon}
             </div>
 
-            <strong>{category.name}</strong>
+            <div>
+              <strong>{category.name}</strong>
+              <span>
+                Explorar productos
+              </span>
+            </div>
 
-            <span>Ver productos ›</span>
+            <Icon name="arrow" size={22} />
+
           </button>
         ))}
 
@@ -716,18 +980,26 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      CATEGORÍA
-  ========================= */
+  ======================================================= */
 
   const CategoryPage = () => (
     <main className="page-content">
 
       <PageHeader title={selectedCategory} />
 
-      <div className="section-title-row">
-        <h2>{selectedCategory}</h2>
-        <span>{filteredProducts.length} productos</span>
+      <div className="category-heading">
+
+        <div>
+          <span>Categoría</span>
+          <h2>{selectedCategory}</h2>
+        </div>
+
+        <b>
+          {filteredProducts.length} productos
+        </b>
+
       </div>
 
       <div className="products-grid">
@@ -740,9 +1012,11 @@ function App() {
             />
           ))
         ) : (
-          <div className="empty-products">
-            No hay productos disponibles todavía.
-          </div>
+          <EmptyState
+            icon="🔎"
+            title="No hay productos"
+            text="Todavía no hay productos en esta categoría."
+          />
         )}
 
       </div>
@@ -750,14 +1024,30 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      PRODUCTOS
-  ========================= */
+  ======================================================= */
 
   const ProductsPage = () => (
     <main className="page-content">
 
       <PageHeader title="Todos los productos" />
+
+      <div className="page-intro">
+        <span className="page-intro-icon">
+          🛍️
+        </span>
+
+        <div>
+          <strong>
+            Descubre nuestros productos
+          </strong>
+
+          <small>
+            Compra, compara y encuentra tus favoritos.
+          </small>
+        </div>
+      </div>
 
       <div className="products-grid">
 
@@ -773,43 +1063,48 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      OFERTAS
-  ========================= */
+  ======================================================= */
 
   const OffersPage = () => (
     <main className="page-content">
 
       <PageHeader title="Ofertas exclusivas" />
 
-      <div className="offer-page">
+      <div className="internal-offer-banner">
 
-        <div className="offer-page-banner">
-          <strong>🔥 OFERTAS ESPECIALES</strong>
-          <span>
-            Aprovecha nuestros precios por tiempo limitado.
-          </span>
+        <div>
+          <span>OFERTAS</span>
+          <strong>
+            Precios especiales
+          </strong>
+          <small>
+            Aprovecha antes de que terminen.
+          </small>
         </div>
 
-        <div className="products-grid">
+        <b>%</b>
 
-          {products.map((product) => (
-            <ProductCard
-              key={product.name}
-              product={product}
-            />
-          ))}
+      </div>
 
-        </div>
+      <div className="products-grid">
+
+        {products.map((product) => (
+          <ProductCard
+            key={product.name}
+            product={product}
+          />
+        ))}
 
       </div>
 
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      BÚSQUEDA
-  ========================= */
+  ======================================================= */
 
   const SearchPage = () => (
     <main className="page-content">
@@ -817,6 +1112,8 @@ function App() {
       <PageHeader title="Buscar" />
 
       <div className="search-page-box">
+        <Icon name="search" size={24} />
+
         <input
           type="text"
           placeholder="Buscar productos..."
@@ -828,11 +1125,23 @@ function App() {
         />
       </div>
 
-      <h2>
-        {search
-          ? `Resultados para "${search}"`
-          : "Todos los productos"}
-      </h2>
+      <div className="search-result-title">
+
+        <div>
+          <span>Resultados</span>
+
+          <h2>
+            {search
+              ? `"${search}"`
+              : "Todos los productos"}
+          </h2>
+        </div>
+
+        <b>
+          {filteredProducts.length}
+        </b>
+
+      </div>
 
       <div className="products-grid">
 
@@ -844,9 +1153,11 @@ function App() {
             />
           ))
         ) : (
-          <div className="empty-products">
-            🔎 No encontramos productos.
-          </div>
+          <EmptyState
+            icon="🔎"
+            title="No encontramos productos"
+            text="Prueba con otra palabra."
+          />
         )}
 
       </div>
@@ -854,9 +1165,9 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      CARRITO
-  ========================= */
+  ======================================================= */
 
   const CartPage = () => (
     <main className="page-content">
@@ -864,25 +1175,13 @@ function App() {
       <PageHeader title="Mi carrito" />
 
       {cart.length === 0 ? (
-        <div className="empty-page">
-
-          <div className="empty-icon">🛒</div>
-
-          <h2>Tu carrito está vacío</h2>
-
-          <p>
-            Agrega productos y aparecerán aquí.
-          </p>
-
-          <button
-            className="panel-primary-button"
-            type="button"
-            onClick={() => navigate("products")}
-          >
-            Explorar productos
-          </button>
-
-        </div>
+        <EmptyState
+          icon="🛒"
+          title="Tu carrito está vacío"
+          text="Agrega productos y aparecerán aquí."
+          action="Explorar productos"
+          onAction={() => navigate("products")}
+        />
       ) : (
         <>
 
@@ -894,7 +1193,7 @@ function App() {
                 key={item.name}
               >
 
-                <div className="cart-item-art">
+                <div className={`cart-item-art ${item.type}`}>
                   {item.type === "earbuds" && "🎧"}
                   {item.type === "bag" && "👜"}
                   {item.type === "watch" && "⌚"}
@@ -905,7 +1204,9 @@ function App() {
 
                   <h3>{item.name}</h3>
 
-                  <strong>{item.price}</strong>
+                  <strong>
+                    {item.price}
+                  </strong>
 
                   <div className="quantity-controls">
 
@@ -944,16 +1245,28 @@ function App() {
 
           </div>
 
-          <div className="cart-page-total">
+          <div className="cart-summary">
 
-            <span>Total</span>
+            <div>
+              <span>Productos</span>
+              <b>{cartCount}</b>
+            </div>
 
-            <strong>
-              $
-              {cartTotal.toLocaleString("es-MX", {
-                minimumFractionDigits: 2,
-              })}
-            </strong>
+            <div className="cart-total">
+
+              <span>Total</span>
+
+              <strong>
+                $
+                {cartTotal.toLocaleString(
+                  "es-MX",
+                  {
+                    minimumFractionDigits: 2,
+                  }
+                )}
+              </strong>
+
+            </div>
 
           </div>
 
@@ -963,6 +1276,7 @@ function App() {
             onClick={() => navigate("checkout")}
           >
             Continuar compra
+            <Icon name="arrow" size={22} />
           </button>
 
         </>
@@ -971,12 +1285,11 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      FAVORITOS
-  ========================= */
+  ======================================================= */
 
   const FavoritesPage = () => {
-
     const favoriteProducts = products.filter(
       (product) =>
         favorites.includes(product.name)
@@ -988,35 +1301,21 @@ function App() {
         <PageHeader title="Mis favoritos" />
 
         {favoriteProducts.length === 0 ? (
-          <div className="empty-page">
-
-            <div className="empty-icon">♡</div>
-
-            <h2>No tienes favoritos</h2>
-
-            <p>
-              Toca el corazón de un producto para guardarlo.
-            </p>
-
-            <button
-              className="panel-primary-button"
-              type="button"
-              onClick={() => navigate("products")}
-            >
-              Ver productos
-            </button>
-
-          </div>
+          <EmptyState
+            icon="♡"
+            title="No tienes favoritos"
+            text="Toca el corazón de un producto para guardarlo."
+            action="Ver productos"
+            onAction={() => navigate("products")}
+          />
         ) : (
           <div className="products-grid">
-
             {favoriteProducts.map((product) => (
               <ProductCard
                 key={product.name}
                 product={product}
               />
             ))}
-
           </div>
         )}
 
@@ -1024,9 +1323,9 @@ function App() {
     );
   };
 
-  /* =========================
+  /* =======================================================
      NOTIFICACIONES
-  ========================= */
+  ======================================================= */
 
   const NotificationsPage = () => (
     <main className="page-content">
@@ -1035,56 +1334,32 @@ function App() {
 
       <div className="notification-list">
 
-        <div className="notification-item">
-          <span>🎉</span>
+        <Notification
+          icon="🎉"
+          title="¡Bienvenido a SHORASHOPP!"
+          text="Descubre productos increíbles."
+        />
 
-          <div>
-            <strong>
-              ¡Bienvenido a SHORASHOPP!
-            </strong>
+        <Notification
+          icon="🔥"
+          title="Nuevas ofertas disponibles"
+          text="Revisa nuestras promociones."
+        />
 
-            <small>
-              Descubre productos increíbles.
-            </small>
-          </div>
-        </div>
-
-        <div className="notification-item">
-          <span>🔥</span>
-
-          <div>
-            <strong>
-              Nuevas ofertas disponibles
-            </strong>
-
-            <small>
-              Revisa nuestras promociones.
-            </small>
-          </div>
-        </div>
-
-        <div className="notification-item">
-          <span>📦</span>
-
-          <div>
-            <strong>
-              Tus pedidos aparecerán aquí
-            </strong>
-
-            <small>
-              Podrás consultar el estado de tus compras.
-            </small>
-          </div>
-        </div>
+        <Notification
+          icon="📦"
+          title="Tus pedidos aparecerán aquí"
+          text="Podrás consultar el estado de tus compras."
+        />
 
       </div>
 
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      CUENTA
-  ========================= */
+  ======================================================= */
 
   const AccountPage = () => (
     <main className="page-content">
@@ -1094,23 +1369,24 @@ function App() {
       <div className="account-page">
 
         <div className="account-avatar">
-          ✨
+          <Icon name="user" size={46} />
         </div>
 
-        <h2>
-          {session
-            ? "Mi cuenta"
-            : "Hola, Jacqueline"}
-        </h2>
+        <h2>Mi cuenta</h2>
 
-        <p>
-          {session
-            ? session.user.email
-            : "Inicia sesión para acceder a todas las funciones."}
-        </p>
+        {session ? (
+          <p>
+            {session.user.email}
+          </p>
+        ) : (
+          <p>
+            Inicia sesión para acceder a tus funciones.
+          </p>
+        )}
 
         {!session ? (
           <>
+
             <button
               className="panel-primary-button"
               type="button"
@@ -1125,41 +1401,39 @@ function App() {
               onClick={() => openAuth("register")}
             >
               Crear una cuenta
+              <Icon name="arrow" size={21} />
             </button>
+
           </>
         ) : (
           <>
-            <button
-              className="panel-option"
-              type="button"
+
+            <AccountOption
+              icon={<Icon name="box" size={23} />}
+              text="Mis pedidos"
               onClick={() => navigate("orders")}
-            >
-              📦 Mis pedidos
-            </button>
+            />
 
-            <button
-              className="panel-option"
-              type="button"
+            <AccountOption
+              icon={<Icon name="message" size={23} />}
+              text="Mensajes"
               onClick={() => navigate("messages")}
-            >
-              💬 Mensajes
-            </button>
+            />
 
-            <button
-              className="panel-option"
-              type="button"
+            <AccountOption
+              icon={<Icon name="settings" size={23} />}
+              text="Configuración"
               onClick={() => navigate("settings")}
-            >
-              ⚙️ Configuración
-            </button>
+            />
 
             <button
-              className="panel-primary-button"
+              className="panel-primary-button logout-button"
               type="button"
               onClick={handleLogout}
             >
               Cerrar sesión
             </button>
+
           </>
         )}
 
@@ -1168,67 +1442,47 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      PEDIDOS
-  ========================= */
+  ======================================================= */
 
   const OrdersPage = () => (
     <main className="page-content">
 
       <PageHeader title="Mis pedidos" />
 
-      <div className="empty-page">
-
-        <div className="empty-icon">📦</div>
-
-        <h2>Todavía no tienes pedidos</h2>
-
-        <p>
-          Cuando realices una compra podrás consultar
-          aquí el estado de tu pedido.
-        </p>
-
-        <button
-          className="panel-primary-button"
-          type="button"
-          onClick={() => navigate("products")}
-        >
-          Comprar ahora
-        </button>
-
-      </div>
+      <EmptyState
+        icon="📦"
+        title="Todavía no tienes pedidos"
+        text="Cuando realices una compra podrás consultar aquí el estado de tu pedido."
+        action="Comprar ahora"
+        onAction={() => navigate("products")}
+      />
 
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      MENSAJES
-  ========================= */
+  ======================================================= */
 
   const MessagesPage = () => (
     <main className="page-content">
 
       <PageHeader title="Mensajes" />
 
-      <div className="empty-page">
-
-        <div className="empty-icon">💬</div>
-
-        <h2>No tienes mensajes</h2>
-
-        <p>
-          Aquí podrás comunicarte con vendedores y
-          con el equipo de SHORASHOPP.
-        </p>
-
-      </div>
+      <EmptyState
+        icon="💬"
+        title="No tienes mensajes"
+        text="Aquí podrás comunicarte con vendedores y con el equipo de SHORASHOPP."
+      />
 
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      CONFIGURACIÓN
-  ========================= */
+  ======================================================= */
 
   const SettingsPage = () => (
     <main className="page-content">
@@ -1237,54 +1491,39 @@ function App() {
 
       <div className="settings-list">
 
-        <button
-          type="button"
-          className="panel-option"
-        >
-          🔔 Notificaciones
-          <span>›</span>
-        </button>
+        <AccountOption
+          icon="🔔"
+          text="Notificaciones"
+        />
 
-        <button
-          type="button"
-          className="panel-option"
-        >
-          🔐 Privacidad y seguridad
-          <span>›</span>
-        </button>
+        <AccountOption
+          icon="🔐"
+          text="Privacidad y seguridad"
+        />
 
-        <button
-          type="button"
-          className="panel-option"
-        >
-          🌎 País y preferencias
-          <span>›</span>
-        </button>
+        <AccountOption
+          icon="🌎"
+          text="País y preferencias"
+        />
 
-        <button
-          type="button"
-          className="panel-option"
-        >
-          📄 Términos y condiciones
-          <span>›</span>
-        </button>
+        <AccountOption
+          icon="📄"
+          text="Términos y condiciones"
+        />
 
-        <button
-          type="button"
-          className="panel-option"
-        >
-          ℹ️ Acerca de SHORASHOPP
-          <span>›</span>
-        </button>
+        <AccountOption
+          icon="ℹ️"
+          text="Acerca de SHORASHOPP"
+        />
 
       </div>
 
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      VENDER
-  ========================= */
+  ======================================================= */
 
   const SellPage = () => (
     <main className="page-content">
@@ -1293,9 +1532,13 @@ function App() {
 
       <div className="sell-page">
 
-        <div className="sell-page-icon">
-          🛍️
+        <div className="sell-hero-icon">
+          <Icon name="store" size={55} />
         </div>
+
+        <span className="sell-kicker">
+          CONVIÉRTETE EN VENDEDOR
+        </span>
 
         <h2>
           Comienza a vender
@@ -1320,6 +1563,7 @@ function App() {
           onClick={() => openAuth("login")}
         >
           Ya tengo una cuenta
+          <Icon name="arrow" size={20} />
         </button>
 
       </div>
@@ -1327,9 +1571,9 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      CHECKOUT
-  ========================= */
+  ======================================================= */
 
   const CheckoutPage = () => (
     <main className="page-content">
@@ -1339,25 +1583,33 @@ function App() {
       <div className="checkout-page">
 
         <div className="checkout-icon">
-          🛒
+          <Icon name="cart" size={45} />
         </div>
 
+        <span className="checkout-kicker">
+          RESUMEN
+        </span>
+
         <h2>
-          Resumen de compra
+          Tu compra
         </h2>
 
-        <p>
-          Productos: {cartCount}
-        </p>
+        <div className="checkout-row">
+          <span>Productos</span>
+          <strong>{cartCount}</strong>
+        </div>
 
-        <div className="cart-page-total">
+        <div className="checkout-row total">
           <span>Total</span>
 
           <strong>
             $
-            {cartTotal.toLocaleString("es-MX", {
-              minimumFractionDigits: 2,
-            })}
+            {cartTotal.toLocaleString(
+              "es-MX",
+              {
+                minimumFractionDigits: 2,
+              }
+            )}
           </strong>
         </div>
 
@@ -1384,9 +1636,9 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      MENÚ
-  ========================= */
+  ======================================================= */
 
   const MenuPage = () => (
     <main className="page-content">
@@ -1395,77 +1647,59 @@ function App() {
 
       <div className="main-menu-page">
 
-        <button
-          type="button"
-          onClick={openAccountPanel}
-        >
-          ✨
-          <span>Mi cuenta</span>
-          <b>›</b>
-        </button>
+        <MenuOption
+          icon={<Icon name="user" size={25} />}
+          text="Mi cuenta"
+          onClick={() =>
+            session
+              ? navigate("account")
+              : openAuth("login")
+          }
+        />
 
-        <button
-          type="button"
+        <MenuOption
+          icon={<Icon name="box" size={25} />}
+          text="Mis pedidos"
           onClick={() => navigate("orders")}
-        >
-          📦
-          <span>Mis pedidos</span>
-          <b>›</b>
-        </button>
+        />
 
-        <button
-          type="button"
+        <MenuOption
+          icon={<Icon name="message" size={25} />}
+          text="Mensajes"
           onClick={() => navigate("messages")}
-        >
-          💬
-          <span>Mensajes</span>
-          <b>›</b>
-        </button>
+        />
 
-        <button
-          type="button"
+        <MenuOption
+          icon={<Icon name="settings" size={25} />}
+          text="Configuración"
           onClick={() => navigate("settings")}
-        >
-          ⚙️
-          <span>Configuración</span>
-          <b>›</b>
-        </button>
+        />
 
-        <button
-          type="button"
+        <MenuOption
+          icon={<Icon name="heart" size={25} />}
+          text="Favoritos"
           onClick={() => navigate("favorites")}
-        >
-          ♡
-          <span>Favoritos</span>
-          <b>›</b>
-        </button>
+        />
 
-        <button
-          type="button"
+        <MenuOption
+          icon={<Icon name="store" size={25} />}
+          text="Vender en SHORASHOPP"
           onClick={() => navigate("sell")}
-        >
-          🛍️
-          <span>Vender en SHORASHOPP</span>
-          <b>›</b>
-        </button>
+        />
 
-        <button
-          type="button"
+        <MenuOption
+          icon={<Icon name="bell" size={25} />}
+          text="Notificaciones"
           onClick={() => navigate("notifications")}
-        >
-          🔔
-          <span>Notificaciones</span>
-          <b>›</b>
-        </button>
+        />
 
         {session && (
           <button
-            type="button"
             className="menu-logout"
+            type="button"
             onClick={handleLogout}
           >
-            ↪️
-            <span>Cerrar sesión</span>
+            Cerrar sesión
           </button>
         )}
 
@@ -1474,51 +1708,229 @@ function App() {
     </main>
   );
 
-  /* =========================
+  /* =======================================================
      CONFIANZA
-  ========================= */
+  ======================================================= */
 
   const TrustSection = () => (
     <section className="trust-section">
 
-      <div className="trust-item">
-        <span>♢</span>
-        <strong>Compra segura</strong>
-        <small>
-          Protegemos tus datos y compras
-        </small>
-      </div>
+      <TrustItem
+        icon={<Icon name="shield" size={34} />}
+        title="Compra segura"
+        text="Protegemos tus datos y compras"
+      />
 
-      <div className="trust-item">
-        <span>♧</span>
-        <strong>Envíos rápidos</strong>
-        <small>
-          Recibe tus productos en tiempo récord
-        </small>
-      </div>
+      <TrustItem
+        icon={<Icon name="truck" size={34} />}
+        title="Envíos rápidos"
+        text="Recibe tus productos en tiempo récord"
+      />
 
-      <div className="trust-item">
-        <span>✿</span>
-        <strong>Vendedores verificados</strong>
-        <small>
-          Más confianza para ti
-        </small>
-      </div>
+      <TrustItem
+        icon="✓"
+        title="Vendedores verificados"
+        text="Más confianza para ti"
+      />
 
-      <div className="trust-item">
-        <span>☏</span>
-        <strong>Soporte 24/7</strong>
-        <small>
-          Estamos aquí para ayudarte
-        </small>
-      </div>
+      <TrustItem
+        icon="💬"
+        title="Soporte 24/7"
+        text="Estamos aquí para ayudarte"
+      />
 
     </section>
   );
 
-  /* =========================
-     CONTENIDO PRINCIPAL
-  ========================= */
+  /* =======================================================
+     BARRA INFERIOR
+  ======================================================= */
+
+  const BottomNav = () => (
+    <nav className="bottom-nav">
+
+      <button
+        className={`bottom-item ${
+          view === "home" ? "active" : ""
+        }`}
+        type="button"
+        onClick={goHome}
+      >
+        <Icon name="home" size={25} />
+        <small>Inicio</small>
+      </button>
+
+      <button
+        className={`bottom-item ${
+          view === "categories" ||
+          view === "category"
+            ? "active"
+            : ""
+        }`}
+        type="button"
+        onClick={() => navigate("categories")}
+      >
+        <Icon name="grid" size={25} />
+        <small>Categorías</small>
+      </button>
+
+      <button
+        className={`seller-button ${
+          view === "sell" ? "active" : ""
+        }`}
+        type="button"
+        onClick={() => navigate("sell")}
+      >
+        <span className="seller-circle">
+          <Icon name="store" size={29} />
+        </span>
+        <small>Vender</small>
+      </button>
+
+      <button
+        className={`bottom-item ${
+          view === "favorites" ? "active" : ""
+        }`}
+        type="button"
+        onClick={() => navigate("favorites")}
+      >
+        <Icon name="heart" size={26} />
+        <small>Favoritos</small>
+      </button>
+
+      <button
+        className={`bottom-item ${
+          view === "account" ? "active" : ""
+        }`}
+        type="button"
+        onClick={() =>
+          session
+            ? navigate("account")
+            : openAuth("login")
+        }
+      >
+        <Icon name="user" size={26} />
+        <small>Cuenta</small>
+      </button>
+
+    </nav>
+  );
+
+  /* =======================================================
+     HELPERS
+  ======================================================= */
+
+  const EmptyState = ({
+    icon,
+    title,
+    text,
+    action,
+    onAction,
+  }) => (
+    <div className="empty-page">
+
+      <div className="empty-icon">
+        {icon}
+      </div>
+
+      <h2>{title}</h2>
+
+      <p>{text}</p>
+
+      {action && (
+        <button
+          className="panel-primary-button"
+          type="button"
+          onClick={onAction}
+        >
+          {action}
+        </button>
+      )}
+
+    </div>
+  );
+
+  const Notification = ({
+    icon,
+    title,
+    text,
+  }) => (
+    <div className="notification-item">
+
+      <span>{icon}</span>
+
+      <div>
+        <strong>{title}</strong>
+        <small>{text}</small>
+      </div>
+
+      <Icon name="arrow" size={20} />
+
+    </div>
+  );
+
+  const AccountOption = ({
+    icon,
+    text,
+    onClick,
+  }) => (
+    <button
+      className="panel-option"
+      type="button"
+      onClick={onClick}
+    >
+      <span className="option-icon">
+        {icon}
+      </span>
+
+      <span>{text}</span>
+
+      <Icon name="arrow" size={20} />
+    </button>
+  );
+
+  const MenuOption = ({
+    icon,
+    text,
+    onClick,
+  }) => (
+    <button
+      className="menu-option"
+      type="button"
+      onClick={onClick}
+    >
+      <span className="menu-option-icon">
+        {icon}
+      </span>
+
+      <span>{text}</span>
+
+      <Icon name="arrow" size={21} />
+    </button>
+  );
+
+  const TrustItem = ({
+    icon,
+    title,
+    text,
+  }) => (
+    <div className="trust-item">
+
+      <span className="trust-icon">
+        {icon}
+      </span>
+
+      <div>
+        <strong>{title}</strong>
+        <small>{text}</small>
+      </div>
+
+    </div>
+  );
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   const renderView = () => {
     switch (view) {
@@ -1573,76 +1985,6 @@ function App() {
     }
   };
 
-  /* =========================
-     BARRA INFERIOR
-  ========================= */
-
-  const BottomNav = () => (
-    <nav className="bottom-nav">
-
-      <button
-        className={`bottom-item ${
-          view === "home" ? "active" : ""
-        }`}
-        type="button"
-        onClick={goHome}
-      >
-        <span>⌂</span>
-        <small>Inicio</small>
-      </button>
-
-      <button
-        className={`bottom-item ${
-          view === "categories" ||
-          view === "category"
-            ? "active"
-            : ""
-        }`}
-        type="button"
-        onClick={() => navigate("categories")}
-      >
-        <span>▦</span>
-        <small>Categorías</small>
-      </button>
-
-      <button
-        className={`seller-button ${
-          view === "sell" ? "active" : ""
-        }`}
-        type="button"
-        onClick={() => navigate("sell")}
-      >
-        <span>▰</span>
-        <small>Vender</small>
-      </button>
-
-      <button
-        className={`bottom-item ${
-          view === "favorites" ? "active" : ""
-        }`}
-        type="button"
-        onClick={() => navigate("favorites")}
-      >
-        <span>
-          {favorites.length > 0 ? "♥" : "♡"}
-        </span>
-        <small>Favoritos</small>
-      </button>
-
-      <button
-        className={`bottom-item ${
-          view === "account" ? "active" : ""
-        }`}
-        type="button"
-        onClick={openAccountPanel}
-      >
-        <span>✨</span>
-        <small>Cuenta</small>
-      </button>
-
-    </nav>
-  );
-
   return (
     <div className="app">
 
@@ -1652,9 +1994,9 @@ function App() {
 
       <BottomNav />
 
-      {/* =========================
+      {/* ===================================================
           LOGIN / REGISTRO
-      ========================= */}
+      =================================================== */}
 
       {showAuth && (
         <div
@@ -1667,14 +2009,20 @@ function App() {
             }
           }}
         >
-          <div className="auth-modal">
+
+          <div
+            className="auth-modal"
+            onMouseDown={(event) =>
+              event.stopPropagation()
+            }
+          >
 
             <button
               className="auth-close"
               type="button"
               onClick={closeAuth}
             >
-              ×
+              <Icon name="close" size={22} />
             </button>
 
             <div className="auth-logo">
@@ -1783,126 +2131,7 @@ function App() {
             </div>
 
           </div>
-        </div>
-      )}
 
-      {/* =========================
-          PANEL MI CUENTA
-      ========================= */}
-
-      {showAccountPanel && (
-        <div
-          className="auth-overlay"
-          onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget
-            ) {
-              closeAccountPanel();
-            }
-          }}
-        >
-          <div className="auth-modal">
-
-            <button
-              className="auth-close"
-              type="button"
-              onClick={closeAccountPanel}
-            >
-              ×
-            </button>
-
-            <div className="auth-logo">
-              ✨
-            </div>
-
-            <h2>
-              {session
-                ? "Mi cuenta"
-                : "Hola, Jacqueline"}
-            </h2>
-
-            <p>
-              {session
-                ? session.user.email
-                : "Accede a tu cuenta de SHORASHOPP."}
-            </p>
-
-            {!session ? (
-              <>
-                <button
-                  className="auth-submit"
-                  type="button"
-                  onClick={() => {
-                    closeAccountPanel();
-                    openAuth("login");
-                  }}
-                >
-                  Iniciar sesión
-                </button>
-
-                <button
-                  className="panel-option"
-                  type="button"
-                  onClick={() => {
-                    closeAccountPanel();
-                    openAuth("register");
-                  }}
-                >
-                  Crear una cuenta
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="panel-option"
-                  type="button"
-                  onClick={() => {
-                    closeAccountPanel();
-                    navigate("orders");
-                  }}
-                >
-                  📦 Mis pedidos
-                  <span>›</span>
-                </button>
-
-                <button
-                  className="panel-option"
-                  type="button"
-                  onClick={() => {
-                    closeAccountPanel();
-                    navigate("messages");
-                  }}
-                >
-                  💬 Mensajes
-                  <span>›</span>
-                </button>
-
-                <button
-                  className="panel-option"
-                  type="button"
-                  onClick={() => {
-                    closeAccountPanel();
-                    navigate("settings");
-                  }}
-                >
-                  ⚙️ Configuración
-                  <span>›</span>
-                </button>
-
-                <button
-                  className="panel-primary-button"
-                  type="button"
-                  onClick={() => {
-                    closeAccountPanel();
-                    handleLogout();
-                  }}
-                >
-                  Cerrar sesión
-                </button>
-              </>
-            )}
-
-          </div>
         </div>
       )}
 
