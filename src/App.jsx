@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./lib/supabase";
 import "./App.css";
 
+/* =========================================================
+   DATOS
+========================================================= */
+
 const categories = [
   ["👕", "Ropa y Moda"],
   ["📱", "Tecnología"],
@@ -126,54 +130,84 @@ const demoProducts = [
   },
 ];
 
-const reviews = [
-  ["María", 5, "Llegó rápido y tal como se describe."],
-  ["Carlos", 4, "Buen producto, volvería a comprar."],
-  ["Ana", 5, "Excelente atención del vendedor."],
+const demoReviews = [
+  {
+    name: "María",
+    stars: 5,
+    text: "Llegó rápido y tal como se describe.",
+  },
+  {
+    name: "Carlos",
+    stars: 4,
+    text: "Buen producto, volvería a comprar.",
+  },
+  {
+    name: "Ana",
+    stars: 5,
+    text: "Excelente atención del vendedor.",
+  },
 ];
 
 const money = (value) =>
   new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
+    maximumFractionDigits: 2,
   }).format(Number(value || 0));
 
-const normalizeProduct = (p) => ({
-  ...p,
-  id: p.id || `product-${Date.now()}-${Math.random()}`,
-  price: Number(p.price || 0),
+const normalizeProduct = (product) => ({
+  ...product,
+  id: product.id || `product-${Date.now()}`,
+  price: Number(product.price || 0),
   compare_at_price:
-    p.compare_at_price === null || p.compare_at_price === ""
+    product.compare_at_price === null ||
+    product.compare_at_price === ""
       ? null
-      : Number(p.compare_at_price),
-  stock: Number(p.stock ?? 0),
-  images: Array.isArray(p.images)
-    ? p.images
-    : typeof p.images === "string"
+      : Number(product.compare_at_price),
+  stock: Number(product.stock ?? 0),
+  images: Array.isArray(product.images)
+    ? product.images
+    : typeof product.images === "string"
       ? (() => {
           try {
-            const x = JSON.parse(p.images);
-            return Array.isArray(x) ? x : [];
+            const parsed = JSON.parse(product.images);
+            return Array.isArray(parsed) ? parsed : [];
           } catch {
             return [];
           }
         })()
       : [],
-  category: p.category || p.category_name || "Otros",
-  description: p.description || "Producto publicado en SHORASHOPP.",
-  sellerName: p.sellerName || p.seller_name || "Vendedor SHORASHOPP",
-  sellerRating: p.sellerRating || p.seller_rating || "4.8",
-  shipping: p.shipping || "Envío calculado al finalizar",
-  delivery: p.delivery || "Consulta la fecha disponible al comprar",
-  reviews: p.reviews || "Producto publicado",
-  variants:
-    Array.isArray(p.variants) && p.variants.length
-      ? p.variants
-      : [],
+  category:
+    product.category ||
+    product.category_name ||
+    "Otros",
+  description:
+    product.description ||
+    "Producto publicado en SHORASHOPP.",
+  sellerName:
+    product.sellerName ||
+    product.seller_name ||
+    "Vendedor SHORASHOPP",
+  sellerRating:
+    product.sellerRating ||
+    product.seller_rating ||
+    "4.8",
+  shipping:
+    product.shipping ||
+    "Envío calculado al finalizar",
+  delivery:
+    product.delivery ||
+    "Consulta la fecha disponible al comprar",
+  reviews:
+    product.reviews ||
+    "Producto publicado",
+  variants: Array.isArray(product.variants)
+    ? product.variants
+    : [],
 });
 
-const slugify = (value) =>
-  value
+const slugify = (text) =>
+  String(text || "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
@@ -181,9 +215,14 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
+/* =========================================================
+   APP
+========================================================= */
+
 function App() {
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [loading, setLoading] = useState(false);
@@ -195,92 +234,145 @@ function App() {
 
   const [page, setPage] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState("");
+
   const [toast, setToast] = useState("");
 
-  const [products, setProducts] = useState(demoProducts);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [product, setProduct] = useState(null);
+  const [products, setProducts] =
+    useState(demoProducts);
+  const [productsLoading, setProductsLoading] =
+    useState(true);
+  const [selectedProduct, setSelectedProduct] =
+    useState(null);
 
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] =
+    useState([]);
+
   const [cart, setCart] = useState([]);
-  const [checkoutItems, setCheckoutItems] = useState([]);
+  const [checkoutItems, setCheckoutItems] =
+    useState([]);
 
-  const [sellerStore, setSellerStore] = useState(null);
-  const [sellerLoading, setSellerLoading] = useState(false);
-  const [publishLoading, setPublishLoading] = useState(false);
-
-  const [variant, setVariant] = useState("");
+  const [selectedVariant, setSelectedVariant] =
+    useState("");
 
   const [addresses, setAddresses] = useState([]);
-  const [payments, setPayments] = useState([]);
-
-  const [address, setAddress] = useState({
-    name: "",
-    phone: "",
-    street: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    reference: "",
-  });
-
-  const [publish, setPublish] = useState({
-    name: "",
-    description: "",
-    price: "",
-    compare_at_price: "",
-    stock: "1",
-    sku: "",
-    category: "Tecnología",
-    image_url: "",
-    images: "",
-  });
+  const [paymentMethods, setPaymentMethods] =
+    useState([]);
 
   const [questions, setQuestions] = useState([]);
-  const [question, setQuestion] = useState("");
+  const [questionText, setQuestionText] =
+    useState("");
 
   const [orders, setOrders] = useState([
     {
       id: "SH-00001234",
       date: new Date().toLocaleDateString("es-MX"),
-      total: 1298,
+      total: 998,
       status: "En tránsito",
       items: [
-        { ...demoProducts[0], quantity: 1 },
-        { ...demoProducts[1], quantity: 1 },
+        {
+          ...demoProducts[0],
+          quantity: 1,
+        },
+        {
+          ...demoProducts[1],
+          quantity: 1,
+        },
       ],
     },
   ]);
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] =
+    useState(null);
+
+  const [sellerStore, setSellerStore] =
+    useState(null);
+  const [sellerLoading, setSellerLoading] =
+    useState(false);
+  const [publishLoading, setPublishLoading] =
+    useState(false);
+
+  const [addressForm, setAddressForm] =
+    useState({
+      name: "",
+      phone: "",
+      street: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      reference: "",
+    });
+
+  const [paymentForm, setPaymentForm] =
+    useState({
+      card: "",
+      name: "",
+      expiration: "",
+      cvv: "",
+    });
+
+  const [productForm, setProductForm] =
+    useState({
+      name: "",
+      description: "",
+      price: "",
+      compare_at_price: "",
+      stock: "1",
+      sku: "",
+      category: "Tecnología",
+      image_url: "",
+      images: "",
+    });
+
+  /* =======================================================
+     AUTH
+  ======================================================= */
 
   useEffect(() => {
     let mounted = true;
 
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (mounted) {
-        setSession(data?.session || null);
-        setAuthReady(true);
+    const initializeAuth = async () => {
+      try {
+        const { data } =
+          await supabase.auth.getSession();
+
+        if (mounted) {
+          setSession(data?.session || null);
+        }
+      } catch {
+        if (mounted) {
+          setSession(null);
+        }
+      } finally {
+        if (mounted) {
+          setAuthReady(true);
+        }
       }
     };
 
-    init();
+    initializeAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
-      setAuthReady(true);
-    });
+    } =
+      supabase.auth.onAuthStateChange(
+        (_event, currentSession) => {
+          setSession(currentSession);
+          setAuthReady(true);
+        },
+      );
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
+  /* =======================================================
+     PRODUCTS
+  ======================================================= */
 
   useEffect(() => {
     loadProducts();
@@ -302,59 +394,95 @@ function App() {
         .from("products")
         .select("*")
         .eq("status", "approved")
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false,
+        });
 
-      if (!error && Array.isArray(data) && data.length) {
-        setProducts(data.map(normalizeProduct));
+      if (
+        !error &&
+        Array.isArray(data) &&
+        data.length
+      ) {
+        setProducts(
+          data.map(normalizeProduct),
+        );
       } else {
-        setProducts(demoProducts);
+        setProducts(
+          demoProducts.map(normalizeProduct),
+        );
       }
     } catch {
-      setProducts(demoProducts);
+      setProducts(
+        demoProducts.map(normalizeProduct),
+      );
+    } finally {
+      setProductsLoading(false);
     }
-
-    setProductsLoading(false);
   };
 
   const loadSellerStore = async (userId) => {
     setSellerLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from("seller_stores")
-        .select("*")
-        .eq("owner_id", userId)
-        .limit(1)
-        .maybeSingle();
+      const { data, error } =
+        await supabase
+          .from("seller_stores")
+          .select("*")
+          .eq("owner_id", userId)
+          .limit(1)
+          .maybeSingle();
 
       setSellerStore(!error ? data : null);
     } catch {
       setSellerStore(null);
+    } finally {
+      setSellerLoading(false);
     }
-
-    setSellerLoading(false);
   };
 
-  const notify = (text) => {
-    setToast(text);
-    clearTimeout(window.__shoraToast);
-    window.__shoraToast = setTimeout(() => setToast(""), 2500);
-  };
+  /* =======================================================
+     NAVIGATION
+  ======================================================= */
 
-  const openPage = (next) => {
-    setPage(next);
+  const openPage = (nextPage) => {
+    setPage(nextPage);
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const goHome = () => {
     setPage("home");
-    setProduct(null);
-    setCategory("");
-    setSearch("");
+    setSelectedProduct(null);
+    setSelectedCategory("");
+    setSearchTerm("");
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
+
+  const notify = (text) => {
+    setToast(text);
+
+    window.clearTimeout(
+      window.__shorashoppToastTimer,
+    );
+
+    window.__shorashoppToastTimer =
+      window.setTimeout(() => {
+        setToast("");
+      }, 2600);
+  };
+
+  /* =======================================================
+     AUTH FUNCTIONS
+  ======================================================= */
 
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
@@ -373,41 +501,54 @@ function App() {
 
   const handleAuth = async (event) => {
     event.preventDefault();
+
     setLoading(true);
     setMessage("");
 
     try {
       if (authMode === "register") {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              full_name: name.trim(),
+        const { data, error } =
+          await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: {
+              data: {
+                full_name: name.trim(),
+              },
             },
-          },
-        });
+          });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         if (data?.session) {
           closeAuth();
         } else {
           setMessage(
-            "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
+            "Cuenta creada. Revisa tu correo para confirmar tu cuenta.",
           );
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+        const { error } =
+          await supabase.auth.signInWithPassword(
+            {
+              email: email.trim(),
+              password,
+            },
+          );
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
+
         closeAuth();
       }
     } catch (error) {
-      setMessage(error?.message || "Ocurrió un error.");
+      setMessage(
+        error?.message ||
+          "No se pudo completar la operación.",
+      );
     } finally {
       setLoading(false);
     }
@@ -419,43 +560,71 @@ function App() {
     goHome();
   };
 
+  const openAccount = () => {
+    if (session) {
+      openPage("account");
+    } else {
+      openAuth("login");
+    }
+  };
+
+  /* =======================================================
+     PRODUCTS / CART
+  ======================================================= */
+
   const openProduct = (item) => {
-    const normalized = normalizeProduct(item);
-    setProduct(normalized);
-    setVariant(normalized.variants?.[0] || "");
+    const normalized =
+      normalizeProduct(item);
+
+    setSelectedProduct(normalized);
+    setSelectedVariant(
+      normalized.variants?.[0] || "",
+    );
     setQuestions([]);
-    setQuestion("");
+    setQuestionText("");
+
     openPage("product");
   };
 
-  const imageOf = (item) =>
-    item?.image_url || item?.images?.[0] || "";
+  const productImage = (item) =>
+    item?.image_url ||
+    item?.images?.[0] ||
+    "";
 
-  const addCart = (item, quantity = 1) => {
-    const selectedVariant = variant || item.variants?.[0] || "";
-    const key = `${item.id}-${selectedVariant || "default"}`;
+  const addToCart = (
+    item,
+    quantity = 1,
+    variant = selectedVariant,
+  ) => {
     const qty = Math.max(
       1,
       Math.min(
         Number(quantity) || 1,
-        item.stock || 999
-      )
+        item.stock || 999,
+      ),
     );
 
-    setCart((current) => {
-      const found = current.find((x) => x.cartKey === key);
+    const cartKey = `${item.id}-${
+      variant || "default"
+    }`;
 
-      if (found) {
+    setCart((current) => {
+      const existing = current.find(
+        (x) => x.cartKey === cartKey,
+      );
+
+      if (existing) {
         return current.map((x) =>
-          x.cartKey === key
+          x.cartKey === cartKey
             ? {
                 ...x,
                 quantity: Math.min(
                   x.quantity + qty,
-                  item.stock || x.quantity + qty
+                  item.stock ||
+                    x.quantity + qty,
                 ),
               }
-            : x
+            : x,
         );
       }
 
@@ -464,8 +633,8 @@ function App() {
         {
           ...item,
           quantity: qty,
-          variant: selectedVariant,
-          cartKey: key,
+          variant: variant || "",
+          cartKey,
         },
       ];
     });
@@ -473,15 +642,20 @@ function App() {
     notify("Producto agregado al carrito.");
   };
 
-  const removeCart = (cartKey) => {
+  const removeFromCart = (cartKey) => {
     setCart((current) =>
-      current.filter((item) => item.cartKey !== cartKey)
+      current.filter(
+        (item) => item.cartKey !== cartKey,
+      ),
     );
   };
 
-  const changeQuantity = (cartKey, quantity) => {
+  const changeQuantity = (
+    cartKey,
+    quantity,
+  ) => {
     if (quantity <= 0) {
-      removeCart(cartKey);
+      removeFromCart(cartKey);
       return;
     }
 
@@ -492,27 +666,34 @@ function App() {
               ...item,
               quantity: Math.min(
                 quantity,
-                item.stock || quantity
+                item.stock || quantity,
               ),
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
   const cartCount = cart.reduce(
-    (sum, item) => sum + item.quantity,
-    0
+    (sum, item) =>
+      sum + Number(item.quantity || 0),
+    0,
   );
 
   const cartTotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+    (sum, item) =>
+      sum +
+      Number(item.price || 0) *
+        Number(item.quantity || 0),
+    0,
   );
 
   const checkoutTotal = checkoutItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+    (sum, item) =>
+      sum +
+      Number(item.price || 0) *
+        Number(item.quantity || 0),
+    0,
   );
 
   const buyNow = (item) => {
@@ -520,7 +701,10 @@ function App() {
       {
         ...item,
         quantity: 1,
-        variant: variant || item.variants?.[0] || "",
+        variant:
+          selectedVariant ||
+          item.variants?.[0] ||
+          "",
       },
     ]);
 
@@ -540,41 +724,61 @@ function App() {
   const toggleFavorite = (id) => {
     setFavorites((current) =>
       current.includes(id)
-        ? current.filter((x) => x !== id)
-        : [...current, id]
+        ? current.filter((item) => item !== id)
+        : [...current, id],
     );
   };
 
+  /* =======================================================
+     SEARCH / CATEGORY
+  ======================================================= */
+
   const filteredProducts = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const query =
+      searchTerm.trim().toLowerCase();
 
     return products.filter((item) => {
-      const byCategory =
-        !category || item.category === category;
+      const categoryMatches =
+        !selectedCategory ||
+        item.category === selectedCategory;
 
-      const bySearch =
-        !q ||
-        item.name.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q) ||
+      const searchMatches =
+        !query ||
+        item.name
+          .toLowerCase()
+          .includes(query) ||
+        item.description
+          .toLowerCase()
+          .includes(query) ||
+        item.category
+          .toLowerCase()
+          .includes(query) ||
         String(item.sellerName || "")
           .toLowerCase()
-          .includes(q);
+          .includes(query);
 
-      return byCategory && bySearch;
+      return (
+        categoryMatches &&
+        searchMatches
+      );
     });
-  }, [products, category, search]);
+  }, [
+    products,
+    selectedCategory,
+    searchTerm,
+  ]);
 
-  const favoriteProducts = products.filter((item) =>
-    favorites.includes(item.id)
+  const favoriteProducts = products.filter(
+    (item) =>
+      favorites.includes(item.id),
   );
 
-  const goCategory = (name) => {
-    setCategory(name);
-    setSearch("");
+  const selectCategory = (category) => {
+    setSelectedCategory(category);
+    setSearchTerm("");
     openPage("home");
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       document
         .querySelector(".products-section")
         ?.scrollIntoView({
@@ -583,28 +787,46 @@ function App() {
     }, 80);
   };
 
+  const handleSearch = () => {
+    openPage("home");
+
+    window.setTimeout(() => {
+      document
+        .querySelector(".products-section")
+        ?.scrollIntoView({
+          behavior: "smooth",
+        });
+    }, 80);
+  };
+
+  /* =======================================================
+     ADDRESS / PAYMENTS
+  ======================================================= */
+
   const saveAddress = (event) => {
     event.preventDefault();
 
     if (
-      !address.name ||
-      !address.street ||
-      !address.city ||
-      !address.postalCode
+      !addressForm.name ||
+      !addressForm.street ||
+      !addressForm.city ||
+      !addressForm.postalCode
     ) {
-      notify("Completa los campos principales.");
+      notify(
+        "Completa los campos principales.",
+      );
       return;
     }
 
     setAddresses((current) => [
       ...current,
       {
-        ...address,
+        ...addressForm,
         id: Date.now(),
       },
     ]);
 
-    setAddress({
+    setAddressForm({
       name: "",
       phone: "",
       street: "",
@@ -620,17 +842,96 @@ function App() {
   const savePayment = (event) => {
     event.preventDefault();
 
-    setPayments((current) => [
+    setPaymentMethods((current) => [
       ...current,
       {
         id: Date.now(),
-        label: "Tarjeta terminación 4242",
-        detail: "Método de pago guardado",
+        label:
+          "Tarjeta terminación " +
+          (
+            paymentForm.card.replace(
+              /\D/g,
+              "",
+            ) || "4242"
+          ).slice(-4),
+        detail:
+          "Método de pago guardado",
       },
     ]);
 
+    setPaymentForm({
+      card: "",
+      name: "",
+      expiration: "",
+      cvv: "",
+    });
+
     notify("Método de pago agregado.");
   };
+
+  /* =======================================================
+     ORDERS
+  ======================================================= */
+
+  const placeOrder = () => {
+    if (!checkoutItems.length) {
+      notify("No hay productos para comprar.");
+      return;
+    }
+
+    const order = {
+      id: `SH-${Date.now()
+        .toString()
+        .slice(-8)}`,
+      date:
+        new Date().toLocaleDateString(
+          "es-MX",
+        ),
+      total: checkoutTotal,
+      status: "Confirmado",
+      items: checkoutItems,
+    };
+
+    setOrders((current) => [
+      order,
+      ...current,
+    ]);
+
+    setSelectedOrder(order);
+    setCart([]);
+    setCheckoutItems([]);
+
+    openPage("confirmation");
+  };
+
+  /* =======================================================
+     QUESTIONS
+  ======================================================= */
+
+  const addQuestion = (event) => {
+    event.preventDefault();
+
+    if (!questionText.trim()) {
+      return;
+    }
+
+    setQuestions((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        text: questionText.trim(),
+        answer:
+          "El vendedor responderá pronto.",
+      },
+    ]);
+
+    setQuestionText("");
+    notify("Pregunta enviada.");
+  };
+
+  /* =======================================================
+     SELL
+  ======================================================= */
 
   const publishProduct = async (event) => {
     event.preventDefault();
@@ -642,47 +943,62 @@ function App() {
 
     if (!sellerStore?.id) {
       notify(
-        "Primero necesitas una tienda de vendedor vinculada."
+        "Primero necesitas una tienda de vendedor vinculada.",
       );
       return;
     }
 
-    const price = Number(publish.price);
-    const stock = Number(publish.stock);
+    const price = Number(
+      productForm.price,
+    );
+    const stock = Number(
+      productForm.stock,
+    );
 
     if (
-      !publish.name.trim() ||
+      !productForm.name.trim() ||
       price <= 0 ||
       stock < 0
     ) {
-      notify("Completa nombre, precio y stock.");
+      notify(
+        "Completa nombre, precio y stock.",
+      );
       return;
     }
 
     setPublishLoading(true);
 
     try {
-      const images = publish.images
-        .split(/\n|,/)
-        .map((x) => x.trim())
-        .filter(Boolean);
+      const imageList =
+        productForm.images
+          .split(/\n|,/)
+          .map((item) => item.trim())
+          .filter(Boolean);
 
       const payload = {
         seller_id: sellerStore.id,
-        name: publish.name.trim(),
-        slug: `${slugify(publish.name)}-${Date.now()}`,
-        description: publish.description.trim(),
+        name: productForm.name.trim(),
+        slug: `${slugify(
+          productForm.name,
+        )}-${Date.now()}`,
+        description:
+          productForm.description.trim(),
         price,
         compare_at_price:
-          publish.compare_at_price
-            ? Number(publish.compare_at_price)
+          productForm.compare_at_price
+            ? Number(
+                productForm.compare_at_price,
+              )
             : null,
         stock,
-        sku: publish.sku.trim() || null,
+        sku:
+          productForm.sku.trim() ||
+          null,
         image_url:
-          publish.image_url.trim() || null,
-        images,
-        category: publish.category,
+          productForm.image_url.trim() ||
+          null,
+        images: imageList,
+        category: productForm.category,
         status: "pending",
       };
 
@@ -691,7 +1007,10 @@ function App() {
         .insert(payload);
 
       if (result.error) {
-        const fallback = { ...payload };
+        const fallback = {
+          ...payload,
+        };
+
         delete fallback.category;
 
         result = await supabase
@@ -699,9 +1018,11 @@ function App() {
           .insert(fallback);
       }
 
-      if (result.error) throw result.error;
+      if (result.error) {
+        throw result.error;
+      }
 
-      setPublish({
+      setProductForm({
         name: "",
         description: "",
         price: "",
@@ -714,107 +1035,143 @@ function App() {
       });
 
       notify(
-        "Producto enviado para aprobación."
+        "Producto enviado para aprobación.",
       );
 
       await loadProducts();
     } catch (error) {
       notify(
         error?.message ||
-          "No se pudo publicar el producto."
+          "No se pudo publicar el producto.",
       );
     } finally {
       setPublishLoading(false);
     }
   };
 
-  const askQuestion = (event) => {
-    event.preventDefault();
+  /* =======================================================
+     STYLES
+  ======================================================= */
 
-    if (!question.trim()) return;
-
-    setQuestions((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        question: question.trim(),
-        answer:
-          "El vendedor responderá próximamente.",
-      },
-    ]);
-
-    setQuestion("");
-    notify("Pregunta enviada.");
+  const primaryButton = {
+    border: 0,
+    borderRadius: 14,
+    padding: "14px 18px",
+    background:
+      "linear-gradient(135deg,#ed174d,#7020d0)",
+    color: "#fff",
+    fontWeight: 800,
+    cursor: "pointer",
   };
 
-  const placeOrder = () => {
-    if (!checkoutItems.length) {
-      notify("No hay productos para comprar.");
-      return;
-    }
-
-    const order = {
-      id: `SH-${Date.now()
-        .toString()
-        .slice(-8)}`,
-      date: new Date().toLocaleDateString("es-MX"),
-      total: checkoutTotal,
-      status: "Confirmado",
-      items: checkoutItems,
-    };
-
-    setOrders((current) => [
-      order,
-      ...current,
-    ]);
-
-    setCart([]);
-    setCheckoutItems([]);
-    setSelectedOrder(order);
-
-    openPage("confirmation");
+  const secondaryButton = {
+    border:
+      "1px solid #7020d0",
+    borderRadius: 14,
+    padding: "14px 18px",
+    background: "#fff",
+    color: "#7020d0",
+    fontWeight: 800,
+    cursor: "pointer",
   };
 
-  const styles = {
-    primary: {
-      border: 0,
-      borderRadius: 14,
-      padding: "14px 18px",
-      background:
-        "linear-gradient(135deg,#ed174d,#7020d0)",
-      color: "#fff",
-      fontWeight: 800,
-      cursor: "pointer",
-    },
-    secondary: {
-      border: "1px solid #7020d0",
-      borderRadius: 14,
-      padding: "14px 18px",
-      background: "#fff",
-      color: "#7020d0",
-      fontWeight: 800,
-      cursor: "pointer",
-    },
-    card: {
-      background: "#fff",
-      border: "1px solid #ece7f3",
-      borderRadius: 18,
-      padding: 18,
-      boxShadow:
-        "0 5px 18px rgba(50,16,74,.05)",
-    },
-    menu: {
-      width: "100%",
-      border: 0,
-      borderRadius: 13,
-      background: "#fff",
-      color: "#24152f",
-      fontSize: 16,
-      fontWeight: 700,
-      textAlign: "left",
-      padding: "14px 12px",
-    },
+  const cardStyle = {
+    background: "#fff",
+    border:
+      "1px solid #ece7f3",
+    borderRadius: 18,
+    padding: 18,
+    boxShadow:
+      "0 5px 18px rgba(50,16,74,.05)",
   };
+
+  const menuStyle = {
+    width: "100%",
+    border: 0,
+    borderRadius: 13,
+    background: "#fff",
+    color: "#24152f",
+    fontSize: 16,
+    fontWeight: 700,
+    textAlign: "left",
+    padding: "14px 12px",
+    cursor: "pointer",
+  };
+
+  const cardButtonStyle = {
+    ...menuStyle,
+    display: "flex",
+    justifyContent:
+      "space-between",
+    alignItems: "center",
+    border:
+      "1px solid #ece7f3",
+    boxShadow:
+      "0 5px 18px rgba(50,16,74,.05)",
+  };
+
+  /* =======================================================
+     SIMPLE PAGE
+  ======================================================= */
+
+  const SimplePage = ({
+    title,
+    icon,
+    text,
+    back = "home",
+    buttons = [],
+  }) => (
+    <PageShell
+      title={title}
+      onBack={() => openPage(back)}
+    >
+      <div style={cardStyle}>
+        <div
+          style={{ fontSize: 54 }}
+        >
+          {icon}
+        </div>
+
+        <h2>{title}</h2>
+
+        <p
+          style={{
+            color: "#666",
+            lineHeight: 1.7,
+          }}
+        >
+          {text}
+        </p>
+      </div>
+
+      {buttons.length > 0 && (
+        <div
+          className="stack-list"
+          style={{ marginTop: 12 }}
+        >
+          {buttons.map((button) => (
+            <button
+              key={button.label}
+              type="button"
+              style={cardButtonStyle}
+              onClick={button.onClick}
+            >
+              <span>
+                {button.icon}{" "}
+                {button.label}
+              </span>
+
+              <span>›</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </PageShell>
+  );
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
 
   if (!authReady) {
     return (
@@ -825,13 +1182,20 @@ function App() {
     );
   }
 
+  /* =======================================================
+     RETURN
+  ======================================================= */
+
   return (
     <div className="app">
+      {/* HEADER */}
       <header className="mobile-header">
         <button
           className="menu-button"
           type="button"
-          onClick={() => setMenuOpen(true)}
+          onClick={() =>
+            setMenuOpen(true)
+          }
         >
           ☰
         </button>
@@ -844,6 +1208,7 @@ function App() {
           <strong>
             SHORA<span>SHOPP</span>
           </strong>
+
           <small>
             Compra. <b>Vende.</b> Descubre.
           </small>
@@ -854,7 +1219,9 @@ function App() {
             className="notification-button"
             type="button"
             onClick={() =>
-              openPage("notifications")
+              openPage(
+                "notifications",
+              )
             }
           >
             🔔<i>3</i>
@@ -863,13 +1230,16 @@ function App() {
           <button
             className="cart-button"
             type="button"
-            onClick={() => openPage("cart")}
+            onClick={() =>
+              openPage("cart")
+            }
           >
             🛒<i>{cartCount}</i>
           </button>
         </div>
       </header>
 
+      {/* SEARCH */}
       <div className="search-container">
         <div className="search-box">
           <span>⌕</span>
@@ -877,27 +1247,29 @@ function App() {
           <input
             type="text"
             placeholder="¿Qué estás buscando hoy?"
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
+            value={searchTerm}
+            onChange={(event) =>
+              setSearchTerm(
+                event.target.value,
+              )
             }
-            onKeyDown={(e) =>
-              e.key === "Enter" &&
-              openPage("home")
-            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
 
           <button
             type="button"
-            onClick={() =>
-              openPage("home")
-            }
+            onClick={handleSearch}
           >
             ⌕
           </button>
         </div>
       </div>
 
+      {/* HOME */}
       {page === "home" && (
         <main className="home-main">
           <section className="quick-cards">
@@ -907,7 +1279,9 @@ function App() {
               onClick={() =>
                 session
                   ? openPage("sell")
-                  : openAuth("register")
+                  : openAuth(
+                      "register",
+                    )
               }
             >
               <div className="quick-icon">
@@ -922,29 +1296,29 @@ function App() {
                 </strong>
 
                 <span>
-                  Publica tus productos y comienza
-                  a vender.
+                  Publica tus productos y
+                  comienza a vender.
                 </span>
               </div>
 
-              <b className="round-arrow">›</b>
+              <b className="round-arrow">
+                ›
+              </b>
             </button>
 
             <button
               className="quick-card account-card"
               type="button"
-              onClick={() =>
-                session
-                  ? openPage("account")
-                  : openAuth("login")
-              }
+              onClick={openAccount}
             >
               <div className="quick-icon">
                 ✨
               </div>
 
               <div className="quick-content">
-                <strong>Mi cuenta</strong>
+                <strong>
+                  Mi cuenta
+                </strong>
 
                 <span>
                   {session
@@ -953,11 +1327,14 @@ function App() {
                 </span>
 
                 <small>
-                  Perfil, pedidos y configuraciones
+                  Perfil, pedidos y
+                  configuraciones
                 </small>
               </div>
 
-              <b className="round-arrow">›</b>
+              <b className="round-arrow">
+                ›
+              </b>
             </button>
           </section>
 
@@ -968,7 +1345,9 @@ function App() {
               <button
                 type="button"
                 onClick={() =>
-                  openPage("categories")
+                  openPage(
+                    "categories",
+                  )
                 }
               >
                 Ver todas <span>›</span>
@@ -978,21 +1357,28 @@ function App() {
             <div className="categories-scroll">
               {categories
                 .slice(0, 6)
-                .map(([icon, name]) => (
-                  <button
-                    key={name}
-                    className="category-item"
-                    type="button"
-                    onClick={() =>
-                      goCategory(name)
-                    }
-                  >
-                    <div className="category-icon">
-                      {icon}
-                    </div>
-                    <span>{name}</span>
-                  </button>
-                ))}
+                .map(
+                  ([icon, title]) => (
+                    <button
+                      key={title}
+                      className="category-item"
+                      type="button"
+                      onClick={() =>
+                        selectCategory(
+                          title,
+                        )
+                      }
+                    >
+                      <div className="category-icon">
+                        {icon}
+                      </div>
+
+                      <span>
+                        {title}
+                      </span>
+                    </button>
+                  ),
+                )}
             </div>
           </section>
 
@@ -1033,15 +1419,15 @@ function App() {
           <section className="content-section products-section">
             <div className="section-title-row">
               <h2>
-                {category ||
+                {selectedCategory ||
                   "Productos destacados"}
               </h2>
 
               <button
                 type="button"
                 onClick={() => {
-                  setCategory("");
-                  setSearch("");
+                  setSelectedCategory("");
+                  setSearchTerm("");
                 }}
               >
                 Ver todos <span>›</span>
@@ -1056,24 +1442,26 @@ function App() {
               <div className="products-grid">
                 {filteredProducts.length ? (
                   filteredProducts.map(
-                    (item) => (
+                    (product) => (
                       <ProductCard
-                        key={item.id}
-                        product={item}
+                        key={product.id}
+                        product={product}
                         favorite={favorites.includes(
-                          item.id
+                          product.id,
                         )}
                         onFavorite={
                           toggleFavorite
                         }
-                        onClick={openProduct}
+                        onClick={
+                          openProduct
+                        }
                       />
-                    )
+                    ),
                   )
                 ) : (
                   <div className="empty-inline">
-                    No hay productos con esa
-                    búsqueda.
+                    No hay productos con
+                    esa búsqueda.
                   </div>
                 )}
               </div>
@@ -1083,24 +1471,31 @@ function App() {
           <section className="trust-section">
             <div>
               <span>♢</span>
-              <strong>Compra segura</strong>
+              <strong>
+                Compra segura
+              </strong>
               <small>
-                Protegemos tus datos y compras
+                Protegemos tus datos y
+                compras
               </small>
             </div>
 
             <div>
               <span>♧</span>
-              <strong>Envíos rápidos</strong>
+              <strong>
+                Envíos rápidos
+              </strong>
               <small>
-                Recibe tus productos rápidamente
+                Recibe tus productos
+                rápidamente
               </small>
             </div>
 
             <div>
               <span>✿</span>
               <strong>
-                Vendedores verificados
+                Vendedores
+                verificados
               </strong>
               <small>
                 Más confianza para ti
@@ -1109,44 +1504,56 @@ function App() {
 
             <div>
               <span>☏</span>
-              <strong>Soporte 24/7</strong>
+              <strong>
+                Soporte 24/7
+              </strong>
               <small>
-                Estamos aquí para ayudarte
+                Estamos aquí para
+                ayudarte
               </small>
             </div>
           </section>
         </main>
       )}
 
+      {/* CATEGORIES */}
       {page === "categories" && (
         <PageShell
           title="Categorías"
           onBack={goHome}
         >
           <div className="category-page-grid">
-            {categories.map(([icon, name]) => (
-              <button
-                key={name}
-                className="big-category-card"
-                type="button"
-                onClick={() =>
-                  goCategory(name)
-                }
-              >
-                <span className="big-category-icon">
-                  {icon}
-                </span>
+            {categories.map(
+              ([icon, title]) => (
+                <button
+                  key={title}
+                  className="big-category-card"
+                  type="button"
+                  onClick={() =>
+                    selectCategory(
+                      title,
+                    )
+                  }
+                >
+                  <span className="big-category-icon">
+                    {icon}
+                  </span>
 
-                <strong>{name}</strong>
-                <small>
-                  Explorar productos
-                </small>
-              </button>
-            ))}
+                  <strong>
+                    {title}
+                  </strong>
+
+                  <small>
+                    Explorar productos
+                  </small>
+                </button>
+              ),
+            )}
           </div>
         </PageShell>
       )}
 
+      {/* OFFERS */}
       {page === "offers" && (
         <PageShell
           title="Ofertas"
@@ -1166,21 +1573,19 @@ function App() {
           <div className="products-grid">
             {products
               .filter(
-                (p) =>
-                  p.compare_at_price &&
-                  p.price <
-                    p.compare_at_price
+                (item) =>
+                  item.compare_at_price &&
+                  item.price <
+                    item.compare_at_price,
               )
-              .map((item) => (
+              .map((product) => (
                 <ProductCard
-                  key={item.id}
-                  product={item}
+                  key={product.id}
+                  product={product}
                   favorite={favorites.includes(
-                    item.id
+                    product.id,
                   )}
-                  onFavorite={
-                    toggleFavorite
-                  }
+                  onFavorite={toggleFavorite}
                   onClick={openProduct}
                 />
               ))}
@@ -1188,24 +1593,31 @@ function App() {
         </PageShell>
       )}
 
+      {/* PRODUCT */}
       {page === "product" &&
-        product && (
+        selectedProduct && (
           <PageShell
             title="Producto"
-            onBack={() => openPage("home")}
+            onBack={goHome}
           >
             <div className="product-detail-grid">
               <div>
                 <div className="product-main-image">
                   <span className="product-label">
-                    {product.discount ||
+                    {selectedProduct.discount ||
                       "Disponible"}
                   </span>
 
-                  {imageOf(product) ? (
+                  {productImage(
+                    selectedProduct,
+                  ) ? (
                     <img
-                      src={imageOf(product)}
-                      alt={product.name}
+                      src={productImage(
+                        selectedProduct,
+                      )}
+                      alt={
+                        selectedProduct.name
+                      }
                     />
                   ) : (
                     <span className="product-placeholder-large">
@@ -1215,90 +1627,116 @@ function App() {
                 </div>
 
                 <div className="thumb-row">
-                  {[product.image_url, ...(product.images || [])]
+                  {[
+                    selectedProduct.image_url,
+                    ...(selectedProduct.images ||
+                      []),
+                  ]
                     .filter(Boolean)
                     .slice(0, 5)
-                    .map((src, index) => (
-                      <button
-                        key={`${src}-${index}`}
-                        type="button"
-                        className="thumb"
-                      >
-                        <img
-                          src={src}
-                          alt=""
-                        />
-                      </button>
-                    ))}
+                    .map(
+                      (
+                        src,
+                        index,
+                      ) => (
+                        <button
+                          key={`${src}-${index}`}
+                          type="button"
+                          className="thumb"
+                        >
+                          <img
+                            src={src}
+                            alt=""
+                          />
+                        </button>
+                      ),
+                    )}
                 </div>
               </div>
 
               <div className="product-detail-copy">
                 <div className="eyebrow">
-                  {product.category}
+                  {
+                    selectedProduct.category
+                  }
                 </div>
 
-                <h1>{product.name}</h1>
+                <h1>
+                  {selectedProduct.name}
+                </h1>
 
                 <div className="rating-row big">
-                  ★ {product.rating || "Nuevo"}{" "}
+                  ★{" "}
+                  {selectedProduct.rating ||
+                    "Nuevo"}{" "}
                   <small>
-                    • {product.reviews}
+                    •{" "}
+                    {
+                      selectedProduct.reviews
+                    }
                   </small>
                 </div>
 
                 <div className="detail-price-row">
                   <strong>
-                    {money(product.price)}
+                    {money(
+                      selectedProduct.price,
+                    )}
                   </strong>
 
-                  {product.compare_at_price && (
+                  {selectedProduct.compare_at_price && (
                     <del>
                       {money(
-                        product.compare_at_price
+                        selectedProduct.compare_at_price,
                       )}
                     </del>
                   )}
                 </div>
 
-                {product.compare_at_price && (
+                {selectedProduct.compare_at_price && (
                   <div className="saving-pill">
                     Ahorras{" "}
                     {money(
-                      product.compare_at_price -
-                        product.price
+                      selectedProduct.compare_at_price -
+                        selectedProduct.price,
                     )}
                   </div>
                 )}
 
                 <p className="detail-description">
-                  {product.description}
+                  {
+                    selectedProduct.description
+                  }
                 </p>
 
-                {product.variants?.length > 0 && (
+                {selectedProduct.variants
+                  ?.length > 0 && (
                   <div className="variant-block">
                     <strong>
                       Elige una opción
                     </strong>
 
                     <div className="variant-row">
-                      {product.variants.map(
-                        (item) => (
+                      {selectedProduct.variants.map(
+                        (option) => (
                           <button
-                            key={item}
+                            key={option}
                             type="button"
                             className={`variant-button ${
-                              variant === item
+                              selectedVariant ===
+                              option
                                 ? "selected"
                                 : ""
                             }`}
                             onClick={() =>
-                              setVariant(item)
+                              setSelectedVariant(
+                                option,
+                              )
                             }
                           >
-                            {item}
+                            {option}
                           </button>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -1309,25 +1747,35 @@ function App() {
                     <b>
                       Stock disponible:
                     </b>{" "}
-                    {product.stock}
+                    {
+                      selectedProduct.stock
+                    }
                   </div>
 
                   <div>
                     <b>Envío:</b>{" "}
-                    {product.shipping}
+                    {
+                      selectedProduct.shipping
+                    }
                   </div>
 
                   <div>
                     <b>Entrega:</b>{" "}
-                    {product.delivery}
+                    {
+                      selectedProduct.delivery
+                    }
                   </div>
 
                   <div className="buy-actions">
                     <button
                       type="button"
-                      style={styles.secondary}
+                      style={
+                        secondaryButton
+                      }
                       onClick={() =>
-                        addCart(product)
+                        addToCart(
+                          selectedProduct,
+                        )
                       }
                     >
                       🛒 Agregar al carrito
@@ -1335,9 +1783,13 @@ function App() {
 
                     <button
                       type="button"
-                      style={styles.primary}
+                      style={
+                        primaryButton
+                      }
                       onClick={() =>
-                        buyNow(product)
+                        buyNow(
+                          selectedProduct,
+                        )
                       }
                     >
                       Comprar ahora
@@ -1347,7 +1799,7 @@ function App() {
 
                 <div
                   style={{
-                    ...styles.card,
+                    ...cardStyle,
                     marginTop: 14,
                   }}
                 >
@@ -1355,19 +1807,25 @@ function App() {
 
                   <div className="seller-mini-card">
                     <div className="seller-avatar">
-                      {product.sellerName?.charAt(
-                        0
+                      {selectedProduct.sellerName?.charAt(
+                        0,
                       ) || "S"}
                     </div>
 
                     <div>
                       <strong>
-                        {product.sellerName}
+                        {
+                          selectedProduct.sellerName
+                        }
                       </strong>
+
                       <div>
                         ⭐{" "}
-                        {product.sellerRating}
-                        {" · "}Vendedor destacado
+                        {
+                          selectedProduct.sellerRating
+                        }{" "}
+                        · Vendedor
+                        destacado
                       </div>
                     </div>
 
@@ -1375,7 +1833,7 @@ function App() {
                       type="button"
                       onClick={() =>
                         openPage(
-                          "seller-store"
+                          "seller-store",
                         )
                       }
                     >
@@ -1387,7 +1845,7 @@ function App() {
             </div>
 
             <div className="detail-section-grid">
-              <div style={styles.card}>
+              <div style={cardStyle}>
                 <h2>Descripción</h2>
 
                 <p
@@ -1396,102 +1854,122 @@ function App() {
                     lineHeight: 1.8,
                   }}
                 >
-                  {product.description}
+                  {
+                    selectedProduct.description
+                  }
                 </p>
 
-                <h2>Características</h2>
+                <h2>
+                  Características
+                </h2>
 
                 <div className="spec-list">
-                  {(product.specifications ||
-                    []).map(
+                  {(
+                    selectedProduct.specifications ||
+                    []
+                  ).map(
                     ([label, value]) => (
                       <div key={label}>
                         <strong>
                           {label}
                         </strong>
 
-                        <span>{value}</span>
+                        <span>
+                          {value}
+                        </span>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </div>
 
-              <div style={styles.card}>
+              <div style={cardStyle}>
                 <h2>Opiniones</h2>
 
-                {reviews.map(
-                  ([name, stars, text]) => (
+                {demoReviews.map(
+                  (review) => (
                     <div
                       className="review-item"
-                      key={name}
+                      key={review.name}
                     >
-                      <strong>{name}</strong>
+                      <strong>
+                        {review.name}
+                      </strong>
 
                       <div>
-                        {"★".repeat(stars)}
+                        {"★".repeat(
+                          review.stars,
+                        )}
                       </div>
 
-                      <p>{text}</p>
+                      <p>
+                        {review.text}
+                      </p>
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
 
             <div
               style={{
-                ...styles.card,
+                ...cardStyle,
                 marginTop: 14,
               }}
             >
               <h2>
-                Preguntas sobre el producto
+                Preguntas sobre el
+                producto
               </h2>
 
               <form
                 className="inline-form"
-                onSubmit={askQuestion}
+                onSubmit={addQuestion}
               >
                 <input
-                  value={question}
-                  onChange={(e) =>
-                    setQuestion(
-                      e.target.value
+                  value={questionText}
+                  onChange={(event) =>
+                    setQuestionText(
+                      event.target
+                        .value,
                     )
                   }
                   placeholder="Escribe tu pregunta"
                 />
 
                 <button
-                  style={styles.primary}
+                  style={primaryButton}
                   type="submit"
                 >
                   Preguntar
                 </button>
               </form>
 
-              {questions.map((item) => (
-                <div
-                  className="question-item"
-                  key={item.id}
-                >
-                  <strong>
-                    Pregunta
-                  </strong>
+              {questions.map(
+                (question) => (
+                  <div
+                    className="question-item"
+                    key={question.id}
+                  >
+                    <strong>
+                      Pregunta
+                    </strong>
 
-                  <p>{item.question}</p>
+                    <p>
+                      {question.text}
+                    </p>
 
-                  <small>
-                    {item.answer}
-                  </small>
-                </div>
-              ))}
+                    <small>
+                      {question.answer}
+                    </small>
+                  </div>
+                ),
+              )}
             </div>
 
             <div
               style={{
-                ...styles.card,
+                ...cardStyle,
                 marginTop: 14,
               }}
             >
@@ -1502,10 +1980,11 @@ function App() {
               <div className="products-grid mini-grid">
                 {products
                   .filter(
-                    (x) =>
-                      x.id !== product.id &&
-                      x.category ===
-                        product.category
+                    (item) =>
+                      item.id !==
+                        selectedProduct.id &&
+                      item.category ===
+                        selectedProduct.category,
                   )
                   .slice(0, 4)
                   .map((item) => (
@@ -1513,7 +1992,7 @@ function App() {
                       key={item.id}
                       product={item}
                       favorite={favorites.includes(
-                        item.id
+                        item.id,
                       )}
                       onFavorite={
                         toggleFavorite
@@ -1528,28 +2007,38 @@ function App() {
           </PageShell>
         )}
 
+      {/* CART */}
       {page === "cart" && (
         <PageShell
           title="Carrito"
           onBack={goHome}
         >
           {!cart.length ? (
-            <div style={styles.card}>
-              <div style={{ fontSize: 58 }}>
+            <div style={cardStyle}>
+              <div
+                style={{
+                  fontSize: 58,
+                }}
+              >
                 🛒
               </div>
 
               <h2>
-                Tu carrito está vacío
+                Tu carrito está
+                vacío
               </h2>
 
-              <p style={{ color: "#666" }}>
-                Agrega productos para comenzar
-                tu compra.
+              <p
+                style={{
+                  color: "#666",
+                }}
+              >
+                Agrega productos para
+                comenzar tu compra.
               </p>
 
               <button
-                style={styles.primary}
+                style={primaryButton}
                 type="button"
                 onClick={goHome}
               >
@@ -1558,20 +2047,26 @@ function App() {
             </div>
           ) : (
             <div className="checkout-layout">
-              <div style={styles.card}>
+              <div style={cardStyle}>
                 {cart.map((item) => (
                   <div
                     className="cart-item"
                     key={item.cartKey}
                   >
                     <div className="cart-image">
-                      {imageOf(item) ? (
+                      {productImage(
+                        item,
+                      ) ? (
                         <img
-                          src={imageOf(item)}
+                          src={productImage(
+                            item,
+                          )}
                           alt={item.name}
                         />
                       ) : (
-                        <span>🛍️</span>
+                        <span>
+                          🛍️
+                        </span>
                       )}
                     </div>
 
@@ -1595,7 +2090,8 @@ function App() {
                           onClick={() =>
                             changeQuantity(
                               item.cartKey,
-                              item.quantity - 1
+                              item.quantity -
+                                1,
                             )
                           }
                         >
@@ -1611,7 +2107,8 @@ function App() {
                           onClick={() =>
                             changeQuantity(
                               item.cartKey,
-                              item.quantity + 1
+                              item.quantity +
+                                1,
                             )
                           }
                         >
@@ -1622,8 +2119,8 @@ function App() {
                           type="button"
                           className="remove-btn"
                           onClick={() =>
-                            removeCart(
-                              item.cartKey
+                            removeFromCart(
+                              item.cartKey,
                             )
                           }
                         >
@@ -1635,7 +2132,7 @@ function App() {
                 ))}
               </div>
 
-              <div style={styles.card}>
+              <div style={cardStyle}>
                 <h2>Resumen</h2>
 
                 <div className="summary-line">
@@ -1650,9 +2147,9 @@ function App() {
 
                 <div className="summary-line">
                   <span>Envío</span>
-
                   <span>
-                    Se calcula al comprar
+                    Se calcula al
+                    finalizar
                   </span>
                 </div>
 
@@ -1667,7 +2164,7 @@ function App() {
                 </div>
 
                 <button
-                  style={styles.primary}
+                  style={primaryButton}
                   type="button"
                   onClick={checkoutCart}
                 >
@@ -1679,33 +2176,50 @@ function App() {
         </PageShell>
       )}
 
+      {/* CHECKOUT */}
       {page === "checkout" && (
         <PageShell
           title="Finalizar compra"
-          onBack={() => openPage("cart")}
+          onBack={() =>
+            openPage("cart")
+          }
         >
           <div className="checkout-layout">
-            <div style={styles.card}>
-              <h2>Entrega</h2>
+            <div style={cardStyle}>
+              <h2>
+                1. Entrega
+              </h2>
 
               {addresses.length ? (
-                addresses.map((item) => (
-                  <div
-                    className="select-card"
-                    key={item.id}
-                  >
-                    <strong>
-                      {item.name}
-                    </strong>
+                addresses.map(
+                  (address) => (
+                    <div
+                      className="select-card"
+                      key={address.id}
+                    >
+                      <strong>
+                        {address.name}
+                      </strong>
 
-                    <span>
-                      {item.street},{" "}
-                      {item.city},{" "}
-                      {item.state}{" "}
-                      {item.postalCode}
-                    </span>
-                  </div>
-                ))
+                      <span>
+                        {
+                          address.street
+                        }
+                        ,{" "}
+                        {
+                          address.city
+                        }
+                        ,{" "}
+                        {
+                          address.state
+                        }{" "}
+                        {
+                          address.postalCode
+                        }
+                      </span>
+                    </div>
+                  ),
+                )
               ) : (
                 <div className="empty-inline">
                   <p>
@@ -1714,10 +2228,14 @@ function App() {
                   </p>
 
                   <button
-                    style={styles.secondary}
+                    style={
+                      secondaryButton
+                    }
                     type="button"
                     onClick={() =>
-                      openPage("addresses")
+                      openPage(
+                        "addresses",
+                      )
                     }
                   >
                     Agregar dirección
@@ -1725,83 +2243,93 @@ function App() {
                 </div>
               )}
 
-              <h2>Método de pago</h2>
+              <h2>
+                2. Método de pago
+              </h2>
 
-              {payments.length ? (
-                payments.map((item) => (
-                  <div
-                    className="select-card"
-                    key={item.id}
-                  >
-                    <strong>
-                      💳 {item.label}
-                    </strong>
+              {paymentMethods.length ? (
+                paymentMethods.map(
+                  (payment) => (
+                    <div
+                      className="select-card"
+                      key={payment.id}
+                    >
+                      <strong>
+                        💳{" "}
+                        {payment.label}
+                      </strong>
 
-                    <span>
-                      {item.detail}
-                    </span>
-                  </div>
-                ))
+                      <span>
+                        {
+                          payment.detail
+                        }
+                      </span>
+                    </div>
+                  ),
+                )
               ) : (
                 <div className="empty-inline">
                   <p>
-                    Agrega un método de pago.
+                    Agrega un método
+                    de pago.
                   </p>
 
                   <button
-                    style={styles.secondary}
+                    style={
+                      secondaryButton
+                    }
                     type="button"
                     onClick={() =>
-                      openPage("payments")
+                      openPage(
+                        "payments",
+                      )
                     }
                   >
                     Administrar pagos
                   </button>
                 </div>
               )}
-
-              <p className="checkout-note">
-                🔒 Tus datos están
-                protegidos.
-              </p>
             </div>
 
-            <div style={styles.card}>
+            <div style={cardStyle}>
               <h2>
                 Resumen de compra
               </h2>
 
-              {checkoutItems.map((item) => (
-                <div
-                  className="summary-product"
-                  key={item.cartKey || item.id}
-                >
-                  <span>
-                    {item.quantity} ×{" "}
-                    {item.name}
-                  </span>
+              {checkoutItems.map(
+                (item) => (
+                  <div
+                    className="summary-product"
+                    key={`${item.id}-${item.variant || "default"}`}
+                  >
+                    <span>
+                      {item.quantity} ×{" "}
+                      {item.name}
+                    </span>
 
-                  <strong>
-                    {money(
-                      item.price *
-                        item.quantity
-                    )}
-                  </strong>
-                </div>
-              ))}
+                    <strong>
+                      {money(
+                        item.price *
+                          item.quantity,
+                      )}
+                    </strong>
+                  </div>
+                ),
+              )}
 
               <hr />
 
               <div className="summary-line total">
                 <span>Total</span>
+
                 <strong>
                   {money(checkoutTotal)}
                 </strong>
               </div>
 
               <button
-                style={styles.primary}
                 type="button"
+                style={primaryButton}
                 onClick={placeOrder}
               >
                 Confirmar pedido
@@ -1811,6 +2339,7 @@ function App() {
         </PageShell>
       )}
 
+      {/* CONFIRMATION */}
       {page === "confirmation" && (
         <PageShell
           title="Compra confirmada"
@@ -1826,8 +2355,8 @@ function App() {
             </h1>
 
             <p>
-              Tu pedido fue registrado en
-              SHORASHOPP.
+              Tu pedido fue registrado
+              en SHORASHOPP.
             </p>
 
             <strong>
@@ -1837,7 +2366,7 @@ function App() {
 
             <div className="button-row">
               <button
-                style={styles.primary}
+                style={primaryButton}
                 type="button"
                 onClick={() =>
                   openPage("orders")
@@ -1847,7 +2376,7 @@ function App() {
               </button>
 
               <button
-                style={styles.secondary}
+                style={secondaryButton}
                 type="button"
                 onClick={goHome}
               >
@@ -1858,6 +2387,7 @@ function App() {
         </PageShell>
       )}
 
+      {/* ACCOUNT */}
       {page === "account" && (
         <PageShell
           title="Mi cuenta"
@@ -1886,35 +2416,147 @@ function App() {
           </div>
 
           <div className="account-grid">
-            {[
-              ["👤", "Perfil", "profile"],
-              ["📦", "Mis pedidos", "orders"],
-              ["❤️", "Favoritos", "favorites"],
-              ["📍", "Direcciones", "addresses"],
-              ["💳", "Métodos de pago", "payments"],
-              ["💬", "Mensajes", "messages"],
-              ["🔔", "Notificaciones", "notifications"],
-              ["🏪", "Vender", "sell"],
-              ["💰", "Crédito SHORASHOPP", "credit"],
-              ["🎁", "Referidos", "referrals"],
-              ["⚙️", "Configuración", "settings"],
-              ["🔐", "Privacidad y seguridad", "privacy"],
-            ].map(([icon, title, target]) => (
-              <button
-                key={target}
-                style={styles.menu}
-                type="button"
-                onClick={() =>
-                  openPage(target)
-                }
-              >
-                {icon} {title} <span>›</span>
-              </button>
-            ))}
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("profile")
+              }
+            >
+              👤 Perfil
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("orders")
+              }
+            >
+              📦 Mis pedidos
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("favorites")
+              }
+            >
+              ❤️ Favoritos
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("addresses")
+              }
+            >
+              📍 Direcciones
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("payments")
+              }
+            >
+              💳 Métodos de pago
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("messages")
+              }
+            >
+              💬 Mensajes
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage(
+                  "notifications",
+                )
+              }
+            >
+              🔔 Notificaciones
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                session
+                  ? openPage("sell")
+                  : openAuth(
+                      "register",
+                    )
+              }
+            >
+              🏪 Vender
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("credits")
+              }
+            >
+              💰 Crédito SHORASHOPP
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("referrals")
+              }
+            >
+              🎁 Referidos
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("settings")
+              }
+            >
+              ⚙️ Configuración
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("privacy")
+              }
+            >
+              🔐 Privacidad y seguridad
+              <span>›</span>
+            </button>
 
             <button
               style={{
-                ...styles.menu,
+                ...cardButtonStyle,
                 color: "#d41452",
               }}
               type="button"
@@ -1927,33 +2569,54 @@ function App() {
         </PageShell>
       )}
 
-      {page === "profile" &&
+      {/* PROFILE */}
+      {page === "profile" && (
         <SimplePage
           title="Perfil"
           icon="👤"
-          text="Administra la información personal de tu cuenta."
-          back={() => openPage("account")}
-        />}
+          text="Administra tu información personal y los datos de tu cuenta."
+          back="account"
+          buttons={[
+            {
+              icon: "✏️",
+              label:
+                "Editar datos personales",
+              onClick: () =>
+                notify(
+                  "La edición de datos se conectará con tu cuenta.",
+                ),
+            },
+          ]}
+        />
+      )}
 
+      {/* ORDERS */}
       {page === "orders" && (
         <PageShell
           title="Mis pedidos"
-          onBack={() => openPage("account")}
+          onBack={() =>
+            openPage("account")
+          }
         >
           {selectedOrder ? (
-            <div style={styles.card}>
+            <div style={cardStyle}>
               <button
-                style={styles.secondary}
+                style={
+                  secondaryButton
+                }
                 type="button"
                 onClick={() =>
-                  setSelectedOrder(null)
+                  setSelectedOrder(
+                    null,
+                  )
                 }
               >
-                ← Volver a pedidos
+                ← Volver
               </button>
 
               <h2>
-                Pedido {selectedOrder.id}
+                Pedido{" "}
+                {selectedOrder.id}
               </h2>
 
               <p>
@@ -1964,7 +2627,9 @@ function App() {
               <p>
                 Estado:{" "}
                 <b>
-                  {selectedOrder.status}
+                  {
+                    selectedOrder.status
+                  }
                 </b>
               </p>
 
@@ -1982,11 +2647,11 @@ function App() {
                     <strong>
                       {money(
                         item.price *
-                          item.quantity
+                          item.quantity,
                       )}
                     </strong>
                   </div>
-                )
+                ),
               )}
 
               <hr />
@@ -1996,51 +2661,89 @@ function App() {
 
                 <strong>
                   {money(
-                    selectedOrder.total
+                    selectedOrder.total,
                   )}
                 </strong>
               </div>
 
               <button
-                style={styles.primary}
+                style={primaryButton}
                 type="button"
                 onClick={() =>
-                  openPage("tracking")
+                  openPage(
+                    "tracking",
+                  )
                 }
               >
                 Seguir pedido
               </button>
             </div>
           ) : (
-            <div className="order-list">
-              {orders.map((order) => (
-                <button
-                  style={styles.menu}
-                  type="button"
-                  key={order.id}
-                  onClick={() =>
-                    setSelectedOrder(
-                      order
-                    )
-                  }
-                >
-                  📦 {order.id}
-                  <span>›</span>
-                </button>
-              ))}
+            <div className="stack-list">
+              {orders.map(
+                (order) => (
+                  <button
+                    key={order.id}
+                    style={
+                      cardButtonStyle
+                    }
+                    type="button"
+                    onClick={() =>
+                      setSelectedOrder(
+                        order,
+                      )
+                    }
+                  >
+                    📦{" "}
+                    {order.id}
+                    <span>›</span>
+                  </button>
+                ),
+              )}
             </div>
           )}
         </PageShell>
       )}
 
-      {page === "tracking" &&
+      {/* TRACKING */}
+      {page === "tracking" && (
         <SimplePage
           title="Seguimiento"
           icon="🚚"
-          text="Consulta el estado de tus envíos y pedidos."
-          back={() => openPage("orders")}
-        />}
+          text="Consulta el avance de tus envíos y el estado actual de tus pedidos."
+          back="orders"
+          buttons={[
+            {
+              icon: "📦",
+              label:
+                "Pedido preparado",
+              onClick: () =>
+                notify(
+                  "Pedido preparado.",
+                ),
+            },
+            {
+              icon: "🚚",
+              label: "En camino",
+              onClick: () =>
+                notify(
+                  "El pedido está en camino.",
+                ),
+            },
+            {
+              icon: "🏠",
+              label:
+                "Entrega estimada",
+              onClick: () =>
+                notify(
+                  "Próxima entrega programada.",
+                ),
+            },
+          ]}
+        />
+      )}
 
+      {/* FAVORITES */}
       {page === "favorites" && (
         <PageShell
           title="Favoritos"
@@ -2051,25 +2754,25 @@ function App() {
           {favoriteProducts.length ? (
             <div className="products-grid">
               {favoriteProducts.map(
-                (item) => (
+                (product) => (
                   <ProductCard
-                    key={item.id}
-                    product={item}
+                    key={product.id}
+                    product={product}
                     favorite
                     onFavorite={
                       toggleFavorite
                     }
-                    onClick={
-                      openProduct
-                    }
+                    onClick={openProduct}
                   />
-                )
+                ),
               )}
             </div>
           ) : (
-            <div style={styles.card}>
+            <div style={cardStyle}>
               <div
-                style={{ fontSize: 52 }}
+                style={{
+                  fontSize: 52,
+                }}
               >
                 ❤️
               </div>
@@ -2079,7 +2782,9 @@ function App() {
               </h2>
 
               <p
-                style={{ color: "#666" }}
+                style={{
+                  color: "#666",
+                }}
               >
                 Toca el corazón de un
                 producto para guardarlo.
@@ -2089,6 +2794,7 @@ function App() {
         </PageShell>
       )}
 
+      {/* ADDRESSES */}
       {page === "addresses" && (
         <PageShell
           title="Direcciones"
@@ -2097,46 +2803,56 @@ function App() {
           }
         >
           <form
-            style={styles.card}
+            style={cardStyle}
             onSubmit={saveAddress}
           >
             <div className="form-grid">
               {[
                 ["name", "Nombre"],
                 ["phone", "Teléfono"],
-                ["street", "Calle y número"],
+                [
+                  "street",
+                  "Calle y número",
+                ],
                 ["city", "Ciudad"],
                 ["state", "Estado"],
-                ["postalCode", "Código postal"],
-                ["reference", "Referencia"],
-              ].map(([field, label]) => (
-                <label key={field}>
-                  {label}
+                [
+                  "postalCode",
+                  "Código postal",
+                ],
+                [
+                  "reference",
+                  "Referencia",
+                ],
+              ].map(
+                ([field, label]) => (
+                  <label key={field}>
+                    {label}
 
-                  <input
-                    value={address[field]}
-                    onChange={(e) =>
-                      setAddress(
-                        (current) => ({
-                          ...current,
-                          [field]:
-                            e.target.value,
-                        })
-                      )
-                    }
-                    required={[
-                      "name",
-                      "street",
-                      "city",
-                      "postalCode",
-                    ].includes(field)}
-                  />
-                </label>
-              ))}
+                    <input
+                      value={
+                        addressForm[
+                          field
+                        ]
+                      }
+                      onChange={(event) =>
+                        setAddressForm(
+                          (current) => ({
+                            ...current,
+                            [field]:
+                              event.target
+                                .value,
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+                ),
+              )}
             </div>
 
             <button
-              style={styles.primary}
+              style={primaryButton}
               type="submit"
             >
               Guardar dirección
@@ -2145,29 +2861,36 @@ function App() {
 
           <div
             className="stack-list"
-            style={{ marginTop: 12 }}
+            style={{
+              marginTop: 12,
+            }}
           >
-            {addresses.map((item) => (
-              <div
-                style={styles.card}
-                key={item.id}
-              >
-                <strong>
-                  {item.name}
-                </strong>
+            {addresses.map(
+              (address) => (
+                <div
+                  style={cardStyle}
+                  key={address.id}
+                >
+                  <strong>
+                    {address.name}
+                  </strong>
 
-                <p>
-                  {item.street},{" "}
-                  {item.city},{" "}
-                  {item.state}{" "}
-                  {item.postalCode}
-                </p>
-              </div>
-            ))}
+                  <p>
+                    {address.street},{" "}
+                    {address.city},{" "}
+                    {address.state}{" "}
+                    {
+                      address.postalCode
+                    }
+                  </p>
+                </div>
+              ),
+            )}
           </div>
         </PageShell>
       )}
 
+      {/* PAYMENTS */}
       {page === "payments" && (
         <PageShell
           title="Métodos de pago"
@@ -2175,7 +2898,7 @@ function App() {
             openPage("account")
           }
         >
-          <div style={styles.card}>
+          <div style={cardStyle}>
             <h2>
               Agregar tarjeta
             </h2>
@@ -2186,260 +2909,197 @@ function App() {
             >
               <label>
                 Número de tarjeta
+
                 <input
+                  value={
+                    paymentForm.card
+                  }
+                  onChange={(event) =>
+                    setPaymentForm(
+                      (current) => ({
+                        ...current,
+                        card: event
+                          .target.value,
+                      }),
+                    )
+                  }
                   placeholder="0000 0000 0000 0000"
-                  inputMode="numeric"
                 />
               </label>
 
               <label>
                 Nombre en tarjeta
+
                 <input
+                  value={
+                    paymentForm.name
+                  }
+                  onChange={(event) =>
+                    setPaymentForm(
+                      (current) => ({
+                        ...current,
+                        name: event
+                          .target.value,
+                      }),
+                    )
+                  }
                   placeholder="Nombre completo"
                 />
               </label>
 
               <label>
                 Vencimiento
-                <input placeholder="MM/AA" />
+
+                <input
+                  value={
+                    paymentForm.expiration
+                  }
+                  onChange={(event) =>
+                    setPaymentForm(
+                      (current) => ({
+                        ...current,
+                        expiration:
+                          event.target
+                            .value,
+                      }),
+                    )
+                  }
+                  placeholder="MM/AA"
+                />
               </label>
 
               <label>
                 CVV
+
                 <input
+                  value={
+                    paymentForm.cvv
+                  }
+                  onChange={(event) =>
+                    setPaymentForm(
+                      (current) => ({
+                        ...current,
+                        cvv: event.target
+                          .value,
+                      }),
+                    )
+                  }
                   placeholder="123"
                 />
               </label>
 
               <button
-                style={styles.primary}
+                style={primaryButton}
                 type="submit"
               >
                 Guardar método
               </button>
             </form>
           </div>
+
+          <div
+            className="stack-list"
+            style={{
+              marginTop: 12,
+            }}
+          >
+            {paymentMethods.map(
+              (payment) => (
+                <div
+                  style={cardStyle}
+                  key={payment.id}
+                >
+                  <strong>
+                    💳{" "}
+                    {payment.label}
+                  </strong>
+
+                  <p>
+                    {payment.detail}
+                  </p>
+                </div>
+              ),
+            )}
+          </div>
         </PageShell>
       )}
 
-      {page === "messages" &&
+      {/* MESSAGES */}
+      {page === "messages" && (
         <SimplePage
           title="Mensajes"
           icon="💬"
           text="Comunícate con vendedores y con el soporte de SHORASHOPP."
-          back={() => openPage("account")}
-        />}
+          back="account"
+          buttons={[
+            {
+              icon: "🏪",
+              label:
+                "Vendedores",
+              onClick: () =>
+                notify(
+                  "Conversaciones con vendedores preparadas.",
+                ),
+            },
+            {
+              icon: "🛟",
+              label:
+                "Soporte SHORASHOPP",
+              onClick: () =>
+                openPage(
+                  "support",
+                ),
+            },
+          ]}
+        />
+      )}
 
-      {page === "notifications" &&
-        <SimplePage
-          title="Notificaciones"
-          icon="🔔"
-          text="Aquí aparecerán ofertas, pedidos, avisos y novedades de tu cuenta."
-          back={() => openPage("account")}
-        />}
-
-      {page === "credit" &&
-        <SimplePage
-          title="Crédito SHORASHOPP"
-          icon="💰"
-          text="Solicita y administra crédito para realizar compras dentro de SHORASHOPP."
-          back={() => openPage("account")}
-        />}
-
-      {page === "referrals" &&
-        <SimplePage
-          title="Referidos"
-          icon="🎁"
-          text="Invita personas a SHORASHOPP y administra tus referencias."
-          back={() => openPage("account")}
-        />}
-
-{page === "settings" && (
-  <PageShell
-    title="Configuración"
-    onBack={() => openPage("account")}
-  >
-    <div className="stack-list">
-      <button
-        style={styles.menu}
-        type="button"
-        onClick={() =>
-          notify("Notificaciones configuradas.")
-        }
-      >
-        🔔 Notificaciones
-        <span>›</span>
-      </button>
-
-      <button
-        style={styles.menu}
-        type="button"
-        onClick={() =>
-          notify("Idioma: Español (México)")
-        }
-      >
-        🌐 Idioma
-        <span>›</span>
-      </button>
-
-      <button
-        style={styles.menu}
-        type="button"
-        onClick={() => openPage("privacy")}
-      >
-        🔐 Privacidad
-        <span>›</span>
-      </button>
-    </div>
-  </PageShell>
-)}
-
-      {page === "privacy" && (
+      {/* NOTIFICATIONS */}
+      {page === "notifications" && (
         <PageShell
-          title="Privacidad y seguridad"
+          title="Notificaciones"
           onBack={() =>
             openPage("account")
           }
         >
           <div className="stack-list">
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                openPage("sessions")
-              }
-            >
-              📱 Sesiones activas
-              <span>›</span>
-            </button>
+            <div style={cardStyle}>
+              <strong>
+                🛍️ Ofertas
+              </strong>
 
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                openPage("security")
-              }
-            >
-              🛡️ Verificación de seguridad
-              <span>›</span>
-            </button>
+              <p>
+                Nuevas promociones y
+                descuentos disponibles.
+              </p>
+            </div>
 
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                openPage("terms")
-              }
-            >
-              📄 Términos y condiciones
-              <span>›</span>
-            </button>
+            <div style={cardStyle}>
+              <strong>
+                📦 Pedidos
+              </strong>
 
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                openPage("returns")
-              }
-            >
-              ↩️ Devoluciones y reembolsos
-              <span>›</span>
-            </button>
+              <p>
+                Actualizaciones de tus
+                compras y envíos.
+              </p>
+            </div>
+
+            <div style={cardStyle}>
+              <strong>
+                🔔 Cuenta
+              </strong>
+
+              <p>
+                Avisos importantes de
+                SHORASHOPP.
+              </p>
+            </div>
           </div>
         </PageShell>
       )}
 
-      {page === "sessions" &&
-        <SimplePage
-          title="Sesiones activas"
-          icon="📱"
-          text={`Sesión actual: ${
-            session?.user?.email ||
-            "No identificada"
-          }`}
-          back={() =>
-            openPage("privacy")
-          }
-        />}
-
-      {page === "security" &&
-        <SimplePage
-          title="Verificación de seguridad"
-          icon="🛡️"
-          text="La autenticación y las credenciales se administran mediante Supabase Auth."
-          back={() =>
-            openPage("privacy")
-          }
-        />}
-
-      {page === "terms" &&
-        <SimplePage
-          title="Términos y condiciones"
-          icon="📄"
-          text="SHORASHOPP es un marketplace que conecta compradores y vendedores. Los productos, disponibilidad, condiciones y envíos pueden variar según cada vendedor."
-          back={() =>
-            openPage("privacy")
-          }
-        />}
-
-      {page === "returns" &&
-        <SimplePage
-          title="Devoluciones y reembolsos"
-          icon="↩️"
-          text="Consulta las condiciones aplicables al producto y al vendedor. SHORASHOPP podrá mostrar el estado correspondiente del proceso."
-          back={() =>
-            openPage("privacy")
-          }
-        />}
-
-      {page === "support" &&
-        <PageShell
-          title="Soporte"
-          onBack={goHome}
-        >
-          <div className="stack-list">
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                notify(
-                  "Asistente de soporte preparado."
-                )
-              }
-            >
-              🤖 Asistente SHORASHOPP
-              <span>›</span>
-            </button>
-
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                notify(
-                  "Centro de ayuda preparado."
-                )
-              }
-            >
-              ❓ Preguntas frecuentes
-              <span>›</span>
-            </button>
-
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                notify(
-                  "Soporte conectado."
-                )
-              }
-            >
-              💬 Contactar soporte
-              <span>›</span>
-            </button>
-          </div>
-        </PageShell>
-      )}
-
+      {/* SELL */}
       {page === "sell" && (
         <PageShell
           title="Vender en SHORASHOPP"
@@ -2448,13 +3108,15 @@ function App() {
           }
         >
           {sellerLoading ? (
-            <div style={styles.card}>
+            <div style={cardStyle}>
               Comprobando tu tienda...
             </div>
           ) : !sellerStore ? (
-            <div style={styles.card}>
+            <div style={cardStyle}>
               <div
-                style={{ fontSize: 50 }}
+                style={{
+                  fontSize: 50,
+                }}
               >
                 🏪
               </div>
@@ -2468,33 +3130,50 @@ function App() {
                   color: "#666",
                 }}
               >
-                Necesitas una tienda
-                vinculada en
+                Tu cuenta necesita una
+                tienda vinculada en
                 seller_stores para
                 publicar productos reales.
               </p>
+
+              <button
+                type="button"
+                style={primaryButton}
+                onClick={() =>
+                  notify(
+                    "La creación de tiendas se conectará aquí.",
+                  )
+                }
+              >
+                Crear tienda
+              </button>
             </div>
           ) : (
             <form
-              style={styles.card}
+              style={cardStyle}
               onSubmit={publishProduct}
             >
               <h2>
-                {sellerStore.store_name}
+                {
+                  sellerStore.store_name
+                }
               </h2>
 
               <div className="form-grid">
                 <label>
                   Nombre del producto
+
                   <input
-                    value={publish.name}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
-                          name: e.target
-                            .value,
-                        })
+                    value={
+                      productForm.name
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
+                          name: event
+                            .target.value,
+                        }),
                       )
                     }
                     required
@@ -2503,17 +3182,21 @@ function App() {
 
                 <label>
                   Precio
+
                   <input
                     type="number"
                     min="0"
-                    value={publish.price}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
-                          price: e.target
-                            .value,
-                        })
+                    value={
+                      productForm.price
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
+                          price:
+                            event.target
+                              .value,
+                        }),
                       )
                     }
                     required
@@ -2522,19 +3205,21 @@ function App() {
 
                 <label>
                   Precio anterior
+
                   <input
                     type="number"
                     min="0"
                     value={
-                      publish.compare_at_price
+                      productForm.compare_at_price
                     }
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
                           compare_at_price:
-                            e.target.value,
-                        })
+                            event.target
+                              .value,
+                        }),
                       )
                     }
                   />
@@ -2542,34 +3227,40 @@ function App() {
 
                 <label>
                   Stock
+
                   <input
                     type="number"
                     min="0"
-                    value={publish.stock}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
-                          stock: e.target
-                            .value,
-                        })
+                    value={
+                      productForm.stock
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
+                          stock:
+                            event.target
+                              .value,
+                        }),
                       )
                     }
-                    required
                   />
                 </label>
 
                 <label>
                   SKU
+
                   <input
-                    value={publish.sku}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
-                          sku: e.target
-                            .value,
-                        })
+                    value={
+                      productForm.sku
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
+                          sku: event
+                            .target.value,
+                        }),
                       )
                     }
                   />
@@ -2577,17 +3268,20 @@ function App() {
 
                 <label>
                   Imagen principal
+
                   <input
                     type="url"
-                    value={publish.image_url}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
+                    value={
+                      productForm.image_url
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
                           image_url:
-                            e.target
+                            event.target
                               .value,
-                        })
+                        }),
                       )
                     }
                   />
@@ -2595,42 +3289,51 @@ function App() {
 
                 <label>
                   Categoría
+
                   <select
-                    value={publish.category}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
+                    value={
+                      productForm.category
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
                           category:
-                            e.target
+                            event.target
                               .value,
-                        })
+                        }),
                       )
                     }
                   >
                     {categories.map(
-                      ([, name]) => (
-                        <option key={name}>
-                          {name}
+                      ([, title]) => (
+                        <option
+                          key={title}
+                          value={title}
+                        >
+                          {title}
                         </option>
-                      )
+                      ),
                     )}
                   </select>
                 </label>
 
                 <label>
                   Imágenes adicionales
+
                   <textarea
                     rows="3"
-                    value={publish.images}
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
+                    value={
+                      productForm.images
+                    }
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
                           images:
-                            e.target
+                            event.target
                               .value,
-                        })
+                        }),
                       )
                     }
                   />
@@ -2638,19 +3341,20 @@ function App() {
 
                 <label>
                   Descripción
+
                   <textarea
                     rows="5"
                     value={
-                      publish.description
+                      productForm.description
                     }
-                    onChange={(e) =>
-                      setPublish(
-                        (c) => ({
-                          ...c,
+                    onChange={(event) =>
+                      setProductForm(
+                        (current) => ({
+                          ...current,
                           description:
-                            e.target
+                            event.target
                               .value,
-                        })
+                        }),
                       )
                     }
                   />
@@ -2658,8 +3362,11 @@ function App() {
               </div>
 
               <button
-                style={styles.primary}
-                disabled={publishLoading}
+                style={primaryButton}
+                type="submit"
+                disabled={
+                  publishLoading
+                }
               >
                 {publishLoading
                   ? "Publicando..."
@@ -2670,19 +3377,307 @@ function App() {
         </PageShell>
       )}
 
-      {page === "seller-store" &&
+      {/* CREDITS */}
+      {page === "credits" && (
         <SimplePage
-          title={
-            product?.sellerName ||
-            "Tienda SHORASHOPP"
-          }
-          icon="🏪"
-          text="Aquí aparecerán los productos, reputación y datos públicos del vendedor."
-          back={() =>
-            openPage("product")
-          }
-        />}
+          title="Crédito SHORASHOPP"
+          icon="💰"
+          text="Consulta y administra tu crédito para compras dentro de SHORASHOPP."
+          back="account"
+          buttons={[
+            {
+              icon: "📝",
+              label:
+                "Solicitar crédito",
+              onClick: () =>
+                notify(
+                  "Solicitud de crédito preparada.",
+                ),
+            },
+            {
+              icon: "💳",
+              label: "Ver pagos",
+              onClick: () =>
+                openPage("orders"),
+            },
+          ]}
+        />
+      )}
 
+      {/* REFERRALS */}
+      {page === "referrals" && (
+        <SimplePage
+          title="Referidos"
+          icon="🎁"
+          text="Comparte SHORASHOPP con otras personas y administra tus referencias."
+          back="account"
+          buttons={[
+            {
+              icon: "🔗",
+              label:
+                "Copiar código",
+              onClick: async () => {
+                const code =
+                  "SHORA-2026";
+
+                try {
+                  await navigator.clipboard?.writeText(
+                    code,
+                  );
+                } catch {
+                  // El navegador puede bloquear clipboard.
+                }
+
+                notify(
+                  "Código SHORA-2026 listo para compartir.",
+                );
+              },
+            },
+          ]}
+        />
+      )}
+
+      {/* SUPPORT */}
+      {page === "support" && (
+        <SimplePage
+          title="Soporte SHORASHOPP"
+          icon="🛟"
+          text="Encuentra ayuda sobre compras, ventas, pagos, envíos y seguridad."
+          back="account"
+          buttons={[
+            {
+              icon: "💬",
+              label: "Abrir chat",
+              onClick: () =>
+                notify(
+                  "Chat de soporte preparado.",
+                ),
+            },
+            {
+              icon: "❓",
+              label:
+                "Preguntas frecuentes",
+              onClick: () =>
+                openPage("faq"),
+            },
+          ]}
+        />
+      )}
+
+      {/* FAQ */}
+      {page === "faq" && (
+        <SimplePage
+          title="Preguntas frecuentes"
+          icon="❓"
+          text="Consulta respuestas sobre pedidos, pagos, envíos, vendedores y tu cuenta."
+          back="support"
+        />
+      )}
+
+      {/* TERMS */}
+      {page === "terms" && (
+        <SimplePage
+          title="Términos y condiciones"
+          icon="📄"
+          text="Aquí estarán los términos y condiciones de SHORASHOPP para compradores y vendedores."
+          back="privacy"
+        />
+      )}
+
+      {/* RETURNS */}
+      {page === "returns" && (
+        <SimplePage
+          title="Devoluciones y reembolsos"
+          icon="↩️"
+          text="Gestiona devoluciones, incidencias y solicitudes de reembolso según las condiciones aplicables."
+          back="privacy"
+        />
+      )}
+
+      {/* SELLER STORE */}
+      {page === "seller-store" && (
+        <SimplePage
+          title="Tienda del vendedor"
+          icon="🏪"
+          text={
+            selectedProduct
+              ? `Conoce más sobre ${selectedProduct.sellerName}.`
+              : "Perfil público del vendedor dentro de SHORASHOPP."
+          }
+          back="product"
+        />
+      )}
+
+      {/* SETTINGS */}
+      {page === "settings" && (
+        <PageShell
+          title="Configuración"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          <div className="stack-list">
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Notificaciones configuradas.",
+                )
+              }
+            >
+              🔔 Notificaciones
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Idioma: Español (México)",
+                )
+              }
+            >
+              🌐 Idioma
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("privacy")
+              }
+            >
+              🔐 Privacidad
+              <span>›</span>
+            </button>
+          </div>
+        </PageShell>
+      )}
+
+      {/* PRIVACY */}
+      {page === "privacy" && (
+        <PageShell
+          title="Privacidad y seguridad"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          <div className="stack-list">
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("sessions")
+              }
+            >
+              📱 Sesiones activas
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("security")
+              }
+            >
+              🛡️ Verificación de seguridad
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("terms")
+              }
+            >
+              📄 Términos y condiciones
+              <span>›</span>
+            </button>
+
+            <button
+              style={cardButtonStyle}
+              type="button"
+              onClick={() =>
+                openPage("returns")
+              }
+            >
+              ↩️ Devoluciones y reembolsos
+              <span>›</span>
+            </button>
+          </div>
+        </PageShell>
+      )}
+
+      {/* SESSIONS */}
+      {page === "sessions" && (
+        <SimplePage
+          title="Sesiones activas"
+          icon="📱"
+          text={`Sesión actual: ${
+            session?.user?.email ||
+            "No identificada"
+          }`}
+          back="privacy"
+          buttons={[
+            {
+              icon: "🚪",
+              label:
+                "Cerrar sesión",
+              onClick: logout,
+            },
+          ]}
+        />
+      )}
+
+      {/* SECURITY */}
+      {page === "security" && (
+        <PageShell
+          title="Verificación de seguridad"
+          onBack={() =>
+            openPage("privacy")
+          }
+        >
+          <div className="stack-list">
+            <div style={cardStyle}>
+              <strong>
+                🔑 Contraseña
+              </strong>
+
+              <p
+                style={{
+                  color: "#666",
+                }}
+              >
+                Gestionada de forma
+                segura mediante Supabase
+                Auth.
+              </p>
+            </div>
+
+            <div style={cardStyle}>
+              <strong>
+                ✉️ Correo
+              </strong>
+
+              <p
+                style={{
+                  color: "#666",
+                }}
+              >
+                {session?.user?.email ||
+                  "—"}
+              </p>
+            </div>
+          </div>
+        </PageShell>
+      )}
+
+      {/* DRAWER */}
       {menuOpen && (
         <div
           className="drawer-overlay"
@@ -2712,42 +3707,155 @@ function App() {
             </div>
 
             <div className="drawer-list">
-              {[
-                ["⌂", "Inicio", "home"],
-                ["▦", "Categorías", "categories"],
-                ["✨", "Mi cuenta", "account"],
-                ["📦", "Mis pedidos", "orders"],
-                ["❤️", "Favoritos", "favorites"],
-                ["💬", "Mensajes", "messages"],
-                ["🔔", "Notificaciones", "notifications"],
-                ["🏪", "Vender", "sell"],
-                ["📍", "Direcciones", "addresses"],
-                ["💳", "Métodos de pago", "payments"],
-                ["💰", "Crédito SHORASHOPP", "credit"],
-                ["🎁", "Referidos", "referrals"],
-                ["⚙️", "Configuración", "settings"],
-                ["🔐", "Privacidad y seguridad", "privacy"],
-                ["🛟", "Soporte", "support"],
-              ].map(([icon, label, target]) => (
-                <button
-                  key={target}
-                  type="button"
-                  style={styles.menu}
-                  onClick={() =>
-                    target === "account" &&
-                    !session
-                      ? openAuth("login")
-                      : openPage(target)
-                  }
-                >
-                  {icon} {label}
-                </button>
-              ))}
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={goHome}
+              >
+                ⌂ Inicio
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage(
+                    "categories",
+                  )
+                }
+              >
+                ▦ Categorías
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={openAccount}
+              >
+                ✨ Mi cuenta
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("orders")
+                }
+              >
+                📦 Mis pedidos
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("favorites")
+                }
+              >
+                ❤️ Favoritos
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("messages")
+                }
+              >
+                💬 Mensajes
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage(
+                    "notifications",
+                  )
+                }
+              >
+                🔔 Notificaciones
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  session
+                    ? openPage("sell")
+                    : openAuth(
+                        "register",
+                      )
+                }
+              >
+                🏪 Vender
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("cart")
+                }
+              >
+                🛒 Carrito ({cartCount})
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("addresses")
+                }
+              >
+                📍 Direcciones
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("payments")
+                }
+              >
+                💳 Métodos de pago
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("privacy")
+                }
+              >
+                🔐 Privacidad y seguridad
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("support")
+                }
+              >
+                🛟 Soporte
+              </button>
+
+              <button
+                type="button"
+                style={menuStyle}
+                onClick={() =>
+                  openPage("terms")
+                }
+              >
+                📄 Términos
+              </button>
             </div>
           </aside>
         </div>
       )}
 
+      {/* BOTTOM NAV */}
       <nav className="bottom-nav">
         <button
           className={
@@ -2770,11 +3878,15 @@ function App() {
           }
           type="button"
           onClick={() =>
-            openPage("categories")
+            openPage(
+              "categories",
+            )
           }
         >
           <span>▦</span>
-          <small>Categorías</small>
+          <small>
+            Categorías
+          </small>
         </button>
 
         <button
@@ -2783,7 +3895,9 @@ function App() {
           onClick={() =>
             session
               ? openPage("sell")
-              : openAuth("register")
+              : openAuth(
+                  "register",
+                )
           }
         >
           <span>▰</span>
@@ -2802,7 +3916,9 @@ function App() {
           }
         >
           <span>🛒</span>
-          <small>Carrito</small>
+          <small>
+            Carrito
+          </small>
         </button>
 
         <button
@@ -2812,29 +3928,28 @@ function App() {
               : "bottom-item"
           }
           type="button"
-          onClick={() =>
-            session
-              ? openPage("account")
-              : openAuth("login")
-          }
+          onClick={openAccount}
         >
           <span>✨</span>
           <small>Cuenta</small>
         </button>
       </nav>
 
+      {/* TOAST */}
       {toast && (
         <div className="toast">
           {toast}
         </div>
       )}
 
+      {/* AUTH MODAL */}
       {showAuth && (
         <div
           className="auth-overlay"
-          onMouseDown={(e) => {
+          onMouseDown={(event) => {
             if (
-              e.target === e.currentTarget
+              event.target ===
+              event.currentTarget
             ) {
               closeAuth();
             }
@@ -2854,13 +3969,15 @@ function App() {
             </div>
 
             <h2>
-              {authMode === "login"
+              {authMode ===
+              "login"
                 ? "Bienvenido."
                 : "Crea tu cuenta."}
             </h2>
 
             <p>
-              {authMode === "login"
+              {authMode ===
+              "login"
                 ? "Inicia sesión en SHORASHOPP."
                 : "Únete a SHORASHOPP."}
             </p>
@@ -2868,14 +3985,16 @@ function App() {
             <form
               onSubmit={handleAuth}
             >
-              {authMode === "register" && (
+              {authMode ===
+                "register" && (
                 <input
                   type="text"
                   placeholder="Nombre completo"
                   value={name}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setName(
-                      e.target.value
+                      event.target
+                        .value,
                     )
                   }
                   required
@@ -2886,9 +4005,9 @@ function App() {
                 type="email"
                 placeholder="Correo electrónico"
                 value={email}
-                onChange={(e) =>
+                onChange={(event) =>
                   setEmail(
-                    e.target.value
+                    event.target.value,
                   )
                 }
                 required
@@ -2898,9 +4017,10 @@ function App() {
                 type="password"
                 placeholder="Contraseña"
                 value={password}
-                onChange={(e) =>
+                onChange={(event) =>
                   setPassword(
-                    e.target.value
+                    event.target
+                      .value,
                   )
                 }
                 minLength={6}
@@ -2914,7 +4034,8 @@ function App() {
               >
                 {loading
                   ? "Procesando..."
-                  : authMode === "login"
+                  : authMode ===
+                      "login"
                     ? "Iniciar sesión"
                     : "Crear cuenta"}
               </button>
@@ -2935,7 +4056,7 @@ function App() {
                     type="button"
                     onClick={() => {
                       setAuthMode(
-                        "register"
+                        "register",
                       );
                       setMessage("");
                     }}
@@ -2949,7 +4070,9 @@ function App() {
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthMode("login");
+                      setAuthMode(
+                        "login",
+                      );
                       setMessage("");
                     }}
                   >
@@ -2964,6 +4087,10 @@ function App() {
     </div>
   );
 }
+
+/* =========================================================
+   PAGE SHELL
+========================================================= */
 
 function PageShell({
   title,
@@ -2990,47 +4117,9 @@ function PageShell({
   );
 }
 
-function SimplePage({
-  title,
-  icon,
-  text,
-  back,
-}) {
-  return (
-    <PageShell
-      title={title}
-      onBack={back}
-    >
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #ece7f3",
-          borderRadius: 18,
-          padding: 20,
-          boxShadow:
-            "0 5px 18px rgba(50,16,74,.05)",
-        }}
-      >
-        <div
-          style={{ fontSize: 54 }}
-        >
-          {icon}
-        </div>
-
-        <h2>{title}</h2>
-
-        <p
-          style={{
-            color: "#666",
-            lineHeight: 1.7,
-          }}
-        >
-          {text}
-        </p>
-      </div>
-    </PageShell>
-  );
-}
+/* =========================================================
+   PRODUCT CARD
+========================================================= */
 
 function ProductCard({
   product,
@@ -3051,10 +4140,10 @@ function ProductCard({
       onClick={() =>
         onClick(product)
       }
-      onKeyDown={(e) => {
+      onKeyDown={(event) => {
         if (
-          e.key === "Enter" ||
-          e.key === " "
+          event.key === "Enter" ||
+          event.key === " "
         ) {
           onClick(product);
         }
@@ -3071,8 +4160,8 @@ function ProductCard({
         <button
           className="heart-button"
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
+          onClick={(event) => {
+            event.stopPropagation();
             onFavorite(product.id);
           }}
         >
@@ -3102,7 +4191,7 @@ function ProductCard({
           {product.compare_at_price && (
             <del>
               {money(
-                product.compare_at_price
+                product.compare_at_price,
               )}
             </del>
           )}
@@ -3110,25 +4199,18 @@ function ProductCard({
 
         <div className="rating-row">
           <span>★</span>{" "}
-          {product.rating || "Nuevo"}
+          {product.rating ||
+            "Nuevo"}
 
           <small>
-            • {product.reviews || "Producto"}
+            •{" "}
+            {product.reviews ||
+              "Producto"}
           </small>
         </div>
       </div>
     </article>
   );
-}
-
-function money(value) {
-  return new Intl.NumberFormat(
-    "es-MX",
-    {
-      style: "currency",
-      currency: "MXN",
-    }
-  ).format(Number(value || 0));
 }
 
 export default App;
