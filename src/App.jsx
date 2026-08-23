@@ -3,12 +3,16 @@ import { supabase } from "./lib/supabase";
 import "./App.css";
 
 const categories = [
-  { icon: "👕", name: "Ropa y Moda" },
-  { icon: "📱", name: "Tecnología" },
-  { icon: "🏠", name: "Hogar y Vida" },
-  { icon: "💄", name: "Belleza y Salud" },
-  { icon: "🎧", name: "Accesorios" },
-  { icon: "🎮", name: "Juguetes y Más" },
+  ["👕", "Ropa y Moda"],
+  ["📱", "Tecnología"],
+  ["🏠", "Hogar y Vida"],
+  ["💄", "Belleza y Salud"],
+  ["🎧", "Accesorios"],
+  ["🎮", "Juguetes y Más"],
+  ["🚗", "Autos y Motos"],
+  ["🍔", "Comida local"],
+  ["🐶", "Mascotas"],
+  ["⚽", "Deportes"],
 ];
 
 const demoProducts = [
@@ -27,12 +31,15 @@ const demoProducts = [
     sku: "DEMO-EARBUDS",
     image_url: "",
     images: [],
-    status: "approved",
-    demo: true,
+    sellerName: "Tech Market",
+    sellerRating: "4.9",
+    shipping: "Envío gratis a partir de $499 MXN",
+    delivery: "2 a 5 días",
+    variants: ["Negro", "Blanco"],
     specifications: [
       ["Conectividad", "Bluetooth"],
       ["Autonomía", "Hasta 6 horas"],
-      ["Estuche", "Carga USB-C"],
+      ["Estuche", "USB-C"],
       ["Garantía", "30 días"],
     ],
   },
@@ -43,16 +50,19 @@ const demoProducts = [
     compare_at_price: 799,
     rating: "4.9",
     reviews: "85 ventas",
-    discount: "Nuevo",
+    discount: "-25%",
     category: "Ropa y Moda",
     description:
-      "Bolsa de hombro elegante para uso diario, con compartimentos interiores.",
+      "Bolsa de hombro elegante para uso diario con compartimentos interiores.",
     stock: 8,
     sku: "DEMO-BAG",
     image_url: "",
     images: [],
-    status: "approved",
-    demo: true,
+    sellerName: "Tienda SHORA",
+    sellerRating: "4.8",
+    shipping: "Envío calculado al finalizar",
+    delivery: "3 a 6 días",
+    variants: ["Negro", "Rosa", "Beige"],
     specifications: [
       ["Material", "Sintético premium"],
       ["Cierre", "Cremallera"],
@@ -75,8 +85,11 @@ const demoProducts = [
     sku: "DEMO-WATCH",
     image_url: "",
     images: [],
-    status: "approved",
-    demo: true,
+    sellerName: "Tech Market",
+    sellerRating: "4.9",
+    shipping: "Envío gratis",
+    delivery: "2 a 4 días",
+    variants: ["Negro", "Azul"],
     specifications: [
       ["Pantalla", "Táctil"],
       ["Conectividad", "Bluetooth"],
@@ -99,8 +112,11 @@ const demoProducts = [
     sku: "DEMO-BLENDER",
     image_url: "",
     images: [],
-    status: "approved",
-    demo: true,
+    sellerName: "Casa Moderna",
+    sellerRating: "4.7",
+    shipping: "Envío calculado al finalizar",
+    delivery: "3 a 7 días",
+    variants: ["Negro"],
     specifications: [
       ["Potencia", "1000 W"],
       ["Vaso", "1.5 L"],
@@ -108,6 +124,12 @@ const demoProducts = [
       ["Material", "Acero y plástico"],
     ],
   },
+];
+
+const reviews = [
+  ["María", 5, "Llegó rápido y tal como se describe."],
+  ["Carlos", 4, "Buen producto, volvería a comprar."],
+  ["Ana", 5, "Excelente atención del vendedor."],
 ];
 
 const money = (value) =>
@@ -118,6 +140,7 @@ const money = (value) =>
 
 const normalizeProduct = (p) => ({
   ...p,
+  id: p.id || `product-${Date.now()}-${Math.random()}`,
   price: Number(p.price || 0),
   compare_at_price:
     p.compare_at_price === null || p.compare_at_price === ""
@@ -129,8 +152,8 @@ const normalizeProduct = (p) => ({
     : typeof p.images === "string"
       ? (() => {
           try {
-            const parsed = JSON.parse(p.images);
-            return Array.isArray(parsed) ? parsed : [];
+            const x = JSON.parse(p.images);
+            return Array.isArray(x) ? x : [];
           } catch {
             return [];
           }
@@ -138,7 +161,25 @@ const normalizeProduct = (p) => ({
       : [],
   category: p.category || p.category_name || "Otros",
   description: p.description || "Producto publicado en SHORASHOPP.",
+  sellerName: p.sellerName || p.seller_name || "Vendedor SHORASHOPP",
+  sellerRating: p.sellerRating || p.seller_rating || "4.8",
+  shipping: p.shipping || "Envío calculado al finalizar",
+  delivery: p.delivery || "Consulta la fecha disponible al comprar",
+  reviews: p.reviews || "Producto publicado",
+  variants:
+    Array.isArray(p.variants) && p.variants.length
+      ? p.variants
+      : [],
 });
+
+const slugify = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 function App() {
   const [session, setSession] = useState(null);
@@ -152,22 +193,40 @@ function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [favorites, setFavorites] = useState([]);
-  const [actionMessage, setActionMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState("home");
+  const [page, setPage] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [toast, setToast] = useState("");
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(demoProducts);
   const [productsLoading, setProductsLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [product, setProduct] = useState(null);
+
+  const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
   const [checkoutItems, setCheckoutItems] = useState([]);
+
   const [sellerStore, setSellerStore] = useState(null);
   const [sellerLoading, setSellerLoading] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
 
-  const [productForm, setProductForm] = useState({
+  const [variant, setVariant] = useState("");
+
+  const [addresses, setAddresses] = useState([]);
+  const [payments, setPayments] = useState([]);
+
+  const [address, setAddress] = useState({
+    name: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    reference: "",
+  });
+
+  const [publish, setPublish] = useState({
     name: "",
     description: "",
     price: "",
@@ -179,24 +238,36 @@ function App() {
     images: "",
   });
 
-  const [publishLoading, setPublishLoading] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [question, setQuestion] = useState("");
+
+  const [orders, setOrders] = useState([
+    {
+      id: "SH-00001234",
+      date: new Date().toLocaleDateString("es-MX"),
+      total: 1298,
+      status: "En tránsito",
+      items: [
+        { ...demoProducts[0], quantity: 1 },
+        { ...demoProducts[1], quantity: 1 },
+      ],
+    },
+  ]);
+
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (!mounted) return;
-
-      if (!error) {
-        setSession(data?.session ?? null);
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (mounted) {
+        setSession(data?.session || null);
+        setAuthReady(true);
       }
-
-      setAuthReady(true);
     };
 
-    initializeAuth();
+    init();
 
     const {
       data: { subscription },
@@ -226,16 +297,20 @@ function App() {
   const loadProducts = async () => {
     setProductsLoading(true);
 
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
 
-    if (!error && Array.isArray(data)) {
-      setProducts(data.map(normalizeProduct));
-    } else {
-      setProducts([]);
+      if (!error && Array.isArray(data) && data.length) {
+        setProducts(data.map(normalizeProduct));
+      } else {
+        setProducts(demoProducts);
+      }
+    } catch {
+      setProducts(demoProducts);
     }
 
     setProductsLoading(false);
@@ -244,15 +319,41 @@ function App() {
   const loadSellerStore = async (userId) => {
     setSellerLoading(true);
 
-    const { data, error } = await supabase
-      .from("seller_stores")
-      .select("*")
-      .eq("owner_id", userId)
-      .limit(1)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("seller_stores")
+        .select("*")
+        .eq("owner_id", userId)
+        .limit(1)
+        .maybeSingle();
 
-    setSellerStore(!error ? data : null);
+      setSellerStore(!error ? data : null);
+    } catch {
+      setSellerStore(null);
+    }
+
     setSellerLoading(false);
+  };
+
+  const notify = (text) => {
+    setToast(text);
+    clearTimeout(window.__shoraToast);
+    window.__shoraToast = setTimeout(() => setToast(""), 2500);
+  };
+
+  const openPage = (next) => {
+    setPage(next);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const goHome = () => {
+    setPage("home");
+    setProduct(null);
+    setCategory("");
+    setSearch("");
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openAuth = (mode = "login") => {
@@ -303,7 +404,6 @@ function App() {
         });
 
         if (error) throw error;
-
         closeAuth();
       }
     } catch (error) {
@@ -313,121 +413,86 @@ function App() {
     }
   };
 
-  const handleLogout = async () => {
+  const logout = async () => {
     await supabase.auth.signOut();
     setSession(null);
-    openPage("home");
+    goHome();
   };
 
-  const showActionMessage = (text) => {
-    setActionMessage(text);
-
-    window.clearTimeout(window.__shoraMessageTimer);
-
-    window.__shoraMessageTimer = window.setTimeout(() => {
-      setActionMessage("");
-    }, 2200);
+  const openProduct = (item) => {
+    const normalized = normalizeProduct(item);
+    setProduct(normalized);
+    setVariant(normalized.variants?.[0] || "");
+    setQuestions([]);
+    setQuestion("");
+    openPage("product");
   };
 
-  const openPage = (page) => {
-    setCurrentPage(page);
-    setMenuOpen(false);
+  const imageOf = (item) =>
+    item?.image_url || item?.images?.[0] || "";
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const goHome = () => {
-    setCurrentPage("home");
-    setSelectedProduct(null);
-    setSelectedCategory("");
-    setSearchTerm("");
-    setMenuOpen(false);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const handleAccountAccess = () => {
-    if (session) {
-      openPage("account");
-    } else {
-      openAuth("login");
-    }
-  };
-
-  const openProduct = (product) => {
-    setSelectedProduct(product);
-    setCurrentPage("product");
-    setMenuOpen(false);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const addToCart = (product, quantity = 1) => {
+  const addCart = (item, quantity = 1) => {
+    const selectedVariant = variant || item.variants?.[0] || "";
+    const key = `${item.id}-${selectedVariant || "default"}`;
     const qty = Math.max(
       1,
-      Math.min(Number(quantity) || 1, product.stock || 999)
+      Math.min(
+        Number(quantity) || 1,
+        item.stock || 999
+      )
     );
 
     setCart((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const found = current.find((x) => x.cartKey === key);
 
-      if (existing) {
-        return current.map((item) =>
-          item.id === product.id
+      if (found) {
+        return current.map((x) =>
+          x.cartKey === key
             ? {
-                ...item,
+                ...x,
                 quantity: Math.min(
-                  item.quantity + qty,
-                  product.stock || item.quantity + qty
+                  x.quantity + qty,
+                  item.stock || x.quantity + qty
                 ),
               }
-            : item
+            : x
         );
       }
 
       return [
         ...current,
         {
-          ...product,
+          ...item,
           quantity: qty,
+          variant: selectedVariant,
+          cartKey: key,
         },
       ];
     });
 
-    showActionMessage("Producto agregado al carrito.");
+    notify("Producto agregado al carrito.");
   };
 
-  const removeFromCart = (productId) => {
+  const removeCart = (cartKey) => {
     setCart((current) =>
-      current.filter((item) => item.id !== productId)
+      current.filter((item) => item.cartKey !== cartKey)
     );
   };
 
-  const updateCartQuantity = (productId, quantity) => {
-    const safeQuantity = Number(quantity);
-
-    if (safeQuantity <= 0) {
-      removeFromCart(productId);
+  const changeQuantity = (cartKey, quantity) => {
+    if (quantity <= 0) {
+      removeCart(cartKey);
       return;
     }
 
     setCart((current) =>
       current.map((item) =>
-        item.id === productId
+        item.cartKey === cartKey
           ? {
               ...item,
               quantity: Math.min(
-                safeQuantity,
-                item.stock || safeQuantity
+                quantity,
+                item.stock || quantity
               ),
             }
           : item
@@ -435,11 +500,27 @@ function App() {
     );
   };
 
-  const buyNow = (product) => {
+  const cartCount = cart.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  const cartTotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const checkoutTotal = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const buyNow = (item) => {
     setCheckoutItems([
       {
-        ...product,
+        ...item,
         quantity: 1,
+        variant: variant || item.variants?.[0] || "",
       },
     ]);
 
@@ -448,7 +529,7 @@ function App() {
 
   const checkoutCart = () => {
     if (!cart.length) {
-      showActionMessage("Tu carrito está vacío.");
+      notify("Tu carrito está vacío.");
       return;
     }
 
@@ -456,153 +537,171 @@ function App() {
     openPage("checkout");
   };
 
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
-
-  const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-
-  const checkoutTotal = checkoutItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-
-  const filteredProducts = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-
-    return products.filter((product) => {
-      const categoryMatches =
-        !selectedCategory ||
-        product.category === selectedCategory;
-
-      const searchMatches =
-        !search ||
-        product.name.toLowerCase().includes(search) ||
-        product.description.toLowerCase().includes(search) ||
-        product.category.toLowerCase().includes(search);
-
-      return categoryMatches && searchMatches;
-    });
-  }, [products, selectedCategory, searchTerm]);
-
-  const toggleFavorite = (productId) => {
+  const toggleFavorite = (id) => {
     setFavorites((current) =>
-      current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId]
+      current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [...current, id]
     );
   };
 
-  const handleCategoryClick = (categoryName) => {
-    setSelectedCategory(categoryName);
-    setSearchTerm("");
+  const filteredProducts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return products.filter((item) => {
+      const byCategory =
+        !category || item.category === category;
+
+      const bySearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q) ||
+        String(item.sellerName || "")
+          .toLowerCase()
+          .includes(q);
+
+      return byCategory && bySearch;
+    });
+  }, [products, category, search]);
+
+  const favoriteProducts = products.filter((item) =>
+    favorites.includes(item.id)
+  );
+
+  const goCategory = (name) => {
+    setCategory(name);
+    setSearch("");
     openPage("home");
 
-    window.setTimeout(() => {
-      document.querySelector(".products-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    setTimeout(() => {
+      document
+        .querySelector(".products-section")
+        ?.scrollIntoView({
+          behavior: "smooth",
+        });
     }, 80);
   };
 
-  const handleSearch = () => {
-    openPage("home");
+  const saveAddress = (event) => {
+    event.preventDefault();
 
-    window.setTimeout(() => {
-      document.querySelector(".products-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 80);
-  };
-
-  const startPublishing = () => {
-    if (!session) {
-      openAuth("login");
+    if (
+      !address.name ||
+      !address.street ||
+      !address.city ||
+      !address.postalCode
+    ) {
+      notify("Completa los campos principales.");
       return;
     }
 
-    openPage("publish");
+    setAddresses((current) => [
+      ...current,
+      {
+        ...address,
+        id: Date.now(),
+      },
+    ]);
+
+    setAddress({
+      name: "",
+      phone: "",
+      street: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      reference: "",
+    });
+
+    notify("Dirección guardada.");
   };
 
-  const handleProductFormChange = (field, value) => {
-    setProductForm((current) => ({
+  const savePayment = (event) => {
+    event.preventDefault();
+
+    setPayments((current) => [
       ...current,
-      [field]: value,
-    }));
+      {
+        id: Date.now(),
+        label: "Tarjeta terminación 4242",
+        detail: "Método de pago guardado",
+      },
+    ]);
+
+    notify("Método de pago agregado.");
   };
 
   const publishProduct = async (event) => {
     event.preventDefault();
 
-    if (!session?.user?.id) {
+    if (!session) {
       openAuth("login");
       return;
     }
 
     if (!sellerStore?.id) {
-      showActionMessage(
-        "Primero necesitas una tienda de vendedor vinculada a tu cuenta."
+      notify(
+        "Primero necesitas una tienda de vendedor vinculada."
       );
       return;
     }
 
-    const price = Number(productForm.price);
-    const stock = Number(productForm.stock);
+    const price = Number(publish.price);
+    const stock = Number(publish.stock);
 
     if (
-      !productForm.name.trim() ||
-      !price ||
-      price < 0 ||
+      !publish.name.trim() ||
+      price <= 0 ||
       stock < 0
     ) {
-      showActionMessage(
-        "Completa nombre, precio y stock correctamente."
-      );
+      notify("Completa nombre, precio y stock.");
       return;
     }
 
     setPublishLoading(true);
 
     try {
-      const imageList = productForm.images
+      const images = publish.images
         .split(/\n|,/)
-        .map((url) => url.trim())
+        .map((x) => x.trim())
         .filter(Boolean);
 
-      const { error } = await supabase.from("products").insert({
+      const payload = {
         seller_id: sellerStore.id,
-        name: productForm.name.trim(),
-        slug:
-          productForm.name
-            .trim()
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "") +
-          "-" +
-          Date.now(),
-        description: productForm.description.trim(),
+        name: publish.name.trim(),
+        slug: `${slugify(publish.name)}-${Date.now()}`,
+        description: publish.description.trim(),
         price,
-        compare_at_price: productForm.compare_at_price
-          ? Number(productForm.compare_at_price)
-          : null,
+        compare_at_price:
+          publish.compare_at_price
+            ? Number(publish.compare_at_price)
+            : null,
         stock,
-        sku: productForm.sku.trim() || null,
-        image_url: productForm.image_url.trim() || null,
-        images: imageList,
+        sku: publish.sku.trim() || null,
+        image_url:
+          publish.image_url.trim() || null,
+        images,
+        category: publish.category,
         status: "pending",
-      });
+      };
 
-      if (error) throw error;
+      let result = await supabase
+        .from("products")
+        .insert(payload);
 
-      setProductForm({
+      if (result.error) {
+        const fallback = { ...payload };
+        delete fallback.category;
+
+        result = await supabase
+          .from("products")
+          .insert(fallback);
+      }
+
+      if (result.error) throw result.error;
+
+      setPublish({
         name: "",
         description: "",
         price: "",
@@ -614,92 +713,112 @@ function App() {
         images: "",
       });
 
-      showActionMessage(
+      notify(
         "Producto enviado para aprobación."
       );
 
       await loadProducts();
     } catch (error) {
-      showActionMessage(
-        error?.message || "No se pudo publicar el producto."
+      notify(
+        error?.message ||
+          "No se pudo publicar el producto."
       );
     } finally {
       setPublishLoading(false);
     }
   };
 
-  const productImage = (product) =>
-    product?.image_url ||
-    (Array.isArray(product?.images)
-      ? product.images[0]
-      : "") ||
-    "";
+  const askQuestion = (event) => {
+    event.preventDefault();
 
-  const goToCategories = () => {
-    openPage("home");
+    if (!question.trim()) return;
 
-    window.setTimeout(() => {
-      document.querySelector(".content-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 80);
+    setQuestions((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        question: question.trim(),
+        answer:
+          "El vendedor responderá próximamente.",
+      },
+    ]);
+
+    setQuestion("");
+    notify("Pregunta enviada.");
   };
 
-  const goToProducts = () => {
-    openPage("home");
+  const placeOrder = () => {
+    if (!checkoutItems.length) {
+      notify("No hay productos para comprar.");
+      return;
+    }
 
-    window.setTimeout(() => {
-      document.querySelector(".products-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 80);
+    const order = {
+      id: `SH-${Date.now()
+        .toString()
+        .slice(-8)}`,
+      date: new Date().toLocaleDateString("es-MX"),
+      total: checkoutTotal,
+      status: "Confirmado",
+      items: checkoutItems,
+    };
+
+    setOrders((current) => [
+      order,
+      ...current,
+    ]);
+
+    setCart([]);
+    setCheckoutItems([]);
+    setSelectedOrder(order);
+
+    openPage("confirmation");
   };
 
-  const cardStyle = {
-    background: "#fff",
-    border: "1px solid #ece7f3",
-    borderRadius: 18,
-    padding: 18,
-    boxShadow: "0 5px 18px rgba(50,16,74,.05)",
-  };
-
-  const primaryButton = {
-    border: 0,
-    borderRadius: 14,
-    padding: "14px 18px",
-    background: "linear-gradient(135deg,#ed174d,#7020d0)",
-    color: "#fff",
-    fontWeight: 800,
-    cursor: "pointer",
-  };
-
-  const secondaryButton = {
-    border: "1px solid #7020d0",
-    borderRadius: 14,
-    padding: "14px 18px",
-    background: "#fff",
-    color: "#7020d0",
-    fontWeight: 800,
-    cursor: "pointer",
-  };
-
-  const pageTitle = {
-    fontSize: 28,
-    margin: "12px 0 6px",
-    color: "#24152f",
+  const styles = {
+    primary: {
+      border: 0,
+      borderRadius: 14,
+      padding: "14px 18px",
+      background:
+        "linear-gradient(135deg,#ed174d,#7020d0)",
+      color: "#fff",
+      fontWeight: 800,
+      cursor: "pointer",
+    },
+    secondary: {
+      border: "1px solid #7020d0",
+      borderRadius: 14,
+      padding: "14px 18px",
+      background: "#fff",
+      color: "#7020d0",
+      fontWeight: 800,
+      cursor: "pointer",
+    },
+    card: {
+      background: "#fff",
+      border: "1px solid #ece7f3",
+      borderRadius: 18,
+      padding: 18,
+      boxShadow:
+        "0 5px 18px rgba(50,16,74,.05)",
+    },
+    menu: {
+      width: "100%",
+      border: 0,
+      borderRadius: 13,
+      background: "#fff",
+      color: "#24152f",
+      fontSize: 16,
+      fontWeight: 700,
+      textAlign: "left",
+      padding: "14px 12px",
+    },
   };
 
   if (!authReady) {
     return (
-      <div
-        className="app"
-        style={{
-          minHeight: "100vh",
-          padding: 30,
-        }}
-      >
+      <div className="loading-screen">
         <strong>SHORASHOPP</strong>
         <p>Cargando tu cuenta...</p>
       </div>
@@ -725,7 +844,6 @@ function App() {
           <strong>
             SHORA<span>SHOPP</span>
           </strong>
-
           <small>
             Compra. <b>Vende.</b> Descubre.
           </small>
@@ -733,16 +851,18 @@ function App() {
 
         <div className="header-icons">
           <button
-            type="button"
             className="notification-button"
-            onClick={() => openPage("notifications")}
+            type="button"
+            onClick={() =>
+              openPage("notifications")
+            }
           >
             🔔<i>3</i>
           </button>
 
           <button
-            type="button"
             className="cart-button"
+            type="button"
             onClick={() => openPage("cart")}
           >
             🛒<i>{cartCount}</i>
@@ -757,1139 +877,38 @@ function App() {
           <input
             type="text"
             placeholder="¿Qué estás buscando hoy?"
-            value={searchTerm}
-            onChange={(event) =>
-              setSearchTerm(event.target.value)
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
             }
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                handleSearch();
-              }
-            }}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              openPage("home")
+            }
           />
 
           <button
             type="button"
-            onClick={handleSearch}
+            onClick={() =>
+              openPage("home")
+            }
           >
             ⌕
           </button>
         </div>
       </div>
 
-      {currentPage !== "home" && (
-        <section
-          style={{
-            maxWidth: 820,
-            margin: "0 auto",
-            padding: "18px 16px 120px",
-          }}
-        >
-          <button
-            type="button"
-            onClick={goHome}
-            style={{
-              border: 0,
-              background: "transparent",
-              color: "#7020d0",
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
-            ← Volver
-          </button>
-
-          {currentPage === "product" &&
-            selectedProduct && (
-              <div style={{ marginTop: 14 }}>
-                <div
-                  style={{
-                    ...cardStyle,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      minHeight: 260,
-                      borderRadius: 16,
-                      background: "#f6f2fa",
-                      display: "grid",
-                      placeItems: "center",
-                      position: "relative",
-                    }}
-                  >
-                    {productImage(selectedProduct) ? (
-                      <img
-                        src={productImage(selectedProduct)}
-                        alt={selectedProduct.name}
-                        style={{
-                          width: "100%",
-                          height: 300,
-                          objectFit: "contain",
-                          borderRadius: 16,
-                        }}
-                      />
-                    ) : (
-                      <div style={{ fontSize: 92 }}>
-                        {selectedProduct.category ===
-                        "Tecnología"
-                          ? "📱"
-                          : selectedProduct.category ===
-                            "Ropa y Moda"
-                            ? "👜"
-                            : selectedProduct.category ===
-                              "Hogar y Vida"
-                              ? "🏠"
-                              : "🛍️"}
-                      </div>
-                    )}
-
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 14,
-                        left: 14,
-                        background: "#ed174d",
-                        color: "#fff",
-                        borderRadius: 20,
-                        padding: "7px 11px",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {selectedProduct.discount ||
-                        (selectedProduct.stock > 0
-                          ? "Disponible"
-                          : "Agotado")}
-                    </span>
-                  </div>
-
-                  <div style={{ paddingTop: 20 }}>
-                    <div
-                      style={{
-                        color: "#7020d0",
-                        fontWeight: 800,
-                        fontSize: 13,
-                      }}
-                    >
-                      {selectedProduct.category}
-                    </div>
-
-                    <h1 style={pageTitle}>
-                      {selectedProduct.name}
-                    </h1>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        alignItems: "center",
-                      }}
-                    >
-                      <strong
-                        style={{
-                          fontSize: 28,
-                          color: "#24152f",
-                        }}
-                      >
-                        {money(selectedProduct.price)}
-                      </strong>
-
-                      {selectedProduct.compare_at_price && (
-                        <del style={{ color: "#999" }}>
-                          {money(
-                            selectedProduct.compare_at_price
-                          )}
-                        </del>
-                      )}
-                    </div>
-
-                    <div style={{ marginTop: 8 }}>
-                      ⭐ {selectedProduct.rating || "Nuevo"}{" "}
-                      <span style={{ color: "#777" }}>
-                        •{" "}
-                        {selectedProduct.reviews ||
-                          "Producto publicado"}
-                      </span>
-                    </div>
-
-                    <p
-                      style={{
-                        color: "#555",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      {selectedProduct.description}
-                    </p>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 10,
-                        margin: "18px 0",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        style={secondaryButton}
-                        disabled={!selectedProduct.stock}
-                        onClick={() =>
-                          addToCart(selectedProduct)
-                        }
-                      >
-                        🛒 Añadir al carrito
-                      </button>
-
-                      <button
-                        type="button"
-                        style={primaryButton}
-                        disabled={!selectedProduct.stock}
-                        onClick={() =>
-                          buyNow(selectedProduct)
-                        }
-                      >
-                        Comprar ahora
-                      </button>
-                    </div>
-
-                    <div
-                      style={{
-                        ...cardStyle,
-                        marginTop: 14,
-                      }}
-                    >
-                      <h2 style={{ marginTop: 0 }}>
-                        Especificaciones
-                      </h2>
-
-                      <div
-                        style={{
-                          display: "grid",
-                          gap: 10,
-                        }}
-                      >
-                        {(
-                          selectedProduct.specifications || [
-                            [
-                              "SKU",
-                              selectedProduct.sku ||
-                                "No especificado",
-                            ],
-                            [
-                              "Stock",
-                              String(
-                                selectedProduct.stock
-                              ),
-                            ],
-                            [
-                              "Categoría",
-                              selectedProduct.category,
-                            ],
-                            [
-                              "Estado",
-                              "Producto aprobado",
-                            ],
-                          ]
-                        ).map(([label, value]) => (
-                          <div
-                            key={label}
-                            style={{
-                              display: "flex",
-                              justifyContent:
-                                "space-between",
-                              gap: 16,
-                              borderBottom:
-                                "1px solid #eee",
-                              paddingBottom: 9,
-                            }}
-                          >
-                            <strong>{label}</strong>
-
-                            <span
-                              style={{
-                                color: "#666",
-                                textAlign: "right",
-                              }}
-                            >
-                              {value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-          {currentPage === "cart" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>Tu carrito</h1>
-
-              {!cart.length ? (
-                <div style={cardStyle}>
-                  <div style={{ fontSize: 48 }}>
-                    🛒
-                  </div>
-
-                  <h2>Tu carrito está vacío</h2>
-
-                  <p style={{ color: "#666" }}>
-                    Agrega productos desde sus páginas
-                    para comenzar tu compra.
-                  </p>
-
-                  <button
-                    type="button"
-                    style={primaryButton}
-                    onClick={goToProducts}
-                  >
-                    Ver productos
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 12,
-                    }}
-                  >
-                    {cart.map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          ...cardStyle,
-                          display: "grid",
-                          gridTemplateColumns:
-                            "80px 1fr",
-                          gap: 14,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: 14,
-                            background: "#f6f2fa",
-                            display: "grid",
-                            placeItems: "center",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {productImage(item) ? (
-                            <img
-                              src={productImage(item)}
-                              alt={item.name}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: 34,
-                              }}
-                            >
-                              🛍️
-                            </span>
-                          )}
-                        </div>
-
-                        <div>
-                          <strong>{item.name}</strong>
-
-                          <div
-                            style={{
-                              color: "#7020d0",
-                              fontWeight: 800,
-                            }}
-                          >
-                            {money(item.price)}
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 8,
-                              alignItems: "center",
-                              marginTop: 8,
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateCartQuantity(
-                                  item.id,
-                                  item.quantity - 1
-                                )
-                              }
-                            >
-                              −
-                            </button>
-
-                            <span>
-                              {item.quantity}
-                            </span>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateCartQuantity(
-                                  item.id,
-                                  item.quantity + 1
-                                )
-                              }
-                            >
-                              +
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeFromCart(item.id)
-                              }
-                              style={{
-                                marginLeft: "auto",
-                                border: 0,
-                                background:
-                                  "transparent",
-                                color: "#d41452",
-                                fontWeight: 700,
-                              }}
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    style={{
-                      ...cardStyle,
-                      marginTop: 14,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent:
-                          "space-between",
-                        fontSize: 20,
-                        marginBottom: 14,
-                      }}
-                    >
-                      <strong>Total</strong>
-                      <strong>
-                        {money(cartTotal)}
-                      </strong>
-                    </div>
-
-                    <button
-                      type="button"
-                      style={primaryButton}
-                      onClick={checkoutCart}
-                    >
-                      Continuar compra
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {currentPage === "checkout" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Comprar ahora
-              </h1>
-
-              <p style={{ color: "#666" }}>
-                Revisa tu compra antes de continuar al
-                pago.
-              </p>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                {checkoutItems.map((item) => (
-                  <div
-                    key={item.id}
-                    style={cardStyle}
-                  >
-                    <strong>{item.name}</strong>
-
-                    <div style={{ color: "#666" }}>
-                      {item.quantity} ×{" "}
-                      {money(item.price)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div
-                style={{
-                  ...cardStyle,
-                  marginTop: 14,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      "space-between",
-                    fontSize: 22,
-                  }}
-                >
-                  <strong>Total</strong>
-
-                  <strong>
-                    {money(checkoutTotal)}
-                  </strong>
-                </div>
-
-                <p
-                  style={{
-                    color: "#777",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  El siguiente paso será conectar el
-                  método de pago y la creación del pedido.
-                  No se realiza ningún cargo desde esta
-                  pantalla.
-                </p>
-
-                <button
-                  type="button"
-                  style={primaryButton}
-                  onClick={() =>
-                    showActionMessage(
-                      "Flujo de pago preparado."
-                    )
-                  }
-                >
-                  Continuar al pago
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentPage === "publish" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Publicar producto
-              </h1>
-
-              <p style={{ color: "#666" }}>
-                Agrega un producto real a tu tienda.
-                Quedará como <b>pendiente</b> hasta que
-                sea aprobado.
-              </p>
-
-              {sellerLoading ? (
-                <div style={cardStyle}>
-                  Comprobando tu tienda de vendedor...
-                </div>
-              ) : !sellerStore ? (
-                <div style={cardStyle}>
-                  <div style={{ fontSize: 44 }}>
-                    🏪
-                  </div>
-
-                  <h2>
-                    No hay una tienda vinculada
-                  </h2>
-
-                  <p
-                    style={{
-                      color: "#666",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    Tu cuenta debe tener un registro en{" "}
-                    <code>seller_stores</code> cuyo{" "}
-                    <code>owner_id</code> sea tu usuario
-                    actual.
-                  </p>
-                </div>
-              ) : (
-                <form
-                  onSubmit={publishProduct}
-                  style={{
-                    ...cardStyle,
-                    display: "grid",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <strong>Tienda</strong>
-
-                    <div
-                      style={{
-                        color: "#7020d0",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {sellerStore.store_name}
-                    </div>
-                  </div>
-
-                  {[
-                    [
-                      "name",
-                      "Nombre del producto",
-                      "text",
-                    ],
-                    ["price", "Precio", "number"],
-                    [
-                      "compare_at_price",
-                      "Precio anterior (opcional)",
-                      "number",
-                    ],
-                    ["stock", "Stock", "number"],
-                    [
-                      "sku",
-                      "SKU (opcional)",
-                      "text",
-                    ],
-                    [
-                      "image_url",
-                      "URL de imagen principal (opcional)",
-                      "url",
-                    ],
-                    [
-                      "images",
-                      "URLs de imágenes adicionales, una por línea",
-                      "text",
-                    ],
-                  ].map(([field, label, type]) => (
-                    <label
-                      key={field}
-                      style={{
-                        display: "grid",
-                        gap: 6,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {label}
-
-                      {field === "images" ? (
-                        <textarea
-                          value={productForm[field]}
-                          onChange={(e) =>
-                            handleProductFormChange(
-                              field,
-                              e.target.value
-                            )
-                          }
-                          rows={3}
-                          style={inputStyle}
-                        />
-                      ) : (
-                        <input
-                          type={type}
-                          value={productForm[field]}
-                          min={
-                            type === "number"
-                              ? "0"
-                              : undefined
-                          }
-                          onChange={(e) =>
-                            handleProductFormChange(
-                              field,
-                              e.target.value
-                            )
-                          }
-                          style={inputStyle}
-                          required={[
-                            "name",
-                            "price",
-                            "stock",
-                          ].includes(field)}
-                        />
-                      )}
-                    </label>
-                  ))}
-
-                  <label
-                    style={{
-                      display: "grid",
-                      gap: 6,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Categoría
-
-                    <select
-                      value={productForm.category}
-                      onChange={(e) =>
-                        handleProductFormChange(
-                          "category",
-                          e.target.value
-                        )
-                      }
-                      style={inputStyle}
-                    >
-                      {categories.map((category) => (
-                        <option key={category.name}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label
-                    style={{
-                      display: "grid",
-                      gap: 6,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Descripción
-
-                    <textarea
-                      value={productForm.description}
-                      onChange={(e) =>
-                        handleProductFormChange(
-                          "description",
-                          e.target.value
-                        )
-                      }
-                      rows={5}
-                      style={inputStyle}
-                    />
-                  </label>
-
-                  <button
-                    type="submit"
-                    style={primaryButton}
-                    disabled={publishLoading}
-                  >
-                    {publishLoading
-                      ? "Publicando..."
-                      : "Publicar producto"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {currentPage === "account" && (
-            <div style={{ marginTop: 14 }}>
-              <div
-                style={{
-                  background:
-                    "linear-gradient(135deg,#ed174d,#7020d0)",
-                  color: "#fff",
-                  borderRadius: 22,
-                  padding: 24,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 12,
-                    opacity: 0.85,
-                  }}
-                >
-                  SHORASHOPP
-                </div>
-
-                <h1 style={{ margin: "6px 0" }}>
-                  Mi cuenta
-                </h1>
-
-                <p
-                  style={{
-                    margin: 0,
-                    opacity: 0.9,
-                  }}
-                >
-                  {session?.user?.email ||
-                    "Sesión iniciada"}
-                </p>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                  marginTop: 14,
-                }}
-              >
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("orders")
-                  }
-                >
-                  📦 Tus pedidos <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("messages")
-                  }
-                >
-                  💬 Mensajes <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={startPublishing}
-                >
-                  🏪 Publicar productos{" "}
-                  <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("notifications")
-                  }
-                >
-                  🔔 Notificaciones{" "}
-                  <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("privacy")
-                  }
-                >
-                  🔐 Privacidad y seguridad{" "}
-                  <span>›</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  style={{
-                    ...cardButtonStyle,
-                    color: "#d41452",
-                  }}
-                >
-                  🚪 Cerrar sesión <span>›</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentPage === "orders" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Tus pedidos
-              </h1>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("my-orders")
-                  }
-                >
-                  📦 Tus pedidos <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("tracking")
-                  }
-                >
-                  🚚 Seguimiento <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("confirmations")
-                  }
-                >
-                  ✅ Confirmaciones{" "}
-                  <span>›</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {[
-            "my-orders",
-            "tracking",
-            "confirmations",
-          ].includes(currentPage) && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                {currentPage === "my-orders"
-                  ? "Tus pedidos"
-                  : currentPage === "tracking"
-                    ? "Seguimiento"
-                    : "Confirmaciones"}
-              </h1>
-
-              <div style={cardStyle}>
-                <div style={{ fontSize: 48 }}>
-                  {currentPage === "my-orders"
-                    ? "📦"
-                    : currentPage === "tracking"
-                      ? "🚚"
-                      : "✅"}
-                </div>
-
-                <h2>
-                  {currentPage === "my-orders"
-                    ? "Aquí aparecerán tus compras"
-                    : currentPage === "tracking"
-                      ? "Aquí podrás seguir tus envíos"
-                      : "Aquí estarán las confirmaciones de tus pedidos"}
-                </h2>
-
-                <p
-                  style={{
-                    color: "#666",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  La pantalla ya está preparada para
-                  conectarse con la tabla de pedidos cuando
-                  ese flujo se active.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {currentPage === "messages" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Mensajes
-              </h1>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                {[
-                  [
-                    "Vendedores",
-                    "Habla directamente con los vendedores.",
-                  ],
-                  [
-                    "Soporte SHORA SHOP",
-                    "Obtén ayuda con tu cuenta y compras.",
-                  ],
-                  [
-                    "Conversaciones",
-                    "Consulta tus conversaciones recientes.",
-                  ],
-                ].map(([title, text]) => (
-                  <button
-                    key={title}
-                    type="button"
-                    style={{
-                      ...cardButtonStyle,
-                      display: "grid",
-                      gap: 5,
-                    }}
-                    onClick={() =>
-                      showActionMessage(
-                        `${title}: próximamente conectado.`
-                      )
-                    }
-                  >
-                    <strong>
-                      💬 {title}
-                    </strong>
-
-                    <span
-                      style={{
-                        color: "#777",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {text}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {currentPage === "notifications" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Notificaciones
-              </h1>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                {[
-                  [
-                    "🛍️ Ofertas",
-                    "Nuevas ofertas y promociones.",
-                  ],
-                  [
-                    "📦 Pedidos",
-                    "Actualizaciones de tus pedidos.",
-                  ],
-                  [
-                    "🔔 Cuenta",
-                    "Avisos importantes de SHORASHOPP.",
-                  ],
-                ].map(([title, text]) => (
-                  <div
-                    key={title}
-                    style={cardStyle}
-                  >
-                    <strong>{title}</strong>
-
-                    <p
-                      style={{
-                        marginBottom: 0,
-                        color: "#666",
-                      }}
-                    >
-                      {text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {currentPage === "privacy" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Privacidad y seguridad
-              </h1>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("sessions")
-                  }
-                >
-                  📱 Sesiones activas{" "}
-                  <span>›</span>
-                </button>
-
-                <button
-                  style={cardButtonStyle}
-                  type="button"
-                  onClick={() =>
-                    openPage("security")
-                  }
-                >
-                  🛡️ Verificación de seguridad{" "}
-                  <span>›</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentPage === "sessions" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Sesiones activas
-              </h1>
-
-              <div style={cardStyle}>
-                <p style={{ color: "#666" }}>
-                  Sesión actual:{" "}
-                  {session?.user?.email ||
-                    "No identificada"}
-                </p>
-
-                <button
-                  type="button"
-                  style={primaryButton}
-                  onClick={handleLogout}
-                >
-                  Cerrar sesión
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentPage === "security" && (
-            <div style={{ marginTop: 14 }}>
-              <h1 style={pageTitle}>
-                Verificación de seguridad
-              </h1>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                <div style={cardStyle}>
-                  <strong>
-                    🔑 Contraseña
-                  </strong>
-
-                  <p style={{ color: "#666" }}>
-                    Gestionada de forma segura por
-                    Supabase Auth.
-                  </p>
-                </div>
-
-                <div style={cardStyle}>
-                  <strong>
-                    ✉️ Correo
-                  </strong>
-
-                  <p style={{ color: "#666" }}>
-                    {session?.user?.email || "—"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {currentPage === "home" && (
-        <main>
+      {page === "home" && (
+        <main className="home-main">
           <section className="quick-cards">
             <button
               className="quick-card sell-card"
               type="button"
-              onClick={startPublishing}
+              onClick={() =>
+                session
+                  ? openPage("sell")
+                  : openAuth("register")
+              }
             >
               <div className="quick-icon">
                 ▣
@@ -1903,23 +922,25 @@ function App() {
                 </strong>
 
                 <span>
-                  Publica tus productos y comienza a
-                  vender.
+                  Publica tus productos y comienza
+                  a vender.
                 </span>
               </div>
 
-              <b className="round-arrow">
-                ›
-              </b>
+              <b className="round-arrow">›</b>
             </button>
 
             <button
               className="quick-card account-card"
               type="button"
-              onClick={handleAccountAccess}
+              onClick={() =>
+                session
+                  ? openPage("account")
+                  : openAuth("login")
+              }
             >
               <div className="quick-icon">
-                ♙
+                ✨
               </div>
 
               <div className="quick-content">
@@ -1936,9 +957,7 @@ function App() {
                 </small>
               </div>
 
-              <b className="round-arrow">
-                ›
-              </b>
+              <b className="round-arrow">›</b>
             </button>
           </section>
 
@@ -1949,7 +968,7 @@ function App() {
               <button
                 type="button"
                 onClick={() =>
-                  setSelectedCategory("")
+                  openPage("categories")
                 }
               >
                 Ver todas <span>›</span>
@@ -1957,26 +976,23 @@ function App() {
             </div>
 
             <div className="categories-scroll">
-              {categories.map((category) => (
-                <button
-                  className="category-item"
-                  key={category.name}
-                  type="button"
-                  onClick={() =>
-                    handleCategoryClick(
-                      category.name
-                    )
-                  }
-                >
-                  <div className="category-icon">
-                    {category.icon}
-                  </div>
-
-                  <span>
-                    {category.name}
-                  </span>
-                </button>
-              ))}
+              {categories
+                .slice(0, 6)
+                .map(([icon, name]) => (
+                  <button
+                    key={name}
+                    className="category-item"
+                    type="button"
+                    onClick={() =>
+                      goCategory(name)
+                    }
+                  >
+                    <div className="category-icon">
+                      {icon}
+                    </div>
+                    <span>{name}</span>
+                  </button>
+                ))}
             </div>
           </section>
 
@@ -1997,28 +1013,19 @@ function App() {
 
                 <button
                   type="button"
-                  onClick={goToProducts}
+                  onClick={() =>
+                    openPage("offers")
+                  }
                 >
                   Ver ofertas <b>›</b>
                 </button>
               </div>
 
               <div className="offer-products">
-                <div className="offer-bag">
-                  🛍️
-                </div>
-
-                <div className="offer-watch">
-                  ⌚
-                </div>
-
-                <div className="offer-shoe">
-                  👟
-                </div>
-
-                <div className="offer-percent">
-                  %
-                </div>
+                <div>🛍️</div>
+                <div>⌚</div>
+                <div>👟</div>
+                <div>%</div>
               </div>
             </div>
           </section>
@@ -2026,15 +1033,15 @@ function App() {
           <section className="content-section products-section">
             <div className="section-title-row">
               <h2>
-                {selectedCategory ||
+                {category ||
                   "Productos destacados"}
               </h2>
 
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedCategory("");
-                  setSearchTerm("");
+                  setCategory("");
+                  setSearch("");
                 }}
               >
                 Ver todos <span>›</span>
@@ -2042,141 +1049,31 @@ function App() {
             </div>
 
             {productsLoading ? (
-              <div
-                style={{
-                  padding: 30,
-                  textAlign: "center",
-                }}
-              >
+              <div className="empty-inline">
                 Cargando productos...
               </div>
             ) : (
               <div className="products-grid">
-                {filteredProducts.length > 0 ? (
+                {filteredProducts.length ? (
                   filteredProducts.map(
-                    (product) => (
-                      <article
-                        className="product-card"
-                        key={product.id}
-                        onClick={() =>
-                          openProduct(product)
+                    (item) => (
+                      <ProductCard
+                        key={item.id}
+                        product={item}
+                        favorite={favorites.includes(
+                          item.id
+                        )}
+                        onFavorite={
+                          toggleFavorite
                         }
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(event) => {
-                          if (
-                            event.key === "Enter" ||
-                            event.key === " "
-                          ) {
-                            openProduct(product);
-                          }
-                        }}
-                      >
-                        <div className="product-image">
-                          <span className="product-label">
-                            {product.compare_at_price &&
-                            product.price <
-                              product.compare_at_price
-                              ? `${Math.round(
-                                  ((product.compare_at_price -
-                                    product.price) /
-                                    product.compare_at_price) *
-                                    100
-                                )}% OFF`
-                              : product.stock > 0
-                                ? "Disponible"
-                                : "Agotado"}
-                          </span>
-
-                          <button
-                            className="heart-button"
-                            type="button"
-                            aria-label="Favorito"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleFavorite(
-                                product.id
-                              );
-                            }}
-                          >
-                            {favorites.includes(
-                              product.id
-                            )
-                              ? "♥"
-                              : "♡"}
-                          </button>
-
-                          <div className="product-art">
-                            {productImage(product) ? (
-                              <img
-                                src={productImage(
-                                  product
-                                )}
-                                alt={product.name}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "contain",
-                                  borderRadius: 14,
-                                }}
-                              />
-                            ) : (
-                              <span
-                                style={{
-                                  fontSize: 60,
-                                }}
-                              >
-                                🛍️
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="product-info">
-                          <h3>
-                            {product.name}
-                          </h3>
-
-                          <div className="price-row">
-                            <strong>
-                              {money(
-                                product.price
-                              )}
-                            </strong>
-
-                            {product.compare_at_price && (
-                              <del>
-                                {money(
-                                  product.compare_at_price
-                                )}
-                              </del>
-                            )}
-                          </div>
-
-                          <div className="rating-row">
-                            <span>★</span>
-
-                            {product.rating ||
-                              "Nuevo"}
-
-                            <small>
-                              • {product.stock} disponibles
-                            </small>
-                          </div>
-                        </div>
-                      </article>
+                        onClick={openProduct}
+                      />
                     )
                   )
                 ) : (
-                  <div
-                    style={{
-                      padding: 30,
-                      textAlign: "center",
-                      width: "100%",
-                    }}
-                  >
-                    No hay productos aprobados con
-                    esa búsqueda.
+                  <div className="empty-inline">
+                    No hay productos con esa
+                    búsqueda.
                   </div>
                 )}
               </div>
@@ -2184,7 +1081,7 @@ function App() {
           </section>
 
           <section className="trust-section">
-            <div className="trust-item">
+            <div>
               <span>♢</span>
               <strong>Compra segura</strong>
               <small>
@@ -2192,15 +1089,15 @@ function App() {
               </small>
             </div>
 
-            <div className="trust-item">
+            <div>
               <span>♧</span>
               <strong>Envíos rápidos</strong>
               <small>
-                Recibe tus productos en tiempo récord
+                Recibe tus productos rápidamente
               </small>
             </div>
 
-            <div className="trust-item">
+            <div>
               <span>✿</span>
               <strong>
                 Vendedores verificados
@@ -2210,7 +1107,7 @@ function App() {
               </small>
             </div>
 
-            <div className="trust-item">
+            <div>
               <span>☏</span>
               <strong>Soporte 24/7</strong>
               <small>
@@ -2221,44 +1118,1594 @@ function App() {
         </main>
       )}
 
+      {page === "categories" && (
+        <PageShell
+          title="Categorías"
+          onBack={goHome}
+        >
+          <div className="category-page-grid">
+            {categories.map(([icon, name]) => (
+              <button
+                key={name}
+                className="big-category-card"
+                type="button"
+                onClick={() =>
+                  goCategory(name)
+                }
+              >
+                <span className="big-category-icon">
+                  {icon}
+                </span>
+
+                <strong>{name}</strong>
+                <small>
+                  Explorar productos
+                </small>
+              </button>
+            ))}
+          </div>
+        </PageShell>
+      )}
+
+      {page === "offers" && (
+        <PageShell
+          title="Ofertas"
+          onBack={goHome}
+        >
+          <div className="offer-page-banner">
+            <strong>
+              OFERTAS EXCLUSIVAS
+            </strong>
+
+            <span>
+              Descuentos especiales en
+              productos seleccionados.
+            </span>
+          </div>
+
+          <div className="products-grid">
+            {products
+              .filter(
+                (p) =>
+                  p.compare_at_price &&
+                  p.price <
+                    p.compare_at_price
+              )
+              .map((item) => (
+                <ProductCard
+                  key={item.id}
+                  product={item}
+                  favorite={favorites.includes(
+                    item.id
+                  )}
+                  onFavorite={
+                    toggleFavorite
+                  }
+                  onClick={openProduct}
+                />
+              ))}
+          </div>
+        </PageShell>
+      )}
+
+      {page === "product" &&
+        product && (
+          <PageShell
+            title="Producto"
+            onBack={() => openPage("home")}
+          >
+            <div className="product-detail-grid">
+              <div>
+                <div className="product-main-image">
+                  <span className="product-label">
+                    {product.discount ||
+                      "Disponible"}
+                  </span>
+
+                  {imageOf(product) ? (
+                    <img
+                      src={imageOf(product)}
+                      alt={product.name}
+                    />
+                  ) : (
+                    <span className="product-placeholder-large">
+                      🛍️
+                    </span>
+                  )}
+                </div>
+
+                <div className="thumb-row">
+                  {[product.image_url, ...(product.images || [])]
+                    .filter(Boolean)
+                    .slice(0, 5)
+                    .map((src, index) => (
+                      <button
+                        key={`${src}-${index}`}
+                        type="button"
+                        className="thumb"
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                        />
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              <div className="product-detail-copy">
+                <div className="eyebrow">
+                  {product.category}
+                </div>
+
+                <h1>{product.name}</h1>
+
+                <div className="rating-row big">
+                  ★ {product.rating || "Nuevo"}{" "}
+                  <small>
+                    • {product.reviews}
+                  </small>
+                </div>
+
+                <div className="detail-price-row">
+                  <strong>
+                    {money(product.price)}
+                  </strong>
+
+                  {product.compare_at_price && (
+                    <del>
+                      {money(
+                        product.compare_at_price
+                      )}
+                    </del>
+                  )}
+                </div>
+
+                {product.compare_at_price && (
+                  <div className="saving-pill">
+                    Ahorras{" "}
+                    {money(
+                      product.compare_at_price -
+                        product.price
+                    )}
+                  </div>
+                )}
+
+                <p className="detail-description">
+                  {product.description}
+                </p>
+
+                {product.variants?.length > 0 && (
+                  <div className="variant-block">
+                    <strong>
+                      Elige una opción
+                    </strong>
+
+                    <div className="variant-row">
+                      {product.variants.map(
+                        (item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            className={`variant-button ${
+                              variant === item
+                                ? "selected"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              setVariant(item)
+                            }
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="buy-box">
+                  <div>
+                    <b>
+                      Stock disponible:
+                    </b>{" "}
+                    {product.stock}
+                  </div>
+
+                  <div>
+                    <b>Envío:</b>{" "}
+                    {product.shipping}
+                  </div>
+
+                  <div>
+                    <b>Entrega:</b>{" "}
+                    {product.delivery}
+                  </div>
+
+                  <div className="buy-actions">
+                    <button
+                      type="button"
+                      style={styles.secondary}
+                      onClick={() =>
+                        addCart(product)
+                      }
+                    >
+                      🛒 Agregar al carrito
+                    </button>
+
+                    <button
+                      type="button"
+                      style={styles.primary}
+                      onClick={() =>
+                        buyNow(product)
+                      }
+                    >
+                      Comprar ahora
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    ...styles.card,
+                    marginTop: 14,
+                  }}
+                >
+                  <h2>Vendedor</h2>
+
+                  <div className="seller-mini-card">
+                    <div className="seller-avatar">
+                      {product.sellerName?.charAt(
+                        0
+                      ) || "S"}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {product.sellerName}
+                      </strong>
+                      <div>
+                        ⭐{" "}
+                        {product.sellerRating}
+                        {" · "}Vendedor destacado
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openPage(
+                          "seller-store"
+                        )
+                      }
+                    >
+                      Ver tienda
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="detail-section-grid">
+              <div style={styles.card}>
+                <h2>Descripción</h2>
+
+                <p
+                  style={{
+                    color: "#666",
+                    lineHeight: 1.8,
+                  }}
+                >
+                  {product.description}
+                </p>
+
+                <h2>Características</h2>
+
+                <div className="spec-list">
+                  {(product.specifications ||
+                    []).map(
+                    ([label, value]) => (
+                      <div key={label}>
+                        <strong>
+                          {label}
+                        </strong>
+
+                        <span>{value}</span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div style={styles.card}>
+                <h2>Opiniones</h2>
+
+                {reviews.map(
+                  ([name, stars, text]) => (
+                    <div
+                      className="review-item"
+                      key={name}
+                    >
+                      <strong>{name}</strong>
+
+                      <div>
+                        {"★".repeat(stars)}
+                      </div>
+
+                      <p>{text}</p>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...styles.card,
+                marginTop: 14,
+              }}
+            >
+              <h2>
+                Preguntas sobre el producto
+              </h2>
+
+              <form
+                className="inline-form"
+                onSubmit={askQuestion}
+              >
+                <input
+                  value={question}
+                  onChange={(e) =>
+                    setQuestion(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Escribe tu pregunta"
+                />
+
+                <button
+                  style={styles.primary}
+                  type="submit"
+                >
+                  Preguntar
+                </button>
+              </form>
+
+              {questions.map((item) => (
+                <div
+                  className="question-item"
+                  key={item.id}
+                >
+                  <strong>
+                    Pregunta
+                  </strong>
+
+                  <p>{item.question}</p>
+
+                  <small>
+                    {item.answer}
+                  </small>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                ...styles.card,
+                marginTop: 14,
+              }}
+            >
+              <h2>
+                Productos relacionados
+              </h2>
+
+              <div className="products-grid mini-grid">
+                {products
+                  .filter(
+                    (x) =>
+                      x.id !== product.id &&
+                      x.category ===
+                        product.category
+                  )
+                  .slice(0, 4)
+                  .map((item) => (
+                    <ProductCard
+                      key={item.id}
+                      product={item}
+                      favorite={favorites.includes(
+                        item.id
+                      )}
+                      onFavorite={
+                        toggleFavorite
+                      }
+                      onClick={
+                        openProduct
+                      }
+                    />
+                  ))}
+              </div>
+            </div>
+          </PageShell>
+        )}
+
+      {page === "cart" && (
+        <PageShell
+          title="Carrito"
+          onBack={goHome}
+        >
+          {!cart.length ? (
+            <div style={styles.card}>
+              <div style={{ fontSize: 58 }}>
+                🛒
+              </div>
+
+              <h2>
+                Tu carrito está vacío
+              </h2>
+
+              <p style={{ color: "#666" }}>
+                Agrega productos para comenzar
+                tu compra.
+              </p>
+
+              <button
+                style={styles.primary}
+                type="button"
+                onClick={goHome}
+              >
+                Seguir comprando
+              </button>
+            </div>
+          ) : (
+            <div className="checkout-layout">
+              <div style={styles.card}>
+                {cart.map((item) => (
+                  <div
+                    className="cart-item"
+                    key={item.cartKey}
+                  >
+                    <div className="cart-image">
+                      {imageOf(item) ? (
+                        <img
+                          src={imageOf(item)}
+                          alt={item.name}
+                        />
+                      ) : (
+                        <span>🛍️</span>
+                      )}
+                    </div>
+
+                    <div className="cart-copy">
+                      <strong>
+                        {item.name}
+                      </strong>
+
+                      <small>
+                        {item.variant ||
+                          item.category}
+                      </small>
+
+                      <div>
+                        {money(item.price)}
+                      </div>
+
+                      <div className="qty-row">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            changeQuantity(
+                              item.cartKey,
+                              item.quantity - 1
+                            )
+                          }
+                        >
+                          −
+                        </button>
+
+                        <span>
+                          {item.quantity}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            changeQuantity(
+                              item.cartKey,
+                              item.quantity + 1
+                            )
+                          }
+                        >
+                          +
+                        </button>
+
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() =>
+                            removeCart(
+                              item.cartKey
+                            )
+                          }
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={styles.card}>
+                <h2>Resumen</h2>
+
+                <div className="summary-line">
+                  <span>
+                    Productos
+                  </span>
+
+                  <strong>
+                    {money(cartTotal)}
+                  </strong>
+                </div>
+
+                <div className="summary-line">
+                  <span>Envío</span>
+
+                  <span>
+                    Se calcula al comprar
+                  </span>
+                </div>
+
+                <hr />
+
+                <div className="summary-line total">
+                  <span>Total</span>
+
+                  <strong>
+                    {money(cartTotal)}
+                  </strong>
+                </div>
+
+                <button
+                  style={styles.primary}
+                  type="button"
+                  onClick={checkoutCart}
+                >
+                  Continuar compra
+                </button>
+              </div>
+            </div>
+          )}
+        </PageShell>
+      )}
+
+      {page === "checkout" && (
+        <PageShell
+          title="Finalizar compra"
+          onBack={() => openPage("cart")}
+        >
+          <div className="checkout-layout">
+            <div style={styles.card}>
+              <h2>Entrega</h2>
+
+              {addresses.length ? (
+                addresses.map((item) => (
+                  <div
+                    className="select-card"
+                    key={item.id}
+                  >
+                    <strong>
+                      {item.name}
+                    </strong>
+
+                    <span>
+                      {item.street},{" "}
+                      {item.city},{" "}
+                      {item.state}{" "}
+                      {item.postalCode}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-inline">
+                  <p>
+                    No tienes una dirección
+                    guardada.
+                  </p>
+
+                  <button
+                    style={styles.secondary}
+                    type="button"
+                    onClick={() =>
+                      openPage("addresses")
+                    }
+                  >
+                    Agregar dirección
+                  </button>
+                </div>
+              )}
+
+              <h2>Método de pago</h2>
+
+              {payments.length ? (
+                payments.map((item) => (
+                  <div
+                    className="select-card"
+                    key={item.id}
+                  >
+                    <strong>
+                      💳 {item.label}
+                    </strong>
+
+                    <span>
+                      {item.detail}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-inline">
+                  <p>
+                    Agrega un método de pago.
+                  </p>
+
+                  <button
+                    style={styles.secondary}
+                    type="button"
+                    onClick={() =>
+                      openPage("payments")
+                    }
+                  >
+                    Administrar pagos
+                  </button>
+                </div>
+              )}
+
+              <p className="checkout-note">
+                🔒 Tus datos están
+                protegidos.
+              </p>
+            </div>
+
+            <div style={styles.card}>
+              <h2>
+                Resumen de compra
+              </h2>
+
+              {checkoutItems.map((item) => (
+                <div
+                  className="summary-product"
+                  key={item.cartKey || item.id}
+                >
+                  <span>
+                    {item.quantity} ×{" "}
+                    {item.name}
+                  </span>
+
+                  <strong>
+                    {money(
+                      item.price *
+                        item.quantity
+                    )}
+                  </strong>
+                </div>
+              ))}
+
+              <hr />
+
+              <div className="summary-line total">
+                <span>Total</span>
+                <strong>
+                  {money(checkoutTotal)}
+                </strong>
+              </div>
+
+              <button
+                style={styles.primary}
+                type="button"
+                onClick={placeOrder}
+              >
+                Confirmar pedido
+              </button>
+            </div>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "confirmation" && (
+        <PageShell
+          title="Compra confirmada"
+          onBack={goHome}
+        >
+          <div className="success-card">
+            <div className="success-icon">
+              ✓
+            </div>
+
+            <h1>
+              ¡Gracias por tu compra!
+            </h1>
+
+            <p>
+              Tu pedido fue registrado en
+              SHORASHOPP.
+            </p>
+
+            <strong>
+              Pedido:{" "}
+              {selectedOrder?.id}
+            </strong>
+
+            <div className="button-row">
+              <button
+                style={styles.primary}
+                type="button"
+                onClick={() =>
+                  openPage("orders")
+                }
+              >
+                Mis pedidos
+              </button>
+
+              <button
+                style={styles.secondary}
+                type="button"
+                onClick={goHome}
+              >
+                Seguir comprando
+              </button>
+            </div>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "account" && (
+        <PageShell
+          title="Mi cuenta"
+          onBack={goHome}
+        >
+          <div className="account-hero">
+            <div className="account-avatar">
+              {session?.user?.email
+                ?.charAt(0)
+                .toUpperCase() || "S"}
+            </div>
+
+            <div>
+              <strong>
+                {session?.user
+                  ?.user_metadata
+                  ?.full_name ||
+                  "Usuario SHORASHOPP"}
+              </strong>
+
+              <span>
+                {session?.user?.email ||
+                  "Sesión iniciada"}
+              </span>
+            </div>
+          </div>
+
+          <div className="account-grid">
+            {[
+              ["👤", "Perfil", "profile"],
+              ["📦", "Mis pedidos", "orders"],
+              ["❤️", "Favoritos", "favorites"],
+              ["📍", "Direcciones", "addresses"],
+              ["💳", "Métodos de pago", "payments"],
+              ["💬", "Mensajes", "messages"],
+              ["🔔", "Notificaciones", "notifications"],
+              ["🏪", "Vender", "sell"],
+              ["💰", "Crédito SHORASHOPP", "credit"],
+              ["🎁", "Referidos", "referrals"],
+              ["⚙️", "Configuración", "settings"],
+              ["🔐", "Privacidad y seguridad", "privacy"],
+            ].map(([icon, title, target]) => (
+              <button
+                key={target}
+                style={styles.menu}
+                type="button"
+                onClick={() =>
+                  openPage(target)
+                }
+              >
+                {icon} {title} <span>›</span>
+              </button>
+            ))}
+
+            <button
+              style={{
+                ...styles.menu,
+                color: "#d41452",
+              }}
+              type="button"
+              onClick={logout}
+            >
+              🚪 Cerrar sesión
+              <span>›</span>
+            </button>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "profile" &&
+        <SimplePage
+          title="Perfil"
+          icon="👤"
+          text="Administra la información personal de tu cuenta."
+          back={() => openPage("account")}
+        />}
+
+      {page === "orders" && (
+        <PageShell
+          title="Mis pedidos"
+          onBack={() => openPage("account")}
+        >
+          {selectedOrder ? (
+            <div style={styles.card}>
+              <button
+                style={styles.secondary}
+                type="button"
+                onClick={() =>
+                  setSelectedOrder(null)
+                }
+              >
+                ← Volver a pedidos
+              </button>
+
+              <h2>
+                Pedido {selectedOrder.id}
+              </h2>
+
+              <p>
+                Fecha:{" "}
+                {selectedOrder.date}
+              </p>
+
+              <p>
+                Estado:{" "}
+                <b>
+                  {selectedOrder.status}
+                </b>
+              </p>
+
+              {selectedOrder.items.map(
+                (item) => (
+                  <div
+                    className="summary-product"
+                    key={item.id}
+                  >
+                    <span>
+                      {item.quantity} ×{" "}
+                      {item.name}
+                    </span>
+
+                    <strong>
+                      {money(
+                        item.price *
+                          item.quantity
+                      )}
+                    </strong>
+                  </div>
+                )
+              )}
+
+              <hr />
+
+              <div className="summary-line total">
+                <span>Total</span>
+
+                <strong>
+                  {money(
+                    selectedOrder.total
+                  )}
+                </strong>
+              </div>
+
+              <button
+                style={styles.primary}
+                type="button"
+                onClick={() =>
+                  openPage("tracking")
+                }
+              >
+                Seguir pedido
+              </button>
+            </div>
+          ) : (
+            <div className="order-list">
+              {orders.map((order) => (
+                <button
+                  style={styles.menu}
+                  type="button"
+                  key={order.id}
+                  onClick={() =>
+                    setSelectedOrder(
+                      order
+                    )
+                  }
+                >
+                  📦 {order.id}
+                  <span>›</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </PageShell>
+      )}
+
+      {page === "tracking" &&
+        <SimplePage
+          title="Seguimiento"
+          icon="🚚"
+          text="Consulta el estado de tus envíos y pedidos."
+          back={() => openPage("orders")}
+        />}
+
+      {page === "favorites" && (
+        <PageShell
+          title="Favoritos"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          {favoriteProducts.length ? (
+            <div className="products-grid">
+              {favoriteProducts.map(
+                (item) => (
+                  <ProductCard
+                    key={item.id}
+                    product={item}
+                    favorite
+                    onFavorite={
+                      toggleFavorite
+                    }
+                    onClick={
+                      openProduct
+                    }
+                  />
+                )
+              )}
+            </div>
+          ) : (
+            <div style={styles.card}>
+              <div
+                style={{ fontSize: 52 }}
+              >
+                ❤️
+              </div>
+
+              <h2>
+                No tienes favoritos
+              </h2>
+
+              <p
+                style={{ color: "#666" }}
+              >
+                Toca el corazón de un
+                producto para guardarlo.
+              </p>
+            </div>
+          )}
+        </PageShell>
+      )}
+
+      {page === "addresses" && (
+        <PageShell
+          title="Direcciones"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          <form
+            style={styles.card}
+            onSubmit={saveAddress}
+          >
+            <div className="form-grid">
+              {[
+                ["name", "Nombre"],
+                ["phone", "Teléfono"],
+                ["street", "Calle y número"],
+                ["city", "Ciudad"],
+                ["state", "Estado"],
+                ["postalCode", "Código postal"],
+                ["reference", "Referencia"],
+              ].map(([field, label]) => (
+                <label key={field}>
+                  {label}
+
+                  <input
+                    value={address[field]}
+                    onChange={(e) =>
+                      setAddress(
+                        (current) => ({
+                          ...current,
+                          [field]:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    required={[
+                      "name",
+                      "street",
+                      "city",
+                      "postalCode",
+                    ].includes(field)}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <button
+              style={styles.primary}
+              type="submit"
+            >
+              Guardar dirección
+            </button>
+          </form>
+
+          <div
+            className="stack-list"
+            style={{ marginTop: 12 }}
+          >
+            {addresses.map((item) => (
+              <div
+                style={styles.card}
+                key={item.id}
+              >
+                <strong>
+                  {item.name}
+                </strong>
+
+                <p>
+                  {item.street},{" "}
+                  {item.city},{" "}
+                  {item.state}{" "}
+                  {item.postalCode}
+                </p>
+              </div>
+            ))}
+          </div>
+        </PageShell>
+      )}
+
+      {page === "payments" && (
+        <PageShell
+          title="Métodos de pago"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          <div style={styles.card}>
+            <h2>
+              Agregar tarjeta
+            </h2>
+
+            <form
+              className="form-grid"
+              onSubmit={savePayment}
+            >
+              <label>
+                Número de tarjeta
+                <input
+                  placeholder="0000 0000 0000 0000"
+                  inputMode="numeric"
+                />
+              </label>
+
+              <label>
+                Nombre en tarjeta
+                <input
+                  placeholder="Nombre completo"
+                />
+              </label>
+
+              <label>
+                Vencimiento
+                <input placeholder="MM/AA" />
+              </label>
+
+              <label>
+                CVV
+                <input
+                  placeholder="123"
+                />
+              </label>
+
+              <button
+                style={styles.primary}
+                type="submit"
+              >
+                Guardar método
+              </button>
+            </form>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "messages" &&
+        <SimplePage
+          title="Mensajes"
+          icon="💬"
+          text="Comunícate con vendedores y con el soporte de SHORASHOPP."
+          back={() => openPage("account")}
+        />}
+
+      {page === "notifications" &&
+        <SimplePage
+          title="Notificaciones"
+          icon="🔔"
+          text="Aquí aparecerán ofertas, pedidos, avisos y novedades de tu cuenta."
+          back={() => openPage("account")}
+        />}
+
+      {page === "credit" &&
+        <SimplePage
+          title="Crédito SHORASHOPP"
+          icon="💰"
+          text="Solicita y administra crédito para realizar compras dentro de SHORASHOPP."
+          back={() => openPage("account")}
+        />}
+
+      {page === "referrals" &&
+        <SimplePage
+          title="Referidos"
+          icon="🎁"
+          text="Invita personas a SHORASHOPP y administra tus referencias."
+          back={() => openPage("account")}
+        />}
+
+      {page === "settings" &&
+        <PageShell
+          title="Configuración"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          <div className="stack-list">
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Notificaciones configuradas."
+                )
+              }
+            >
+              🔔 Notificaciones
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Idioma: Español (México)"
+                )
+              }
+            >
+              🌐 Idioma
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                openPage("privacy")
+              }
+            >
+              🔐 Privacidad
+              <span>›</span>
+            </button>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "privacy" && (
+        <PageShell
+          title="Privacidad y seguridad"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          <div className="stack-list">
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                openPage("sessions")
+              }
+            >
+              📱 Sesiones activas
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                openPage("security")
+              }
+            >
+              🛡️ Verificación de seguridad
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                openPage("terms")
+              }
+            >
+              📄 Términos y condiciones
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                openPage("returns")
+              }
+            >
+              ↩️ Devoluciones y reembolsos
+              <span>›</span>
+            </button>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "sessions" &&
+        <SimplePage
+          title="Sesiones activas"
+          icon="📱"
+          text={`Sesión actual: ${
+            session?.user?.email ||
+            "No identificada"
+          }`}
+          back={() =>
+            openPage("privacy")
+          }
+        />}
+
+      {page === "security" &&
+        <SimplePage
+          title="Verificación de seguridad"
+          icon="🛡️"
+          text="La autenticación y las credenciales se administran mediante Supabase Auth."
+          back={() =>
+            openPage("privacy")
+          }
+        />}
+
+      {page === "terms" &&
+        <SimplePage
+          title="Términos y condiciones"
+          icon="📄"
+          text="SHORASHOPP es un marketplace que conecta compradores y vendedores. Los productos, disponibilidad, condiciones y envíos pueden variar según cada vendedor."
+          back={() =>
+            openPage("privacy")
+          }
+        />}
+
+      {page === "returns" &&
+        <SimplePage
+          title="Devoluciones y reembolsos"
+          icon="↩️"
+          text="Consulta las condiciones aplicables al producto y al vendedor. SHORASHOPP podrá mostrar el estado correspondiente del proceso."
+          back={() =>
+            openPage("privacy")
+          }
+        />}
+
+      {page === "support" &&
+        <PageShell
+          title="Soporte"
+          onBack={goHome}
+        >
+          <div className="stack-list">
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Asistente de soporte preparado."
+                )
+              }
+            >
+              🤖 Asistente SHORASHOPP
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Centro de ayuda preparado."
+                )
+              }
+            >
+              ❓ Preguntas frecuentes
+              <span>›</span>
+            </button>
+
+            <button
+              style={styles.menu}
+              type="button"
+              onClick={() =>
+                notify(
+                  "Soporte conectado."
+                )
+              }
+            >
+              💬 Contactar soporte
+              <span>›</span>
+            </button>
+          </div>
+        </PageShell>
+      )}
+
+      {page === "sell" && (
+        <PageShell
+          title="Vender en SHORASHOPP"
+          onBack={() =>
+            openPage("account")
+          }
+        >
+          {sellerLoading ? (
+            <div style={styles.card}>
+              Comprobando tu tienda...
+            </div>
+          ) : !sellerStore ? (
+            <div style={styles.card}>
+              <div
+                style={{ fontSize: 50 }}
+              >
+                🏪
+              </div>
+
+              <h2>
+                Tienda de vendedor
+              </h2>
+
+              <p
+                style={{
+                  color: "#666",
+                }}
+              >
+                Necesitas una tienda
+                vinculada en
+                seller_stores para
+                publicar productos reales.
+              </p>
+            </div>
+          ) : (
+            <form
+              style={styles.card}
+              onSubmit={publishProduct}
+            >
+              <h2>
+                {sellerStore.store_name}
+              </h2>
+
+              <div className="form-grid">
+                <label>
+                  Nombre del producto
+                  <input
+                    value={publish.name}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          name: e.target
+                            .value,
+                        })
+                      )
+                    }
+                    required
+                  />
+                </label>
+
+                <label>
+                  Precio
+                  <input
+                    type="number"
+                    min="0"
+                    value={publish.price}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          price: e.target
+                            .value,
+                        })
+                      )
+                    }
+                    required
+                  />
+                </label>
+
+                <label>
+                  Precio anterior
+                  <input
+                    type="number"
+                    min="0"
+                    value={
+                      publish.compare_at_price
+                    }
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          compare_at_price:
+                            e.target.value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+
+                <label>
+                  Stock
+                  <input
+                    type="number"
+                    min="0"
+                    value={publish.stock}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          stock: e.target
+                            .value,
+                        })
+                      )
+                    }
+                    required
+                  />
+                </label>
+
+                <label>
+                  SKU
+                  <input
+                    value={publish.sku}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          sku: e.target
+                            .value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+
+                <label>
+                  Imagen principal
+                  <input
+                    type="url"
+                    value={publish.image_url}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          image_url:
+                            e.target
+                              .value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+
+                <label>
+                  Categoría
+                  <select
+                    value={publish.category}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          category:
+                            e.target
+                              .value,
+                        })
+                      )
+                    }
+                  >
+                    {categories.map(
+                      ([, name]) => (
+                        <option key={name}>
+                          {name}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </label>
+
+                <label>
+                  Imágenes adicionales
+                  <textarea
+                    rows="3"
+                    value={publish.images}
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          images:
+                            e.target
+                              .value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+
+                <label>
+                  Descripción
+                  <textarea
+                    rows="5"
+                    value={
+                      publish.description
+                    }
+                    onChange={(e) =>
+                      setPublish(
+                        (c) => ({
+                          ...c,
+                          description:
+                            e.target
+                              .value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <button
+                style={styles.primary}
+                disabled={publishLoading}
+              >
+                {publishLoading
+                  ? "Publicando..."
+                  : "Publicar producto"}
+              </button>
+            </form>
+          )}
+        </PageShell>
+      )}
+
+      {page === "seller-store" &&
+        <SimplePage
+          title={
+            product?.sellerName ||
+            "Tienda SHORASHOPP"
+          }
+          icon="🏪"
+          text="Aquí aparecerán los productos, reputación y datos públicos del vendedor."
+          back={() =>
+            openPage("product")
+          }
+        />}
+
       {menuOpen && (
         <div
+          className="drawer-overlay"
           onMouseDown={(event) => {
             if (
-              event.target === event.currentTarget
+              event.target ===
+              event.currentTarget
             ) {
               setMenuOpen(false);
             }
           }}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,.35)",
-            zIndex: 10000,
-          }}
         >
-          <aside
-            style={{
-              width: "min(330px, 88vw)",
-              height: "100%",
-              background: "#fff",
-              padding: 20,
-              boxShadow:
-                "8px 0 30px rgba(0,0,0,.15)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent:
-                  "space-between",
-                alignItems: "center",
-                marginBottom: 20,
-              }}
-            >
-              <strong
-                style={{ fontSize: 23 }}
-              >
+          <aside className="drawer">
+            <div className="drawer-head">
+              <strong>
                 SHORASHOPP
               </strong>
 
@@ -2267,121 +2714,55 @@ function App() {
                 onClick={() =>
                   setMenuOpen(false)
                 }
-                style={{
-                  border: 0,
-                  background: "#f5f5f7",
-                  borderRadius: 12,
-                  width: 40,
-                  height: 40,
-                  fontSize: 22,
-                }}
               >
                 ×
               </button>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gap: 8,
-              }}
-            >
-              <button
-                type="button"
-                onClick={goHome}
-                style={menuButtonStyle}
-              >
-                ⌂ Inicio
-              </button>
-
-              <button
-                type="button"
-                onClick={handleAccountAccess}
-                style={menuButtonStyle}
-              >
-                ✨ Mi cuenta
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("orders")
-                }
-                style={menuButtonStyle}
-              >
-                📦 Tus pedidos
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("messages")
-                }
-                style={menuButtonStyle}
-              >
-                💬 Mensajes
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("notifications")
-                }
-                style={menuButtonStyle}
-              >
-                🔔 Notificaciones
-              </button>
-
-              <button
-                type="button"
-                onClick={startPublishing}
-                style={menuButtonStyle}
-              >
-                🏪 Publicar producto
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("cart")
-                }
-                style={menuButtonStyle}
-              >
-                🛒 Carrito ({cartCount})
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  openPage("privacy")
-                }
-                style={menuButtonStyle}
-              >
-                🔐 Privacidad y seguridad
-              </button>
+            <div className="drawer-list">
+              {[
+                ["⌂", "Inicio", "home"],
+                ["▦", "Categorías", "categories"],
+                ["✨", "Mi cuenta", "account"],
+                ["📦", "Mis pedidos", "orders"],
+                ["❤️", "Favoritos", "favorites"],
+                ["💬", "Mensajes", "messages"],
+                ["🔔", "Notificaciones", "notifications"],
+                ["🏪", "Vender", "sell"],
+                ["📍", "Direcciones", "addresses"],
+                ["💳", "Métodos de pago", "payments"],
+                ["💰", "Crédito SHORASHOPP", "credit"],
+                ["🎁", "Referidos", "referrals"],
+                ["⚙️", "Configuración", "settings"],
+                ["🔐", "Privacidad y seguridad", "privacy"],
+                ["🛟", "Soporte", "support"],
+              ].map(([icon, label, target]) => (
+                <button
+                  key={target}
+                  type="button"
+                  style={styles.menu}
+                  onClick={() =>
+                    target === "account" &&
+                    !session
+                      ? openAuth("login")
+                      : openPage(target)
+                  }
+                >
+                  {icon} {label}
+                </button>
+              ))}
             </div>
           </aside>
         </div>
       )}
 
-      <nav
-        style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9998,
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(5,1fr)",
-          background: "#fff",
-          borderTop: "1px solid #eee",
-          padding:
-            "7px 5px calc(7px + env(safe-area-inset-bottom))",
-        }}
-      >
+      <nav className="bottom-nav">
         <button
-          className="bottom-item active"
+          className={
+            page === "home"
+              ? "bottom-item active"
+              : "bottom-item"
+          }
           type="button"
           onClick={goHome}
         >
@@ -2390,9 +2771,15 @@ function App() {
         </button>
 
         <button
-          className="bottom-item"
+          className={
+            page === "categories"
+              ? "bottom-item active"
+              : "bottom-item"
+          }
           type="button"
-          onClick={goToCategories}
+          onClick={() =>
+            openPage("categories")
+          }
         >
           <span>▦</span>
           <small>Categorías</small>
@@ -2401,14 +2788,22 @@ function App() {
         <button
           className="seller-button"
           type="button"
-          onClick={startPublishing}
+          onClick={() =>
+            session
+              ? openPage("sell")
+              : openAuth("register")
+          }
         >
           <span>▰</span>
           <small>Vender</small>
         </button>
 
         <button
-          className="bottom-item"
+          className={
+            page === "cart"
+              ? "bottom-item active"
+              : "bottom-item"
+          }
           type="button"
           onClick={() =>
             openPage("cart")
@@ -2419,44 +2814,35 @@ function App() {
         </button>
 
         <button
-          className="bottom-item"
+          className={
+            page === "account"
+              ? "bottom-item active"
+              : "bottom-item"
+          }
           type="button"
-          onClick={handleAccountAccess}
+          onClick={() =>
+            session
+              ? openPage("account")
+              : openAuth("login")
+          }
         >
-          <span>♙</span>
+          <span>✨</span>
           <small>Cuenta</small>
         </button>
       </nav>
 
-      {actionMessage && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 90,
-            left: "50%",
-            transform:
-              "translateX(-50%)",
-            background: "#222",
-            color: "#fff",
-            padding: "10px 18px",
-            borderRadius: 20,
-            zIndex: 11000,
-            fontSize: 13,
-            textAlign: "center",
-            maxWidth: "90vw",
-          }}
-        >
-          {actionMessage}
+      {toast && (
+        <div className="toast">
+          {toast}
         </div>
       )}
 
       {showAuth && (
         <div
           className="auth-overlay"
-          onMouseDown={(event) => {
+          onMouseDown={(e) => {
             if (
-              event.target ===
-              event.currentTarget
+              e.target === e.currentTarget
             ) {
               closeAuth();
             }
@@ -2487,15 +2873,17 @@ function App() {
                 : "Únete a SHORASHOPP."}
             </p>
 
-            <form onSubmit={handleAuth}>
+            <form
+              onSubmit={handleAuth}
+            >
               {authMode === "register" && (
                 <input
                   type="text"
                   placeholder="Nombre completo"
                   value={name}
-                  onChange={(event) =>
+                  onChange={(e) =>
                     setName(
-                      event.target.value
+                      e.target.value
                     )
                   }
                   required
@@ -2506,9 +2894,9 @@ function App() {
                 type="email"
                 placeholder="Correo electrónico"
                 value={email}
-                onChange={(event) =>
+                onChange={(e) =>
                   setEmail(
-                    event.target.value
+                    e.target.value
                   )
                 }
                 required
@@ -2518,9 +2906,9 @@ function App() {
                 type="password"
                 placeholder="Contraseña"
                 value={password}
-                onChange={(event) =>
+                onChange={(e) =>
                   setPassword(
-                    event.target.value
+                    e.target.value
                   )
                 }
                 minLength={6}
@@ -2547,7 +2935,8 @@ function App() {
             )}
 
             <div className="auth-switch">
-              {authMode === "login" ? (
+              {authMode ===
+              "login" ? (
                 <>
                   ¿No tienes cuenta?{" "}
                   <button
@@ -2584,45 +2973,170 @@ function App() {
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  boxSizing: "border-box",
-  border: "1px solid #ddd",
-  borderRadius: 12,
-  padding: "12px 13px",
-  fontSize: 15,
-  background: "#fff",
-};
+function PageShell({
+  title,
+  onBack,
+  children,
+}) {
+  return (
+    <section className="page-shell">
+      <button
+        className="back-button"
+        type="button"
+        onClick={onBack}
+      >
+        ← Volver
+      </button>
 
-const cardButtonStyle = {
-  width: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
-  padding: 16,
-  border: "1px solid #ece7f3",
-  borderRadius: 16,
-  background: "#fff",
-  color: "#24152f",
-  fontWeight: 800,
-  textAlign: "left",
-  cursor: "pointer",
-  boxShadow:
-    "0 5px 18px rgba(50,16,74,.05)",
-};
+      <div className="page-heading">
+        <h1>{title}</h1>
+        <div className="heading-line" />
+      </div>
 
-const menuButtonStyle = {
-  width: "100%",
-  border: 0,
-  borderRadius: 13,
-  background: "#fff",
-  color: "#24152f",
-  fontSize: 16,
-  fontWeight: 700,
-  textAlign: "left",
-  padding: "14px 12px",
-  cursor: "pointer",
-};
+      {children}
+    </section>
+  );
+}
+
+function SimplePage({
+  title,
+  icon,
+  text,
+  back,
+}) {
+  return (
+    <PageShell
+      title={title}
+      onBack={back}
+    >
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #ece7f3",
+          borderRadius: 18,
+          padding: 20,
+          boxShadow:
+            "0 5px 18px rgba(50,16,74,.05)",
+        }}
+      >
+        <div
+          style={{ fontSize: 54 }}
+        >
+          {icon}
+        </div>
+
+        <h2>{title}</h2>
+
+        <p
+          style={{
+            color: "#666",
+            lineHeight: 1.7,
+          }}
+        >
+          {text}
+        </p>
+      </div>
+    </PageShell>
+  );
+}
+
+function ProductCard({
+  product,
+  favorite,
+  onFavorite,
+  onClick,
+}) {
+  const image =
+    product.image_url ||
+    product.images?.[0] ||
+    "";
+
+  return (
+    <article
+      className="product-card"
+      role="button"
+      tabIndex={0}
+      onClick={() =>
+        onClick(product)
+      }
+      onKeyDown={(e) => {
+        if (
+          e.key === "Enter" ||
+          e.key === " "
+        ) {
+          onClick(product);
+        }
+      }}
+    >
+      <div className="product-image">
+        <span className="product-label">
+          {product.discount ||
+            (product.stock > 0
+              ? "Disponible"
+              : "Agotado")}
+        </span>
+
+        <button
+          className="heart-button"
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onFavorite(product.id);
+          }}
+        >
+          {favorite ? "♥" : "♡"}
+        </button>
+
+        <div className="product-art">
+          {image ? (
+            <img
+              src={image}
+              alt={product.name}
+            />
+          ) : (
+            <span>🛍️</span>
+          )}
+        </div>
+      </div>
+
+      <div className="product-info">
+        <h3>{product.name}</h3>
+
+        <div className="price-row">
+          <strong>
+            {money(product.price)}
+          </strong>
+
+          {product.compare_at_price && (
+            <del>
+              {money(
+                product.compare_at_price
+              )}
+            </del>
+          )}
+        </div>
+
+        <div className="rating-row">
+          <span>★</span>{" "}
+          {product.rating || "Nuevo"}
+
+          <small>
+            • {product.reviews || "Producto"}
+          </small>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function money(value) {
+  return new Intl.NumberFormat(
+    "es-MX",
+    {
+      style: "currency",
+      currency: "MXN",
+    }
+  ).format(Number(value || 0));
+}
 
 export default App;
