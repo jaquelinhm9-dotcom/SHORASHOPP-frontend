@@ -2254,53 +2254,45 @@ function App() {
           back={() => openPage("account")}
         />}
 
-      {page === "settings" &&
+      {page === "settings" && (
         <PageShell
-          title="Configuración"
-          onBack={() =>
-            openPage("account")
-          }
-        >
-          <div className="stack-list">
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                notify(
-                  "Notificaciones configuradas."
-                )
-              }
-            >
-              🔔 Notificaciones
-              <span>›</span>
-            </button>
+        title="Configuración"
+        onBack={() => openPage("account")}
+     >
+    <div className="stack-list">
+      <button
+        style={styles.menu}
+        type="button"
+        onClick={() =>
+          notify("Notificaciones configuradas.")
+        }
+      >
+        🔔 Notificaciones
+        <span>›</span>
+      </button>
 
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                notify(
-                  "Idioma: Español (México)"
-                )
-              }
-            >
-              🌐 Idioma
-              <span>›</span>
-            </button>
+      <button
+        style={styles.menu}
+        type="button"
+        onClick={() =>
+          notify("Idioma: Español (México)")
+        }
+      >
+        🌐 Idioma
+        <span>›</span>
+      </button>
 
-            <button
-              style={styles.menu}
-              type="button"
-              onClick={() =>
-                openPage("privacy")
-              }
-            >
-              🔐 Privacidad
-              <span>›</span>
-            </button>
-          </div>
-        </PageShell>
-      )}
+      <button
+        style={styles.menu}
+        type="button"
+        onClick={() => openPage("privacy")}
+      >
+        🔐 Privacidad
+        <span>›</span>
+      </button>
+    </div>
+  </PageShell>
+)}
 
       {page === "privacy" && (
         <PageShell
