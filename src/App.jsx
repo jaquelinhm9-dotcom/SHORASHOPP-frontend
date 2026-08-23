@@ -2254,11 +2254,11 @@ function App() {
           back={() => openPage("account")}
         />}
 
-      {page === "settings" && (
-        <PageShell
-        title="Configuración"
-        onBack={() => openPage("account")}
-     >
+{page === "settings" && (
+  <PageShell
+    title="Configuración"
+    onBack={() => openPage("account")}
+  >
     <div className="stack-list">
       <button
         style={styles.menu}
