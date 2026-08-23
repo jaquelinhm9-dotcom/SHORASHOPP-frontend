@@ -82,7 +82,6 @@ const categories = [
 ];
 
 const CART_KEY = "shora_cart";
-const FAVORITES_KEY = "shora_favorites";
 
 function getCart() {
   try {
@@ -105,27 +104,10 @@ function saveCart(cart) {
   );
 }
 
-function getFavorites() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(
-        FAVORITES_KEY
-      ) || "[]"
-    );
-  } catch {
-    return [];
-  }
-}
-
-function saveFavorites(favorites) {
-  localStorage.setItem(
-    FAVORITES_KEY,
-    JSON.stringify(favorites)
-  );
-
-  window.dispatchEvent(
-    new Event("favoritechange")
-  );
+function money(value) {
+  return `$${Number(value || 0).toLocaleString(
+    "es-MX"
+  )} MXN`;
 }
 
 function addToCart(product) {
@@ -139,7 +121,7 @@ function addToCart(product) {
     existing.quantity =
       Number(existing.quantity || 1) + 1;
 
-    saveCart([...cart]);
+    saveCart(cart);
     return;
   }
 
@@ -152,13 +134,7 @@ function addToCart(product) {
   ]);
 }
 
-function money(value) {
-  return `$${Number(value || 0).toLocaleString(
-    "es-MX"
-  )} MXN`;
-}
-
-function Layout({
+function Header({
   cartCount,
   session,
   onAccount,
@@ -168,8 +144,8 @@ function Layout({
     useState(false);
 
   return (
-    <div className="app">
-      <header className="header">
+    <>
+      <header className="main-header">
         <div className="header-left">
           <button
             type="button"
@@ -177,24 +153,27 @@ function Layout({
             onClick={() =>
               setMenuOpen(true)
             }
-            aria-label="Abrir menú"
           >
             ☰
           </button>
 
           <Link
-            className="logo"
             to="/"
+            className="brand"
             onClick={() =>
               setMenuOpen(false)
             }
           >
-            SHORA
-            <span>SHOPP</span>
+            <span className="brand-main">
+              SHORA
+            </span>
+            <span className="brand-second">
+              SHOPP
+            </span>
           </Link>
         </div>
 
-        <nav className="nav">
+        <nav className="main-nav">
           <NavLink to="/" end>
             Inicio
           </NavLink>
@@ -210,19 +189,20 @@ function Layout({
 
         <div className="header-actions">
           <Link
-            className="icon-btn"
             to="/carrito"
-            aria-label="Carrito"
+            className="cart-button"
           >
             🛒
             {cartCount > 0 && (
-              <b>{cartCount}</b>
+              <span className="cart-count">
+                {cartCount}
+              </span>
             )}
           </Link>
 
           <button
             type="button"
-            className="account"
+            className="account-button"
             onClick={onAccount}
           >
             ✨
@@ -243,7 +223,7 @@ function Layout({
               event.stopPropagation()
             }
           >
-            <div className="menu-title">
+            <div className="side-menu-header">
               <strong>
                 SHORASHOPP
               </strong>
@@ -327,108 +307,7 @@ function Layout({
           </aside>
         </div>
       )}
-
-      <main>
-        <Routes>
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
-          <Route
-            path="/catalogo"
-            element={<Catalog />}
-          />
-
-          <Route
-            path="/producto/:id"
-            element={<Product />}
-          />
-
-          <Route
-            path="/carrito"
-            element={<Cart />}
-          />
-
-          <Route
-            path="/cuenta"
-            element={
-              <Account session={session} />
-            }
-          />
-
-          <Route
-            path="/vender"
-            element={
-              <Seller session={session} />
-            }
-          />
-
-          <Route
-            path="/admin"
-            element={
-              <Admin session={session} />
-            }
-          />
-
-          <Route
-            path="/ayuda"
-            element={<Support />}
-          />
-
-          <Route
-            path="/privacidad"
-            element={<Privacy />}
-          />
-
-          <Route
-            path="/sesiones"
-            element={<ActiveSessions />}
-          />
-
-          <Route
-            path="/verificacion"
-            element={
-              <SecurityVerification
-                session={session}
-              />
-            }
-          />
-        </Routes>
-      </main>
-
-      <footer className="footer">
-        <div>
-          <strong>
-            SHORASHOPP
-          </strong>
-
-          <p>
-            Compra y vende de todo en un
-            solo lugar.
-          </p>
-        </div>
-
-        <div>
-          <Link to="/catalogo">
-            Comprar
-          </Link>
-
-          <Link to="/vender">
-            Vender
-          </Link>
-
-          <Link to="/cuenta">
-            Mi cuenta
-          </Link>
-        </div>
-
-        <small>
-          © 2026 SHORASHOPP. Todos los
-          derechos reservados.
-        </small>
-      </footer>
-    </div>
+    </>
   );
 }
 
@@ -436,41 +315,40 @@ function Home() {
   return (
     <>
       <section className="hero">
-        <div>
-          <span className="pill">
+        <div className="hero-content">
+          <span className="hero-label">
             MARKETPLACE MEXICANO
           </span>
 
           <h1>
             Todo lo que buscas.
             <br />
-            <em>
+            <span>
               Todo en SHORASHOPP.
-            </em>
+            </span>
           </h1>
 
           <p>
-            Descubre productos de
-            diferentes vendedores, compra
-            de forma segura y encuentra
-            nuevas ofertas cada día.
+            Compra y vende productos de
+            diferentes categorías en un
+            solo lugar.
           </p>
 
           <Link
-            className="primary"
             to="/catalogo"
+            className="primary-button"
           >
             Explorar productos →
           </Link>
         </div>
 
-        <div className="hero-art">
+        <div className="hero-visual">
           🛍️
         </div>
       </section>
 
       <section className="section">
-        <div className="section-title">
+        <div className="section-heading">
           <div>
             <span>
               DESCUBRE
@@ -486,16 +364,16 @@ function Home() {
           </Link>
         </div>
 
-        <div className="categories">
+        <div className="category-grid">
           {categories
             .slice(0, 6)
             .map((category) => (
               <Link
                 to="/catalogo"
-                className="category"
+                className="category-card"
                 key={category.name}
               >
-                <div>
+                <div className="category-icon">
                   {category.emoji}
                 </div>
 
@@ -508,7 +386,7 @@ function Home() {
       </section>
 
       <section className="section">
-        <div className="section-title">
+        <div className="section-heading">
           <div>
             <span>
               SELECCIÓN SHORA
@@ -532,7 +410,7 @@ function Home() {
         />
       </section>
 
-      <section className="section seller-banner">
+      <section className="seller-banner">
         <div>
           <span>
             VENDE EN SHORASHOPP
@@ -544,19 +422,19 @@ function Home() {
           </h2>
 
           <p>
-            Crea tu tienda y llega a
-            nuevos compradores.
+            Crea tu espacio como vendedor
+            y llega a nuevos compradores.
           </p>
 
           <Link
-            className="primary"
             to="/vender"
+            className="primary-button"
           >
             Quiero vender →
           </Link>
         </div>
 
-        <div>
+        <div className="seller-banner-icon">
           🏪
         </div>
       </section>
@@ -574,12 +452,12 @@ function Catalog() {
   const products = useMemo(() => {
     return demoProducts.filter(
       (product) => {
-        const matchesCategory =
+        const categoryOk =
           category === "Todas" ||
           product.category ===
             category;
 
-        const matchesSearch =
+        const searchOk =
           product.name
             .toLowerCase()
             .includes(
@@ -587,16 +465,16 @@ function Catalog() {
             );
 
         return (
-          matchesCategory &&
-          matchesSearch
+          categoryOk &&
+          searchOk
         );
       }
     );
   }, [search, category]);
 
   return (
-    <section className="section catalog">
-      <div className="catalog-head">
+    <section className="section">
+      <div className="catalog-heading">
         <div>
           <span>
             CATÁLOGO
@@ -608,6 +486,7 @@ function Catalog() {
         </div>
 
         <input
+          type="search"
           value={search}
           onChange={(event) =>
             setSearch(
@@ -633,6 +512,7 @@ function Catalog() {
         ].map((item) => (
           <button
             type="button"
+            key={item}
             className={
               category === item
                 ? "filter active"
@@ -641,7 +521,6 @@ function Catalog() {
             onClick={() =>
               setCategory(item)
             }
-            key={item}
           >
             {item}
           </button>
@@ -653,7 +532,7 @@ function Catalog() {
           products={products}
         />
       ) : (
-        <div className="empty">
+        <div className="empty-box">
           <div>🔎</div>
 
           <h2>
@@ -661,7 +540,7 @@ function Catalog() {
           </h2>
 
           <p>
-            Prueba con otra búsqueda o
+            Prueba otra búsqueda o
             categoría.
           </p>
         </div>
@@ -670,19 +549,21 @@ function Catalog() {
   );
 }
 
-function ProductGrid({ products }) {
+function ProductGrid({
+  products,
+}) {
   const navigate = useNavigate();
 
   return (
-    <div className="grid">
+    <div className="product-grid">
       {products.map((product) => (
         <article
-          className="card"
+          className="product-card"
           key={product.id}
         >
           <button
             type="button"
-            className="product-img"
+            className="product-image"
             onClick={() =>
               navigate(
                 `/producto/${product.id}`
@@ -706,7 +587,7 @@ function ProductGrid({ products }) {
 
           <button
             type="button"
-            className="add"
+            className="add-button"
             onClick={() =>
               addToCart(product)
             }
@@ -729,12 +610,12 @@ function Product() {
     ) || demoProducts[0];
 
   return (
-    <section className="section product-page">
-      <div className="product-big">
+    <section className="section product-detail">
+      <div className="product-detail-image">
         {product.emoji}
       </div>
 
-      <div>
+      <div className="product-detail-info">
         <span>
           {product.category}
         </span>
@@ -748,16 +629,13 @@ function Product() {
         </h2>
 
         <p>
-          Producto publicado en
-          SHORASHOPP. La información,
-          envío y disponibilidad se
-          confirmarán durante el proceso
-          de compra.
+          Producto disponible en
+          SHORASHOPP.
         </p>
 
         <button
           type="button"
-          className="primary"
+          className="primary-button"
           onClick={() =>
             addToCart(product)
           }
@@ -773,68 +651,73 @@ function Cart() {
   const [items, setItems] =
     useState(getCart);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
-    const updateCart = () =>
+    const update = () =>
       setItems(getCart());
 
     window.addEventListener(
       "cartchange",
-      updateCart
+      update
     );
 
-    window.addEventListener(
-      "storage",
-      updateCart
-    );
-
-    return () => {
+    return () =>
       window.removeEventListener(
         "cartchange",
-        updateCart
+        update
       );
-
-      window.removeEventListener(
-        "storage",
-        updateCart
-      );
-    };
   }, []);
 
   const total = items.reduce(
-    (sum, product) =>
+    (sum, item) =>
       sum +
-      Number(product.price) *
-        Number(product.quantity || 1),
+      Number(item.price) *
+        Number(item.quantity || 1),
     0
   );
 
   const removeItem = (index) => {
-    const newCart = items.filter(
-      (_, itemIndex) =>
-        itemIndex !== index
-    );
+    const newCart =
+      items.filter(
+        (_, i) => i !== index
+      );
 
     saveCart(newCart);
     setItems(newCart);
   };
 
-  const clearCart = () => {
-    saveCart([]);
-    setItems([]);
+  const changeQuantity = (
+    index,
+    amount
+  ) => {
+    const newCart = [...items];
+
+    newCart[index].quantity =
+      Number(
+        newCart[index].quantity || 1
+      ) + amount;
+
+    if (
+      newCart[index].quantity <= 0
+    ) {
+      newCart.splice(index, 1);
+    }
+
+    saveCart(newCart);
+    setItems(newCart);
   };
 
   return (
     <section className="section">
-      <span>CARRITO</span>
+      <span>
+        CARRITO
+      </span>
 
       <h1>
         Tu carrito
       </h1>
 
       {items.length === 0 ? (
-        <div className="empty">
+        <div className="empty-box">
           <div>🛒</div>
 
           <h2>
@@ -847,45 +730,71 @@ function Cart() {
           </p>
 
           <Link
-            className="primary"
             to="/catalogo"
+            className="primary-button"
           >
             Ver productos
           </Link>
         </div>
       ) : (
-        <>
-          <div className="cart-items">
+        <div className="cart-layout">
+          <div className="cart-list">
             {items.map(
               (item, index) => (
                 <div
                   className="cart-item"
                   key={`${item.id}-${index}`}
                 >
-                  <span>
+                  <div className="cart-item-icon">
                     {item.emoji}
-                  </span>
+                  </div>
 
-                  <div>
-                    <b>
+                  <div className="cart-item-info">
+                    <h3>
                       {item.name}
-                    </b>
+                    </h3>
 
-                    <p>
+                    <strong>
                       {money(
                         item.price
                       )}
-                    </p>
+                    </strong>
 
-                    <small>
-                      Cantidad:{" "}
-                      {item.quantity ||
-                        1}
-                    </small>
+                    <div className="quantity">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeQuantity(
+                            index,
+                            -1
+                          )
+                        }
+                      >
+                        −
+                      </button>
+
+                      <span>
+                        {item.quantity ||
+                          1}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeQuantity(
+                            index,
+                            1
+                          )
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
 
                   <button
                     type="button"
+                    className="remove-button"
                     onClick={() =>
                       removeItem(
                         index
@@ -904,72 +813,54 @@ function Cart() {
               Resumen
             </h2>
 
-            <p>
-              Productos{" "}
-              <b>
+            <div>
+              <span>
+                Productos
+              </span>
+
+              <strong>
                 {money(total)}
-              </b>
-            </p>
+              </strong>
+            </div>
 
             <hr />
 
-            <h3>
-              Total{" "}
-              <b>
-                {money(total)}
-              </b>
-            </h3>
+            <div>
+              <strong>
+                Total
+              </strong>
 
-            <button
-              type="button"
-              className="primary"
-              onClick={() =>
-                navigate("/checkout")
-              }
+              <strong>
+                {money(total)}
+              </strong>
+            </div>
+
+            <Link
+              to="/checkout"
+              className="primary-button"
             >
               Continuar al pago
-            </button>
-
-            <button
-              type="button"
-              className="filter"
-              onClick={clearCart}
-            >
-              Vaciar carrito
-            </button>
+            </Link>
           </aside>
-        </>
+        </div>
       )}
     </section>
   );
 }
 
 function Checkout() {
-  const [message, setMessage] =
-    useState("");
-
   const items = getCart();
 
   const total = items.reduce(
-    (sum, product) =>
+    (sum, item) =>
       sum +
-      Number(product.price) *
-        Number(product.quantity || 1),
+      Number(item.price) *
+        Number(item.quantity || 1),
     0
   );
 
-  const navigate = useNavigate();
-
-  const finishCheckout = () => {
-    if (!items.length) {
-      navigate("/carrito");
-      return;
-    }
-
-    setMessage(
-      "El pago con Mercado Pago se conectará aquí."
-    );
-  };
+  const [message, setMessage] =
+    useState("");
 
   return (
     <section className="section">
@@ -981,46 +872,52 @@ function Checkout() {
         Confirmar pedido
       </h1>
 
-      <div className="checkout">
+      <div className="checkout-layout">
         <div className="checkout-card">
           <h2>
-            Productos
+            Tus productos
           </h2>
 
-          {items.map(
-            (item, index) => (
-              <div
-                className="checkout-item"
-                key={`${item.id}-${index}`}
-              >
-                <span>
-                  {item.emoji}
-                </span>
+          {items.length === 0 ? (
+            <p>
+              Tu carrito está vacío.
+            </p>
+          ) : (
+            items.map(
+              (item, index) => (
+                <div
+                  className="checkout-item"
+                  key={`${item.id}-${index}`}
+                >
+                  <span>
+                    {item.emoji}
+                  </span>
 
-                <div>
+                  <div>
+                    <strong>
+                      {item.name}
+                    </strong>
+
+                    <small>
+                      Cantidad:{" "}
+                      {item.quantity ||
+                        1}
+                    </small>
+                  </div>
+
                   <b>
-                    {item.name}
-                  </b>
-
-                  <small>
-                    Cantidad:{" "}
-                    {item.quantity ||
-                      1}
-                  </small>
-                </div>
-
-                <strong>
-                  {money(
-                    Number(
-                      item.price
-                    ) *
+                    {money(
                       Number(
-                        item.quantity ||
-                          1
-                      )
-                  )}
-                </strong>
-              </div>
+                        item.price
+                      ) *
+                        Number(
+                          item.quantity ||
+                            1
+                        )
+                    )}
+                  </b>
+                </div>
+              )
             )
           )}
         </div>
@@ -1036,22 +933,23 @@ function Checkout() {
 
           <p>
             El envío será calculado
-            según el vendedor y el
-            destino.
+            según el vendedor y destino.
           </p>
 
           <button
             type="button"
-            className="primary"
-            onClick={
-              finishCheckout
+            className="primary-button"
+            onClick={() =>
+              setMessage(
+                "La conexión con Mercado Pago se configurará aquí."
+              )
             }
           >
             Pagar con Mercado Pago
           </button>
 
           {message && (
-            <div className="empty">
+            <div className="notice">
               {message}
             </div>
           )}
@@ -1064,8 +962,6 @@ function Checkout() {
 function Account({
   session,
 }) {
-  const navigate = useNavigate();
-
   if (!session) {
     return (
       <section className="section">
@@ -1077,7 +973,7 @@ function Account({
           Tu cuenta SHORASHOPP
         </h1>
 
-        <div className="empty">
+        <div className="empty-box">
           <div>✨</div>
 
           <h2>
@@ -1085,27 +981,14 @@ function Account({
           </h2>
 
           <p>
-            Necesitas iniciar sesión
-            para administrar tu cuenta,
+            Inicia sesión para
+            administrar tu cuenta,
             compras y pedidos.
           </p>
-
-          <button
-            type="button"
-            className="primary"
-            onClick={() =>
-              navigate("/")
-            }
-          >
-            Iniciar sesión
-          </button>
         </div>
       </section>
     );
   }
-
-  const email =
-    session.user?.email || "";
 
   return (
     <section className="section">
@@ -1126,24 +1009,9 @@ function Account({
           </h2>
 
           <p>
-            {email}
+            {session.user?.email}
           </p>
         </div>
-
-        <Link
-          className="account-card"
-          to="/privacidad"
-        >
-          <div>🔐</div>
-
-          <h2>
-            Privacidad y seguridad
-          </h2>
-
-          <p>
-            Protege tu cuenta.
-          </p>
-        </Link>
 
         <div className="account-card">
           <div>📦</div>
@@ -1158,8 +1026,23 @@ function Account({
         </div>
 
         <Link
+          to="/privacidad"
           className="account-card"
+        >
+          <div>🔐</div>
+
+          <h2>
+            Privacidad y seguridad
+          </h2>
+
+          <p>
+            Protege tu cuenta.
+          </p>
+        </Link>
+
+        <Link
           to="/vender"
+          className="account-card"
         >
           <div>🏪</div>
 
@@ -1168,7 +1051,7 @@ function Account({
           </h2>
 
           <p>
-            Vende tus productos.
+            Administra tus ventas.
           </p>
         </Link>
 
@@ -1180,7 +1063,7 @@ function Account({
           </h2>
 
           <p>
-            Productos que guardaste.
+            Productos guardados.
           </p>
         </div>
 
@@ -1205,7 +1088,7 @@ function Account({
           </h2>
 
           <p>
-            Invita y participa.
+            Invita a nuevos compradores.
           </p>
         </div>
       </div>
@@ -1216,8 +1099,6 @@ function Account({
 function Seller({
   session,
 }) {
-  const navigate = useNavigate();
-
   return (
     <section className="section">
       <span>
@@ -1225,16 +1106,16 @@ function Seller({
       </span>
 
       <h1>
-        Comienza a vender tus productos
+        Comienza a vender
       </h1>
 
       <p>
-        Publica tus productos y llega a
-        compradores.
+        Publica tus productos y llega
+        a nuevos compradores.
       </p>
 
       <div className="seller-panel">
-        <div className="seller-icon">
+        <div>
           🏪
         </div>
 
@@ -1244,25 +1125,22 @@ function Seller({
 
         <p>
           Las primeras publicaciones de
-          nuevos vendedores pueden quedar
-          sujetas a revisión y aprobación
+          nuevos vendedores pueden
+          requerir revisión y aprobación
           administrativa.
         </p>
 
         {!session ? (
-          <button
-            type="button"
-            className="primary"
-            onClick={() =>
-              navigate("/cuenta")
-            }
+          <Link
+            to="/"
+            className="primary-button"
           >
-            Iniciar sesión para vender
-          </button>
+            Iniciar sesión
+          </Link>
         ) : (
           <button
             type="button"
-            className="primary"
+            className="primary-button"
             onClick={() =>
               alert(
                 "La publicación de productos se conectará aquí."
@@ -1274,26 +1152,25 @@ function Seller({
         )}
       </div>
 
-      <div className="seller-rules">
+      <div className="rules">
         <h2>
           Reglas para vendedores
         </h2>
 
         <p>
           • Los nuevos vendedores pueden
-          necesitar revisión administrativa.
+          necesitar revisión.
         </p>
 
         <p>
           • Después de 2 publicaciones
           aprobadas, la revisión podrá
-          cambiar según las reglas de
-          SHORASHOPP.
+          cambiar.
         </p>
 
         <p>
-          • Si existe una infracción, la
-          revisión puede volver a activarse.
+          • Una infracción puede activar
+          nuevamente la revisión.
         </p>
 
         <p>
@@ -1305,90 +1182,15 @@ function Seller({
   );
 }
 
-function Admin({
-  session,
-}) {
-  return (
-    <section className="section">
-      <span>
-        ADMINISTRACIÓN
-      </span>
-
-      <h1>
-        Panel administrativo
-      </h1>
-
-      {!session ? (
-        <div className="empty">
-          <div>🔐</div>
-
-          <h2>
-            Acceso administrativo
-          </h2>
-
-          <p>
-            Inicia sesión con la cuenta
-            administrativa.
-          </p>
-        </div>
-      ) : (
-        <div className="admin-grid">
-          <div className="category">
-            <div>📦</div>
-            <strong>
-              Productos pendientes
-            </strong>
-          </div>
-
-          <div className="category">
-            <div>👥</div>
-            <strong>
-              Vendedores
-            </strong>
-          </div>
-
-          <div className="category">
-            <div>🛒</div>
-            <strong>
-              Pedidos
-            </strong>
-          </div>
-
-          <div className="category">
-            <div>📊</div>
-            <strong>
-              Actividad administrativa
-            </strong>
-          </div>
-
-          <div className="category">
-            <div>🚚</div>
-            <strong>
-              Envíos
-            </strong>
-          </div>
-
-          <div className="category">
-            <div>💰</div>
-            <strong>
-              Crédito
-            </strong>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
 function Support() {
   return (
     <section className="section">
       <span>
-        AYUDA Y SOPORTE
+        AYUDA
       </span>
 
       <h1>
-        Estamos para ayudarte
+        Ayuda y soporte
       </h1>
 
       <div className="support-grid">
@@ -1400,8 +1202,8 @@ function Support() {
           </h2>
 
           <p>
-            Atención virtual para ayudarte
-            con tus dudas.
+            Atención virtual para
+            ayudarte con tus dudas.
           </p>
         </div>
 
@@ -1409,12 +1211,12 @@ function Support() {
           <div>📦</div>
 
           <h2>
-            Mis pedidos
+            Pedidos
           </h2>
 
           <p>
-            Consulta información de tus
-            compras.
+            Consulta información sobre
+            tus compras.
           </p>
         </div>
 
@@ -1422,12 +1224,12 @@ function Support() {
           <div>📩</div>
 
           <h2>
-            Contactar soporte
+            Soporte
           </h2>
 
           <p>
-            El contacto directo con soporte
-            se conectará aquí.
+            El contacto directo con
+            soporte se conectará aquí.
           </p>
         </div>
       </div>
@@ -1439,7 +1241,7 @@ function Privacy() {
   return (
     <section className="section">
       <span>
-        PRIVACIDAD
+        SEGURIDAD
       </span>
 
       <h1>
@@ -1448,8 +1250,8 @@ function Privacy() {
 
       <div className="settings-list">
         <Link
-          className="settings-row"
           to="/sesiones"
+          className="settings-row"
         >
           <span>📱</span>
 
@@ -1468,8 +1270,8 @@ function Privacy() {
         </Link>
 
         <Link
-          className="settings-row"
           to="/verificacion"
+          className="settings-row"
         >
           <span>🛡️</span>
 
@@ -1486,20 +1288,6 @@ function Privacy() {
 
           <b>›</b>
         </Link>
-
-        <div className="settings-row">
-          <span>🔑</span>
-
-          <div>
-            <strong>
-              Contraseña
-            </strong>
-
-            <small>
-              Administración de contraseña.
-            </small>
-          </div>
-        </div>
       </div>
     </section>
   );
@@ -1530,7 +1318,7 @@ function ActiveSessions() {
           se conectará aquí.
         </p>
 
-        <div className="session-current">
+        <div className="session-status">
           <strong>
             Sesión actual
           </strong>
@@ -1563,13 +1351,12 @@ function SecurityVerification({
         </div>
 
         <h2>
-          Tu cuenta
+          Seguridad de tu cuenta
         </h2>
 
         <p>
-          Aquí podrás revisar las medidas
-          de seguridad de tu cuenta
-          SHORASHOPP.
+          Aquí puedes revisar el estado
+          básico de seguridad de tu cuenta.
         </p>
 
         <div className="security-check">
@@ -1606,12 +1393,12 @@ function SecurityVerification({
 
           <div>
             <strong>
-              Códigos de verificación
+              Código de verificación
             </strong>
 
             <small>
-              Los códigos se envían al
-              correo registrado.
+              Código enviado al correo
+              durante el registro.
             </small>
           </div>
         </div>
@@ -1648,18 +1435,18 @@ function AuthModal({
   const [message, setMessage] =
     useState("");
 
-  const [messageType, setMessageType] =
-    useState("");
+  const [success, setSuccess] =
+    useState(false);
 
   const showMessage = (
     text,
-    type = ""
+    isSuccess = false
   ) => {
     setMessage(text);
-    setMessageType(type);
+    setSuccess(isSuccess);
   };
 
-  const handleSubmit = async (
+  const handleAuth = async (
     event
   ) => {
     event.preventDefault();
@@ -1677,6 +1464,16 @@ function AuthModal({
     if (!password) {
       showMessage(
         "Escribe tu contraseña."
+      );
+      return;
+    }
+
+    if (
+      mode === "register" &&
+      !name.trim()
+    ) {
+      showMessage(
+        "Escribe tu nombre."
       );
       return;
     }
@@ -1731,15 +1528,18 @@ function AuthModal({
 
         showMessage(
           "Te enviamos un código de 6 dígitos a tu correo.",
-          "success"
+          true
         );
       } else {
         showMessage(
           "Tu cuenta fue creada correctamente.",
-          "success"
+          true
         );
 
-        onClose();
+        setTimeout(
+          onClose,
+          700
+        );
       }
     } catch (error) {
       console.error(
@@ -1788,12 +1588,13 @@ function AuthModal({
 
       showMessage(
         "Cuenta verificada correctamente.",
-        "success"
+        true
       );
 
-      setTimeout(() => {
-        onClose();
-      }, 700);
+      setTimeout(
+        onClose,
+        700
+      );
     } catch (error) {
       console.error(
         "Error verificando código:",
@@ -1810,13 +1611,6 @@ function AuthModal({
   };
 
   const resendCode = async () => {
-    const cleanEmail =
-      email.trim().toLowerCase();
-
-    if (!cleanEmail) {
-      return;
-    }
-
     setLoading(true);
     showMessage("");
 
@@ -1826,7 +1620,8 @@ function AuthModal({
       } =
         await supabase.auth.resend({
           type: "signup",
-          email: cleanEmail,
+          email:
+            email.trim().toLowerCase(),
         });
 
       if (error) {
@@ -1835,7 +1630,7 @@ function AuthModal({
 
       showMessage(
         "Enviamos un nuevo código a tu correo.",
-        "success"
+        true
       );
     } catch (error) {
       console.error(
@@ -1852,118 +1647,6 @@ function AuthModal({
     }
   };
 
-  if (waitingForCode) {
-    return (
-      <div className="auth-overlay">
-        <div className="auth-modal">
-          <button
-            type="button"
-            className="close-auth"
-            onClick={onClose}
-          >
-            ×
-          </button>
-
-          <div className="auth-logo">
-            S
-          </div>
-
-          <div className="auth-heading">
-            <span>
-              VERIFICACIÓN
-            </span>
-
-            <h2>
-              Revisa tu correo
-            </h2>
-
-            <p>
-              Enviamos un código de 6
-              dígitos a:
-            </p>
-
-            <strong>
-              {email}
-            </strong>
-          </div>
-
-          <form
-            className="auth-form"
-            onSubmit={verifyCode}
-          >
-            <label>
-              Código de verificación
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={code}
-                onChange={(event) =>
-                  setCode(
-                    event.target.value.replace(
-                      /\D/g,
-                      ""
-                    )
-                  )
-                }
-                placeholder="000000"
-                autoComplete="one-time-code"
-              />
-            </label>
-
-            {message && (
-              <div
-                className={
-                  messageType ===
-                  "success"
-                    ? "auth-message success"
-                    : "auth-message"
-                }
-              >
-                {message}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="primary full"
-              disabled={loading}
-            >
-              {loading
-                ? "Verificando..."
-                : "Verificar código"}
-            </button>
-
-            <button
-              type="button"
-              className="filter"
-              onClick={
-                resendCode
-              }
-              disabled={loading}
-            >
-              Reenviar código
-            </button>
-
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => {
-                setWaitingForCode(
-                  false
-                );
-                setCode("");
-                setMessage("");
-              }}
-            >
-              ← Regresar
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="auth-overlay">
       <div className="auth-modal">
@@ -1979,165 +1662,249 @@ function AuthModal({
           S
         </div>
 
-        <div className="auth-heading">
-          <span>
-            SHORASHOPP
-          </span>
+        {waitingForCode ? (
+          <>
+            <div className="auth-heading">
+              <span>
+                VERIFICACIÓN
+              </span>
 
-          <h2>
-            {mode === "login"
-              ? "Bienvenido de nuevo"
-              : "Crea tu cuenta"}
-          </h2>
+              <h2>
+                Revisa tu correo
+              </h2>
 
-          <p>
-            {mode === "login"
-              ? "Entra para comprar, vender y administrar tu cuenta."
-              : "Compra y vende de todo en un solo lugar."}
-          </p>
-        </div>
+              <p>
+                Enviamos un código de 6
+                dígitos a:
+              </p>
 
-        <div className="auth-tabs">
-          <button
-            type="button"
-            className={
-              mode === "login"
-                ? "active"
-                : ""
-            }
-            onClick={() => {
-              setMode("login");
-              setMessage("");
-            }}
-          >
-            Iniciar sesión
-          </button>
-
-          <button
-            type="button"
-            className={
-              mode === "register"
-                ? "active"
-                : ""
-            }
-            onClick={() => {
-              setMode(
-                "register"
-              );
-              setMessage("");
-            }}
-          >
-            Crear cuenta
-          </button>
-        </div>
-
-        <form
-          className="auth-form"
-          onSubmit={
-            handleSubmit
-          }
-        >
-          {mode === "register" && (
-            <label>
-              Nombre completo
-              <input
-                type="text"
-                value={name}
-                onChange={(event) =>
-                  setName(
-                    event.target.value
-                  )
-                }
-                placeholder="Tu nombre"
-                autoComplete="name"
-              />
-            </label>
-          )}
-
-          <label>
-            Correo electrónico
-            <input
-              type="email"
-              value={email}
-              onChange={(event) =>
-                setEmail(
-                  event.target.value
-                )
-              }
-              placeholder="correo@ejemplo.com"
-              autoComplete="email"
-            />
-          </label>
-
-          <label>
-            Contraseña
-            <input
-              type="password"
-              value={password}
-              onChange={(event) =>
-                setPassword(
-                  event.target.value
-                )
-              }
-              placeholder="Tu contraseña"
-              autoComplete={
-                mode === "login"
-                  ? "current-password"
-                  : "new-password"
-              }
-            />
-          </label>
-
-          {mode === "login" && (
-            <button
-              type="button"
-              className="text-button"
-              onClick={() =>
-                showMessage(
-                  "La recuperación de contraseña se conectará aquí."
-                )
-              }
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          )}
-
-          {message && (
-            <div
-              className={
-                messageType ===
-                "success"
-                  ? "auth-message success"
-                  : "auth-message"
-              }
-            >
-              {message}
+              <strong>
+                {email}
+              </strong>
             </div>
-          )}
 
-          <button
-            type="submit"
-            className="primary full"
-            disabled={loading}
-          >
-            {loading
-              ? "Procesando..."
-              : mode === "login"
-              ? "Iniciar sesión"
-              : "Crear mi cuenta"}
-          </button>
-        </form>
+            <form
+              className="auth-form"
+              onSubmit={
+                verifyCode
+              }
+            >
+              <label>
+                Código de verificación
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={code}
+                  onChange={(event) =>
+                    setCode(
+                      event.target.value.replace(
+                        /\D/g,
+                        ""
+                      )
+                    )
+                  }
+                  placeholder="000000"
+                  autoComplete="one-time-code"
+                />
+              </label>
+
+              {message && (
+                <div
+                  className={
+                    success
+                      ? "auth-message success"
+                      : "auth-message"
+                  }
+                >
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="primary-button full"
+                disabled={loading}
+              >
+                {loading
+                  ? "Verificando..."
+                  : "Verificar código"}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button full"
+                onClick={
+                  resendCode
+                }
+                disabled={loading}
+              >
+                Reenviar código
+              </button>
+
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  setWaitingForCode(
+                    false
+                  );
+                  setCode("");
+                  setMessage("");
+                }}
+              >
+                ← Regresar
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            <div className="auth-heading">
+              <span>
+                SHORASHOPP
+              </span>
+
+              <h2>
+                {mode === "login"
+                  ? "Bienvenido de nuevo"
+                  : "Crea tu cuenta"}
+              </h2>
+
+              <p>
+                {mode === "login"
+                  ? "Entra para comprar, vender y administrar tu cuenta."
+                  : "Compra y vende de todo en un solo lugar."}
+              </p>
+            </div>
+
+            <div className="auth-tabs">
+              <button
+                type="button"
+                className={
+                  mode === "login"
+                    ? "active"
+                    : ""
+                }
+                onClick={() => {
+                  setMode(
+                    "login"
+                  );
+                  setMessage("");
+                }}
+              >
+                Iniciar sesión
+              </button>
+
+              <button
+                type="button"
+                className={
+                  mode ===
+                  "register"
+                    ? "active"
+                    : ""
+                }
+                onClick={() => {
+                  setMode(
+                    "register"
+                  );
+                  setMessage("");
+                }}
+              >
+                Crear cuenta
+              </button>
+            </div>
+
+            <form
+              className="auth-form"
+              onSubmit={
+                handleAuth
+              }
+            >
+              {mode ===
+                "register" && (
+                <label>
+                  Nombre completo
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(event) =>
+                      setName(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Tu nombre"
+                  />
+                </label>
+              )}
+
+              <label>
+                Correo electrónico
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) =>
+                    setEmail(
+                      event.target.value
+                    )
+                  }
+                  placeholder="correo@ejemplo.com"
+                  autoComplete="email"
+                />
+              </label>
+
+              <label>
+                Contraseña
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) =>
+                    setPassword(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Tu contraseña"
+                  autoComplete={
+                    mode ===
+                    "login"
+                      ? "current-password"
+                      : "new-password"
+                  }
+                />
+              </label>
+
+              {message && (
+                <div
+                  className={
+                    success
+                      ? "auth-message success"
+                      : "auth-message"
+                  }
+                >
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="primary-button full"
+                disabled={loading}
+              >
+                {loading
+                  ? "Procesando..."
+                  : mode ===
+                    "login"
+                  ? "Iniciar sesión"
+                  : "Crear mi cuenta"}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
 function App() {
-  const [cartCount, setCartCount] =
-    useState(
-      () => getCart().length
-    );
-
   const [session, setSession] =
     useState(null);
 
@@ -2147,53 +1914,27 @@ function App() {
   const [authMode, setAuthMode] =
     useState("login");
 
+  const [cartCount, setCartCount] =
+    useState(() =>
+      getCart().reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.quantity || 1
+          ),
+        0
+      )
+    );
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const updateCartCount =
-      () => {
-        setCartCount(
-          getCart().reduce(
-            (total, item) =>
-              total +
-              Number(
-                item.quantity || 1
-              ),
-            0
-          )
-        );
-      };
-
-    window.addEventListener(
-      "cartchange",
-      updateCartCount
-    );
-
-    window.addEventListener(
-      "storage",
-      updateCartCount
-    );
-
-    return () => {
-      window.removeEventListener(
-        "cartchange",
-        updateCartCount
-      );
-
-      window.removeEventListener(
-        "storage",
-        updateCartCount
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
+    let active = true;
 
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (mounted) {
+        if (active) {
           setSession(
             data?.session || null
           );
@@ -2207,7 +1948,7 @@ function App() {
       });
 
     const {
-      data: listener,
+      data: authListener,
     } =
       supabase.auth.onAuthStateChange(
         (_event, newSession) => {
@@ -2218,65 +1959,206 @@ function App() {
       );
 
     return () => {
-      mounted = false;
+      active = false;
 
-      listener?.subscription?.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
-  const openAccount =
-    () => {
-      if (session) {
-        navigate("/cuenta");
-      } else {
-        setAuthMode("login");
-        setAuthOpen(true);
-      }
+  useEffect(() => {
+    const updateCart = () => {
+      const cart = getCart();
+
+      setCartCount(
+        cart.reduce(
+          (total, item) =>
+            total +
+            Number(
+              item.quantity || 1
+            ),
+          0
+        )
+      );
     };
 
-  const logout =
-    async () => {
-      try {
-        await supabase.auth.signOut();
-        setSession(null);
-        navigate("/");
-      } catch (error) {
-        console.error(
-          "Error cerrando sesión:",
-          error
-        );
-      }
+    window.addEventListener(
+      "cartchange",
+      updateCart
+    );
+
+    window.addEventListener(
+      "storage",
+      updateCart
+    );
+
+    return () => {
+      window.removeEventListener(
+        "cartchange",
+        updateCart
+      );
+
+      window.removeEventListener(
+        "storage",
+        updateCart
+      );
     };
+  }, []);
+
+  const accountAction = () => {
+    if (session) {
+      navigate("/cuenta");
+    } else {
+      setAuthMode("login");
+      setAuthOpen(true);
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    navigate("/");
+  };
 
   return (
-    <>
-      <Layout
+    <div className="app">
+      <Header
         cartCount={cartCount}
         session={session}
         onAccount={
-          openAccount
+          accountAction
         }
         onLogout={logout}
       />
 
       <Routes>
         <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/catalogo"
+          element={<Catalog />}
+        />
+
+        <Route
+          path="/producto/:id"
+          element={<Product />}
+        />
+
+        <Route
+          path="/carrito"
+          element={<Cart />}
+        />
+
+        <Route
           path="/checkout"
           element={<Checkout />}
         />
+
+        <Route
+          path="/cuenta"
+          element={
+            <Account
+              session={session}
+            />
+          }
+        />
+
+        <Route
+          path="/vender"
+          element={
+            <Seller
+              session={session}
+            />
+          }
+        />
+
+        <Route
+          path="/ayuda"
+          element={<Support />}
+        />
+
+        <Route
+          path="/privacidad"
+          element={<Privacy />}
+        />
+
+        <Route
+          path="/sesiones"
+          element={
+            <ActiveSessions />
+          }
+        />
+
+        <Route
+          path="/verificacion"
+          element={
+            <SecurityVerification
+              session={session}
+            />
+          }
+        />
+
+        <Route
+          path="*"
+          element={<Home />}
+        />
       </Routes>
+
+      <footer className="footer">
+        <div>
+          <strong>
+            SHORASHOPP
+          </strong>
+
+          <p>
+            Compra y vende de todo en
+            un solo lugar.
+          </p>
+        </div>
+
+        <div className="footer-links">
+          <Link to="/catalogo">
+            Comprar
+          </Link>
+
+          <Link to="/vender">
+            Vender
+          </Link>
+
+          <Link to="/cuenta">
+            Mi cuenta
+          </Link>
+
+          <Link to="/ayuda">
+            Ayuda
+          </Link>
+        </div>
+
+        <small>
+          © 2026 SHORASHOPP. Todos los
+          derechos reservados.
+        </small>
+      </footer>
+
+      <Link
+        to="/ayuda"
+        className="support-floating"
+        aria-label="Ayuda"
+      >
+        💬
+      </Link>
 
       {authOpen && (
         <AuthModal
-          initialMode={
-            authMode
-          }
+          initialMode={authMode}
           onClose={() =>
             setAuthOpen(false)
           }
         />
       )}
-    </>
+    </div>
   );
 }
 
