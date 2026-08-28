@@ -14,42 +14,52 @@ import { supabase } from "./supabaseClient";
 const CART_KEY = "vanidaxi_cart";
 const FAVORITES_KEY = "vanidaxi_favorites";
 
-/* ================= CATEGORÍAS ================= */
+/* =========================================================
+   CATEGORÍAS
+   ========================================================= */
 
 const categories = [
   {
     name: "Ropa y Moda",
-    emoji: "👗",
+    image:
+      "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=500&q=88",
     color: "pink",
   },
   {
     name: "Tecnología",
-    emoji: "📱",
+    image:
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=500&q=88",
     color: "purple",
   },
   {
     name: "Hogar y Vida",
-    emoji: "🏡",
+    image:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=88",
     color: "rose",
   },
   {
     name: "Belleza y Salud",
-    emoji: "💄",
+    image:
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=500&q=88",
     color: "magenta",
   },
   {
     name: "Accesorios",
-    emoji: "👜",
+    image:
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=88",
     color: "violet",
   },
   {
     name: "Juguetes y Más",
-    emoji: "🧸",
+    image:
+      "https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=500&q=88",
     color: "fuchsia",
   },
 ];
 
-/* ================= PRODUCTOS ================= */
+/* =========================================================
+   PRODUCTOS
+   ========================================================= */
 
 const products = [
   {
@@ -138,7 +148,9 @@ const products = [
   },
 ];
 
-/* ================= CARRITO ================= */
+/* =========================================================
+   CARRITO
+   ========================================================= */
 
 function getCart() {
   try {
@@ -153,7 +165,10 @@ function getCart() {
 }
 
 function saveCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  localStorage.setItem(
+    CART_KEY,
+    JSON.stringify(cart)
+  );
 
   window.dispatchEvent(
     new CustomEvent("vanidaxi-cart-change")
@@ -187,7 +202,8 @@ function addProductToCart(product) {
   const cart = getCart();
 
   const existing = cart.find(
-    (item) => Number(item.id) === Number(product.id)
+    (item) =>
+      Number(item.id) === Number(product.id)
   );
 
   if (existing) {
@@ -205,17 +221,23 @@ function addProductToCart(product) {
 
 function removeProductFromCart(productId) {
   const cart = getCart().filter(
-    (item) => Number(item.id) !== Number(productId)
+    (item) =>
+      Number(item.id) !== Number(productId)
   );
 
   saveCart(cart);
 }
 
-function updateCartQuantity(productId, quantity) {
+function updateCartQuantity(
+  productId,
+  quantity
+) {
   const cart = getCart();
 
   const item = cart.find(
-    (entry) => Number(entry.id) === Number(productId)
+    (entry) =>
+      Number(entry.id) ===
+      Number(productId)
   );
 
   if (!item) return;
@@ -229,10 +251,14 @@ function updateCartQuantity(productId, quantity) {
 }
 
 function formatPrice(value) {
-  return `$${Number(value).toLocaleString("es-MX")}.00`;
+  return `$${Number(value).toLocaleString(
+    "es-MX"
+  )}.00`;
 }
 
-/* ================= ICONOS ================= */
+/* =========================================================
+   ICONOS
+   ========================================================= */
 
 function Icon({
   name,
@@ -265,7 +291,11 @@ function Icon({
     case "search":
       return (
         <svg {...props}>
-          <circle cx="10.8" cy="10.8" r="6.2" />
+          <circle
+            cx="10.8"
+            cy="10.8"
+            r="6.2"
+          />
           <path d="m15.5 15.5 5 5" />
         </svg>
       );
@@ -282,8 +312,16 @@ function Icon({
       return (
         <svg {...props}>
           <path d="M3.5 5h2l2 10h10l3-7H6.2" />
-          <circle cx="9.3" cy="19" r="1.4" />
-          <circle cx="17.2" cy="19" r="1.4" />
+          <circle
+            cx="9.3"
+            cy="19"
+            r="1.4"
+          />
+          <circle
+            cx="17.2"
+            cy="19"
+            r="1.4"
+          />
         </svg>
       );
 
@@ -300,7 +338,11 @@ function Icon({
     case "user":
       return (
         <svg {...props}>
-          <circle cx="12" cy="8.1" r="3.5" />
+          <circle
+            cx="12"
+            cy="8.1"
+            r="3.5"
+          />
           <path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6" />
         </svg>
       );
@@ -315,10 +357,34 @@ function Icon({
     case "grid":
       return (
         <svg {...props}>
-          <rect x="4" y="4" width="6" height="6" rx="1" />
-          <rect x="14" y="4" width="6" height="6" rx="1" />
-          <rect x="4" y="14" width="6" height="6" rx="1" />
-          <rect x="14" y="14" width="6" height="6" rx="1" />
+          <rect
+            x="4"
+            y="4"
+            width="6"
+            height="6"
+            rx="1"
+          />
+          <rect
+            x="14"
+            y="4"
+            width="6"
+            height="6"
+            rx="1"
+          />
+          <rect
+            x="4"
+            y="14"
+            width="6"
+            height="6"
+            rx="1"
+          />
+          <rect
+            x="14"
+            y="14"
+            width="6"
+            height="6"
+            rx="1"
+          />
         </svg>
       );
 
@@ -335,15 +401,27 @@ function Icon({
         <svg {...props}>
           <path d="M3 6h11v10H3z" />
           <path d="M14 10h4l3 3v3h-7" />
-          <circle cx="7" cy="18" r="1.5" />
-          <circle cx="18" cy="18" r="1.5" />
+          <circle
+            cx="7"
+            cy="18"
+            r="1.5"
+          />
+          <circle
+            cx="18"
+            cy="18"
+            r="1.5"
+          />
         </svg>
       );
 
     case "badge":
       return (
         <svg {...props}>
-          <circle cx="12" cy="10" r="5.5" />
+          <circle
+            cx="12"
+            cy="10"
+            r="5.5"
+          />
           <path d="m8.5 14.5-1 6 4.5-2.5 4.5 2.5-1-6" />
           <path d="m10 10 1.5 1.5L14.5 8.5" />
         </svg>
@@ -380,7 +458,9 @@ function Icon({
   }
 }
 
-/* ================= HEADER ================= */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 function Header({
   cartCount,
@@ -391,7 +471,9 @@ function Header({
   return (
     <header
       className={`vd-header ${
-        hidden ? "vd-header-hidden" : ""
+        hidden
+          ? "vd-header-hidden"
+          : ""
       }`}
     >
       <button
@@ -400,7 +482,11 @@ function Header({
         onClick={onOpenMenu}
         aria-label="Abrir menú"
       >
-        <Icon name="menu" size={25} stroke={1.9} />
+        <Icon
+          name="menu"
+          size={25}
+          stroke={1.9}
+        />
       </button>
 
       <Link
@@ -419,7 +505,11 @@ function Header({
           onClick={onAccount}
           aria-label="Notificaciones"
         >
-          <Icon name="bell" size={23} />
+          <Icon
+            name="bell"
+            size={23}
+          />
+
           <i>3</i>
         </button>
 
@@ -428,7 +518,11 @@ function Header({
           className="vd-header-icon"
           aria-label="Carrito"
         >
-          <Icon name="cart" size={24} />
+          <Icon
+            name="cart"
+            size={24}
+          />
+
           <i>{cartCount}</i>
         </Link>
       </div>
@@ -436,9 +530,14 @@ function Header({
   );
 }
 
-/* ================= BUSCADOR ================= */
+/* =========================================================
+   BUSCADOR
+   ========================================================= */
 
-function SearchBox({ value, onChange }) {
+function SearchBox({
+  value,
+  onChange,
+}) {
   return (
     <div className="vd-search-box">
       <Icon
@@ -456,7 +555,10 @@ function SearchBox({ value, onChange }) {
         aria-label="Buscar productos"
       />
 
-      <button type="button" aria-label="Buscar">
+      <button
+        type="button"
+        aria-label="Buscar"
+      >
         <Icon
           name="search"
           size={20}
@@ -467,7 +569,9 @@ function SearchBox({ value, onChange }) {
   );
 }
 
-/* ================= TARJETAS PRINCIPALES ================= */
+/* =========================================================
+   TARJETAS PRINCIPALES
+   ========================================================= */
 
 function MainPromoCards({
   onSell,
@@ -481,7 +585,10 @@ function MainPromoCards({
         onClick={onSell}
       >
         <span className="vd-main-icon">
-          <Icon name="store" size={27} />
+          <Icon
+            name="store"
+            size={27}
+          />
         </span>
 
         <span className="vd-main-copy">
@@ -499,7 +606,11 @@ function MainPromoCards({
         </span>
 
         <span className="vd-card-arrow">
-          <Icon name="arrow" size={13} stroke={2} />
+          <Icon
+            name="arrow"
+            size={13}
+            stroke={2}
+          />
         </span>
       </button>
 
@@ -509,11 +620,16 @@ function MainPromoCards({
         onClick={onAccount}
       >
         <span className="vd-main-icon vd-account-icon-main">
-          <Icon name="user" size={27} />
+          <Icon
+            name="user"
+            size={27}
+          />
         </span>
 
         <span className="vd-main-copy">
-          <strong>Mi cuenta</strong>
+          <strong>
+            Mi cuenta
+          </strong>
 
           <small>
             Inicia sesión o regístrate
@@ -523,14 +639,20 @@ function MainPromoCards({
         </span>
 
         <span className="vd-card-arrow">
-          <Icon name="arrow" size={13} stroke={2} />
+          <Icon
+            name="arrow"
+            size={13}
+            stroke={2}
+          />
         </span>
       </button>
     </section>
   );
 }
 
-/* ================= CATEGORÍAS ================= */
+/* =========================================================
+   CATEGORÍAS — IMÁGENES REALISTAS
+   ========================================================= */
 
 function CategoriesSection() {
   return (
@@ -556,12 +678,18 @@ function CategoriesSection() {
             <div
               className={`vd-category-icon vd-category-${category.color}`}
             >
-              <span className="vd-category-emoji">
-                {category.emoji}
-              </span>
+              <img
+                src={category.image}
+                alt={category.name}
+                loading="lazy"
+              />
+
+              <span className="vd-category-overlay" />
             </div>
 
-            <span>{category.name}</span>
+            <span className="vd-category-label">
+              {category.name}
+            </span>
           </Link>
         ))}
       </div>
@@ -569,7 +697,9 @@ function CategoriesSection() {
   );
 }
 
-/* ================= OFERTAS ================= */
+/* =========================================================
+   BANNER DE OFERTAS
+   ========================================================= */
 
 function OfferBanner() {
   return (
@@ -636,16 +766,19 @@ function OfferBanner() {
   );
 }
 
-/* ================= PRODUCTOS ================= */
+/* =========================================================
+   TARJETA DE PRODUCTO
+   ========================================================= */
 
 function ProductCard({
   product,
   favorites,
   onToggleFavorite,
 }) {
-  const favorite = favorites.includes(
-    Number(product.id)
-  );
+  const favorite =
+    favorites.includes(
+      Number(product.id)
+    );
 
   return (
     <article className="vd-product-card">
@@ -668,7 +801,9 @@ function ProductCard({
               : ""
           }`}
           onClick={() =>
-            onToggleFavorite(Number(product.id))
+            onToggleFavorite(
+              Number(product.id)
+            )
           }
           aria-label={
             favorite
@@ -691,6 +826,7 @@ function ProductCard({
         <img
           src={product.image}
           alt={product.name}
+          loading="lazy"
         />
       </Link>
 
@@ -699,12 +835,16 @@ function ProductCard({
 
         <div className="vd-price">
           <strong>
-            {formatPrice(product.price)}
+            {formatPrice(
+              product.price
+            )}
           </strong>
 
           {product.oldPrice && (
             <del>
-              {formatPrice(product.oldPrice)}
+              {formatPrice(
+                product.oldPrice
+              )}
             </del>
           )}
         </div>
@@ -730,7 +870,9 @@ function ProductCard({
   );
 }
 
-/* ================= BENEFICIOS ================= */
+/* =========================================================
+   BENEFICIOS
+   ========================================================= */
 
 function Benefits() {
   return (
@@ -744,7 +886,9 @@ function Benefits() {
           />
         </span>
 
-        <strong>Compra segura</strong>
+        <strong>
+          Compra segura
+        </strong>
 
         <small>
           Protegemos tus
@@ -762,7 +906,9 @@ function Benefits() {
           />
         </span>
 
-        <strong>Envíos rápidos</strong>
+        <strong>
+          Envíos rápidos
+        </strong>
 
         <small>
           Recibe tus productos
@@ -780,7 +926,9 @@ function Benefits() {
           />
         </span>
 
-        <strong>Vendedores</strong>
+        <strong>
+          Vendedores
+        </strong>
 
         <small>
           Más confianza
@@ -798,7 +946,9 @@ function Benefits() {
           />
         </span>
 
-        <strong>Soporte 24/7</strong>
+        <strong>
+          Soporte 24/7
+        </strong>
 
         <small>
           Estamos aquí
@@ -810,7 +960,9 @@ function Benefits() {
   );
 }
 
-/* ================= INICIO ================= */
+/* =========================================================
+   INICIO
+   ========================================================= */
 
 function Home({
   onAccount,
@@ -818,22 +970,29 @@ function Home({
   favorites,
   onToggleFavorite,
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
-  const visibleProducts = useMemo(() => {
-    if (!search.trim()) return products;
+  const visibleProducts =
+    useMemo(() => {
+      if (!search.trim()) {
+        return products;
+      }
 
-    return products.filter((product) =>
-      [
-        product.name,
-        product.category,
-        product.description,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
-  }, [search]);
+      return products.filter(
+        (product) =>
+          [
+            product.name,
+            product.category,
+            product.description,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(
+              search.toLowerCase()
+            )
+      );
+    }, [search]);
 
   return (
     <main className="vd-home">
@@ -868,24 +1027,29 @@ function Home({
         </div>
 
         <div className="vd-product-grid">
-          {visibleProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              favorites={favorites}
-              onToggleFavorite={
-                onToggleFavorite
-              }
-            />
-          ))}
+          {visibleProducts.map(
+            (product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                favorites={favorites}
+                onToggleFavorite={
+                  onToggleFavorite
+                }
+              />
+            )
+          )}
         </div>
 
-        {visibleProducts.length === 0 && (
+        {visibleProducts.length ===
+          0 && (
           <div className="vd-no-results">
             <span>🔎</span>
+
             <strong>
               No encontramos productos
             </strong>
+
             <small>
               Prueba con otra búsqueda.
             </small>
@@ -900,22 +1064,30 @@ function Home({
   );
 }
 
-/* ================= CATÁLOGO ================= */
+/* =========================================================
+   CATÁLOGO
+   ========================================================= */
 
 function Catalog({
   favorites,
   onToggleFavorite,
 }) {
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] =
-    useState("Todos");
+  const [search, setSearch] =
+    useState("");
 
-  const location = useLocation();
+  const [
+    activeCategory,
+    setActiveCategory,
+  ] = useState("Todos");
+
+  const location =
+    useLocation();
 
   useEffect(() => {
-    const params = new URLSearchParams(
-      location.search
-    );
+    const params =
+      new URLSearchParams(
+        location.search
+      );
 
     const category =
       params.get("categoria");
@@ -925,41 +1097,61 @@ function Catalog({
     }
   }, [location.search]);
 
-  const filtered = useMemo(() => {
-    return products.filter((product) => {
-      const matchesCategory =
-        activeCategory === "Todos" ||
-        product.category === activeCategory;
+  const filtered =
+    useMemo(() => {
+      return products.filter(
+        (product) => {
+          const matchesCategory =
+            activeCategory ===
+              "Todos" ||
+            product.category ===
+              activeCategory;
 
-      const matchesSearch =
-        !search.trim() ||
-        [
-          product.name,
-          product.category,
-          product.description,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(search.toLowerCase());
+          const matchesSearch =
+            !search.trim() ||
+            [
+              product.name,
+              product.category,
+              product.description,
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              );
 
-      return matchesCategory && matchesSearch;
-    });
-  }, [search, activeCategory]);
+          return (
+            matchesCategory &&
+            matchesSearch
+          );
+        }
+      );
+    }, [
+      search,
+      activeCategory,
+    ]);
 
   return (
     <main className="vd-page">
       <div className="vd-page-title">
         <p>EXPLORA</p>
-        <h1>Todos los productos</h1>
+        <h1>
+          Todos los productos
+        </h1>
       </div>
 
       <div className="vd-catalog-search">
-        <Icon name="search" size={20} />
+        <Icon
+          name="search"
+          size={20}
+        />
 
         <input
           value={search}
           onChange={(event) =>
-            setSearch(event.target.value)
+            setSearch(
+              event.target.value
+            )
           }
           placeholder="Buscar productos..."
         />
@@ -969,19 +1161,23 @@ function Catalog({
         {[
           "Todos",
           ...categories.map(
-            (category) => category.name
+            (category) =>
+              category.name
           ),
         ].map((category) => (
           <button
             key={category}
             type="button"
             className={
-              activeCategory === category
+              activeCategory ===
+              category
                 ? "active"
                 : ""
             }
             onClick={() =>
-              setActiveCategory(category)
+              setActiveCategory(
+                category
+              )
             }
           >
             {category}
@@ -994,32 +1190,38 @@ function Catalog({
           <span>🔎</span>
 
           <strong>
-            No hay productos en esta categoría
+            No hay productos en esta
+            categoría
           </strong>
 
           <small>
-            Prueba otra categoría o búsqueda.
+            Prueba otra categoría o
+            búsqueda.
           </small>
         </div>
       ) : (
         <div className="vd-product-grid vd-catalog-grid">
-          {filtered.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              favorites={favorites}
-              onToggleFavorite={
-                onToggleFavorite
-              }
-            />
-          ))}
+          {filtered.map(
+            (product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                favorites={favorites}
+                onToggleFavorite={
+                  onToggleFavorite
+                }
+              />
+            )
+          )}
         </div>
       )}
     </main>
   );
 }
 
-/* ================= PRODUCTO ================= */
+/* =========================================================
+   PÁGINA DEL PRODUCTO
+   ========================================================= */
 
 function ProductPage({
   onToggleFavorite,
@@ -1030,12 +1232,14 @@ function ProductPage({
   const product =
     products.find(
       (item) =>
-        Number(item.id) === Number(id)
+        Number(item.id) ===
+        Number(id)
     ) || products[0];
 
-  const favorite = favorites.includes(
-    Number(product.id)
-  );
+  const favorite =
+    favorites.includes(
+      Number(product.id)
+    );
 
   return (
     <main className="vd-page">
@@ -1055,7 +1259,8 @@ function ProductPage({
 
           <span
             className={`vd-detail-badge ${
-              product.badgeType === "new"
+              product.badgeType ===
+              "new"
                 ? "vd-new"
                 : ""
             }`}
@@ -1065,7 +1270,9 @@ function ProductPage({
         </div>
 
         <div className="vd-detail-info">
-          <small>{product.category}</small>
+          <small>
+            {product.category}
+          </small>
 
           <h1>{product.name}</h1>
 
@@ -1077,24 +1284,32 @@ function ProductPage({
 
           <div className="vd-detail-price">
             <strong>
-              {formatPrice(product.price)}
+              {formatPrice(
+                product.price
+              )}
             </strong>
 
             {product.oldPrice && (
               <del>
-                {formatPrice(product.oldPrice)}
+                {formatPrice(
+                  product.oldPrice
+                )}
               </del>
             )}
           </div>
 
-          <p>{product.description}</p>
+          <p>
+            {product.description}
+          </p>
 
           <div className="vd-detail-actions">
             <button
               type="button"
               className="vd-gradient-button"
               onClick={() =>
-                addProductToCart(product)
+                addProductToCart(
+                  product
+                )
               }
             >
               Agregar al carrito
@@ -1103,7 +1318,9 @@ function ProductPage({
             <button
               type="button"
               className={`vd-detail-favorite ${
-                favorite ? "active" : ""
+                favorite
+                  ? "active"
+                  : ""
               }`}
               onClick={() =>
                 onToggleFavorite(
@@ -1120,7 +1337,9 @@ function ProductPage({
           </div>
 
           <div className="vd-specifications">
-            <h2>Características</h2>
+            <h2>
+              Características
+            </h2>
 
             {product.specifications.map(
               (specification) => (
@@ -1129,6 +1348,7 @@ function ProductPage({
                   className="vd-spec-row"
                 >
                   <span>✓</span>
+
                   {specification}
                 </div>
               )
@@ -1140,14 +1360,16 @@ function ProductPage({
   );
 }
 
-/* ================= CARRITO ================= */
+/* =========================================================
+   CARRITO
+   ========================================================= */
 
 function Cart() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [items, setItems] = useState(
-    getCart
-  );
+  const [items, setItems] =
+    useState(getCart);
 
   useEffect(() => {
     const update = () => {
@@ -1166,13 +1388,16 @@ function Cart() {
       );
   }, []);
 
-  const total = items.reduce(
-    (sum, item) =>
-      sum +
-      Number(item.price) *
-        Number(item.quantity || 1),
-    0
-  );
+  const total =
+    items.reduce(
+      (sum, item) =>
+        sum +
+        Number(item.price) *
+          Number(
+            item.quantity || 1
+          ),
+      0
+    );
 
   return (
     <main className="vd-page">
@@ -1184,7 +1409,10 @@ function Cart() {
       {items.length === 0 ? (
         <div className="vd-empty">
           <div className="vd-empty-icon">
-            <Icon name="cart" size={44} />
+            <Icon
+              name="cart"
+              size={44}
+            />
           </div>
 
           <h2>
@@ -1192,7 +1420,8 @@ function Cart() {
           </h2>
 
           <p>
-            Agrega productos y aparecerán aquí.
+            Agrega productos y
+            aparecerán aquí.
           </p>
 
           <Link
@@ -1226,7 +1455,9 @@ function Cart() {
                   </strong>
 
                   <span className="vd-cart-price">
-                    {formatPrice(item.price)}
+                    {formatPrice(
+                      item.price
+                    )}
                   </span>
 
                   <div className="vd-cart-actions">
@@ -1250,7 +1481,8 @@ function Cart() {
                       </button>
 
                       <span>
-                        {item.quantity || 1}
+                        {item.quantity ||
+                          1}
                       </span>
 
                       <button
@@ -1321,7 +1553,9 @@ function Cart() {
   );
 }
 
-/* ================= CUENTA ================= */
+/* =========================================================
+   CUENTA
+   ========================================================= */
 
 function AccountPage({
   user,
@@ -1332,7 +1566,10 @@ function AccountPage({
     <main className="vd-page">
       <div className="vd-account-page">
         <div className="vd-account-icon">
-          <Icon name="user" size={42} />
+          <Icon
+            name="user"
+            size={42}
+          />
         </div>
 
         <p>MI CUENTA</p>
@@ -1346,7 +1583,9 @@ function AccountPage({
             <span>
               Sesión iniciada como
               <br />
-              <strong>{user.email}</strong>
+              <strong>
+                {user.email}
+              </strong>
             </span>
 
             <button
@@ -1360,8 +1599,8 @@ function AccountPage({
         ) : (
           <>
             <span>
-              Inicia sesión o regístrate para
-              continuar.
+              Inicia sesión o regístrate
+              para continuar.
             </span>
 
             <button
@@ -1378,7 +1617,9 @@ function AccountPage({
   );
 }
 
-/* ================= VENDEDOR ================= */
+/* =========================================================
+   VENDEDOR
+   ========================================================= */
 
 function SellerPage({
   onOpenAuth,
@@ -1388,18 +1629,22 @@ function SellerPage({
     <main className="vd-page">
       <div className="vd-seller-page">
         <div className="vd-account-icon">
-          <Icon name="store" size={42} />
+          <Icon
+            name="store"
+            size={42}
+          />
         </div>
 
         <p>VENDE EN VANIDAXI</p>
 
         <h1>
-          Comienza a vender tus productos
+          Comienza a vender tus
+          productos
         </h1>
 
         <span>
-          Publica tus productos y llega a
-          nuevos compradores.
+          Publica tus productos y llega
+          a nuevos compradores.
         </span>
 
         <button
@@ -1423,7 +1668,9 @@ function SellerPage({
   );
 }
 
-/* ================= FAVORITOS ================= */
+/* =========================================================
+   FAVORITOS
+   ========================================================= */
 
 function FavoritesPage({
   favorites,
@@ -1431,7 +1678,9 @@ function FavoritesPage({
 }) {
   const favoriteProducts =
     products.filter((product) =>
-      favorites.includes(Number(product.id))
+      favorites.includes(
+        Number(product.id)
+      )
     );
 
   return (
@@ -1441,10 +1690,14 @@ function FavoritesPage({
         <h1>Favoritos</h1>
       </div>
 
-      {favoriteProducts.length === 0 ? (
+      {favoriteProducts.length ===
+      0 ? (
         <div className="vd-empty">
           <div className="vd-empty-icon">
-            <Icon name="heart" size={44} />
+            <Icon
+              name="heart"
+              size={44}
+            />
           </div>
 
           <h2>
@@ -1452,8 +1705,8 @@ function FavoritesPage({
           </h2>
 
           <p>
-            Toca el corazón de un producto para
-            guardarlo.
+            Toca el corazón de un
+            producto para guardarlo.
           </p>
 
           <Link
@@ -1483,7 +1736,9 @@ function FavoritesPage({
   );
 }
 
-/* ================= NAVEGACIÓN INFERIOR ================= */
+/* =========================================================
+   NAVEGACIÓN INFERIOR
+   ========================================================= */
 
 function BottomNavigation({
   onAccount,
@@ -1499,10 +1754,8 @@ function BottomNavigation({
             : "vd-nav-item"
         }
       >
-        <span>
-          <span className="vd-home-symbol">
-            ⌂
-          </span>
+        <span className="vd-home-symbol">
+          ⌂
         </span>
 
         <small>Inicio</small>
@@ -1575,7 +1828,9 @@ function BottomNavigation({
   );
 }
 
-/* ================= MENÚ ================= */
+/* =========================================================
+   MENÚ LATERAL
+   ========================================================= */
 
 function MenuOverlay({
   onClose,
@@ -1584,7 +1839,8 @@ function MenuOverlay({
   user,
   onSignOut,
 }) {
-  const location = useLocation();
+  const location =
+    useLocation();
 
   return (
     <div
@@ -1619,14 +1875,18 @@ function MenuOverlay({
             onClick={onClose}
             aria-label="Cerrar menú"
           >
-            <Icon name="close" size={22} />
+            <Icon
+              name="close"
+              size={22}
+            />
           </button>
         </div>
 
         <Link
           to="/"
           className={
-            location.pathname === "/"
+            location.pathname ===
+            "/"
               ? "vd-menu-link vd-menu-link-active"
               : "vd-menu-link"
           }
@@ -1641,7 +1901,10 @@ function MenuOverlay({
           className="vd-menu-link"
           onClick={onClose}
         >
-          <Icon name="grid" size={19} />
+          <Icon
+            name="grid"
+            size={19}
+          />
           Categorías
         </Link>
 
@@ -1650,7 +1913,10 @@ function MenuOverlay({
           className="vd-menu-link"
           onClick={onClose}
         >
-          <Icon name="cart" size={19} />
+          <Icon
+            name="cart"
+            size={19}
+          />
           Carrito
         </Link>
 
@@ -1659,7 +1925,10 @@ function MenuOverlay({
           className="vd-menu-link"
           onClick={onClose}
         >
-          <Icon name="heart" size={19} />
+          <Icon
+            name="heart"
+            size={19}
+          />
           Favoritos
         </Link>
 
@@ -1671,7 +1940,10 @@ function MenuOverlay({
             onAccount();
           }}
         >
-          <Icon name="user" size={19} />
+          <Icon
+            name="user"
+            size={19}
+          />
           Mi cuenta
         </button>
 
@@ -1683,7 +1955,10 @@ function MenuOverlay({
             onSell();
           }}
         >
-          <Icon name="store" size={19} />
+          <Icon
+            name="store"
+            size={19}
+          />
           Vender
         </button>
 
@@ -1701,9 +1976,13 @@ function MenuOverlay({
   );
 }
 
-/* ================= AUTENTICACIÓN ================= */
+/* =========================================================
+   AUTENTICACIÓN
+   ========================================================= */
 
-function AuthModal({ onClose }) {
+function AuthModal({
+  onClose,
+}) {
   const [mode, setMode] =
     useState("login");
 
@@ -1719,7 +1998,9 @@ function AuthModal({ onClose }) {
   const [message, setMessage] =
     useState("");
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event
+  ) {
     event.preventDefault();
 
     setLoading(true);
@@ -1797,11 +2078,17 @@ function AuthModal({ onClose }) {
           onClick={onClose}
           aria-label="Cerrar"
         >
-          <Icon name="close" size={20} />
+          <Icon
+            name="close"
+            size={20}
+          />
         </button>
 
         <div className="vd-modal-icon">
-          <Icon name="user" size={34} />
+          <Icon
+            name="user"
+            size={34}
+          />
         </div>
 
         <h2>
@@ -1827,7 +2114,9 @@ function AuthModal({ onClose }) {
               type="email"
               value={email}
               onChange={(event) =>
-                setEmail(event.target.value)
+                setEmail(
+                  event.target.value
+                )
               }
               placeholder="correo@ejemplo.com"
               autoComplete="email"
@@ -1841,7 +2130,9 @@ function AuthModal({ onClose }) {
               type="password"
               value={password}
               onChange={(event) =>
-                setPassword(event.target.value)
+                setPassword(
+                  event.target.value
+                )
               }
               placeholder="Tu contraseña"
               autoComplete={
@@ -1880,6 +2171,7 @@ function AuthModal({ onClose }) {
                 ? "register"
                 : "login"
             );
+
             setMessage("");
           }}
         >
@@ -1892,7 +2184,9 @@ function AuthModal({ onClose }) {
   );
 }
 
-/* ================= APP ================= */
+/* =========================================================
+   APP
+   ========================================================= */
 
 function App() {
   const [menuOpen, setMenuOpen] =
@@ -1904,17 +2198,22 @@ function App() {
   const [sellOpen, setSellOpen] =
     useState(false);
 
-  const [headerHidden, setHeaderHidden] =
-    useState(false);
+  const [
+    headerHidden,
+    setHeaderHidden,
+  ] = useState(false);
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] =
+    useState(null);
 
   const [cartCount, setCartCount] =
     useState(() =>
       getCart().reduce(
         (sum, item) =>
           sum +
-          Number(item.quantity || 1),
+          Number(
+            item.quantity || 1
+          ),
         0
       )
     );
@@ -1931,20 +2230,22 @@ function App() {
         if (!mounted) return;
 
         setUser(
-          data?.session?.user || null
+          data?.session?.user ||
+            null
         );
       })
       .catch(() => {});
 
     const {
       data: authListener,
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(
-          session?.user || null
-        );
-      }
-    );
+    } =
+      supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setUser(
+            session?.user || null
+          );
+        }
+      );
 
     return () => {
       mounted = false;
@@ -1955,18 +2256,23 @@ function App() {
 
   useEffect(() => {
     const updateCart = () => {
-      const count = getCart().reduce(
-        (sum, item) =>
-          sum +
-          Number(item.quantity || 1),
-        0
-      );
+      const count =
+        getCart().reduce(
+          (sum, item) =>
+            sum +
+            Number(
+              item.quantity || 1
+            ),
+          0
+        );
 
       setCartCount(count);
     };
 
     const updateFavorites = () => {
-      setFavorites(getFavorites());
+      setFavorites(
+        getFavorites()
+      );
     };
 
     window.addEventListener(
@@ -1996,7 +2302,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let lastScroll = window.scrollY || 0;
+    let lastScroll =
+      window.scrollY || 0;
 
     const handleScroll = () => {
       const current =
@@ -2004,10 +2311,14 @@ function App() {
 
       if (current < 16) {
         setHeaderHidden(false);
-      } else if (current > lastScroll + 5) {
+      } else if (
+        current >
+        lastScroll + 5
+      ) {
         setHeaderHidden(true);
       } else if (
-        current < lastScroll - 5
+        current <
+        lastScroll - 5
       ) {
         setHeaderHidden(false);
       }
@@ -2018,7 +2329,9 @@ function App() {
     window.addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      {
+        passive: true,
+      }
     );
 
     return () =>
@@ -2046,21 +2359,25 @@ function App() {
     sellOpen,
   ]);
 
-  function toggleFavorite(productId) {
-    const current = getFavorites();
+  function toggleFavorite(
+    productId
+  ) {
+    const current =
+      getFavorites();
 
-    const next = current.includes(
-      Number(productId)
-    )
-      ? current.filter(
-          (id) =>
-            Number(id) !==
-            Number(productId)
-        )
-      : [
-          ...current,
-          Number(productId),
-        ];
+    const next =
+      current.includes(
+        Number(productId)
+      )
+        ? current.filter(
+            (id) =>
+              Number(id) !==
+              Number(productId)
+          )
+        : [
+            ...current,
+            Number(productId),
+          ];
 
     saveFavorites(next);
     setFavorites(next);
@@ -2144,7 +2461,9 @@ function App() {
               onOpenAuth={() =>
                 setAccountOpen(true)
               }
-              onSignOut={handleSignOut}
+              onSignOut={
+                handleSignOut
+              }
             />
           }
         />
@@ -2196,7 +2515,9 @@ function App() {
         type="button"
         className="vd-chat"
         onClick={() =>
-          alert("Soporte VaniDaxi")
+          alert(
+            "Soporte VaniDaxi"
+          )
         }
         aria-label="Soporte VaniDaxi"
       >
@@ -2228,7 +2549,9 @@ function App() {
             setSellOpen(true)
           }
           user={user}
-          onSignOut={handleSignOut}
+          onSignOut={
+            handleSignOut
+          }
         />
       )}
 
@@ -2261,7 +2584,10 @@ function App() {
               }
               aria-label="Cerrar"
             >
-              <Icon name="close" size={20} />
+              <Icon
+                name="close"
+                size={20}
+              />
             </button>
 
             <div className="vd-modal-icon">
@@ -2372,15 +2698,19 @@ function App() {
           z-index: 70;
 
           display: grid;
-          grid-template-columns: 44px 1fr 84px;
+          grid-template-columns:
+            44px 1fr 84px;
           align-items: center;
 
           width: 100%;
           height: 64px;
           padding: 7px 13px;
 
-          background: rgba(255,255,255,.97);
-          border-bottom: 1px solid #efedf0;
+          background:
+            rgba(255,255,255,.97);
+
+          border-bottom:
+            1px solid #efedf0;
 
           backdrop-filter: blur(15px);
 
@@ -2390,8 +2720,8 @@ function App() {
         }
 
         .vd-header-hidden {
-          transform: translateY(-110%);
-          opacity: .98;
+          transform:
+            translateY(-110%);
         }
 
         .vd-menu-button,
@@ -2473,7 +2803,8 @@ function App() {
 
         .vd-home {
           width: 100%;
-          padding: 10px 15px 18px;
+          padding:
+            10px 15px 18px;
         }
 
         .vd-search-section {
@@ -2490,14 +2821,17 @@ function App() {
 
           padding-left: 11px;
 
-          border: 1px solid #ece8ee;
+          border:
+            1px solid #ece8ee;
+
           border-radius: 11px;
 
           background: #ffffff;
           color: #77737d;
 
           box-shadow:
-            0 4px 13px rgba(48,29,67,.04);
+            0 4px 13px
+            rgba(48,29,67,.04);
         }
 
         .vd-search-box input {
@@ -2527,7 +2861,8 @@ function App() {
           justify-content: center;
 
           border: 0;
-          border-radius: 0 11px 11px 0;
+          border-radius:
+            0 11px 11px 0;
 
           background:
             linear-gradient(
@@ -2539,12 +2874,13 @@ function App() {
           color: #ffffff;
         }
 
-        /* MAIN CARDS */
+        /* TARJETAS PRINCIPALES */
 
         .vd-main-cards {
           display: grid;
           grid-template-columns:
             repeat(2,minmax(0,1fr));
+
           gap: 8px;
           margin-bottom: 17px;
         }
@@ -2557,7 +2893,8 @@ function App() {
           height: 69px;
 
           display: grid;
-          grid-template-columns: 37px 1fr;
+          grid-template-columns:
+            37px 1fr;
           align-items: center;
           gap: 7px;
 
@@ -2571,7 +2908,8 @@ function App() {
           color: #ffffff;
 
           box-shadow:
-            0 5px 12px rgba(83,16,99,.10);
+            0 5px 12px
+            rgba(83,16,99,.10);
         }
 
         .vd-sell-card {
@@ -2602,7 +2940,9 @@ function App() {
 
           border-radius: 9px;
 
-          background: rgba(255,255,255,.97);
+          background:
+            rgba(255,255,255,.97);
+
           color: #df174f;
         }
 
@@ -2627,7 +2967,8 @@ function App() {
           display: block;
           margin-top: 3px;
 
-          color: rgba(255,255,255,.91);
+          color:
+            rgba(255,255,255,.91);
 
           font-size: 7px;
           line-height: 1.18;
@@ -2647,11 +2988,13 @@ function App() {
 
           border-radius: 50%;
 
-          background: rgba(255,255,255,.96);
+          background:
+            rgba(255,255,255,.96);
+
           color: #742091;
         }
 
-        /* SECTION TITLES */
+        /* TÍTULOS */
 
         .vd-section {
           margin-bottom: 15px;
@@ -2662,6 +3005,7 @@ function App() {
           align-items: center;
           justify-content: space-between;
           gap: 10px;
+
           margin-bottom: 8px;
         }
 
@@ -2684,13 +3028,14 @@ function App() {
 
         .vd-section-title a span {
           margin-left: 2px;
+
           font-size: 13px;
           vertical-align: -1px;
         }
 
-        /* ==================================================
-           CATEGORÍAS — NUEVO DISEÑO
-           ================================================== */
+        /* =========================================
+           CATEGORÍAS
+           ========================================= */
 
         .vd-category-row {
           display: flex;
@@ -2698,7 +3043,8 @@ function App() {
 
           overflow-x: auto;
 
-          padding: 2px 1px 5px;
+          padding:
+            2px 1px 5px;
 
           scrollbar-width: none;
         }
@@ -2708,7 +3054,8 @@ function App() {
         }
 
         .vd-category {
-          flex: 0 0 58px;
+          flex:
+            0 0 58px;
 
           display: flex;
           flex-direction: column;
@@ -2718,23 +3065,35 @@ function App() {
         }
 
         .vd-category-icon {
+          position: relative;
+
           width: 51px;
           height: 51px;
+
+          overflow: hidden;
 
           display: flex;
           align-items: center;
           justify-content: center;
 
-          border-radius: 12px;
+          border-radius: 13px;
 
-          border: 1px solid
-            rgba(255,255,255,.82);
+          border:
+            1px solid
+            rgba(255,255,255,.85);
 
           box-shadow:
-            0 4px 10px
-              rgba(79,25,104,.08),
+            0 4px 11px
+            rgba(67,24,84,.09),
             inset 0 1px 0
-              rgba(255,255,255,.85);
+            rgba(255,255,255,.75);
+
+          background:
+            linear-gradient(
+              145deg,
+              #ffffff,
+              #faf6fb
+            );
 
           transition:
             transform .15s ease,
@@ -2743,34 +3102,45 @@ function App() {
 
         .vd-category:active
         .vd-category-icon {
-          transform: scale(.94);
+          transform: scale(.95);
         }
 
-        .vd-category-emoji {
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        .vd-category-icon img {
+          position: absolute;
+          inset: 0;
 
           width: 100%;
           height: 100%;
 
-          font-size: 27px;
-          line-height: 1;
+          object-fit: cover;
+
+          transform: scale(1.07);
 
           filter:
-            drop-shadow(
-              0 2px 2px
-              rgba(65,20,80,.12)
+            saturate(1.05)
+            contrast(1.02);
+        }
+
+        .vd-category-overlay {
+          position: absolute;
+          inset: 0;
+
+          background:
+            linear-gradient(
+              180deg,
+              rgba(255,255,255,.16),
+              rgba(82,22,103,.18)
             );
+
+          pointer-events: none;
         }
 
         .vd-category-pink {
           background:
             linear-gradient(
               145deg,
-              #fff0f5 0%,
-              #ffdce9 48%,
-              #f9c7dc 100%
+              #fff0f5,
+              #ffdce9
             );
         }
 
@@ -2778,9 +3148,8 @@ function App() {
           background:
             linear-gradient(
               145deg,
-              #f5edff 0%,
-              #e8d8ff 48%,
-              #dbc4fa 100%
+              #f5edff,
+              #e8d8ff
             );
         }
 
@@ -2788,9 +3157,8 @@ function App() {
           background:
             linear-gradient(
               145deg,
-              #fff1ee 0%,
-              #ffe0dc 48%,
-              #ffd0d4 100%
+              #fff1ee,
+              #ffe0dc
             );
         }
 
@@ -2798,9 +3166,8 @@ function App() {
           background:
             linear-gradient(
               145deg,
-              #fff0fb 0%,
-              #fbd7ef 48%,
-              #efc4e6 100%
+              #fff0fb,
+              #fbd7ef
             );
         }
 
@@ -2808,9 +3175,8 @@ function App() {
           background:
             linear-gradient(
               145deg,
-              #f4f0ff 0%,
-              #e5dcff 48%,
-              #d7cafa 100%
+              #f4f0ff,
+              #e5dcff
             );
         }
 
@@ -2818,13 +3184,12 @@ function App() {
           background:
             linear-gradient(
               145deg,
-              #fff0fa 0%,
-              #f9d9f2 48%,
-              #edc7e8 100%
+              #fff0fa,
+              #f9d9f2
             );
         }
 
-        .vd-category > span {
+        .vd-category-label {
           width: 58px;
 
           text-align: center;
@@ -2836,7 +3201,7 @@ function App() {
           font-weight: 750;
         }
 
-        /* OFFER */
+        /* OFERTAS */
 
         .vd-offer {
           position: relative;
@@ -2845,7 +3210,8 @@ function App() {
           height: 145px;
 
           display: grid;
-          grid-template-columns: 42% 58%;
+          grid-template-columns:
+            42% 58%;
 
           overflow: hidden;
 
@@ -2869,7 +3235,9 @@ function App() {
         .vd-offer-text {
           position: relative;
           z-index: 5;
-          padding: 19px 4px 10px 16px;
+
+          padding:
+            19px 4px 10px 16px;
         }
 
         .vd-offer-text h2 {
@@ -2921,7 +3289,8 @@ function App() {
           height: 4px;
 
           border-radius: 50%;
-          background: rgba(255,255,255,.65);
+          background:
+            rgba(255,255,255,.65);
         }
 
         .vd-sale-one {
@@ -2943,13 +3312,15 @@ function App() {
 
         .vd-offer-bag {
           position: absolute;
+
           left: 73px;
           top: 27px;
 
           width: 58px;
           height: 78px;
 
-          border-radius: 8px 8px 10px 10px;
+          border-radius:
+            8px 8px 10px 10px;
 
           background:
             linear-gradient(
@@ -2963,21 +3334,26 @@ function App() {
 
         .vd-bag-handle {
           position: absolute;
+
           left: 8px;
           top: -17px;
 
           width: 41px;
           height: 29px;
 
-          border: 2px solid
+          border:
+            2px solid
             rgba(255,255,255,.78);
 
           border-bottom: 0;
-          border-radius: 24px 24px 0 0;
+
+          border-radius:
+            24px 24px 0 0;
         }
 
         .vd-offer-watch {
           position: absolute;
+
           left: 4px;
           bottom: 9px;
 
@@ -2985,11 +3361,12 @@ function App() {
           height: 71px;
 
           overflow: hidden;
+
           border-radius: 12px;
 
           transform: rotate(4deg);
 
-          background: #fff;
+          background: #ffffff;
         }
 
         .vd-offer-watch img,
@@ -3001,6 +3378,7 @@ function App() {
 
         .vd-offer-shoe {
           position: absolute;
+
           right: -9px;
           bottom: 1px;
 
@@ -3008,15 +3386,17 @@ function App() {
           height: 67px;
 
           overflow: hidden;
+
           border-radius: 12px;
 
           transform: rotate(-7deg);
 
-          background: #fff;
+          background: #ffffff;
         }
 
         .vd-percent-bubble {
           position: absolute;
+
           right: 58px;
           top: 57px;
 
@@ -3048,12 +3428,15 @@ function App() {
           display: flex;
           justify-content: center;
           gap: 5px;
-          padding: 6px 0 8px;
+
+          padding:
+            6px 0 8px;
         }
 
         .vd-dots span {
           width: 6px;
           height: 6px;
+
           border-radius: 50%;
           background: #eadfea;
         }
@@ -3062,7 +3445,7 @@ function App() {
           background: #e81959;
         }
 
-        /* PRODUCTS */
+        /* PRODUCTOS */
 
         .vd-products-section {
           margin-bottom: 14px;
@@ -3072,6 +3455,7 @@ function App() {
           display: grid;
           grid-template-columns:
             repeat(4,minmax(0,1fr));
+
           gap: 6px;
         }
 
@@ -3079,10 +3463,12 @@ function App() {
           min-width: 0;
           overflow: hidden;
 
-          border: 1px solid
+          border:
+            1px solid
             rgba(95,84,104,.065);
 
           border-radius: 8px;
+
           background: #ffffff;
 
           box-shadow:
@@ -3098,6 +3484,7 @@ function App() {
 
         .vd-product-badge {
           position: absolute;
+
           top: 5px;
           left: 5px;
 
@@ -3118,6 +3505,7 @@ function App() {
 
         .vd-favorite {
           position: absolute;
+
           top: 4px;
           right: 4px;
 
@@ -3131,7 +3519,9 @@ function App() {
           border: 0;
           border-radius: 50%;
 
-          background: rgba(255,255,255,.93);
+          background:
+            rgba(255,255,255,.93);
+
           color: #77737c;
         }
 
@@ -3158,7 +3548,9 @@ function App() {
         .vd-product-image img {
           width: 100%;
           height: 100%;
+
           object-fit: contain;
+
           mix-blend-mode: multiply;
         }
 
@@ -3187,6 +3579,7 @@ function App() {
 
         .vd-price strong {
           color: #d9194e;
+
           font-size: 8px;
           font-weight: 900;
         }
@@ -3246,7 +3639,9 @@ function App() {
 
           gap: 4px;
 
-          border: 1px solid #f0edf2;
+          border:
+            1px solid #f0edf2;
+
           border-radius: 10px;
 
           background: #ffffff;
@@ -3280,10 +3675,12 @@ function App() {
 
           overflow: hidden;
 
-          border: 1px solid
+          border:
+            1px solid
             rgba(101,88,114,.06);
 
           border-radius: 10px;
+
           background: #ffffff;
 
           box-shadow:
@@ -3330,31 +3727,42 @@ function App() {
           height: 12px;
         }
 
-        /* NAVEGACIÓN */
+        /* NAVEGACIÓN INFERIOR */
 
         .vd-bottom-nav {
           position: fixed;
+
           left: 50%;
           bottom: 0;
           z-index: 75;
 
-          transform: translateX(-50%);
+          transform:
+            translateX(-50%);
 
-          width: min(100%,560px);
+          width:
+            min(100%,560px);
+
           height: 67px;
 
           display: grid;
+
           grid-template-columns:
             repeat(5,1fr);
+
           align-items: end;
 
           padding:
             4px 7px
-            max(5px,env(safe-area-inset-bottom));
+            max(
+              5px,
+              env(safe-area-inset-bottom)
+            );
 
-          background: rgba(255,255,255,.98);
+          background:
+            rgba(255,255,255,.98);
 
-          border-top: 1px solid #efedf0;
+          border-top:
+            1px solid #efedf0;
 
           box-shadow:
             0 -5px 15px
@@ -3371,6 +3779,7 @@ function App() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
+
           gap: 2px;
 
           border: 0;
@@ -3405,12 +3814,14 @@ function App() {
           height: 50px;
 
           justify-self: center;
+
           margin-top: -21px;
 
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
+
           gap: 1px;
 
           border: 0;
@@ -3480,15 +3891,20 @@ function App() {
 
         .vd-page {
           width: 100%;
-          min-height: calc(100vh - 131px);
-          padding: 18px 15px 22px;
+          min-height:
+            calc(100vh - 131px);
+
+          padding:
+            18px 15px 22px;
         }
 
         .vd-page-title {
           margin-bottom: 14px;
         }
 
-        .vd-page-title p {
+        .vd-page-title p,
+        .vd-account-page > p,
+        .vd-seller-page > p {
           margin: 0 0 4px;
 
           color: #86828b;
@@ -3519,7 +3935,9 @@ function App() {
           margin-bottom: 10px;
           padding: 0 11px;
 
-          border: 1px solid #ece8ef;
+          border:
+            1px solid #ece8ef;
+
           border-radius: 10px;
 
           background: #ffffff;
@@ -3555,10 +3973,13 @@ function App() {
           min-height: 25px;
           padding: 0 9px;
 
-          border: 1px solid #ece8ef;
+          border:
+            1px solid #ece8ef;
+
           border-radius: 999px;
 
           background: #ffffff;
+
           color: #706b75;
 
           font-size: 7px;
@@ -3581,6 +4002,7 @@ function App() {
         .vd-catalog-grid {
           grid-template-columns:
             repeat(2,minmax(0,1fr));
+
           gap: 8px;
         }
 
@@ -3589,7 +4011,7 @@ function App() {
           height: 135px;
         }
 
-        /* PRODUCTO DETALLE */
+        /* PRODUCTO */
 
         .vd-detail-back {
           margin-bottom: 10px;
@@ -3598,6 +4020,7 @@ function App() {
         .vd-detail-back a {
           display: inline-flex;
           align-items: center;
+
           gap: 4px;
 
           color: #75209f;
@@ -3612,8 +4035,12 @@ function App() {
 
         .vd-product-detail {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+
+          grid-template-columns:
+            1fr 1fr;
+
           gap: 14px;
+
           align-items: start;
         }
 
@@ -3627,6 +4054,7 @@ function App() {
           justify-content: center;
 
           overflow: hidden;
+
           border-radius: 16px;
 
           background:
@@ -3648,6 +4076,7 @@ function App() {
 
         .vd-detail-badge {
           position: absolute;
+
           left: 9px;
           top: 9px;
 
@@ -3668,6 +4097,7 @@ function App() {
 
         .vd-detail-info > small {
           color: #7d7782;
+
           font-size: 8px;
           font-weight: 750;
         }
@@ -3712,7 +4142,7 @@ function App() {
         .vd-detail-info > p {
           margin: 0 0 13px;
 
-          color: #77727b;
+          color: #77737c;
 
           font-size: 9px;
           line-height: 1.5;
@@ -3761,7 +4191,9 @@ function App() {
           align-items: center;
           justify-content: center;
 
-          border: 1px solid #ece8ef;
+          border:
+            1px solid #ece8ef;
+
           border-radius: 9px;
 
           background: #ffffff;
@@ -3787,7 +4219,8 @@ function App() {
 
           padding: 6px 0;
 
-          border-bottom: 1px solid #f3eff5;
+          border-bottom:
+            1px solid #f3eff5;
 
           color: #6e6972;
 
@@ -3808,13 +4241,18 @@ function App() {
 
         .vd-cart-item {
           display: grid;
-          grid-template-columns: 67px 1fr;
+
+          grid-template-columns:
+            67px 1fr;
+
           gap: 9px;
 
           min-height: 82px;
           padding: 8px;
 
-          border: 1px solid #eeeaf0;
+          border:
+            1px solid #eeeaf0;
+
           border-radius: 11px;
 
           background: #ffffff;
@@ -3829,6 +4267,7 @@ function App() {
           justify-content: center;
 
           overflow: hidden;
+
           border-radius: 8px;
 
           background: #faf8fb;
@@ -3837,6 +4276,7 @@ function App() {
         .vd-cart-image img {
           width: 100%;
           height: 100%;
+
           object-fit: contain;
           mix-blend-mode: multiply;
         }
@@ -3856,6 +4296,7 @@ function App() {
 
         .vd-cart-price {
           display: block;
+
           margin-top: 4px;
 
           color: #da164b;
@@ -3868,6 +4309,7 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: space-between;
+
           gap: 8px;
 
           margin-top: 6px;
@@ -3878,7 +4320,9 @@ function App() {
           align-items: center;
           gap: 7px;
 
-          border: 1px solid #eeeaf1;
+          border:
+            1px solid #eeeaf1;
+
           border-radius: 999px;
 
           padding: 2px 5px;
@@ -3980,7 +4424,7 @@ function App() {
           font-weight: 900;
         }
 
-        /* EMPTY */
+        /* VACÍO */
 
         .vd-empty {
           min-height: 340px;
@@ -4025,7 +4469,6 @@ function App() {
           margin: 0 0 14px;
 
           color: #77737b;
-
           font-size: 8px;
         }
 
@@ -4041,17 +4484,6 @@ function App() {
           justify-content: center;
 
           text-align: center;
-        }
-
-        .vd-account-page > p,
-        .vd-seller-page > p {
-          margin: 0 0 4px;
-
-          color: #86828b;
-
-          font-size: 7px;
-          font-weight: 900;
-          letter-spacing: 1.8px;
         }
 
         .vd-account-page h1,
@@ -4084,9 +4516,11 @@ function App() {
         .vd-overlay {
           position: fixed;
           inset: 0;
+
           z-index: 100;
 
-          background: rgba(19,13,23,.45);
+          background:
+            rgba(19,13,23,.45);
 
           backdrop-filter: blur(4px);
         }
@@ -4100,10 +4534,13 @@ function App() {
         }
 
         .vd-side-menu {
-          width: min(82%,305px);
+          width:
+            min(82%,305px);
+
           height: 100%;
 
-          padding: 17px 16px;
+          padding:
+            17px 16px;
 
           background: #ffffff;
 
@@ -4112,16 +4549,19 @@ function App() {
             rgba(0,0,0,.12);
 
           animation:
-            vd-slide-menu .22s ease both;
+            vd-slide-menu
+            .22s ease both;
         }
 
         @keyframes vd-slide-menu {
           from {
-            transform: translateX(-100%);
+            transform:
+              translateX(-100%);
           }
 
           to {
-            transform: translateX(0);
+            transform:
+              translateX(0);
           }
         }
 
@@ -4133,7 +4573,8 @@ function App() {
           margin-bottom: 12px;
           padding-bottom: 12px;
 
-          border-bottom: 1px solid #f1eef3;
+          border-bottom:
+            1px solid #f1eef3;
         }
 
         .vd-menu-brand {
@@ -4187,7 +4628,8 @@ function App() {
           padding: 0 6px;
 
           border: 0;
-          border-bottom: 1px solid #f3f0f4;
+          border-bottom:
+            1px solid #f3f0f4;
 
           background: transparent;
 
@@ -4211,11 +4653,13 @@ function App() {
         /* MODAL */
 
         .vd-modal {
-          width: min(100%,335px);
+          width:
+            min(100%,335px);
 
           position: relative;
 
-          padding: 22px 18px 18px;
+          padding:
+            22px 18px 18px;
 
           border-radius: 18px;
 
@@ -4260,6 +4704,7 @@ function App() {
           margin: 0 0 6px;
 
           color: #28262e;
+
           font-size: 19px;
         }
 
@@ -4275,6 +4720,7 @@ function App() {
         .vd-auth-form {
           display: grid;
           gap: 8px;
+
           text-align: left;
         }
 
@@ -4294,7 +4740,9 @@ function App() {
 
           padding: 0 10px;
 
-          border: 1px solid #ebe7ef;
+          border:
+            1px solid #ebe7ef;
+
           border-radius: 8px;
 
           outline: 0;
@@ -4422,12 +4870,8 @@ function App() {
             flex-basis: 55px;
           }
 
-          .vd-category > span {
+          .vd-category-label {
             width: 55px;
-          }
-
-          .vd-category-emoji {
-            font-size: 26px;
           }
         }
       `}</style>
