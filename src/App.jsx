@@ -14,14 +14,42 @@ import { supabase } from "./supabaseClient";
 const CART_KEY = "vanidaxi_cart";
 const FAVORITES_KEY = "vanidaxi_favorites";
 
+/* ================= CATEGORÍAS ================= */
+
 const categories = [
-  { name: "Ropa y Moda", icon: "shirt" },
-  { name: "Tecnología", icon: "phone" },
-  { name: "Hogar y Vida", icon: "home" },
-  { name: "Belleza y Salud", icon: "beauty" },
-  { name: "Accesorios", icon: "headphones" },
-  { name: "Juguetes y Más", icon: "game" },
+  {
+    name: "Ropa y Moda",
+    emoji: "👗",
+    color: "pink",
+  },
+  {
+    name: "Tecnología",
+    emoji: "📱",
+    color: "purple",
+  },
+  {
+    name: "Hogar y Vida",
+    emoji: "🏡",
+    color: "rose",
+  },
+  {
+    name: "Belleza y Salud",
+    emoji: "💄",
+    color: "magenta",
+  },
+  {
+    name: "Accesorios",
+    emoji: "👜",
+    color: "violet",
+  },
+  {
+    name: "Juguetes y Más",
+    emoji: "🧸",
+    color: "fuchsia",
+  },
 ];
+
+/* ================= PRODUCTOS ================= */
 
 const products = [
   {
@@ -109,6 +137,8 @@ const products = [
     ],
   },
 ];
+
+/* ================= CARRITO ================= */
 
 function getCart() {
   try {
@@ -202,6 +232,8 @@ function formatPrice(value) {
   return `$${Number(value).toLocaleString("es-MX")}.00`;
 }
 
+/* ================= ICONOS ================= */
+
 function Icon({
   name,
   size = 24,
@@ -270,80 +302,6 @@ function Icon({
         <svg {...props}>
           <circle cx="12" cy="8.1" r="3.5" />
           <path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6" />
-        </svg>
-      );
-
-    case "shirt":
-      return (
-        <svg {...props}>
-          <path d="m8 5 4 2 4-2 4 4-3 2.2V20H7v-8.8L4 9l4-4Z" />
-        </svg>
-      );
-
-    case "phone":
-      return (
-        <svg {...props}>
-          <rect x="7" y="2.7" width="10" height="18.6" rx="2" />
-          <path d="M10.5 5h3" />
-          <circle
-            cx="12"
-            cy="18.2"
-            r=".8"
-            fill="currentColor"
-            stroke="none"
-          />
-        </svg>
-      );
-
-    case "home":
-      return (
-        <svg {...props}>
-          <path d="m3 10 9-7 9 7" />
-          <path d="M5 9.5V20h14V9.5" />
-          <path d="M9.5 20v-5h5v5" />
-        </svg>
-      );
-
-    case "beauty":
-      return (
-        <svg {...props}>
-          <path d="M8 10c0-3 1.8-5 4-5s4 2 4 5c0 4-1.7 7-4 7s-4-3-4-7Z" />
-          <path d="M6 7c1.3-2.2 3-3.5 6-3.5S16.7 4.8 18 7" />
-          <path d="M9.5 11h.01" />
-          <path d="M14.5 11h.01" />
-          <path d="M10 14c1.3 1 2.7 1 4 0" />
-        </svg>
-      );
-
-    case "headphones":
-      return (
-        <svg {...props}>
-          <path d="M4 13a8 8 0 0 1 16 0" />
-          <path d="M4 13v3.5A2.5 2.5 0 0 0 6.5 19H7v-7h-.5A2.5 2.5 0 0 0 4 14.5" />
-          <path d="M20 13v3.5a2.5 2.5 0 0 1-2.5 2.5H17v-7h.5A2.5 2.5 0 0 1 20 14.5" />
-        </svg>
-      );
-
-    case "game":
-      return (
-        <svg {...props}>
-          <path d="M7 8h10a5 5 0 0 1 5 5v2.5a2.5 2.5 0 0 1-4.3 1.8L15 15H9l-2.7 2.3A2.5 2.5 0 0 1 2 15.5V13a5 5 0 0 1 5-5Z" />
-          <path d="M7 11v4" />
-          <path d="M5 13h4" />
-          <circle
-            cx="17"
-            cy="12"
-            r=".8"
-            fill="currentColor"
-            stroke="none"
-          />
-          <circle
-            cx="19"
-            cy="14"
-            r=".8"
-            fill="currentColor"
-            stroke="none"
-          />
         </svg>
       );
 
@@ -422,6 +380,8 @@ function Icon({
   }
 }
 
+/* ================= HEADER ================= */
+
 function Header({
   cartCount,
   onOpenMenu,
@@ -476,6 +436,8 @@ function Header({
   );
 }
 
+/* ================= BUSCADOR ================= */
+
 function SearchBox({ value, onChange }) {
   return (
     <div className="vd-search-box">
@@ -494,10 +456,7 @@ function SearchBox({ value, onChange }) {
         aria-label="Buscar productos"
       />
 
-      <button
-        type="button"
-        aria-label="Buscar"
-      >
+      <button type="button" aria-label="Buscar">
         <Icon
           name="search"
           size={20}
@@ -507,6 +466,8 @@ function SearchBox({ value, onChange }) {
     </div>
   );
 }
+
+/* ================= TARJETAS PRINCIPALES ================= */
 
 function MainPromoCards({
   onSell,
@@ -538,11 +499,7 @@ function MainPromoCards({
         </span>
 
         <span className="vd-card-arrow">
-          <Icon
-            name="arrow"
-            size={13}
-            stroke={2}
-          />
+          <Icon name="arrow" size={13} stroke={2} />
         </span>
       </button>
 
@@ -566,16 +523,14 @@ function MainPromoCards({
         </span>
 
         <span className="vd-card-arrow">
-          <Icon
-            name="arrow"
-            size={13}
-            stroke={2}
-          />
+          <Icon name="arrow" size={13} stroke={2} />
         </span>
       </button>
     </section>
   );
 }
+
+/* ================= CATEGORÍAS ================= */
 
 function CategoriesSection() {
   return (
@@ -590,7 +545,7 @@ function CategoriesSection() {
       </div>
 
       <div className="vd-category-row">
-        {categories.map((category, index) => (
+        {categories.map((category) => (
           <Link
             key={category.name}
             to={`/catalogo?categoria=${encodeURIComponent(
@@ -599,17 +554,11 @@ function CategoriesSection() {
             className="vd-category"
           >
             <div
-              className={`vd-category-icon ${
-                index % 2 === 1
-                  ? "vd-category-purple"
-                  : ""
-              }`}
+              className={`vd-category-icon vd-category-${category.color}`}
             >
-              <Icon
-                name={category.icon}
-                size={30}
-                stroke={1.45}
-              />
+              <span className="vd-category-emoji">
+                {category.emoji}
+              </span>
             </div>
 
             <span>{category.name}</span>
@@ -619,6 +568,8 @@ function CategoriesSection() {
     </section>
   );
 }
+
+/* ================= OFERTAS ================= */
 
 function OfferBanner() {
   return (
@@ -684,6 +635,8 @@ function OfferBanner() {
     </>
   );
 }
+
+/* ================= PRODUCTOS ================= */
 
 function ProductCard({
   product,
@@ -777,37 +730,7 @@ function ProductCard({
   );
 }
 
-function FeaturedProducts({
-  favorites,
-  onToggleFavorite,
-}) {
-  return (
-    <section
-      id="vd-products"
-      className="vd-section vd-products-section"
-    >
-      <div className="vd-section-title">
-        <h2>Productos destacados</h2>
-
-        <Link to="/catalogo">
-          Ver todos
-          <span>›</span>
-        </Link>
-      </div>
-
-      <div className="vd-product-grid">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            favorites={favorites}
-            onToggleFavorite={onToggleFavorite}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
+/* ================= BENEFICIOS ================= */
 
 function Benefits() {
   return (
@@ -822,6 +745,7 @@ function Benefits() {
         </span>
 
         <strong>Compra segura</strong>
+
         <small>
           Protegemos tus
           <br />
@@ -839,6 +763,7 @@ function Benefits() {
         </span>
 
         <strong>Envíos rápidos</strong>
+
         <small>
           Recibe tus productos
           <br />
@@ -856,6 +781,7 @@ function Benefits() {
         </span>
 
         <strong>Vendedores</strong>
+
         <small>
           Más confianza
           <br />
@@ -873,6 +799,7 @@ function Benefits() {
         </span>
 
         <strong>Soporte 24/7</strong>
+
         <small>
           Estamos aquí
           <br />
@@ -882,6 +809,8 @@ function Benefits() {
     </section>
   );
 }
+
+/* ================= INICIO ================= */
 
 function Home({
   onAccount,
@@ -906,10 +835,6 @@ function Home({
     );
   }, [search]);
 
-  const showProducts = search.trim()
-    ? visibleProducts
-    : products;
-
   return (
     <main className="vd-home">
       <section className="vd-search-section">
@@ -928,14 +853,7 @@ function Home({
 
       <OfferBanner />
 
-      <section
-        id={
-          search.trim()
-            ? undefined
-            : "vd-featured"
-        }
-        className="vd-section vd-products-section"
-      >
+      <section className="vd-section vd-products-section">
         <div className="vd-section-title">
           <h2>
             {search.trim()
@@ -950,17 +868,19 @@ function Home({
         </div>
 
         <div className="vd-product-grid">
-          {showProducts.map((product) => (
+          {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
               favorites={favorites}
-              onToggleFavorite={onToggleFavorite}
+              onToggleFavorite={
+                onToggleFavorite
+              }
             />
           ))}
         </div>
 
-        {showProducts.length === 0 && (
+        {visibleProducts.length === 0 && (
           <div className="vd-no-results">
             <span>🔎</span>
             <strong>
@@ -979,6 +899,8 @@ function Home({
     </main>
   );
 }
+
+/* ================= CATÁLOGO ================= */
 
 function Catalog({
   favorites,
@@ -1070,9 +992,11 @@ function Catalog({
       {filtered.length === 0 ? (
         <div className="vd-no-results vd-no-results-large">
           <span>🔎</span>
+
           <strong>
             No hay productos en esta categoría
           </strong>
+
           <small>
             Prueba otra categoría o búsqueda.
           </small>
@@ -1084,7 +1008,9 @@ function Catalog({
               key={product.id}
               product={product}
               favorites={favorites}
-              onToggleFavorite={onToggleFavorite}
+              onToggleFavorite={
+                onToggleFavorite
+              }
             />
           ))}
         </div>
@@ -1093,11 +1019,14 @@ function Catalog({
   );
 }
 
+/* ================= PRODUCTO ================= */
+
 function ProductPage({
   onToggleFavorite,
   favorites,
 }) {
   const { id } = useParams();
+
   const product =
     products.find(
       (item) =>
@@ -1174,9 +1103,7 @@ function ProductPage({
             <button
               type="button"
               className={`vd-detail-favorite ${
-                favorite
-                  ? "active"
-                  : ""
+                favorite ? "active" : ""
               }`}
               onClick={() =>
                 onToggleFavorite(
@@ -1213,8 +1140,11 @@ function ProductPage({
   );
 }
 
+/* ================= CARRITO ================= */
+
 function Cart() {
   const navigate = useNavigate();
+
   const [items, setItems] = useState(
     getCart
   );
@@ -1254,10 +1184,7 @@ function Cart() {
       {items.length === 0 ? (
         <div className="vd-empty">
           <div className="vd-empty-icon">
-            <Icon
-              name="cart"
-              size={44}
-            />
+            <Icon name="cart" size={44} />
           </div>
 
           <h2>
@@ -1265,8 +1192,7 @@ function Cart() {
           </h2>
 
           <p>
-            Agrega productos y aparecerán
-            aquí.
+            Agrega productos y aparecerán aquí.
           </p>
 
           <Link
@@ -1300,9 +1226,7 @@ function Cart() {
                   </strong>
 
                   <span className="vd-cart-price">
-                    {formatPrice(
-                      item.price
-                    )}
+                    {formatPrice(item.price)}
                   </span>
 
                   <div className="vd-cart-actions">
@@ -1326,8 +1250,7 @@ function Cart() {
                       </button>
 
                       <span>
-                        {item.quantity ||
-                          1}
+                        {item.quantity || 1}
                       </span>
 
                       <button
@@ -1365,6 +1288,7 @@ function Cart() {
 
           <div className="vd-cart-total">
             <span>Total</span>
+
             <strong>
               {formatPrice(total)}
             </strong>
@@ -1397,6 +1321,8 @@ function Cart() {
   );
 }
 
+/* ================= CUENTA ================= */
+
 function AccountPage({
   user,
   onOpenAuth,
@@ -1420,9 +1346,7 @@ function AccountPage({
             <span>
               Sesión iniciada como
               <br />
-              <strong>
-                {user.email}
-              </strong>
+              <strong>{user.email}</strong>
             </span>
 
             <button
@@ -1436,8 +1360,8 @@ function AccountPage({
         ) : (
           <>
             <span>
-              Inicia sesión o regístrate
-              para continuar.
+              Inicia sesión o regístrate para
+              continuar.
             </span>
 
             <button
@@ -1454,15 +1378,17 @@ function AccountPage({
   );
 }
 
-function SellerPage({ onOpenAuth, user }) {
+/* ================= VENDEDOR ================= */
+
+function SellerPage({
+  onOpenAuth,
+  user,
+}) {
   return (
     <main className="vd-page">
       <div className="vd-seller-page">
         <div className="vd-account-icon">
-          <Icon
-            name="store"
-            size={42}
-          />
+          <Icon name="store" size={42} />
         </div>
 
         <p>VENDE EN VANIDAXI</p>
@@ -1472,8 +1398,8 @@ function SellerPage({ onOpenAuth, user }) {
         </h1>
 
         <span>
-          Publica tus productos y llega
-          a nuevos compradores.
+          Publica tus productos y llega a
+          nuevos compradores.
         </span>
 
         <button
@@ -1497,6 +1423,8 @@ function SellerPage({ onOpenAuth, user }) {
   );
 }
 
+/* ================= FAVORITOS ================= */
+
 function FavoritesPage({
   favorites,
   onToggleFavorite,
@@ -1516,10 +1444,7 @@ function FavoritesPage({
       {favoriteProducts.length === 0 ? (
         <div className="vd-empty">
           <div className="vd-empty-icon">
-            <Icon
-              name="heart"
-              size={44}
-            />
+            <Icon name="heart" size={44} />
           </div>
 
           <h2>
@@ -1527,8 +1452,8 @@ function FavoritesPage({
           </h2>
 
           <p>
-            Toca el corazón de un producto
-            para guardarlo.
+            Toca el corazón de un producto para
+            guardarlo.
           </p>
 
           <Link
@@ -1557,6 +1482,8 @@ function FavoritesPage({
     </main>
   );
 }
+
+/* ================= NAVEGACIÓN INFERIOR ================= */
 
 function BottomNavigation({
   onAccount,
@@ -1648,6 +1575,8 @@ function BottomNavigation({
   );
 }
 
+/* ================= MENÚ ================= */
+
 function MenuOverlay({
   onClose,
   onAccount,
@@ -1690,10 +1619,7 @@ function MenuOverlay({
             onClick={onClose}
             aria-label="Cerrar menú"
           >
-            <Icon
-              name="close"
-              size={22}
-            />
+            <Icon name="close" size={22} />
           </button>
         </div>
 
@@ -1715,10 +1641,7 @@ function MenuOverlay({
           className="vd-menu-link"
           onClick={onClose}
         >
-          <Icon
-            name="grid"
-            size={19}
-          />
+          <Icon name="grid" size={19} />
           Categorías
         </Link>
 
@@ -1727,10 +1650,7 @@ function MenuOverlay({
           className="vd-menu-link"
           onClick={onClose}
         >
-          <Icon
-            name="cart"
-            size={19}
-          />
+          <Icon name="cart" size={19} />
           Carrito
         </Link>
 
@@ -1739,10 +1659,7 @@ function MenuOverlay({
           className="vd-menu-link"
           onClick={onClose}
         >
-          <Icon
-            name="heart"
-            size={19}
-          />
+          <Icon name="heart" size={19} />
           Favoritos
         </Link>
 
@@ -1754,10 +1671,7 @@ function MenuOverlay({
             onAccount();
           }}
         >
-          <Icon
-            name="user"
-            size={19}
-          />
+          <Icon name="user" size={19} />
           Mi cuenta
         </button>
 
@@ -1769,10 +1683,7 @@ function MenuOverlay({
             onSell();
           }}
         >
-          <Icon
-            name="store"
-            size={19}
-          />
+          <Icon name="store" size={19} />
           Vender
         </button>
 
@@ -1790,9 +1701,9 @@ function MenuOverlay({
   );
 }
 
-function AuthModal({
-  onClose,
-}) {
+/* ================= AUTENTICACIÓN ================= */
+
+function AuthModal({ onClose }) {
   const [mode, setMode] =
     useState("login");
 
@@ -1886,17 +1797,11 @@ function AuthModal({
           onClick={onClose}
           aria-label="Cerrar"
         >
-          <Icon
-            name="close"
-            size={20}
-          />
+          <Icon name="close" size={20} />
         </button>
 
         <div className="vd-modal-icon">
-          <Icon
-            name="user"
-            size={34}
-          />
+          <Icon name="user" size={34} />
         </div>
 
         <h2>
@@ -1917,6 +1822,7 @@ function AuthModal({
         >
           <label>
             Correo electrónico
+
             <input
               type="email"
               value={email}
@@ -1930,6 +1836,7 @@ function AuthModal({
 
           <label>
             Contraseña
+
             <input
               type="password"
               value={password}
@@ -1984,6 +1891,8 @@ function AuthModal({
     </div>
   );
 }
+
+/* ================= APP ================= */
 
 function App() {
   const [menuOpen, setMenuOpen] =
@@ -2098,8 +2007,7 @@ function App() {
       } else if (current > lastScroll + 5) {
         setHeaderHidden(true);
       } else if (
-        current <
-        lastScroll - 5
+        current < lastScroll - 5
       ) {
         setHeaderHidden(false);
       }
@@ -2288,9 +2196,7 @@ function App() {
         type="button"
         className="vd-chat"
         onClick={() =>
-          alert(
-            "Soporte VaniDaxi"
-          )
+          alert("Soporte VaniDaxi")
         }
         aria-label="Soporte VaniDaxi"
       >
@@ -2355,10 +2261,7 @@ function App() {
               }
               aria-label="Cerrar"
             >
-              <Icon
-                name="close"
-                size={20}
-              />
+              <Icon name="close" size={20} />
             </button>
 
             <div className="vd-modal-icon">
@@ -2461,7 +2364,7 @@ function App() {
             );
         }
 
-        /* ================= HEADER ================= */
+        /* HEADER */
 
         .vd-header {
           position: sticky;
@@ -2476,7 +2379,7 @@ function App() {
           height: 64px;
           padding: 7px 13px;
 
-          background: rgba(255, 255, 255, .97);
+          background: rgba(255,255,255,.97);
           border-bottom: 1px solid #efedf0;
 
           backdrop-filter: blur(15px);
@@ -2566,7 +2469,7 @@ function App() {
           font-weight: 900;
         }
 
-        /* ================= SEARCH ================= */
+        /* HOME */
 
         .vd-home {
           width: 100%;
@@ -2591,17 +2494,15 @@ function App() {
           border-radius: 11px;
 
           background: #ffffff;
-
           color: #77737d;
 
           box-shadow:
-            0 4px 13px rgba(48, 29, 67, .04);
+            0 4px 13px rgba(48,29,67,.04);
         }
 
         .vd-search-box input {
           flex: 1;
           min-width: 0;
-
           height: 100%;
 
           border: 0;
@@ -2638,13 +2539,13 @@ function App() {
           color: #ffffff;
         }
 
-        /* ================= MAIN CARDS ================= */
+        /* MAIN CARDS */
 
         .vd-main-cards {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns:
+            repeat(2,minmax(0,1fr));
           gap: 8px;
-
           margin-bottom: 17px;
         }
 
@@ -2661,7 +2562,6 @@ function App() {
           gap: 7px;
 
           padding: 8px 9px;
-
           overflow: hidden;
 
           border: 0;
@@ -2671,15 +2571,7 @@ function App() {
           color: #ffffff;
 
           box-shadow:
-            0 5px 12px rgba(83, 16, 99, .10);
-
-          transition:
-            transform .15s ease,
-            box-shadow .15s ease;
-        }
-
-        .vd-main-card:active {
-          transform: scale(.985);
+            0 5px 12px rgba(83,16,99,.10);
         }
 
         .vd-sell-card {
@@ -2710,11 +2602,8 @@ function App() {
 
           border-radius: 9px;
 
-          background: rgba(255, 255, 255, .97);
+          background: rgba(255,255,255,.97);
           color: #df174f;
-
-          box-shadow:
-            0 2px 6px rgba(0, 0, 0, .05);
         }
 
         .vd-account-icon-main {
@@ -2736,10 +2625,9 @@ function App() {
 
         .vd-main-copy small {
           display: block;
-
           margin-top: 3px;
 
-          color: rgba(255, 255, 255, .91);
+          color: rgba(255,255,255,.91);
 
           font-size: 7px;
           line-height: 1.18;
@@ -2759,11 +2647,11 @@ function App() {
 
           border-radius: 50%;
 
-          background: rgba(255, 255, 255, .96);
+          background: rgba(255,255,255,.96);
           color: #742091;
         }
 
-        /* ================= SECTION HEADINGS ================= */
+        /* SECTION TITLES */
 
         .vd-section {
           margin-bottom: 15px;
@@ -2774,7 +2662,6 @@ function App() {
           align-items: center;
           justify-content: space-between;
           gap: 10px;
-
           margin-bottom: 8px;
         }
 
@@ -2786,8 +2673,6 @@ function App() {
           font-size: 14px;
           line-height: 1.1;
           font-weight: 900;
-
-          letter-spacing: -.2px;
         }
 
         .vd-section-title a {
@@ -2799,12 +2684,13 @@ function App() {
 
         .vd-section-title a span {
           margin-left: 2px;
-
           font-size: 13px;
           vertical-align: -1px;
         }
 
-        /* ================= CATEGORIES ================= */
+        /* ==================================================
+           CATEGORÍAS — NUEVO DISEÑO
+           ================================================== */
 
         .vd-category-row {
           display: flex;
@@ -2812,7 +2698,7 @@ function App() {
 
           overflow-x: auto;
 
-          padding: 2px 1px 4px;
+          padding: 2px 1px 5px;
 
           scrollbar-width: none;
         }
@@ -2839,24 +2725,103 @@ function App() {
           align-items: center;
           justify-content: center;
 
-          border: 1px solid rgba(100, 87, 113, .06);
-          border-radius: 10px;
+          border-radius: 12px;
 
+          border: 1px solid
+            rgba(255,255,255,.82);
+
+          box-shadow:
+            0 4px 10px
+              rgba(79,25,104,.08),
+            inset 0 1px 0
+              rgba(255,255,255,.85);
+
+          transition:
+            transform .15s ease,
+            box-shadow .15s ease;
+        }
+
+        .vd-category:active
+        .vd-category-icon {
+          transform: scale(.94);
+        }
+
+        .vd-category-emoji {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          width: 100%;
+          height: 100%;
+
+          font-size: 27px;
+          line-height: 1;
+
+          filter:
+            drop-shadow(
+              0 2px 2px
+              rgba(65,20,80,.12)
+            );
+        }
+
+        .vd-category-pink {
           background:
             linear-gradient(
               145deg,
-              #ffffff,
-              #faf6fb
+              #fff0f5 0%,
+              #ffdce9 48%,
+              #f9c7dc 100%
             );
-
-          color: #ee1653;
-
-          box-shadow:
-            0 3px 9px rgba(41, 26, 59, .035);
         }
 
         .vd-category-purple {
-          color: #7620a7;
+          background:
+            linear-gradient(
+              145deg,
+              #f5edff 0%,
+              #e8d8ff 48%,
+              #dbc4fa 100%
+            );
+        }
+
+        .vd-category-rose {
+          background:
+            linear-gradient(
+              145deg,
+              #fff1ee 0%,
+              #ffe0dc 48%,
+              #ffd0d4 100%
+            );
+        }
+
+        .vd-category-magenta {
+          background:
+            linear-gradient(
+              145deg,
+              #fff0fb 0%,
+              #fbd7ef 48%,
+              #efc4e6 100%
+            );
+        }
+
+        .vd-category-violet {
+          background:
+            linear-gradient(
+              145deg,
+              #f4f0ff 0%,
+              #e5dcff 48%,
+              #d7cafa 100%
+            );
+        }
+
+        .vd-category-fuchsia {
+          background:
+            linear-gradient(
+              145deg,
+              #fff0fa 0%,
+              #f9d9f2 48%,
+              #edc7e8 100%
+            );
         }
 
         .vd-category > span {
@@ -2871,7 +2836,7 @@ function App() {
           font-weight: 750;
         }
 
-        /* ================= OFFER ================= */
+        /* OFFER */
 
         .vd-offer {
           position: relative;
@@ -2887,11 +2852,6 @@ function App() {
           border-radius: 11px;
 
           background:
-            radial-gradient(
-              circle at 76% 22%,
-              rgba(255,255,255,.18),
-              transparent 18%
-            ),
             linear-gradient(
               115deg,
               #f11954 0%,
@@ -2902,13 +2862,13 @@ function App() {
           color: #ffffff;
 
           box-shadow:
-            0 8px 16px rgba(106, 17, 106, .11);
+            0 8px 16px
+            rgba(106,17,106,.11);
         }
 
         .vd-offer-text {
           position: relative;
           z-index: 5;
-
           padding: 19px 4px 10px 16px;
         }
 
@@ -2918,7 +2878,6 @@ function App() {
           font-size: 18px;
           line-height: .98;
           font-weight: 950;
-          letter-spacing: -.4px;
         }
 
         .vd-offer-text p {
@@ -2940,7 +2899,6 @@ function App() {
           border-radius: 999px;
 
           background: #ffffff;
-
           color: #dd1657;
 
           font-size: 8px;
@@ -2949,7 +2907,6 @@ function App() {
 
         .vd-offer-button span {
           font-size: 13px;
-          line-height: 1;
         }
 
         .vd-offer-art {
@@ -2964,7 +2921,6 @@ function App() {
           height: 4px;
 
           border-radius: 50%;
-
           background: rgba(255,255,255,.65);
         }
 
@@ -3002,9 +2958,6 @@ function App() {
               #9a3fd0
             );
 
-          box-shadow:
-            0 8px 15px rgba(31, 0, 53, .15);
-
           transform: rotate(5deg);
         }
 
@@ -3016,7 +2969,9 @@ function App() {
           width: 41px;
           height: 29px;
 
-          border: 2px solid rgba(255,255,255,.78);
+          border: 2px solid
+            rgba(255,255,255,.78);
+
           border-bottom: 0;
           border-radius: 24px 24px 0 0;
         }
@@ -3030,18 +2985,15 @@ function App() {
           height: 71px;
 
           overflow: hidden;
-
           border-radius: 12px;
 
           transform: rotate(4deg);
 
-          box-shadow:
-            0 9px 16px rgba(0, 0, 0, .16);
-
           background: #fff;
         }
 
-        .vd-offer-watch img {
+        .vd-offer-watch img,
+        .vd-offer-shoe img {
           width: 100%;
           height: 100%;
           object-fit: cover;
@@ -3056,21 +3008,11 @@ function App() {
           height: 67px;
 
           overflow: hidden;
-
           border-radius: 12px;
 
           transform: rotate(-7deg);
 
-          box-shadow:
-            0 9px 16px rgba(0, 0, 0, .15);
-
-          background: #ffffff;
-        }
-
-        .vd-offer-shoe img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+          background: #fff;
         }
 
         .vd-percent-bubble {
@@ -3106,16 +3048,13 @@ function App() {
           display: flex;
           justify-content: center;
           gap: 5px;
-
           padding: 6px 0 8px;
         }
 
         .vd-dots span {
           width: 6px;
           height: 6px;
-
           border-radius: 50%;
-
           background: #eadfea;
         }
 
@@ -3123,7 +3062,7 @@ function App() {
           background: #e81959;
         }
 
-        /* ================= PRODUCTS ================= */
+        /* PRODUCTS */
 
         .vd-products-section {
           margin-bottom: 14px;
@@ -3131,22 +3070,24 @@ function App() {
 
         .vd-product-grid {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns:
+            repeat(4,minmax(0,1fr));
           gap: 6px;
         }
 
         .vd-product-card {
           min-width: 0;
-
           overflow: hidden;
 
-          border: 1px solid rgba(95, 84, 104, .065);
-          border-radius: 8px;
+          border: 1px solid
+            rgba(95,84,104,.065);
 
+          border-radius: 8px;
           background: #ffffff;
 
           box-shadow:
-            0 4px 10px rgba(35, 24, 47, .035);
+            0 4px 10px
+            rgba(35,24,47,.035);
         }
 
         .vd-product-top {
@@ -3168,7 +3109,6 @@ function App() {
           color: #ffffff;
 
           font-size: 6px;
-          line-height: 1;
           font-weight: 900;
         }
 
@@ -3228,7 +3168,6 @@ function App() {
 
         .vd-product-info h3 {
           min-height: 23px;
-
           margin: 0 0 3px;
 
           color: #2e2c33;
@@ -3242,8 +3181,6 @@ function App() {
           display: flex;
           align-items: baseline;
           gap: 3px;
-
-          min-width: 0;
 
           white-space: nowrap;
         }
@@ -3265,7 +3202,6 @@ function App() {
           color: #75717a;
 
           font-size: 5.5px;
-          line-height: 1;
           white-space: nowrap;
         }
 
@@ -3335,21 +3271,24 @@ function App() {
           min-height: 260px;
         }
 
-        /* ================= BENEFITS ================= */
+        /* BENEFICIOS */
 
         .vd-benefits {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns:
+            repeat(4,1fr);
 
           overflow: hidden;
 
-          border: 1px solid rgba(101, 88, 114, .06);
-          border-radius: 10px;
+          border: 1px solid
+            rgba(101,88,114,.06);
 
+          border-radius: 10px;
           background: #ffffff;
 
           box-shadow:
-            0 4px 11px rgba(40, 28, 55, .035);
+            0 4px 11px
+            rgba(40,28,55,.035);
         }
 
         .vd-benefit {
@@ -3374,17 +3313,11 @@ function App() {
         }
 
         .vd-benefit strong {
-          display: block;
-
           color: #35323a;
-
           font-size: 6.5px;
-          line-height: 1.15;
         }
 
         .vd-benefit small {
-          display: block;
-
           margin-top: 2px;
 
           color: #77737a;
@@ -3397,7 +3330,7 @@ function App() {
           height: 12px;
         }
 
-        /* ================= BOTTOM NAV ================= */
+        /* NAVEGACIÓN */
 
         .vd-bottom-nav {
           position: fixed;
@@ -3407,23 +3340,25 @@ function App() {
 
           transform: translateX(-50%);
 
-          width: min(100%, 560px);
+          width: min(100%,560px);
           height: 67px;
 
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
+          grid-template-columns:
+            repeat(5,1fr);
           align-items: end;
 
           padding:
             4px 7px
-            max(5px, env(safe-area-inset-bottom));
+            max(5px,env(safe-area-inset-bottom));
 
           background: rgba(255,255,255,.98);
 
           border-top: 1px solid #efedf0;
 
           box-shadow:
-            0 -5px 15px rgba(35, 25, 45, .035);
+            0 -5px 15px
+            rgba(35,25,45,.035);
 
           backdrop-filter: blur(12px);
         }
@@ -3444,7 +3379,6 @@ function App() {
           color: #7b7680;
 
           font-size: 8px;
-
           text-align: center;
         }
 
@@ -3464,7 +3398,6 @@ function App() {
           justify-content: center;
 
           font-size: 23px;
-          line-height: 1;
         }
 
         .vd-sell-nav {
@@ -3472,7 +3405,6 @@ function App() {
           height: 50px;
 
           justify-self: center;
-
           margin-top: -21px;
 
           display: flex;
@@ -3494,7 +3426,8 @@ function App() {
           color: #ffffff;
 
           box-shadow:
-            0 7px 15px rgba(135, 18, 103, .20);
+            0 7px 15px
+            rgba(135,18,103,.20);
         }
 
         .vd-sell-nav span {
@@ -3503,7 +3436,7 @@ function App() {
           justify-content: center;
         }
 
-        /* ================= CHAT ================= */
+        /* CHAT */
 
         .vd-chat {
           position: fixed;
@@ -3517,7 +3450,6 @@ function App() {
             );
 
           bottom: 76px;
-
           z-index: 73;
 
           width: 42px;
@@ -3540,15 +3472,15 @@ function App() {
           color: #ffffff;
 
           box-shadow:
-            0 6px 14px rgba(124, 19, 106, .17);
+            0 6px 14px
+            rgba(124,19,106,.17);
         }
 
-        /* ================= GENERIC PAGES ================= */
+        /* PÁGINAS */
 
         .vd-page {
           width: 100%;
           min-height: calc(100vh - 131px);
-
           padding: 18px 15px 22px;
         }
 
@@ -3556,9 +3488,7 @@ function App() {
           margin-bottom: 14px;
         }
 
-        .vd-page-title p,
-        .vd-account-page > p,
-        .vd-seller-page > p {
+        .vd-page-title p {
           margin: 0 0 4px;
 
           color: #86828b;
@@ -3629,7 +3559,6 @@ function App() {
           border-radius: 999px;
 
           background: #ffffff;
-
           color: #706b75;
 
           font-size: 7px;
@@ -3650,13 +3579,17 @@ function App() {
         }
 
         .vd-catalog-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns:
+            repeat(2,minmax(0,1fr));
           gap: 8px;
         }
 
-        .vd-catalog-grid .vd-product-image {
+        .vd-catalog-grid
+        .vd-product-image {
           height: 135px;
         }
+
+        /* PRODUCTO DETALLE */
 
         .vd-detail-back {
           margin-bottom: 10px;
@@ -3694,7 +3627,6 @@ function App() {
           justify-content: center;
 
           overflow: hidden;
-
           border-radius: 16px;
 
           background:
@@ -3752,10 +3684,6 @@ function App() {
         .vd-detail-rating {
           color: #77727b;
           font-size: 8px;
-        }
-
-        .vd-detail-rating:first-letter {
-          color: #f0ac00;
         }
 
         .vd-detail-rating span {
@@ -3817,12 +3745,10 @@ function App() {
 
           font-size: 9px;
           font-weight: 900;
-
-          box-shadow:
-            0 6px 13px rgba(126, 18, 101, .11);
         }
 
-        .vd-detail-actions .vd-gradient-button {
+        .vd-detail-actions
+        .vd-gradient-button {
           flex: 1;
         }
 
@@ -3852,7 +3778,6 @@ function App() {
 
         .vd-specifications h2 {
           margin: 0 0 8px;
-
           font-size: 12px;
         }
 
@@ -3874,7 +3799,7 @@ function App() {
           font-weight: 900;
         }
 
-        /* ================= CART ================= */
+        /* CARRITO */
 
         .vd-cart-list {
           display: grid;
@@ -3887,16 +3812,12 @@ function App() {
           gap: 9px;
 
           min-height: 82px;
-
           padding: 8px;
 
           border: 1px solid #eeeaf0;
           border-radius: 11px;
 
           background: #ffffff;
-
-          box-shadow:
-            0 3px 9px rgba(35, 25, 45, .025);
         }
 
         .vd-cart-image {
@@ -3908,7 +3829,6 @@ function App() {
           justify-content: center;
 
           overflow: hidden;
-
           border-radius: 8px;
 
           background: #faf8fb;
@@ -3936,7 +3856,6 @@ function App() {
 
         .vd-cart-price {
           display: block;
-
           margin-top: 4px;
 
           color: #da164b;
@@ -4025,7 +3944,6 @@ function App() {
 
         .vd-checkout-button {
           width: 100%;
-
           height: 42px;
 
           margin-top: 9px;
@@ -4040,7 +3958,7 @@ function App() {
               #75169f
             );
 
-          color: white;
+          color: #ffffff;
 
           font-size: 9px;
           font-weight: 900;
@@ -4048,7 +3966,6 @@ function App() {
 
         .vd-continue-shopping {
           width: 100%;
-
           min-height: 38px;
 
           margin-top: 7px;
@@ -4063,7 +3980,7 @@ function App() {
           font-weight: 900;
         }
 
-        /* ================= EMPTY ================= */
+        /* EMPTY */
 
         .vd-empty {
           min-height: 340px;
@@ -4101,7 +4018,6 @@ function App() {
 
         .vd-empty h2 {
           margin: 0 0 6px;
-
           font-size: 16px;
         }
 
@@ -4113,7 +4029,7 @@ function App() {
           font-size: 8px;
         }
 
-        /* ================= ACCOUNT / SELLER ================= */
+        /* CUENTA / VENDEDOR */
 
         .vd-account-page,
         .vd-seller-page {
@@ -4125,6 +4041,17 @@ function App() {
           justify-content: center;
 
           text-align: center;
+        }
+
+        .vd-account-page > p,
+        .vd-seller-page > p {
+          margin: 0 0 4px;
+
+          color: #86828b;
+
+          font-size: 7px;
+          font-weight: 900;
+          letter-spacing: 1.8px;
         }
 
         .vd-account-page h1,
@@ -4152,15 +4079,14 @@ function App() {
           line-height: 1.4;
         }
 
-        /* ================= OVERLAYS ================= */
+        /* OVERLAY */
 
         .vd-overlay {
           position: fixed;
           inset: 0;
-
           z-index: 100;
 
-          background: rgba(19, 13, 23, .45);
+          background: rgba(19,13,23,.45);
 
           backdrop-filter: blur(4px);
         }
@@ -4174,7 +4100,7 @@ function App() {
         }
 
         .vd-side-menu {
-          width: min(82%, 305px);
+          width: min(82%,305px);
           height: 100%;
 
           padding: 17px 16px;
@@ -4182,7 +4108,8 @@ function App() {
           background: #ffffff;
 
           box-shadow:
-            12px 0 28px rgba(0,0,0,.12);
+            12px 0 28px
+            rgba(0,0,0,.12);
 
           animation:
             vd-slide-menu .22s ease both;
@@ -4231,7 +4158,6 @@ function App() {
           margin-top: 5px;
 
           color: #7c7680;
-
           font-size: 7px;
         }
 
@@ -4282,10 +4208,10 @@ function App() {
           color: #9f5366;
         }
 
-        /* ================= MODAL ================= */
+        /* MODAL */
 
         .vd-modal {
-          width: min(100%, 335px);
+          width: min(100%,335px);
 
           position: relative;
 
@@ -4296,7 +4222,8 @@ function App() {
           background: #ffffff;
 
           box-shadow:
-            0 17px 40px rgba(0,0,0,.15);
+            0 17px 40px
+            rgba(0,0,0,.15);
 
           text-align: center;
         }
@@ -4333,7 +4260,6 @@ function App() {
           margin: 0 0 6px;
 
           color: #28262e;
-
           font-size: 19px;
         }
 
@@ -4349,7 +4275,6 @@ function App() {
         .vd-auth-form {
           display: grid;
           gap: 8px;
-
           text-align: left;
         }
 
@@ -4384,7 +4309,8 @@ function App() {
           border-color: #bd54c7;
 
           box-shadow:
-            0 0 0 3px rgba(189,84,199,.08);
+            0 0 0 3px
+            rgba(189,84,199,.08);
         }
 
         .vd-auth-message {
@@ -4393,7 +4319,6 @@ function App() {
           border-radius: 7px;
 
           background: #faf0f4;
-
           color: #8d4c5e;
 
           font-size: 8px;
@@ -4414,14 +4339,13 @@ function App() {
           border-radius: 9px;
 
           background: #f7f2f9;
-
           color: #6e228e;
 
           font-size: 8px;
           font-weight: 900;
         }
 
-        /* ================= RESPONSIVE ================= */
+        /* RESPONSIVE */
 
         @media (max-width: 430px) {
           .vd-app {
@@ -4434,7 +4358,9 @@ function App() {
           }
 
           .vd-header {
-            grid-template-columns: 42px 1fr 82px;
+            grid-template-columns:
+              42px 1fr 82px;
+
             padding-left: 8px;
             padding-right: 8px;
           }
@@ -4498,6 +4424,10 @@ function App() {
 
           .vd-category > span {
             width: 55px;
+          }
+
+          .vd-category-emoji {
+            font-size: 26px;
           }
         }
       `}</style>
