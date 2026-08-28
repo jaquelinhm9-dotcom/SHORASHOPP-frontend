@@ -1,9 +1,10 @@
-name: Publicar SHORASHOPP
+name: Publicar VaniDaxi
 
 on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
@@ -41,7 +42,7 @@ jobs:
           echo "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" >> .env
           echo "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}" >> .env
 
-      - name: Construir SHORASHOPP
+      - name: Construir VaniDaxi
         run: npm run build
 
       - name: Preparar archivos para GitHub Pages
@@ -58,6 +59,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Publicar SHORASHOPP
+      - name: Publicar VaniDaxi
         id: deployment
         uses: actions/deploy-pages@v4
