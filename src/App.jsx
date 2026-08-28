@@ -386,31 +386,11 @@ function Home() {
         </Link>
       </section>
 
+      {/* BOTONES CENTRALES */}
       <section className="quick-section">
         <Link
-          to="/catalogo"
-          className="quick-card quick-buy"
-        >
-          <span className="quick-icon">
-            🛍️
-          </span>
-
-          <div>
-            <strong>
-              Comprar
-            </strong>
-
-            <small>
-              Encuentra lo que buscas
-            </small>
-          </div>
-
-          <b>›</b>
-        </Link>
-
-        <Link
           to="/vender"
-          className="quick-card quick-sell"
+          className="quick-card quick-buy"
         >
           <span className="quick-icon">
             🏪
@@ -418,11 +398,36 @@ function Home() {
 
           <div>
             <strong>
-              Vender
+              Vende en
+              <br />
+              VaniDaxi
             </strong>
 
             <small>
-              Publica tus productos
+              Únete y comienza a vender
+              tus productos hoy
+            </small>
+          </div>
+
+          <b>›</b>
+        </Link>
+
+        <Link
+          to="/cuenta"
+          className="quick-card quick-sell"
+        >
+          <span className="quick-icon">
+            👤
+          </span>
+
+          <div>
+            <strong>
+              Mi cuenta
+            </strong>
+
+            <small>
+              Inicia sesión o regístrate
+              como comprador o vendedor
             </small>
           </div>
 
@@ -1037,6 +1042,7 @@ function Account({
           className="account-card"
         >
           🛒
+
           <strong>
             Mis compras
           </strong>
@@ -1047,6 +1053,7 @@ function Account({
           className="account-card"
         >
           🏪
+
           <strong>
             Mi tienda
           </strong>
@@ -1057,6 +1064,7 @@ function Account({
           className="account-card"
         >
           💬
+
           <strong>
             Ayuda
           </strong>
