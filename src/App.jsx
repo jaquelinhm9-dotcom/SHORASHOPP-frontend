@@ -22,37 +22,37 @@ const categories = [
   {
     name: "Ropa y Moda",
     image:
-      "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=500&q=88",
+      "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=600&q=90",
     color: "pink",
   },
   {
     name: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=500&q=88",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=90",
     color: "purple",
   },
   {
     name: "Hogar y Vida",
     image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=500&q=88",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=90",
     color: "rose",
   },
   {
     name: "Belleza y Salud",
     image:
-      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=500&q=88",
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=90",
     color: "magenta",
   },
   {
     name: "Accesorios",
     image:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=88",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=90",
     color: "violet",
   },
   {
     name: "Juguetes y Más",
     image:
-      "https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=500&q=88",
+      "https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=600&q=90",
     color: "fuchsia",
   },
 ];
@@ -73,7 +73,7 @@ const products = [
     sales: "120 ventas",
     category: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=700&q=90",
     description:
       "Audífonos inalámbricos compactos, cómodos y perfectos para uso diario.",
     specifications: [
@@ -94,7 +94,7 @@ const products = [
     sales: "85 ventas",
     category: "Ropa y Moda",
     image:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=90",
     description:
       "Bolsa elegante para uso diario, con diseño moderno y gran versatilidad.",
     specifications: [
@@ -115,7 +115,7 @@ const products = [
     sales: "64 ventas",
     category: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=700&q=90",
     description:
       "Smartwatch moderno para monitorear actividad y mantenerte conectado.",
     specifications: [
@@ -136,7 +136,7 @@ const products = [
     sales: "45 ventas",
     category: "Hogar y Vida",
     image:
-      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=700&q=90",
     description:
       "Licuadora de alto rendimiento para preparar bebidas y alimentos fácilmente.",
     specifications: [
@@ -146,10 +146,94 @@ const products = [
       "Fácil limpieza",
     ],
   },
+  {
+    id: 5,
+    name: "Tenis Urbanos",
+    price: 749,
+    oldPrice: 999,
+    discount: "-25%",
+    badgeType: "discount",
+    rating: "4.8",
+    sales: "92 ventas",
+    category: "Ropa y Moda",
+    image:
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=90",
+    description:
+      "Tenis urbanos cómodos para combinar con cualquier estilo.",
+    specifications: [
+      "Suela cómoda",
+      "Diseño urbano",
+      "Material resistente",
+      "Uso diario",
+    ],
+  },
+  {
+    id: 6,
+    name: "Cámara Instantánea",
+    price: 1199,
+    oldPrice: 1399,
+    discount: "-14%",
+    badgeType: "discount",
+    rating: "4.7",
+    sales: "51 ventas",
+    category: "Tecnología",
+    image:
+      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=700&q=90",
+    description:
+      "Cámara instantánea para capturar y conservar tus mejores momentos.",
+    specifications: [
+      "Fotografía instantánea",
+      "Diseño compacto",
+      "Flash integrado",
+      "Ideal para viajes",
+    ],
+  },
+  {
+    id: 7,
+    name: "Set de Cuidado Facial",
+    price: 459,
+    oldPrice: 599,
+    discount: "-23%",
+    badgeType: "discount",
+    rating: "4.9",
+    sales: "73 ventas",
+    category: "Belleza y Salud",
+    image:
+      "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=700&q=90",
+    description:
+      "Set de cuidado facial para complementar tu rutina diaria.",
+    specifications: [
+      "Cuidado diario",
+      "Presentación completa",
+      "Texturas ligeras",
+      "Ideal para regalar",
+    ],
+  },
+  {
+    id: 8,
+    name: "Lámpara Decorativa",
+    price: 549,
+    oldPrice: null,
+    discount: "Nuevo",
+    badgeType: "new",
+    rating: "4.6",
+    sales: "38 ventas",
+    category: "Hogar y Vida",
+    image:
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=90",
+    description:
+      "Lámpara decorativa moderna para darle personalidad a cualquier espacio.",
+    specifications: [
+      "Diseño moderno",
+      "Luz ambiental",
+      "Ideal para interiores",
+      "Fácil instalación",
+    ],
+  },
 ];
 
 /* =========================================================
-   CARRITO
+   UTILIDADES
    ========================================================= */
 
 function getCart() {
@@ -453,6 +537,20 @@ function Icon({
         </svg>
       );
 
+    case "spark":
+      return (
+        <svg {...props}>
+          <path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z" />
+        </svg>
+      );
+
+    case "fire":
+      return (
+        <svg {...props}>
+          <path d="M12 21c4.2 0 7-2.7 7-6.6 0-3.2-1.8-5.1-4.3-7.4.1 2-1 3.4-2.1 4.1.1-3.2-1.4-5.9-4.3-8.1.2 3.8-3.3 5.5-3.3 9.2C5 17.8 7.8 21 12 21Z" />
+        </svg>
+      );
+
     default:
       return null;
   }
@@ -492,7 +590,6 @@ function Header({
       <Link
         to="/"
         className="vd-brand"
-        aria-label="VaniDaxi"
       >
         <span>Vani</span>
         <strong>Daxi</strong>
@@ -503,13 +600,12 @@ function Header({
           type="button"
           className="vd-header-icon"
           onClick={onAccount}
-          aria-label="Notificaciones"
+          aria-label="Cuenta"
         >
           <Icon
             name="bell"
             size={23}
           />
-
           <i>3</i>
         </button>
 
@@ -522,7 +618,6 @@ function Header({
             name="cart"
             size={24}
           />
-
           <i>{cartCount}</i>
         </Link>
       </div>
@@ -542,7 +637,7 @@ function SearchBox({
     <div className="vd-search-box">
       <Icon
         name="search"
-        size={22}
+        size={21}
         stroke={1.7}
       />
 
@@ -561,7 +656,7 @@ function SearchBox({
       >
         <Icon
           name="search"
-          size={20}
+          size={19}
           stroke={1.9}
         />
       </button>
@@ -609,7 +704,6 @@ function MainPromoCards({
           <Icon
             name="arrow"
             size={13}
-            stroke={2}
           />
         </span>
       </button>
@@ -642,7 +736,6 @@ function MainPromoCards({
           <Icon
             name="arrow"
             size={13}
-            stroke={2}
           />
         </span>
       </button>
@@ -651,7 +744,7 @@ function MainPromoCards({
 }
 
 /* =========================================================
-   CATEGORÍAS — IMÁGENES REALISTAS
+   CATEGORÍAS
    ========================================================= */
 
 function CategoriesSection() {
@@ -698,7 +791,7 @@ function CategoriesSection() {
 }
 
 /* =========================================================
-   BANNER DE OFERTAS
+   BANNER
    ========================================================= */
 
 function OfferBanner() {
@@ -706,6 +799,10 @@ function OfferBanner() {
     <>
       <section className="vd-offer">
         <div className="vd-offer-text">
+          <div className="vd-offer-mini">
+            SOLO POR HOY
+          </div>
+
           <h2>
             OFERTAS
             <br />
@@ -732,20 +829,16 @@ function OfferBanner() {
           <div className="vd-sale-circle vd-sale-two" />
           <div className="vd-sale-circle vd-sale-three" />
 
-          <div className="vd-offer-bag">
-            <div className="vd-bag-handle" />
-          </div>
-
           <div className="vd-offer-watch">
             <img
-              src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=450&q=85"
+              src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=450&q=90"
               alt="Smartwatch"
             />
           </div>
 
           <div className="vd-offer-shoe">
             <img
-              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=550&q=85"
+              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=550&q=90"
               alt="Tenis"
             />
           </div>
@@ -767,7 +860,7 @@ function OfferBanner() {
 }
 
 /* =========================================================
-   TARJETA DE PRODUCTO
+   PRODUCT CARD
    ========================================================= */
 
 function ProductCard({
@@ -867,6 +960,139 @@ function ProductCard({
         </button>
       </div>
     </article>
+  );
+}
+
+/* =========================================================
+   NUEVO: CARRUSEL DE PRODUCTOS
+   ========================================================= */
+
+function ProductCarousel({
+  title,
+  subtitle,
+  items,
+  favorites,
+  onToggleFavorite,
+  icon,
+}) {
+  return (
+    <section className="vd-carousel-section">
+      <div className="vd-section-title vd-carousel-title">
+        <div>
+          <h2>
+            {icon && (
+              <span className="vd-title-icon">
+                <Icon
+                  name={icon}
+                  size={17}
+                  stroke={1.8}
+                />
+              </span>
+            )}
+
+            {title}
+          </h2>
+
+          {subtitle && (
+            <p>{subtitle}</p>
+          )}
+        </div>
+
+        <Link to="/catalogo">
+          Ver todos
+          <span>›</span>
+        </Link>
+      </div>
+
+      <div className="vd-horizontal-products">
+        {items.map((product) => (
+          <div
+            className="vd-carousel-item"
+            key={`${title}-${product.id}`}
+          >
+            <ProductCard
+              product={product}
+              favorites={favorites}
+              onToggleFavorite={
+                onToggleFavorite
+              }
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================
+   SECCIÓN DE CATEGORÍAS DESTACADAS
+   ========================================================= */
+
+function FeaturedCategoryStrip() {
+  const featured = [
+    {
+      name: "Moda",
+      text: "Nuevos estilos",
+      image:
+        "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=800&q=90",
+    },
+    {
+      name: "Tecnología",
+      text: "Lo más nuevo",
+      image:
+        "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=800&q=90",
+    },
+    {
+      name: "Hogar",
+      text: "Hazlo especial",
+      image:
+        "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=90",
+    },
+    {
+      name: "Belleza",
+      text: "Cuida de ti",
+      image:
+        "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=90",
+    },
+  ];
+
+  return (
+    <section className="vd-featured-categories">
+      <div className="vd-section-title">
+        <h2>Descubre más</h2>
+
+        <Link to="/catalogo">
+          Explorar
+          <span>›</span>
+        </Link>
+      </div>
+
+      <div className="vd-featured-row">
+        {featured.map((item) => (
+          <Link
+            key={item.name}
+            to="/catalogo"
+            className="vd-featured-card"
+          >
+            <img
+              src={item.image}
+              alt={item.name}
+              loading="lazy"
+            />
+
+            <div>
+              <small>
+                {item.text}
+              </small>
+
+              <strong>
+                {item.name}
+              </strong>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -994,6 +1220,32 @@ function Home({
       );
     }, [search]);
 
+  const discountProducts =
+    products.filter(
+      (product) =>
+        product.oldPrice
+    );
+
+  const newProducts =
+    products.filter(
+      (product) =>
+        product.badgeType === "new"
+    );
+
+  const techProducts =
+    products.filter(
+      (product) =>
+        product.category ===
+        "Tecnología"
+    );
+
+  const fashionProducts =
+    products.filter(
+      (product) =>
+        product.category ===
+        "Ropa y Moda"
+    );
+
   return (
     <main className="vd-home">
       <section className="vd-search-section">
@@ -1012,50 +1264,164 @@ function Home({
 
       <OfferBanner />
 
-      <section className="vd-section vd-products-section">
-        <div className="vd-section-title">
-          <h2>
-            {search.trim()
-              ? "Resultados"
-              : "Productos destacados"}
-          </h2>
+      {search.trim() ? (
+        <section className="vd-section vd-products-section">
+          <div className="vd-section-title">
+            <h2>Resultados</h2>
 
-          <Link to="/catalogo">
-            Ver todos
-            <span>›</span>
-          </Link>
-        </div>
-
-        <div className="vd-product-grid">
-          {visibleProducts.map(
-            (product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                favorites={favorites}
-                onToggleFavorite={
-                  onToggleFavorite
-                }
-              />
-            )
-          )}
-        </div>
-
-        {visibleProducts.length ===
-          0 && (
-          <div className="vd-no-results">
-            <span>🔎</span>
-
-            <strong>
-              No encontramos productos
-            </strong>
-
-            <small>
-              Prueba con otra búsqueda.
-            </small>
+            <Link to="/catalogo">
+              Ver todos
+              <span>›</span>
+            </Link>
           </div>
-        )}
-      </section>
+
+          <div className="vd-product-grid">
+            {visibleProducts.map(
+              (product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  favorites={favorites}
+                  onToggleFavorite={
+                    onToggleFavorite
+                  }
+                />
+              )
+            )}
+          </div>
+
+          {visibleProducts.length ===
+            0 && (
+            <div className="vd-no-results">
+              <span>🔎</span>
+
+              <strong>
+                No encontramos productos
+              </strong>
+
+              <small>
+                Prueba con otra búsqueda.
+              </small>
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {/* =================================================
+              NUEVAS SECCIONES DESLIZABLES
+              ================================================= */}
+
+          <ProductCarousel
+            title="Ofertas del día"
+            subtitle="Aprovecha precios especiales"
+            items={discountProducts}
+            favorites={favorites}
+            onToggleFavorite={
+              onToggleFavorite
+            }
+            icon="fire"
+          />
+
+          <ProductCarousel
+            title="Lo más vendido"
+            subtitle="Lo que otros compradores están eligiendo"
+            items={[
+              products[0],
+              products[1],
+              products[4],
+              products[2],
+            ]}
+            favorites={favorites}
+            onToggleFavorite={
+              onToggleFavorite
+            }
+            icon="spark"
+          />
+
+          <FeaturedCategoryStrip />
+
+          <ProductCarousel
+            title="Novedades"
+            subtitle="Productos que acaban de llegar"
+            items={newProducts}
+            favorites={favorites}
+            onToggleFavorite={
+              onToggleFavorite
+            }
+            icon="spark"
+          />
+
+          <ProductCarousel
+            title="Tecnología para ti"
+            subtitle="Descubre tus próximos gadgets"
+            items={techProducts}
+            favorites={favorites}
+            onToggleFavorite={
+              onToggleFavorite
+            }
+            icon="spark"
+          />
+
+          <ProductCarousel
+            title="Moda y estilo"
+            subtitle="Encuentra tu próximo look"
+            items={fashionProducts}
+            favorites={favorites}
+            onToggleFavorite={
+              onToggleFavorite
+            }
+            icon="spark"
+          />
+
+          <ProductCarousel
+            title="Recomendados para ti"
+            subtitle="Una selección de VaniDaxi"
+            items={[
+              products[3],
+              products[6],
+              products[7],
+              products[5],
+            ]}
+            favorites={favorites}
+            onToggleFavorite={
+              onToggleFavorite
+            }
+            icon="spark"
+          />
+
+          <section className="vd-final-promo">
+            <div>
+              <span>
+                ✨ VaniDaxi
+              </span>
+
+              <h2>
+                Todo en
+                <br />
+                un solo lugar
+              </h2>
+
+              <p>
+                Compra, descubre y encuentra
+                algo que te encante.
+              </p>
+
+              <Link
+                to="/catalogo"
+                className="vd-final-button"
+              >
+                Explorar productos
+              </Link>
+            </div>
+
+            <div className="vd-final-art">
+              <div>🛍️</div>
+              <div>✨</div>
+              <div>💜</div>
+            </div>
+          </section>
+        </>
+      )}
 
       <Benefits />
 
@@ -1135,6 +1501,7 @@ function Catalog({
     <main className="vd-page">
       <div className="vd-page-title">
         <p>EXPLORA</p>
+
         <h1>
           Todos los productos
         </h1>
@@ -1220,7 +1587,7 @@ function Catalog({
 }
 
 /* =========================================================
-   PÁGINA DEL PRODUCTO
+   PRODUCTO
    ========================================================= */
 
 function ProductPage({
@@ -1327,7 +1694,6 @@ function ProductPage({
                   Number(product.id)
                 )
               }
-              aria-label="Favoritos"
             >
               <Icon
                 name="heart"
@@ -1348,7 +1714,6 @@ function ProductPage({
                   className="vd-spec-row"
                 >
                   <span>✓</span>
-
                   {specification}
                 </div>
               )
@@ -1372,9 +1737,8 @@ function Cart() {
     useState(getCart);
 
   useEffect(() => {
-    const update = () => {
+    const update = () =>
       setItems(getCart());
-    };
 
     window.addEventListener(
       "vanidaxi-cart-change",
@@ -1757,7 +2121,6 @@ function BottomNavigation({
         <span className="vd-home-symbol">
           ⌂
         </span>
-
         <small>Inicio</small>
       </NavLink>
 
@@ -1774,7 +2137,6 @@ function BottomNavigation({
           size={22}
           stroke={1.55}
         />
-
         <small>Categorías</small>
       </NavLink>
 
@@ -1790,7 +2152,6 @@ function BottomNavigation({
             stroke={1.7}
           />
         </span>
-
         <small>Vender</small>
       </button>
 
@@ -1807,7 +2168,6 @@ function BottomNavigation({
           size={22}
           stroke={1.55}
         />
-
         <small>Favoritos</small>
       </NavLink>
 
@@ -1821,7 +2181,6 @@ function BottomNavigation({
           size={22}
           stroke={1.6}
         />
-
         <small>Cuenta</small>
       </button>
     </nav>
@@ -1829,7 +2188,7 @@ function BottomNavigation({
 }
 
 /* =========================================================
-   MENÚ LATERAL
+   MENÚ
    ========================================================= */
 
 function MenuOverlay({
@@ -1873,7 +2232,6 @@ function MenuOverlay({
             type="button"
             className="vd-menu-close"
             onClick={onClose}
-            aria-label="Cerrar menú"
           >
             <Icon
               name="close"
@@ -1885,8 +2243,7 @@ function MenuOverlay({
         <Link
           to="/"
           className={
-            location.pathname ===
-            "/"
+            location.pathname === "/"
               ? "vd-menu-link vd-menu-link-active"
               : "vd-menu-link"
           }
@@ -2076,7 +2433,6 @@ function AuthModal({
           type="button"
           className="vd-modal-close"
           onClick={onClose}
-          aria-label="Cerrar"
         >
           <Icon
             name="close"
@@ -2171,7 +2527,6 @@ function AuthModal({
                 ? "register"
                 : "login"
             );
-
             setMessage("");
           }}
         >
@@ -2515,9 +2870,7 @@ function App() {
         type="button"
         className="vd-chat"
         onClick={() =>
-          alert(
-            "Soporte VaniDaxi"
-          )
+          alert("Soporte VaniDaxi")
         }
         aria-label="Soporte VaniDaxi"
       >
@@ -2582,7 +2935,6 @@ function App() {
               onClick={() =>
                 setSellOpen(false)
               }
-              aria-label="Cerrar"
             >
               <Icon
                 name="close"
@@ -2696,32 +3048,22 @@ function App() {
           position: sticky;
           top: 0;
           z-index: 70;
-
           display: grid;
-          grid-template-columns:
-            44px 1fr 84px;
+          grid-template-columns: 44px 1fr 84px;
           align-items: center;
-
           width: 100%;
           height: 64px;
           padding: 7px 13px;
-
-          background:
-            rgba(255,255,255,.97);
-
-          border-bottom:
-            1px solid #efedf0;
-
+          background: rgba(255,255,255,.97);
+          border-bottom: 1px solid #efedf0;
           backdrop-filter: blur(15px);
-
           transition:
             transform .25s ease,
             opacity .25s ease;
         }
 
         .vd-header-hidden {
-          transform:
-            translateY(-110%);
+          transform: translateY(-110%);
         }
 
         .vd-menu-button,
@@ -2734,7 +3076,6 @@ function App() {
         .vd-menu-button {
           width: 38px;
           height: 38px;
-
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2742,7 +3083,6 @@ function App() {
 
         .vd-brand {
           justify-self: center;
-
           font-size: 25px;
           line-height: 1;
           letter-spacing: -1.3px;
@@ -2750,11 +3090,11 @@ function App() {
         }
 
         .vd-brand span {
-          color: #5d1d9d;
+          color: #7a179e;
         }
 
         .vd-brand strong {
-          color: #e91450;
+          color: #ed1451;
         }
 
         .vd-header-right {
@@ -2766,10 +3106,8 @@ function App() {
 
         .vd-header-icon {
           position: relative;
-
           width: 38px;
           height: 38px;
-
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2779,22 +3117,16 @@ function App() {
           position: absolute;
           top: -1px;
           right: -1px;
-
           min-width: 15px;
           height: 15px;
           padding: 0 3px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 999px;
-
           background: #eb1550;
-          color: #ffffff;
-
+          color: #fff;
           font-size: 8px;
-          line-height: 1;
           font-style: normal;
           font-weight: 900;
         }
@@ -2803,8 +3135,7 @@ function App() {
 
         .vd-home {
           width: 100%;
-          padding:
-            10px 15px 18px;
+          padding: 10px 15px 18px;
         }
 
         .vd-search-section {
@@ -2814,37 +3145,25 @@ function App() {
         .vd-search-box {
           width: 100%;
           height: 39px;
-
           display: flex;
           align-items: center;
           gap: 8px;
-
           padding-left: 11px;
-
-          border:
-            1px solid #ece8ee;
-
+          border: 1px solid #ece8ee;
           border-radius: 11px;
-
-          background: #ffffff;
+          background: #fff;
           color: #77737d;
-
-          box-shadow:
-            0 4px 13px
-            rgba(48,29,67,.04);
+          box-shadow: 0 4px 13px rgba(48,29,67,.04);
         }
 
         .vd-search-box input {
           flex: 1;
           min-width: 0;
           height: 100%;
-
           border: 0;
           outline: 0;
-
           color: #39373e;
           background: transparent;
-
           font-size: 10px;
         }
 
@@ -2855,61 +3174,44 @@ function App() {
         .vd-search-box button {
           width: 39px;
           height: 39px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
-          border-radius:
-            0 11px 11px 0;
-
+          border-radius: 0 11px 11px 0;
           background:
             linear-gradient(
               135deg,
               #ee1451,
               #7a179e
             );
-
-          color: #ffffff;
+          color: #fff;
         }
 
-        /* TARJETAS PRINCIPALES */
+        /* TARJETAS */
 
         .vd-main-cards {
           display: grid;
-          grid-template-columns:
-            repeat(2,minmax(0,1fr));
-
+          grid-template-columns: repeat(2,minmax(0,1fr));
           gap: 8px;
           margin-bottom: 17px;
         }
 
         .vd-main-card {
           position: relative;
-
           width: 100%;
-          min-width: 0;
           height: 69px;
-
           display: grid;
-          grid-template-columns:
-            37px 1fr;
+          grid-template-columns: 37px 1fr;
           align-items: center;
           gap: 7px;
-
           padding: 8px 9px;
           overflow: hidden;
-
           border: 0;
           border-radius: 9px;
-
           text-align: left;
-          color: #ffffff;
-
-          box-shadow:
-            0 5px 12px
-            rgba(83,16,99,.10);
+          color: #fff;
+          box-shadow: 0 5px 12px rgba(83,16,99,.10);
         }
 
         .vd-sell-card {
@@ -2933,16 +3235,11 @@ function App() {
         .vd-main-icon {
           width: 37px;
           height: 37px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 9px;
-
-          background:
-            rgba(255,255,255,.97);
-
+          background: rgba(255,255,255,.97);
           color: #df174f;
         }
 
@@ -2957,7 +3254,6 @@ function App() {
 
         .vd-main-copy strong {
           display: block;
-
           font-size: 10px;
           line-height: 1.03;
           font-weight: 900;
@@ -2966,10 +3262,7 @@ function App() {
         .vd-main-copy small {
           display: block;
           margin-top: 3px;
-
-          color:
-            rgba(255,255,255,.91);
-
+          color: rgba(255,255,255,.91);
           font-size: 7px;
           line-height: 1.18;
         }
@@ -2978,395 +3271,286 @@ function App() {
           position: absolute;
           right: 7px;
           bottom: 7px;
-
           width: 18px;
           height: 18px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 50%;
-
-          background:
-            rgba(255,255,255,.96);
-
+          background: rgba(255,255,255,.96);
           color: #742091;
         }
 
-        /* TÍTULOS */
+        /* SECCIONES */
 
         .vd-section {
-          margin-bottom: 15px;
+          margin-bottom: 17px;
         }
 
         .vd-section-title {
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           justify-content: space-between;
           gap: 10px;
-
-          margin-bottom: 8px;
+          margin-bottom: 9px;
         }
 
         .vd-section-title h2 {
           margin: 0;
-
-          color: #222129;
-
+          color: #332d37;
           font-size: 14px;
           line-height: 1.1;
           font-weight: 900;
+          letter-spacing: -.3px;
         }
 
         .vd-section-title a {
-          color: #dd1653;
-
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          color: #7a179e;
           font-size: 8px;
-          font-weight: 850;
+          font-weight: 800;
         }
 
         .vd-section-title a span {
-          margin-left: 2px;
-
-          font-size: 13px;
-          vertical-align: -1px;
+          font-size: 16px;
+          line-height: 8px;
         }
 
-        /* =========================================
-           CATEGORÍAS
-           ========================================= */
+        /* CATEGORÍAS */
 
         .vd-category-row {
           display: flex;
-          gap: 7px;
-
+          gap: 9px;
           overflow-x: auto;
-
-          padding:
-            2px 1px 5px;
-
+          padding: 1px 2px 7px;
           scrollbar-width: none;
+          overscroll-behavior-x: contain;
         }
 
-        .vd-category-row::-webkit-scrollbar {
+        .vd-category-row::-webkit-scrollbar,
+        .vd-horizontal-products::-webkit-scrollbar,
+        .vd-featured-row::-webkit-scrollbar {
           display: none;
         }
 
         .vd-category {
-          flex:
-            0 0 58px;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-
-          gap: 4px;
+          flex: 0 0 66px;
+          text-align: center;
         }
 
         .vd-category-icon {
           position: relative;
-
-          width: 51px;
-          height: 51px;
-
+          width: 58px;
+          height: 58px;
+          margin: 0 auto 5px;
           overflow: hidden;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          border-radius: 13px;
-
-          border:
-            1px solid
-            rgba(255,255,255,.85);
-
-          box-shadow:
-            0 4px 11px
-            rgba(67,24,84,.09),
-            inset 0 1px 0
-            rgba(255,255,255,.75);
-
+          border-radius: 18px;
+          padding: 3px;
           background:
             linear-gradient(
-              145deg,
-              #ffffff,
-              #faf6fb
+              135deg,
+              #f31a55,
+              #a118a0,
+              #65189b
             );
-
-          transition:
-            transform .15s ease,
-            box-shadow .15s ease;
-        }
-
-        .vd-category:active
-        .vd-category-icon {
-          transform: scale(.95);
+          box-shadow: 0 5px 12px rgba(89,23,119,.13);
         }
 
         .vd-category-icon img {
-          position: absolute;
-          inset: 0;
-
           width: 100%;
           height: 100%;
-
+          display: block;
           object-fit: cover;
-
-          transform: scale(1.07);
-
-          filter:
-            saturate(1.05)
-            contrast(1.02);
+          border-radius: 15px;
         }
 
         .vd-category-overlay {
           position: absolute;
-          inset: 0;
-
+          inset: 3px;
+          border-radius: 15px;
           background:
             linear-gradient(
               180deg,
-              rgba(255,255,255,.16),
-              rgba(82,22,103,.18)
+              rgba(255,255,255,.05),
+              rgba(99,17,139,.22)
             );
-
           pointer-events: none;
         }
 
         .vd-category-pink {
           background:
             linear-gradient(
-              145deg,
-              #fff0f5,
-              #ffdce9
+              135deg,
+              #ff315d,
+              #bd1a96
             );
         }
 
         .vd-category-purple {
           background:
             linear-gradient(
-              145deg,
-              #f5edff,
-              #e8d8ff
+              135deg,
+              #c01fa5,
+              #671aa2
             );
         }
 
         .vd-category-rose {
           background:
             linear-gradient(
-              145deg,
-              #fff1ee,
-              #ffe0dc
+              135deg,
+              #f54a72,
+              #8d1a9d
             );
         }
 
         .vd-category-magenta {
           background:
             linear-gradient(
-              145deg,
-              #fff0fb,
-              #fbd7ef
+              135deg,
+              #f12283,
+              #7a179e
             );
         }
 
         .vd-category-violet {
           background:
             linear-gradient(
-              145deg,
-              #f4f0ff,
-              #e5dcff
+              135deg,
+              #a721d0,
+              #5b189a
             );
         }
 
         .vd-category-fuchsia {
           background:
             linear-gradient(
-              145deg,
-              #fff0fa,
-              #f9d9f2
+              135deg,
+              #f11a9c,
+              #79189e
             );
         }
 
         .vd-category-label {
-          width: 58px;
-
-          text-align: center;
-
-          color: #3b3940;
-
+          display: block;
+          color: #4d4851;
           font-size: 7px;
-          line-height: 1.08;
-          font-weight: 750;
+          line-height: 1.2;
+          font-weight: 800;
         }
 
-        /* OFERTAS */
+        /* OFERTA */
 
         .vd-offer {
           position: relative;
-
-          width: 100%;
-          height: 145px;
-
-          display: grid;
-          grid-template-columns:
-            42% 58%;
-
+          min-height: 145px;
+          margin: 4px 0 5px;
           overflow: hidden;
-
-          border-radius: 11px;
-
+          border-radius: 15px;
           background:
             linear-gradient(
               115deg,
-              #f11954 0%,
-              #d50f82 49%,
-              #6920aa 100%
+              #ee1651,
+              #bd1a91 55%,
+              #711a9e
             );
-
-          color: #ffffff;
-
-          box-shadow:
-            0 8px 16px
-            rgba(106,17,106,.11);
+          color: #fff;
+          box-shadow: 0 8px 18px rgba(113,20,115,.15);
         }
 
         .vd-offer-text {
           position: relative;
-          z-index: 5;
-
-          padding:
-            19px 4px 10px 16px;
+          z-index: 3;
+          padding: 17px 0 16px 18px;
         }
 
-        .vd-offer-text h2 {
-          margin: 0;
+        .vd-offer-mini {
+          margin-bottom: 4px;
+          font-size: 7px;
+          font-weight: 900;
+          letter-spacing: 1.1px;
+          opacity: .88;
+        }
 
-          font-size: 18px;
-          line-height: .98;
+        .vd-offer h2 {
+          margin: 0;
+          font-size: 20px;
+          line-height: .95;
+          letter-spacing: -.8px;
           font-weight: 950;
         }
 
-        .vd-offer-text p {
-          margin: 7px 0 9px;
-
+        .vd-offer p {
+          margin: 7px 0 10px;
           font-size: 8px;
-          line-height: 1.27;
+          line-height: 1.25;
+          color: rgba(255,255,255,.88);
         }
 
         .vd-offer-button {
-          min-height: 26px;
-          padding: 0 10px;
-
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          gap: 2px;
-
+          gap: 8px;
+          padding: 7px 11px;
           border-radius: 999px;
-
-          background: #ffffff;
-          color: #dd1657;
-
+          background: #fff;
+          color: #8a1b99;
           font-size: 8px;
           font-weight: 900;
         }
 
         .vd-offer-button span {
-          font-size: 13px;
+          font-size: 15px;
+          line-height: 8px;
         }
 
         .vd-offer-art {
-          position: relative;
-          overflow: hidden;
+          position: absolute;
+          right: -4px;
+          top: 0;
+          width: 53%;
+          height: 100%;
         }
 
         .vd-sale-circle {
           position: absolute;
-
-          width: 4px;
-          height: 4px;
-
           border-radius: 50%;
-          background:
-            rgba(255,255,255,.65);
+          background: rgba(255,255,255,.10);
         }
 
         .vd-sale-one {
-          left: 23px;
-          top: 28px;
+          width: 110px;
+          height: 110px;
+          right: -18px;
+          top: -20px;
         }
 
         .vd-sale-two {
-          left: 77px;
-          top: 21px;
-          background: #ffd650;
+          width: 72px;
+          height: 72px;
+          right: 65px;
+          bottom: -26px;
         }
 
         .vd-sale-three {
-          right: 22px;
-          top: 38px;
-          background: #ff7ea3;
-        }
-
-        .vd-offer-bag {
-          position: absolute;
-
-          left: 73px;
-          top: 27px;
-
-          width: 58px;
-          height: 78px;
-
-          border-radius:
-            8px 8px 10px 10px;
-
-          background:
-            linear-gradient(
-              135deg,
-              #ea49b7,
-              #9a3fd0
-            );
-
-          transform: rotate(5deg);
-        }
-
-        .vd-bag-handle {
-          position: absolute;
-
-          left: 8px;
-          top: -17px;
-
-          width: 41px;
-          height: 29px;
-
-          border:
-            2px solid
-            rgba(255,255,255,.78);
-
-          border-bottom: 0;
-
-          border-radius:
-            24px 24px 0 0;
+          width: 42px;
+          height: 42px;
+          right: 105px;
+          top: 18px;
+          background: rgba(255,255,255,.15);
         }
 
         .vd-offer-watch {
           position: absolute;
-
-          left: 4px;
-          bottom: 9px;
-
-          width: 63px;
-          height: 71px;
-
-          overflow: hidden;
-
-          border-radius: 12px;
-
-          transform: rotate(4deg);
-
-          background: #ffffff;
+          width: 83px;
+          height: 83px;
+          right: 35px;
+          top: 15px;
+          transform: rotate(9deg);
+          filter: drop-shadow(0 9px 8px rgba(45,0,54,.24));
         }
 
         .vd-offer-watch img,
@@ -3374,592 +3558,564 @@ function App() {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          border-radius: 18px;
         }
 
         .vd-offer-shoe {
           position: absolute;
-
-          right: -9px;
-          bottom: 1px;
-
-          width: 108px;
-          height: 67px;
-
-          overflow: hidden;
-
-          border-radius: 12px;
-
-          transform: rotate(-7deg);
-
-          background: #ffffff;
+          width: 104px;
+          height: 74px;
+          right: -2px;
+          bottom: 6px;
+          transform: rotate(-8deg);
+          filter: drop-shadow(0 9px 8px rgba(45,0,54,.24));
         }
 
         .vd-percent-bubble {
           position: absolute;
-
-          right: 58px;
-          top: 57px;
-
-          width: 42px;
-          height: 42px;
-
+          right: 96px;
+          bottom: 17px;
+          width: 34px;
+          height: 34px;
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 50%;
-
-          background:
-            linear-gradient(
-              135deg,
-              #ff4d78,
-              #bd2acb
-            );
-
-          color: #ffffff;
-
-          font-size: 23px;
+          background: #fff;
+          color: #e61556;
+          font-size: 16px;
           font-weight: 950;
-
-          transform: rotate(8deg);
+          box-shadow: 0 5px 12px rgba(47,0,54,.2);
         }
 
         .vd-dots {
           display: flex;
           justify-content: center;
-          gap: 5px;
-
-          padding:
-            6px 0 8px;
+          gap: 4px;
+          margin: 7px 0 16px;
         }
 
         .vd-dots span {
-          width: 6px;
-          height: 6px;
-
+          width: 5px;
+          height: 5px;
           border-radius: 50%;
-          background: #eadfea;
+          background: #ddd5e2;
         }
 
-        .vd-dots .active {
-          background: #e81959;
+        .vd-dots span.active {
+          width: 16px;
+          border-radius: 999px;
+          background:
+            linear-gradient(
+              90deg,
+              #ed1550,
+              #7b179e
+            );
+        }
+
+        /* =================================================
+           NUEVOS CARRUSELES
+           ================================================= */
+
+        .vd-carousel-section {
+          margin: 0 -15px 19px;
+          padding: 0 15px;
+        }
+
+        .vd-carousel-title {
+          align-items: center;
+          margin-bottom: 8px;
+        }
+
+        .vd-carousel-title > div:first-child {
+          min-width: 0;
+        }
+
+        .vd-carousel-title h2 {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .vd-carousel-title p {
+          margin: 3px 0 0;
+          color: #89838d;
+          font-size: 7px;
+          line-height: 1.2;
+        }
+
+        .vd-title-icon {
+          width: 23px;
+          height: 23px;
+          flex: 0 0 23px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 7px;
+          background:
+            linear-gradient(
+              135deg,
+              #f31a55,
+              #7b179e
+            );
+          color: #fff;
+        }
+
+        .vd-horizontal-products {
+          display: flex;
+          gap: 9px;
+          overflow-x: auto;
+          padding: 1px 2px 8px;
+          scrollbar-width: none;
+          scroll-snap-type: x proximity;
+          overscroll-behavior-x: contain;
+        }
+
+        .vd-carousel-item {
+          flex: 0 0 145px;
+          scroll-snap-align: start;
+        }
+
+        .vd-carousel-item .vd-product-card {
+          width: 145px;
+        }
+
+        .vd-carousel-item .vd-product-image {
+          height: 126px;
+        }
+
+        .vd-carousel-item .vd-product-info {
+          padding: 8px 8px 9px;
+        }
+
+        .vd-carousel-item .vd-product-info h3 {
+          min-height: 25px;
+          font-size: 8px;
+        }
+
+        .vd-carousel-item .vd-price strong {
+          font-size: 11px;
+        }
+
+        .vd-carousel-item .vd-price del {
+          font-size: 7px;
+        }
+
+        .vd-carousel-item .vd-rating {
+          font-size: 6.5px;
+        }
+
+        .vd-carousel-item .vd-add-button {
+          height: 27px;
+          font-size: 7px;
+        }
+
+        /* DESCUBRE */
+
+        .vd-featured-categories {
+          margin: 0 -15px 19px;
+          padding: 0 15px;
+        }
+
+        .vd-featured-row {
+          display: flex;
+          gap: 9px;
+          overflow-x: auto;
+          padding: 1px 2px 7px;
+          scrollbar-width: none;
+        }
+
+        .vd-featured-card {
+          position: relative;
+          flex: 0 0 136px;
+          height: 102px;
+          overflow: hidden;
+          border-radius: 13px;
+          box-shadow: 0 6px 14px rgba(50,20,70,.11);
+        }
+
+        .vd-featured-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .vd-featured-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0) 25%,
+              rgba(48,10,56,.76) 100%
+            );
+        }
+
+        .vd-featured-card div {
+          position: absolute;
+          z-index: 2;
+          left: 9px;
+          right: 8px;
+          bottom: 8px;
+          color: #fff;
+        }
+
+        .vd-featured-card small {
+          display: block;
+          margin-bottom: 2px;
+          font-size: 6px;
+          opacity: .88;
+        }
+
+        .vd-featured-card strong {
+          font-size: 12px;
+          font-weight: 900;
         }
 
         /* PRODUCTOS */
 
-        .vd-products-section {
-          margin-bottom: 14px;
-        }
-
         .vd-product-grid {
           display: grid;
-          grid-template-columns:
-            repeat(4,minmax(0,1fr));
-
-          gap: 6px;
+          grid-template-columns: repeat(2,minmax(0,1fr));
+          gap: 9px;
         }
 
         .vd-product-card {
           min-width: 0;
           overflow: hidden;
-
-          border:
-            1px solid
-            rgba(95,84,104,.065);
-
-          border-radius: 8px;
-
-          background: #ffffff;
-
-          box-shadow:
-            0 4px 10px
-            rgba(35,24,47,.035);
+          border: 1px solid #eee9ef;
+          border-radius: 12px;
+          background: #fff;
+          box-shadow: 0 5px 14px rgba(51,24,66,.055);
         }
 
         .vd-product-top {
-          height: 0;
+          position: absolute;
+          z-index: 3;
+          left: 7px;
+          right: 7px;
+          top: 7px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          pointer-events: none;
+        }
+
+        .vd-product-card {
           position: relative;
-          z-index: 4;
         }
 
         .vd-product-badge {
-          position: absolute;
-
-          top: 5px;
-          left: 5px;
-
-          padding: 3px 5px;
-
-          border-radius: 4px;
-
-          background: #e91650;
-          color: #ffffff;
-
+          padding: 4px 6px;
+          border-radius: 999px;
+          background: #ed1550;
+          color: #fff;
           font-size: 6px;
           font-weight: 900;
         }
 
         .vd-product-badge.vd-new {
-          background: #7920a4;
+          background: #77199e;
         }
 
         .vd-favorite {
-          position: absolute;
-
-          top: 4px;
-          right: 4px;
-
-          width: 19px;
-          height: 19px;
-
+          width: 27px;
+          height: 27px;
           display: flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
           border-radius: 50%;
-
-          background:
-            rgba(255,255,255,.93);
-
-          color: #77737c;
+          background: rgba(255,255,255,.93);
+          color: #7a737d;
+          pointer-events: auto;
+          box-shadow: 0 3px 8px rgba(0,0,0,.08);
         }
 
         .vd-favorite-active {
-          color: #e71854;
+          color: #e81755;
         }
 
         .vd-product-image {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
+          display: block;
           width: 100%;
-          height: 83px;
-
-          background:
-            linear-gradient(
-              145deg,
-              #fcfcfc,
-              #f7f5f8
-            );
+          height: 164px;
+          overflow: hidden;
+          background: #f8f6f9;
         }
 
         .vd-product-image img {
           width: 100%;
           height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform .3s ease;
+        }
 
-          object-fit: contain;
-
-          mix-blend-mode: multiply;
+        .vd-product-card:hover .vd-product-image img {
+          transform: scale(1.035);
         }
 
         .vd-product-info {
-          padding: 5px;
+          padding: 9px 9px 10px;
         }
 
         .vd-product-info h3 {
-          min-height: 23px;
-          margin: 0 0 3px;
-
-          color: #2e2c33;
-
-          font-size: 6.5px;
-          line-height: 1.2;
+          margin: 0 0 5px;
+          min-height: 28px;
+          color: #39343c;
+          font-size: 9px;
+          line-height: 1.25;
           font-weight: 850;
         }
 
         .vd-price {
           display: flex;
           align-items: baseline;
-          gap: 3px;
-
-          white-space: nowrap;
+          gap: 5px;
         }
 
         .vd-price strong {
-          color: #d9194e;
-
-          font-size: 8px;
-          font-weight: 900;
+          color: #74199d;
+          font-size: 13px;
+          font-weight: 950;
         }
 
         .vd-price del {
-          color: #8d8991;
-          font-size: 5.5px;
+          color: #a19ba4;
+          font-size: 7px;
         }
 
         .vd-rating {
+          display: flex;
+          align-items: center;
+          gap: 3px;
           margin-top: 3px;
-
-          color: #75717a;
-
-          font-size: 5.5px;
-          white-space: nowrap;
+          color: #817b85;
+          font-size: 7px;
         }
 
         .vd-rating span {
-          color: #f1af00;
+          color: #f5a900;
         }
 
         .vd-rating b {
-          margin: 0 1px;
-          color: #b6b2b8;
+          color: #c2bbc5;
+          font-weight: 500;
         }
 
         .vd-add-button {
           width: 100%;
-          height: 19px;
-
-          margin-top: 4px;
-
+          height: 29px;
+          margin-top: 8px;
           border: 0;
-          border-radius: 5px;
-
+          border-radius: 8px;
           background:
             linear-gradient(
               135deg,
-              #f21a54,
-              #be24ac
+              #ed1550,
+              #77199f
             );
-
-          color: #ffffff;
-
-          font-size: 6.5px;
+          color: #fff;
+          font-size: 7px;
           font-weight: 900;
         }
 
-        .vd-no-results {
-          min-height: 125px;
+        /* PROMOCIÓN FINAL */
 
+        .vd-final-promo {
+          position: relative;
+          min-height: 150px;
+          margin: 4px 0 20px;
+          padding: 18px;
+          overflow: hidden;
+          border-radius: 16px;
+          color: #fff;
+          background:
+            linear-gradient(
+              135deg,
+              #ef1753,
+              #8a1a9e
+            );
+          box-shadow: 0 8px 18px rgba(106,21,120,.14);
+        }
+
+        .vd-final-promo span {
+          font-size: 7px;
+          font-weight: 900;
+          letter-spacing: .8px;
+        }
+
+        .vd-final-promo h2 {
+          margin: 5px 0;
+          font-size: 21px;
+          line-height: .95;
+          letter-spacing: -.7px;
+        }
+
+        .vd-final-promo p {
+          max-width: 210px;
+          margin: 0 0 12px;
+          color: rgba(255,255,255,.88);
+          font-size: 8px;
+          line-height: 1.3;
+        }
+
+        .vd-final-button {
+          display: inline-flex;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: #fff;
+          color: #78199d;
+          font-size: 7px;
+          font-weight: 900;
+        }
+
+        .vd-final-art {
+          position: absolute;
+          right: 9px;
+          top: 12px;
+          width: 130px;
+          height: 125px;
+        }
+
+        .vd-final-art div {
+          position: absolute;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-
-          gap: 4px;
-
-          border:
-            1px solid #f0edf2;
-
-          border-radius: 10px;
-
-          background: #ffffff;
-
-          text-align: center;
+          border-radius: 50%;
+          background: rgba(255,255,255,.15);
         }
 
-        .vd-no-results span {
-          font-size: 24px;
+        .vd-final-art div:nth-child(1) {
+          right: 5px;
+          top: 8px;
+          width: 75px;
+          height: 75px;
+          font-size: 38px;
         }
 
-        .vd-no-results strong {
-          font-size: 11px;
+        .vd-final-art div:nth-child(2) {
+          left: 3px;
+          top: 28px;
+          width: 42px;
+          height: 42px;
+          font-size: 20px;
         }
 
-        .vd-no-results small {
-          color: #77737c;
-          font-size: 8px;
-        }
-
-        .vd-no-results-large {
-          min-height: 260px;
+        .vd-final-art div:nth-child(3) {
+          right: 32px;
+          bottom: 3px;
+          width: 43px;
+          height: 43px;
+          font-size: 20px;
         }
 
         /* BENEFICIOS */
 
         .vd-benefits {
           display: grid;
-          grid-template-columns:
-            repeat(4,1fr);
-
-          overflow: hidden;
-
-          border:
-            1px solid
-            rgba(101,88,114,.06);
-
-          border-radius: 10px;
-
-          background: #ffffff;
-
-          box-shadow:
-            0 4px 11px
-            rgba(40,28,55,.035);
+          grid-template-columns: repeat(4,minmax(0,1fr));
+          gap: 5px;
+          margin: 20px 0 0;
+          padding: 13px 4px;
+          border-top: 1px solid #eee9ef;
+          border-bottom: 1px solid #eee9ef;
         }
 
         .vd-benefit {
           min-width: 0;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-
-          padding: 9px 3px;
-
           text-align: center;
         }
 
         .vd-benefit > span {
-          margin-bottom: 4px;
-          color: #e91550;
+          width: 34px;
+          height: 34px;
+          margin: 0 auto 5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          background: #fff0f4;
+          color: #e81755;
         }
 
-        .vd-purple-benefit {
-          color: #72209e !important;
+        .vd-benefit .vd-purple-benefit {
+          background: #f3eafe;
+          color: #75199d;
         }
 
         .vd-benefit strong {
-          color: #35323a;
-          font-size: 6.5px;
+          display: block;
+          color: #4a444d;
+          font-size: 6px;
+          font-weight: 900;
         }
 
         .vd-benefit small {
-          margin-top: 2px;
-
-          color: #77737a;
-
-          font-size: 5.6px;
-          line-height: 1.18;
+          display: block;
+          margin-top: 3px;
+          color: #98919b;
+          font-size: 5px;
+          line-height: 1.2;
         }
 
         .vd-bottom-space {
-          height: 12px;
-        }
-
-        /* NAVEGACIÓN INFERIOR */
-
-        .vd-bottom-nav {
-          position: fixed;
-
-          left: 50%;
-          bottom: 0;
-          z-index: 75;
-
-          transform:
-            translateX(-50%);
-
-          width:
-            min(100%,560px);
-
-          height: 67px;
-
-          display: grid;
-
-          grid-template-columns:
-            repeat(5,1fr);
-
-          align-items: end;
-
-          padding:
-            4px 7px
-            max(
-              5px,
-              env(safe-area-inset-bottom)
-            );
-
-          background:
-            rgba(255,255,255,.98);
-
-          border-top:
-            1px solid #efedf0;
-
-          box-shadow:
-            0 -5px 15px
-            rgba(35,25,45,.035);
-
-          backdrop-filter: blur(12px);
-        }
-
-        .vd-nav-item {
-          min-width: 0;
-          height: 54px;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-
-          gap: 2px;
-
-          border: 0;
-          background: transparent;
-
-          color: #7b7680;
-
-          font-size: 8px;
-          text-align: center;
-        }
-
-        .vd-nav-item small,
-        .vd-sell-nav small {
-          font-size: 6.5px;
-          font-weight: 800;
-        }
-
-        .vd-nav-active {
-          color: #e61853 !important;
-        }
-
-        .vd-home-symbol {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          font-size: 23px;
-        }
-
-        .vd-sell-nav {
-          width: 50px;
-          height: 50px;
-
-          justify-self: center;
-
-          margin-top: -21px;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-
-          gap: 1px;
-
-          border: 0;
-          border-radius: 17px;
-
-          background:
-            linear-gradient(
-              145deg,
-              #ef1852,
-              #7a179f
-            );
-
-          color: #ffffff;
-
-          box-shadow:
-            0 7px 15px
-            rgba(135,18,103,.20);
-        }
-
-        .vd-sell-nav span {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* CHAT */
-
-        .vd-chat {
-          position: fixed;
-
-          right:
-            max(
-              12px,
-              calc(
-                (100vw - 560px) / 2 + 12px
-              )
-            );
-
-          bottom: 76px;
-          z-index: 73;
-
-          width: 42px;
-          height: 42px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          border: 0;
-          border-radius: 50%;
-
-          background:
-            linear-gradient(
-              135deg,
-              #ed174f,
-              #74179e
-            );
-
-          color: #ffffff;
-
-          box-shadow:
-            0 6px 14px
-            rgba(124,19,106,.17);
+          height: 10px;
         }
 
         /* PÁGINAS */
 
         .vd-page {
           width: 100%;
-          min-height:
-            calc(100vh - 131px);
-
-          padding:
-            18px 15px 22px;
+          min-height: calc(100vh - 64px);
+          padding: 20px 15px 25px;
         }
 
-        .vd-page-title {
-          margin-bottom: 14px;
-        }
-
-        .vd-page-title p,
-        .vd-account-page > p,
-        .vd-seller-page > p {
+        .vd-page-title p {
           margin: 0 0 4px;
-
-          color: #86828b;
-
+          color: #9b179c;
           font-size: 7px;
           font-weight: 900;
-          letter-spacing: 1.8px;
+          letter-spacing: 1px;
         }
 
         .vd-page-title h1 {
-          margin: 0;
-
-          color: #28262e;
-
+          margin: 0 0 15px;
+          color: #302b33;
           font-size: 23px;
-          line-height: 1.05;
-          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -.8px;
         }
 
         .vd-catalog-search {
-          width: 100%;
-          height: 40px;
-
+          height: 42px;
           display: flex;
           align-items: center;
-          gap: 7px;
-
-          margin-bottom: 10px;
-          padding: 0 11px;
-
-          border:
-            1px solid #ece8ef;
-
-          border-radius: 10px;
-
-          background: #ffffff;
+          gap: 8px;
+          padding: 0 12px;
+          margin-bottom: 11px;
+          border: 1px solid #ebe6ed;
+          border-radius: 11px;
+          color: #817b84;
+          background: #fff;
         }
 
         .vd-catalog-search input {
           flex: 1;
-
           border: 0;
           outline: 0;
-
-          font-size: 10px;
+          font-size: 11px;
         }
 
         .vd-filters {
           display: flex;
-          gap: 5px;
-
+          gap: 6px;
           overflow-x: auto;
-
-          margin-bottom: 13px;
-
+          padding-bottom: 10px;
           scrollbar-width: none;
         }
 
@@ -3968,340 +4124,337 @@ function App() {
         }
 
         .vd-filters button {
-          flex: 0 0 auto;
-
-          min-height: 25px;
-          padding: 0 9px;
-
-          border:
-            1px solid #ece8ef;
-
+          flex-shrink: 0;
+          padding: 7px 10px;
+          border: 1px solid #ebe5ee;
           border-radius: 999px;
-
-          background: #ffffff;
-
-          color: #706b75;
-
+          background: #fff;
+          color: #77717b;
           font-size: 7px;
-          font-weight: 700;
+          font-weight: 800;
         }
 
         .vd-filters button.active {
           border-color: transparent;
-
           background:
             linear-gradient(
               135deg,
-              #ed184f,
-              #71169d
+              #ed1550,
+              #75199d
             );
-
-          color: #ffffff;
+          color: #fff;
         }
 
         .vd-catalog-grid {
-          grid-template-columns:
-            repeat(2,minmax(0,1fr));
-
-          gap: 8px;
-        }
-
-        .vd-catalog-grid
-        .vd-product-image {
-          height: 135px;
+          margin-top: 5px;
         }
 
         /* PRODUCTO */
 
         .vd-detail-back {
-          margin-bottom: 10px;
+          margin-bottom: 12px;
         }
 
         .vd-detail-back a {
           display: inline-flex;
           align-items: center;
-
           gap: 4px;
-
-          color: #75209f;
-
-          font-size: 9px;
+          color: #75199d;
+          font-size: 10px;
           font-weight: 800;
         }
 
         .vd-detail-back span {
-          font-size: 16px;
+          font-size: 18px;
         }
 
         .vd-product-detail {
           display: grid;
-
-          grid-template-columns:
-            1fr 1fr;
-
-          gap: 14px;
-
-          align-items: start;
+          gap: 15px;
         }
 
         .vd-detail-image {
           position: relative;
-
-          min-height: 265px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
+          height: 330px;
           overflow: hidden;
-
-          border-radius: 16px;
-
-          background:
-            linear-gradient(
-              145deg,
-              #fbfafc,
-              #f4f0f7
-            );
+          border-radius: 18px;
+          background: #f7f5f8;
         }
 
         .vd-detail-image img {
           width: 100%;
           height: 100%;
-          min-height: 265px;
-
-          object-fit: contain;
-          mix-blend-mode: multiply;
+          object-fit: cover;
         }
 
         .vd-detail-badge {
           position: absolute;
-
-          left: 9px;
-          top: 9px;
-
-          padding: 4px 7px;
-
-          border-radius: 5px;
-
-          background: #e7164e;
-          color: #ffffff;
-
-          font-size: 7px;
+          top: 12px;
+          left: 12px;
+          padding: 6px 9px;
+          border-radius: 999px;
+          background: #ed1550;
+          color: #fff;
+          font-size: 8px;
           font-weight: 900;
         }
 
         .vd-detail-badge.vd-new {
-          background: #75209e;
+          background: #75199d;
         }
 
         .vd-detail-info > small {
-          color: #7d7782;
-
+          color: #9a169b;
           font-size: 8px;
-          font-weight: 750;
+          font-weight: 900;
         }
 
         .vd-detail-info h1 {
-          margin: 7px 0 6px;
-
-          color: #29272f;
-
-          font-size: 21px;
-          line-height: 1.06;
+          margin: 5px 0;
+          font-size: 25px;
+          line-height: 1;
         }
 
         .vd-detail-rating {
-          color: #77727b;
-          font-size: 8px;
+          color: #77717a;
+          font-size: 9px;
+        }
+
+        .vd-detail-rating:first-letter {
+          color: #f5a900;
         }
 
         .vd-detail-rating span {
-          margin: 0 3px;
-          color: #c0bbc1;
+          margin: 0 5px;
+          color: #c4bdc7;
         }
 
         .vd-detail-price {
-          margin: 12px 0 10px;
-
           display: flex;
           align-items: baseline;
-          gap: 6px;
+          gap: 8px;
+          margin: 12px 0;
         }
 
         .vd-detail-price strong {
-          color: #db164d;
-          font-size: 21px;
+          color: #75199d;
+          font-size: 23px;
         }
 
         .vd-detail-price del {
-          color: #8c8790;
-          font-size: 8px;
+          color: #99939c;
+          font-size: 10px;
         }
 
         .vd-detail-info > p {
-          margin: 0 0 13px;
-
-          color: #77737c;
-
-          font-size: 9px;
+          color: #69636d;
+          font-size: 11px;
           line-height: 1.5;
         }
 
         .vd-detail-actions {
-          display: flex;
-          gap: 7px;
+          display: grid;
+          grid-template-columns: 1fr 48px;
+          gap: 8px;
+          margin: 16px 0;
         }
 
         .vd-gradient-button {
-          min-height: 38px;
-          padding: 0 14px;
-
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-
+          min-height: 43px;
+          padding: 0 18px;
           border: 0;
-          border-radius: 9px;
-
+          border-radius: 11px;
           background:
             linear-gradient(
               135deg,
-              #ed174e,
-              #74179d
+              #ed1550,
+              #75199d
             );
-
-          color: #ffffff;
-
+          color: #fff;
           font-size: 9px;
           font-weight: 900;
-        }
-
-        .vd-detail-actions
-        .vd-gradient-button {
-          flex: 1;
+          box-shadow: 0 5px 13px rgba(113,20,130,.15);
         }
 
         .vd-detail-favorite {
-          width: 39px;
-          min-width: 39px;
-          height: 38px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          border:
-            1px solid #ece8ef;
-
-          border-radius: 9px;
-
-          background: #ffffff;
-          color: #716c75;
+          border: 1px solid #ece7ee;
+          border-radius: 11px;
+          background: #fff;
+          color: #77717b;
         }
 
         .vd-detail-favorite.active {
-          color: #e71854;
+          color: #ed1550;
         }
 
         .vd-specifications {
-          margin-top: 18px;
+          padding-top: 13px;
+          border-top: 1px solid #eee9ef;
         }
 
         .vd-specifications h2 {
-          margin: 0 0 8px;
-          font-size: 12px;
+          margin: 0 0 10px;
+          font-size: 13px;
         }
 
         .vd-spec-row {
           display: flex;
-          gap: 7px;
-
-          padding: 6px 0;
-
-          border-bottom:
-            1px solid #f3eff5;
-
-          color: #6e6972;
-
-          font-size: 8px;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 0;
+          border-bottom: 1px solid #f0edf1;
+          color: #69636d;
+          font-size: 9px;
         }
 
         .vd-spec-row span {
-          color: #e61955;
+          color: #ed1550;
           font-weight: 900;
+        }
+
+        /* VACÍOS */
+
+        .vd-empty {
+          padding: 45px 20px;
+          text-align: center;
+          border: 1px dashed #ddd5e1;
+          border-radius: 18px;
+          background: #fcfbfd;
+        }
+
+        .vd-empty-icon,
+        .vd-account-icon {
+          width: 72px;
+          height: 72px;
+          margin: 0 auto 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 22px;
+          background:
+            linear-gradient(
+              135deg,
+              #fbe9ef,
+              #f0e5f8
+            );
+          color: #76199e;
+        }
+
+        .vd-empty h2 {
+          margin: 0 0 7px;
+          font-size: 17px;
+        }
+
+        .vd-empty p {
+          margin: 0 0 17px;
+          color: #817b84;
+          font-size: 9px;
+        }
+
+        .vd-no-results {
+          padding: 30px 10px;
+          text-align: center;
+        }
+
+        .vd-no-results span {
+          display: block;
+          margin-bottom: 8px;
+          font-size: 28px;
+        }
+
+        .vd-no-results strong {
+          display: block;
+          font-size: 12px;
+        }
+
+        .vd-no-results small {
+          display: block;
+          margin-top: 4px;
+          color: #8e8791;
+          font-size: 8px;
+        }
+
+        /* CUENTA */
+
+        .vd-account-page,
+        .vd-seller-page {
+          max-width: 430px;
+          margin: 30px auto;
+          padding: 25px 20px;
+          text-align: center;
+          border-radius: 18px;
+          background: #fff;
+          box-shadow: 0 8px 25px rgba(51,24,66,.07);
+        }
+
+        .vd-account-page > p,
+        .vd-seller-page > p {
+          margin: 0 0 6px;
+          color: #9a169b;
+          font-size: 7px;
+          font-weight: 900;
+          letter-spacing: 1px;
+        }
+
+        .vd-account-page h1,
+        .vd-seller-page h1 {
+          margin: 0 0 12px;
+          font-size: 21px;
+        }
+
+        .vd-account-page > span,
+        .vd-seller-page > span {
+          display: block;
+          margin-bottom: 17px;
+          color: #77717b;
+          font-size: 9px;
+          line-height: 1.5;
         }
 
         /* CARRITO */
 
         .vd-cart-list {
           display: grid;
-          gap: 8px;
+          gap: 9px;
         }
 
         .vd-cart-item {
           display: grid;
-
-          grid-template-columns:
-            67px 1fr;
-
-          gap: 9px;
-
-          min-height: 82px;
+          grid-template-columns: 76px 1fr;
+          gap: 10px;
           padding: 8px;
-
-          border:
-            1px solid #eeeaf0;
-
-          border-radius: 11px;
-
-          background: #ffffff;
+          border: 1px solid #eee9ef;
+          border-radius: 12px;
+          background: #fff;
         }
 
         .vd-cart-image {
-          width: 67px;
-          height: 67px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
+          width: 76px;
+          height: 76px;
           overflow: hidden;
-
-          border-radius: 8px;
-
-          background: #faf8fb;
+          border-radius: 9px;
+          background: #f8f6f9;
         }
 
         .vd-cart-image img {
           width: 100%;
           height: 100%;
-
-          object-fit: contain;
-          mix-blend-mode: multiply;
+          object-fit: cover;
         }
 
         .vd-cart-content {
           min-width: 0;
         }
 
-        .vd-cart-content strong {
+        .vd-cart-content > strong {
           display: block;
-
-          color: #323038;
-
-          font-size: 9px;
-          line-height: 1.22;
+          margin-bottom: 4px;
+          font-size: 10px;
         }
 
         .vd-cart-price {
-          display: block;
-
-          margin-top: 4px;
-
-          color: #da164b;
-
-          font-size: 9px;
+          color: #75199d;
+          font-size: 11px;
           font-weight: 900;
         }
 
@@ -4309,259 +4462,122 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-
-          gap: 8px;
-
-          margin-top: 6px;
+          margin-top: 10px;
         }
 
         .vd-quantity {
-          display: inline-flex;
+          display: flex;
           align-items: center;
-          gap: 7px;
-
-          border:
-            1px solid #eeeaf1;
-
-          border-radius: 999px;
-
-          padding: 2px 5px;
+          gap: 10px;
+          border: 1px solid #ece7ee;
+          border-radius: 8px;
+          padding: 3px;
         }
 
         .vd-quantity button {
-          width: 18px;
-          height: 18px;
-
+          width: 22px;
+          height: 22px;
           border: 0;
-          border-radius: 50%;
-
+          border-radius: 5px;
           background: #f6f1f8;
-          color: #6d218f;
+          color: #75199d;
         }
 
         .vd-quantity span {
-          font-size: 8px;
+          min-width: 12px;
+          text-align: center;
+          font-size: 9px;
           font-weight: 800;
         }
 
         .vd-remove {
           border: 0;
           background: transparent;
-
-          color: #9b5969;
-
+          color: #e21751;
           font-size: 7px;
-          font-weight: 750;
+          font-weight: 800;
         }
 
         .vd-cart-total {
-          margin-top: 10px;
-
-          min-height: 52px;
-          padding: 0 13px;
-
           display: flex;
           align-items: center;
           justify-content: space-between;
-
-          border-radius: 11px;
-
-          background:
-            linear-gradient(
-              135deg,
-              #ee1750,
-              #74169d
-            );
-
-          color: #ffffff;
+          margin: 16px 0 10px;
+          padding: 13px 0;
+          border-top: 1px solid #eee9ef;
+          border-bottom: 1px solid #eee9ef;
         }
 
         .vd-cart-total span {
+          color: #77717b;
           font-size: 10px;
-          font-weight: 700;
         }
 
         .vd-cart-total strong {
-          font-size: 16px;
-          font-weight: 900;
+          color: #75199d;
+          font-size: 17px;
         }
 
         .vd-checkout-button {
           width: 100%;
-          height: 42px;
-
-          margin-top: 9px;
-
+          height: 45px;
           border: 0;
-          border-radius: 10px;
-
+          border-radius: 11px;
           background:
             linear-gradient(
               135deg,
-              #ef174f,
-              #75169f
+              #ed1550,
+              #75199d
             );
-
-          color: #ffffff;
-
+          color: #fff;
           font-size: 9px;
           font-weight: 900;
         }
 
         .vd-continue-shopping {
           width: 100%;
-          min-height: 38px;
-
-          margin-top: 7px;
-
-          border: 0;
-          border-radius: 9px;
-
-          background: #f6f2f8;
-          color: #6e218e;
-
-          font-size: 8px;
-          font-weight: 900;
-        }
-
-        /* VACÍO */
-
-        .vd-empty {
-          min-height: 340px;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-
-          text-align: center;
-        }
-
-        .vd-empty-icon,
-        .vd-account-icon {
-          width: 72px;
-          height: 72px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          margin-bottom: 10px;
-
-          border-radius: 19px;
-
-          background:
-            linear-gradient(
-              135deg,
-              #fff0f5,
-              #f1e8fb
-            );
-
-          color: #76209f;
-        }
-
-        .vd-empty h2 {
-          margin: 0 0 6px;
-          font-size: 16px;
-        }
-
-        .vd-empty p {
-          margin: 0 0 14px;
-
-          color: #77737b;
-          font-size: 8px;
-        }
-
-        /* CUENTA / VENDEDOR */
-
-        .vd-account-page,
-        .vd-seller-page {
-          min-height: 390px;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-
-          text-align: center;
-        }
-
-        .vd-account-page h1,
-        .vd-seller-page h1 {
-          max-width: 290px;
-
-          margin: 0 0 8px;
-
-          color: #2a2830;
-
-          font-size: 23px;
-          line-height: 1.08;
-          font-weight: 900;
-        }
-
-        .vd-account-page > span,
-        .vd-seller-page > span {
-          max-width: 300px;
-
-          margin-bottom: 15px;
-
-          color: #77737c;
-
+          height: 42px;
+          margin-top: 8px;
+          border: 1px solid #e9e3eb;
+          border-radius: 11px;
+          background: #fff;
+          color: #75199d;
           font-size: 9px;
-          line-height: 1.4;
+          font-weight: 900;
         }
 
-        /* OVERLAY */
+        /* MENÚ */
 
         .vd-overlay {
           position: fixed;
           inset: 0;
-
-          z-index: 100;
-
-          background:
-            rgba(19,13,23,.45);
-
-          backdrop-filter: blur(4px);
+          z-index: 200;
+          background: rgba(30,16,35,.38);
+          backdrop-filter: blur(3px);
         }
 
         .vd-centered {
           display: flex;
           align-items: center;
           justify-content: center;
-
-          padding: 16px;
+          padding: 18px;
         }
 
         .vd-side-menu {
-          width:
-            min(82%,305px);
-
+          width: min(315px,88vw);
           height: 100%;
-
-          padding:
-            17px 16px;
-
-          background: #ffffff;
-
-          box-shadow:
-            12px 0 28px
-            rgba(0,0,0,.12);
-
-          animation:
-            vd-slide-menu
-            .22s ease both;
+          padding: 19px 14px;
+          background: #fff;
+          box-shadow: 10px 0 30px rgba(39,10,48,.18);
+          animation: vd-menu-in .22s ease;
         }
 
-        @keyframes vd-slide-menu {
+        @keyframes vd-menu-in {
           from {
-            transform:
-              translateX(-100%);
+            transform: translateX(-100%);
           }
-
           to {
-            transform:
-              translateX(0);
+            transform: translateX(0);
           }
         }
 
@@ -4569,309 +4585,317 @@ function App() {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
-
-          margin-bottom: 12px;
-          padding-bottom: 12px;
-
-          border-bottom:
-            1px solid #f1eef3;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 1px solid #eee9ef;
         }
 
         .vd-menu-brand {
           display: block;
-
-          font-size: 22px;
+          font-size: 23px;
           line-height: 1;
-          letter-spacing: -1px;
-          font-weight: 900;
+          font-weight: 950;
         }
 
         .vd-menu-brand span {
-          color: #6420a0;
+          color: #75199d;
         }
 
         .vd-menu-brand strong {
-          color: #e91752;
+          color: #ed1550;
         }
 
         .vd-menu-head small {
           display: block;
           margin-top: 5px;
-
-          color: #7c7680;
+          color: #948d97;
           font-size: 7px;
         }
 
         .vd-menu-close,
         .vd-modal-close {
-          width: 34px;
-          height: 34px;
-
+          width: 35px;
+          height: 35px;
           display: flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
-          background: transparent;
-
-          color: #5f5962;
+          border-radius: 50%;
+          background: #f7f3f8;
+          color: #4a444d;
         }
 
         .vd-menu-link {
           width: 100%;
-          min-height: 39px;
-
+          min-height: 44px;
           display: flex;
           align-items: center;
-          gap: 9px;
-
-          padding: 0 6px;
-
+          gap: 12px;
+          padding: 0 10px;
           border: 0;
-          border-bottom:
-            1px solid #f3f0f4;
-
+          border-radius: 10px;
           background: transparent;
-
-          color: #3f3a42;
-
+          color: #514b55;
           font-size: 10px;
-          font-weight: 800;
-
+          font-weight: 750;
           text-align: left;
         }
 
         .vd-menu-link-active {
-          color: #dd1751;
+          background:
+            linear-gradient(
+              135deg,
+              #fff0f4,
+              #f5eafd
+            );
+          color: #75199d;
         }
 
         .vd-menu-signout {
-          margin-top: 10px;
-          color: #9f5366;
+          margin-top: 12px;
+          color: #e21751;
         }
 
         /* MODAL */
 
         .vd-modal {
-          width:
-            min(100%,335px);
-
           position: relative;
-
-          padding:
-            22px 18px 18px;
-
+          width: min(390px,100%);
+          padding: 25px 20px;
           border-radius: 18px;
+          background: #fff;
+          box-shadow: 0 20px 55px rgba(39,10,48,.2);
+          animation: vd-modal-in .2s ease;
+        }
 
-          background: #ffffff;
-
-          box-shadow:
-            0 17px 40px
-            rgba(0,0,0,.15);
-
-          text-align: center;
+        @keyframes vd-modal-in {
+          from {
+            transform: translateY(12px) scale(.98);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
         }
 
         .vd-modal-close {
           position: absolute;
-          top: 5px;
-          right: 5px;
+          top: 12px;
+          right: 12px;
         }
 
         .vd-modal-icon {
           width: 58px;
           height: 58px;
-
-          margin: 0 auto 9px;
-
+          margin: 0 auto 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-
-          border-radius: 17px;
-
+          border-radius: 18px;
           background:
             linear-gradient(
               135deg,
-              #ed174e,
-              #77189f
+              #ffe9ef,
+              #eee2f8
             );
-
-          color: #ffffff;
+          color: #75199d;
         }
 
         .vd-modal h2 {
-          margin: 0 0 6px;
-
-          color: #28262e;
-
-          font-size: 19px;
+          margin: 0;
+          text-align: center;
+          font-size: 20px;
         }
 
-        .vd-modal p {
-          margin: 0 0 13px;
-
-          color: #77727c;
-
+        .vd-modal > p {
+          margin: 8px 0 17px;
+          color: #807984;
+          text-align: center;
           font-size: 9px;
           line-height: 1.45;
         }
 
         .vd-auth-form {
           display: grid;
-          gap: 8px;
-
-          text-align: left;
+          gap: 11px;
         }
 
         .vd-auth-form label {
           display: grid;
-          gap: 4px;
-
-          color: #615b65;
-
+          gap: 5px;
+          color: #554e58;
           font-size: 8px;
           font-weight: 800;
         }
 
         .vd-auth-form input {
           width: 100%;
-          height: 38px;
-
-          padding: 0 10px;
-
-          border:
-            1px solid #ebe7ef;
-
-          border-radius: 8px;
-
+          height: 41px;
+          padding: 0 11px;
+          border: 1px solid #e8e3ea;
+          border-radius: 9px;
           outline: 0;
-
-          background: #ffffff;
-          color: #36323a;
-
-          font-size: 9px;
+          background: #fff;
+          font-size: 10px;
         }
 
         .vd-auth-form input:focus {
-          border-color: #bd54c7;
-
-          box-shadow:
-            0 0 0 3px
-            rgba(189,84,199,.08);
+          border-color: #9b31b1;
+          box-shadow: 0 0 0 3px rgba(155,49,177,.08);
         }
 
         .vd-auth-message {
-          padding: 7px 8px;
-
-          border-radius: 7px;
-
-          background: #faf0f4;
-          color: #8d4c5e;
-
+          padding: 9px;
+          border-radius: 8px;
+          background: #faf4fb;
+          color: #75199d;
           font-size: 8px;
-          line-height: 1.35;
+          line-height: 1.4;
         }
 
         .vd-full-button {
           width: 100%;
+          margin-top: 3px;
         }
 
         .vd-light-button {
           width: 100%;
-          min-height: 39px;
-
-          margin-top: 7px;
-
-          border: 0;
-          border-radius: 9px;
-
-          background: #f7f2f9;
-          color: #6e228e;
-
+          height: 40px;
+          margin-top: 9px;
+          border: 1px solid #e9e3eb;
+          border-radius: 10px;
+          background: #fff;
+          color: #75199d;
           font-size: 8px;
           font-weight: 900;
         }
 
-        /* RESPONSIVE */
+        /* BARRA INFERIOR */
 
-        @media (max-width: 430px) {
+        .vd-bottom-nav {
+          position: fixed;
+          left: 50%;
+          bottom: 0;
+          z-index: 80;
+          width: min(560px,100%);
+          height: 66px;
+          transform: translateX(-50%);
+          display: grid;
+          grid-template-columns: repeat(5,1fr);
+          align-items: end;
+          padding: 5px 8px 7px;
+          border-top: 1px solid #ece7ee;
+          background: rgba(255,255,255,.98);
+          box-shadow: 0 -5px 18px rgba(45,17,58,.07);
+          backdrop-filter: blur(15px);
+        }
+
+        .vd-nav-item,
+        .vd-sell-nav {
+          min-width: 0;
+          height: 51px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          border: 0;
+          background: transparent;
+          color: #8d8790;
+          font-size: 7px;
+        }
+
+        .vd-nav-item small,
+        .vd-sell-nav small {
+          font-size: 7px;
+          font-weight: 800;
+        }
+
+        .vd-nav-active {
+          color: #75199d;
+        }
+
+        .vd-home-symbol {
+          font-size: 24px;
+          line-height: 20px;
+        }
+
+        .vd-sell-nav > span {
+          width: 43px;
+          height: 43px;
+          margin-top: -16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 4px solid #fff;
+          border-radius: 50%;
+          background:
+            linear-gradient(
+              135deg,
+              #ed1550,
+              #75199d
+            );
+          color: #fff;
+          box-shadow: 0 5px 14px rgba(105,18,126,.24);
+        }
+
+        .vd-sell-nav small {
+          margin-top: 2px;
+          color: #75199d;
+        }
+
+        /* SOPORTE */
+
+        .vd-chat {
+          position: fixed;
+          right: max(17px, calc((100vw - 560px) / 2 + 14px));
+          bottom: 76px;
+          z-index: 75;
+          width: 45px;
+          height: 45px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 0;
+          border-radius: 50%;
+          background:
+            linear-gradient(
+              135deg,
+              #ed1550,
+              #75199d
+            );
+          color: #fff;
+          box-shadow: 0 7px 17px rgba(93,16,113,.25);
+        }
+
+        @media (min-width: 561px) {
           .vd-app {
-            max-width: 100%;
+            box-shadow:
+              0 0 35px rgba(50,20,70,.07);
           }
+        }
 
+        @media (max-width: 360px) {
           .vd-home {
             padding-left: 12px;
             padding-right: 12px;
           }
 
-          .vd-header {
-            grid-template-columns:
-              42px 1fr 82px;
-
-            padding-left: 8px;
-            padding-right: 8px;
+          .vd-carousel-item {
+            flex-basis: 137px;
           }
 
-          .vd-brand {
-            font-size: 24px;
-          }
-
-          .vd-main-card {
-            height: 67px;
-          }
-
-          .vd-main-icon {
-            width: 36px;
-            height: 36px;
-          }
-
-          .vd-category {
-            flex-basis: 57px;
-          }
-
-          .vd-category-icon {
-            width: 50px;
-            height: 50px;
+          .vd-carousel-item .vd-product-card {
+            width: 137px;
           }
 
           .vd-product-image {
-            height: 81px;
-          }
-        }
-
-        @media (max-width: 370px) {
-          .vd-home {
-            padding-left: 10px;
-            padding-right: 10px;
+            height: 145px;
           }
 
-          .vd-product-grid {
-            gap: 5px;
-          }
-
-          .vd-product-image {
-            height: 77px;
-          }
-
-          .vd-main-copy strong {
-            font-size: 9.5px;
-          }
-
-          .vd-main-copy small {
-            font-size: 6.5px;
-          }
-
-          .vd-offer {
-            height: 142px;
-          }
-
-          .vd-category {
-            flex-basis: 55px;
-          }
-
-          .vd-category-label {
-            width: 55px;
+          .vd-benefits {
+            gap: 2px;
           }
         }
       `}</style>
