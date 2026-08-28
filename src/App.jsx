@@ -13,7 +13,7 @@ import { supabase } from "./supabaseClient";
 const demoProducts = [
   {
     id: 1,
-    name: "Bolso urbano SHORA",
+    name: "Bolso urbano VaniDaxi",
     price: 699,
     category: "Moda",
     emoji: "👜",
@@ -81,7 +81,7 @@ const categories = [
   { name: "Alimentos", emoji: "🍔" },
 ];
 
-const CART_KEY = "shora_cart";
+const CART_KEY = "vanidaxi_cart";
 
 function getCart() {
   try {
@@ -165,10 +165,11 @@ function Header({
             }
           >
             <span className="brand-main">
-              SHORA
+              Vani
             </span>
+
             <span className="brand-second">
-              SHOPP
+              Daxi
             </span>
           </Link>
         </div>
@@ -193,6 +194,7 @@ function Header({
             className="cart-button"
           >
             🛒
+
             {cartCount > 0 && (
               <span className="cart-count">
                 {cartCount}
@@ -225,7 +227,7 @@ function Header({
           >
             <div className="side-menu-header">
               <strong>
-                SHORASHOPP
+                VaniDaxi
               </strong>
 
               <button
@@ -281,7 +283,7 @@ function Header({
                 setMenuOpen(false)
               }
             >
-              🏪 Vender en SHORASHOPP
+              🏪 Vender en VaniDaxi
             </Link>
 
             <Link
@@ -323,8 +325,9 @@ function Home() {
           <h1>
             Todo lo que buscas.
             <br />
+
             <span>
-              Todo en SHORASHOPP.
+              Todo en VaniDaxi.
             </span>
           </h1>
 
@@ -389,7 +392,7 @@ function Home() {
         <div className="section-heading">
           <div>
             <span>
-              SELECCIÓN SHORA
+              SELECCIÓN VANIDAXI
             </span>
 
             <h2>
@@ -413,7 +416,7 @@ function Home() {
       <section className="seller-banner">
         <div>
           <span>
-            VENDE EN SHORASHOPP
+            VENDE EN VANIDAXI
           </span>
 
           <h2>
@@ -630,7 +633,7 @@ function Product() {
 
         <p>
           Producto disponible en
-          SHORASHOPP.
+          VaniDaxi.
         </p>
 
         <button
@@ -970,7 +973,7 @@ function Account({
         </span>
 
         <h1>
-          Tu cuenta SHORASHOPP
+          Tu cuenta VaniDaxi
         </h1>
 
         <div className="empty-box">
@@ -997,7 +1000,7 @@ function Account({
       </span>
 
       <h1>
-        Tu cuenta SHORASHOPP
+        Tu cuenta VaniDaxi
       </h1>
 
       <div className="account-grid">
@@ -1071,7 +1074,7 @@ function Account({
           <div>💰</div>
 
           <h2>
-            Crédito SHORASHOPP
+            Crédito VaniDaxi
           </h2>
 
           <p>
@@ -1102,7 +1105,7 @@ function Seller({
   return (
     <section className="section">
       <span>
-        VENDE EN SHORASHOPP
+        VENDE EN VANIDAXI
       </span>
 
       <h1>
@@ -1198,7 +1201,7 @@ function Support() {
           <div>🤖</div>
 
           <h2>
-            Asistente SHORASHOPP
+            Asistente VaniDaxi
           </h2>
 
           <p>
@@ -1659,7 +1662,7 @@ function AuthModal({
         </button>
 
         <div className="auth-logo">
-          S
+          V
         </div>
 
         {waitingForCode ? (
@@ -1691,6 +1694,7 @@ function AuthModal({
             >
               <label>
                 Código de verificación
+
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1761,7 +1765,7 @@ function AuthModal({
           <>
             <div className="auth-heading">
               <span>
-                SHORASHOPP
+                VaniDaxi
               </span>
 
               <h2>
@@ -1824,6 +1828,7 @@ function AuthModal({
                 "register" && (
                 <label>
                   Nombre completo
+
                   <input
                     type="text"
                     value={name}
@@ -1839,6 +1844,7 @@ function AuthModal({
 
               <label>
                 Correo electrónico
+
                 <input
                   type="email"
                   value={email}
@@ -1854,6 +1860,7 @@ function AuthModal({
 
               <label>
                 Contraseña
+
                 <input
                   type="password"
                   value={password}
@@ -2109,7 +2116,7 @@ function App() {
       <footer className="footer">
         <div>
           <strong>
-            SHORASHOPP
+            VaniDaxi
           </strong>
 
           <p>
@@ -2137,7 +2144,7 @@ function App() {
         </div>
 
         <small>
-          © 2026 SHORASHOPP. Todos los
+          © 2026 VaniDaxi. Todos los
           derechos reservados.
         </small>
       </footer>
