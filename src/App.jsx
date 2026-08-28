@@ -17,13 +17,15 @@ const demoProducts = [
     price: 699,
     category: "Moda",
     emoji: "👜",
+    badge: "Oferta",
   },
   {
     id: 2,
     name: "Tenis casuales",
     price: 899,
-    category: "Calzado",
+    category: "Moda",
     emoji: "👟",
+    badge: "Popular",
   },
   {
     id: 3,
@@ -31,6 +33,7 @@ const demoProducts = [
     price: 549,
     category: "Tecnología",
     emoji: "🎧",
+    badge: "Nuevo",
   },
   {
     id: 4,
@@ -38,6 +41,7 @@ const demoProducts = [
     price: 399,
     category: "Hogar",
     emoji: "🏠",
+    badge: "Oferta",
   },
   {
     id: 5,
@@ -45,6 +49,7 @@ const demoProducts = [
     price: 249,
     category: "Tecnología",
     emoji: "📱",
+    badge: "Popular",
   },
   {
     id: 6,
@@ -52,6 +57,7 @@ const demoProducts = [
     price: 599,
     category: "Moda",
     emoji: "👗",
+    badge: "Nuevo",
   },
   {
     id: 7,
@@ -59,6 +65,7 @@ const demoProducts = [
     price: 449,
     category: "Belleza",
     emoji: "✨",
+    badge: "Oferta",
   },
   {
     id: 8,
@@ -66,22 +73,52 @@ const demoProducts = [
     price: 299,
     category: "Accesorios",
     emoji: "💍",
+    badge: "Popular",
   },
 ];
 
 const categories = [
-  { name: "Moda", emoji: "👗" },
-  { name: "Tecnología", emoji: "📱" },
-  { name: "Hogar", emoji: "🏠" },
-  { name: "Calzado", emoji: "👟" },
-  { name: "Belleza", emoji: "✨" },
-  { name: "Accesorios", emoji: "👜" },
-  { name: "Automotriz", emoji: "🚗" },
-  { name: "Motos", emoji: "🏍️" },
-  { name: "Alimentos", emoji: "🍔" },
+  {
+    name: "Moda",
+    emoji: "👗",
+  },
+  {
+    name: "Tecnología",
+    emoji: "📱",
+  },
+  {
+    name: "Hogar",
+    emoji: "🏠",
+  },
+  {
+    name: "Belleza",
+    emoji: "✨",
+  },
+  {
+    name: "Autos",
+    emoji: "🚗",
+  },
+  {
+    name: "Comida",
+    emoji: "🍔",
+  },
+  {
+    name: "Juguetes",
+    emoji: "🧸",
+  },
+  {
+    name: "Deportes",
+    emoji: "⚽",
+  },
 ];
 
 const CART_KEY = "vanidaxi_cart";
+
+function money(value) {
+  return `$${Number(value || 0).toLocaleString(
+    "es-MX"
+  )}`;
+}
 
 function getCart() {
   try {
@@ -102,12 +139,6 @@ function saveCart(cart) {
   window.dispatchEvent(
     new Event("cartchange")
   );
-}
-
-function money(value) {
-  return `$${Number(value || 0).toLocaleString(
-    "es-MX"
-  )} MXN`;
 }
 
 function addToCart(product) {
@@ -143,13 +174,16 @@ function Header({
   const [menuOpen, setMenuOpen] =
     useState(false);
 
+  const [searchOpen, setSearchOpen] =
+    useState(false);
+
   return (
     <>
-      <header className="main-header">
-        <div className="header-left">
+      <header className="top-header">
+        <div className="top-header-row">
           <button
             type="button"
-            className="menu-button"
+            className="icon-button"
             onClick={() =>
               setMenuOpen(true)
             }
@@ -159,57 +193,56 @@ function Header({
 
           <Link
             to="/"
-            className="brand"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            className="logo"
           >
-            <span className="brand-main">
-              Vani
-            </span>
-
-            <span className="brand-second">
-              Daxi
-            </span>
-          </Link>
-        </div>
-
-        <nav className="main-nav">
-          <NavLink to="/" end>
-            Inicio
-          </NavLink>
-
-          <NavLink to="/catalogo">
-            Comprar
-          </NavLink>
-
-          <NavLink to="/vender">
-            Vender
-          </NavLink>
-        </nav>
-
-        <div className="header-actions">
-          <Link
-            to="/carrito"
-            className="cart-button"
-          >
-            🛒
-
-            {cartCount > 0 && (
-              <span className="cart-count">
-                {cartCount}
-              </span>
-            )}
+            <span>Vani</span>
+            <b>Daxi</b>
           </Link>
 
-          <button
-            type="button"
-            className="account-button"
-            onClick={onAccount}
-          >
-            ✨
-          </button>
+          <div className="header-icons">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() =>
+                setSearchOpen(
+                  !searchOpen
+                )
+              }
+            >
+              🔍
+            </button>
+
+            <Link
+              to="/carrito"
+              className="cart-icon"
+            >
+              🛒
+
+              {cartCount > 0 && (
+                <span>
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
         </div>
+
+        {searchOpen && (
+          <div className="header-search">
+            <input
+              autoFocus
+              placeholder="Buscar en VaniDaxi..."
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter"
+                ) {
+                  window.location.href =
+                    "/VaniDaxi-frontend/catalogo";
+                }
+              }}
+            />
+          </div>
+        )}
       </header>
 
       {menuOpen && (
@@ -225,10 +258,10 @@ function Header({
               event.stopPropagation()
             }
           >
-            <div className="side-menu-header">
-              <strong>
-                VaniDaxi
-              </strong>
+            <div className="menu-top">
+              <div className="menu-logo">
+                Vani<span>Daxi</span>
+              </div>
 
               <button
                 type="button"
@@ -255,7 +288,7 @@ function Header({
                 setMenuOpen(false)
               }
             >
-              🛍️ Comprar
+              🛍️ Explorar productos
             </Link>
 
             <Link
@@ -292,7 +325,7 @@ function Header({
                 setMenuOpen(false)
               }
             >
-              💬 Ayuda y soporte
+              💬 Ayuda
             </Link>
 
             {session && (
@@ -315,85 +348,158 @@ function Header({
 
 function Home() {
   return (
-    <>
-      <section className="hero">
-        <div className="hero-content">
-          <span className="hero-label">
-            MARKETPLACE MEXICANO
-          </span>
+    <main className="home">
+      <section className="welcome-section">
+        <div>
+          <p className="small-gradient-text">
+            BIENVENIDO A
+          </p>
 
           <h1>
-            Todo lo que buscas.
-            <br />
-
+            Todo lo que buscas
             <span>
-              Todo en VaniDaxi.
+              en un solo lugar.
             </span>
           </h1>
 
-          <p>
-            Compra y vende productos de
-            diferentes categorías en un
-            solo lugar.
+          <p className="welcome-description">
+            Compra, vende y descubre
+            miles de productos.
           </p>
-
-          <Link
-            to="/catalogo"
-            className="primary-button"
-          >
-            Explorar productos →
-          </Link>
         </div>
 
-        <div className="hero-visual">
+        <div className="welcome-icon">
           🛍️
         </div>
       </section>
 
-      <section className="section">
-        <div className="section-heading">
+      <section className="search-section">
+        <Link
+          to="/catalogo"
+          className="big-search"
+        >
+          <span>🔍</span>
+
+          <span>
+            ¿Qué estás buscando?
+          </span>
+        </Link>
+      </section>
+
+      <section className="quick-section">
+        <Link
+          to="/catalogo"
+          className="quick-card quick-buy"
+        >
+          <span className="quick-icon">
+            🛍️
+          </span>
+
           <div>
-            <span>
-              DESCUBRE
-            </span>
+            <strong>
+              Comprar
+            </strong>
+
+            <small>
+              Encuentra lo que buscas
+            </small>
+          </div>
+
+          <b>›</b>
+        </Link>
+
+        <Link
+          to="/vender"
+          className="quick-card quick-sell"
+        >
+          <span className="quick-icon">
+            🏪
+          </span>
+
+          <div>
+            <strong>
+              Vender
+            </strong>
+
+            <small>
+              Publica tus productos
+            </small>
+          </div>
+
+          <b>›</b>
+        </Link>
+      </section>
+
+      <section className="home-section">
+        <div className="section-title-row">
+          <div>
+            <p>
+              EXPLORA
+            </p>
 
             <h2>
-              Categorías populares
+              Categorías
             </h2>
           </div>
 
           <Link to="/catalogo">
-            Ver todo →
+            Ver todas
           </Link>
         </div>
 
-        <div className="category-grid">
-          {categories
-            .slice(0, 6)
-            .map((category) => (
+        <div className="categories-row">
+          {categories.map(
+            (category) => (
               <Link
-                to="/catalogo"
-                className="category-card"
+                to={`/catalogo?categoria=${category.name}`}
+                className="category-item"
                 key={category.name}
               >
-                <div className="category-icon">
+                <div>
                   {category.emoji}
                 </div>
 
-                <strong>
+                <span>
                   {category.name}
-                </strong>
+                </span>
               </Link>
-            ))}
+            )
+          )}
         </div>
       </section>
 
-      <section className="section">
-        <div className="section-heading">
+      <section className="promo-banner">
+        <div className="promo-content">
+          <span>
+            ✨ VANIDAXI
+          </span>
+
+          <h2>
+            Descubre ofertas
+            increíbles
+          </h2>
+
+          <p>
+            Encuentra productos que te
+            encantarán.
+          </p>
+
+          <Link to="/catalogo">
+            Ver ofertas
+          </Link>
+        </div>
+
+        <div className="promo-emoji">
+          🎁
+        </div>
+      </section>
+
+      <section className="home-section products-section">
+        <div className="section-title-row">
           <div>
-            <span>
-              SELECCIÓN VANIDAXI
-            </span>
+            <p>
+              PARA TI
+            </p>
 
             <h2>
               Productos destacados
@@ -401,154 +507,40 @@ function Home() {
           </div>
 
           <Link to="/catalogo">
-            Ver catálogo →
+            Ver más
           </Link>
         </div>
 
         <ProductGrid
-          products={demoProducts.slice(
-            0,
-            4
-          )}
+          products={demoProducts.slice(0, 4)}
         />
       </section>
 
-      <section className="seller-banner">
+      <section className="register-banner">
         <div>
           <span>
-            VENDE EN VANIDAXI
+            ✨ ÚNETE A VANIDAXI
           </span>
 
           <h2>
-            Convierte tus productos
-            en ventas.
+            Todo comienza aquí
           </h2>
 
           <p>
-            Crea tu espacio como vendedor
-            y llega a nuevos compradores.
+            Crea tu cuenta y disfruta
+            una nueva forma de comprar
+            y vender.
           </p>
-
-          <Link
-            to="/vender"
-            className="primary-button"
-          >
-            Quiero vender →
-          </Link>
         </div>
 
-        <div className="seller-banner-icon">
-          🏪
-        </div>
+        <Link
+          to="/cuenta"
+          className="register-button"
+        >
+          Crear cuenta
+        </Link>
       </section>
-    </>
-  );
-}
-
-function Catalog() {
-  const [search, setSearch] =
-    useState("");
-
-  const [category, setCategory] =
-    useState("Todas");
-
-  const products = useMemo(() => {
-    return demoProducts.filter(
-      (product) => {
-        const categoryOk =
-          category === "Todas" ||
-          product.category ===
-            category;
-
-        const searchOk =
-          product.name
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            );
-
-        return (
-          categoryOk &&
-          searchOk
-        );
-      }
-    );
-  }, [search, category]);
-
-  return (
-    <section className="section">
-      <div className="catalog-heading">
-        <div>
-          <span>
-            CATÁLOGO
-          </span>
-
-          <h1>
-            Encuentra lo que necesitas
-          </h1>
-        </div>
-
-        <input
-          type="search"
-          value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value
-            )
-          }
-          placeholder="Buscar productos..."
-        />
-      </div>
-
-      <div className="filters">
-        {[
-          "Todas",
-          "Moda",
-          "Tecnología",
-          "Hogar",
-          "Calzado",
-          "Belleza",
-          "Accesorios",
-          "Automotriz",
-          "Motos",
-          "Alimentos",
-        ].map((item) => (
-          <button
-            type="button"
-            key={item}
-            className={
-              category === item
-                ? "filter active"
-                : "filter"
-            }
-            onClick={() =>
-              setCategory(item)
-            }
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-
-      {products.length > 0 ? (
-        <ProductGrid
-          products={products}
-        />
-      ) : (
-        <div className="empty-box">
-          <div>🔎</div>
-
-          <h2>
-            No encontramos productos
-          </h2>
-
-          <p>
-            Prueba otra búsqueda o
-            categoría.
-          </p>
-        </div>
-      )}
-    </section>
+    </main>
   );
 }
 
@@ -573,33 +565,128 @@ function ProductGrid({
               )
             }
           >
-            {product.emoji}
+            {product.badge && (
+              <span className="product-badge">
+                {product.badge}
+              </span>
+            )}
+
+            <span>
+              {product.emoji}
+            </span>
           </button>
 
-          <small>
-            {product.category}
-          </small>
+          <div className="product-info">
+            <small>
+              {product.category}
+            </small>
 
-          <h3>
-            {product.name}
-          </h3>
+            <h3>
+              {product.name}
+            </h3>
 
-          <strong>
-            {money(product.price)}
-          </strong>
+            <strong>
+              {money(product.price)}
+            </strong>
 
-          <button
-            type="button"
-            className="add-button"
-            onClick={() =>
-              addToCart(product)
-            }
-          >
-            Agregar al carrito
-          </button>
+            <button
+              type="button"
+              onClick={() =>
+                addToCart(product)
+              }
+            >
+              Agregar
+            </button>
+          </div>
         </article>
       ))}
     </div>
+  );
+}
+
+function Catalog() {
+  const [search, setSearch] =
+    useState("");
+
+  const [category, setCategory] =
+    useState("Todas");
+
+  const products = useMemo(() => {
+    return demoProducts.filter(
+      (product) => {
+        const searchMatch =
+          product.name
+            .toLowerCase()
+            .includes(
+              search.toLowerCase()
+            );
+
+        const categoryMatch =
+          category === "Todas" ||
+          product.category === category;
+
+        return (
+          searchMatch &&
+          categoryMatch
+        );
+      }
+    );
+  }, [search, category]);
+
+  return (
+    <main className="page">
+      <section className="page-heading">
+        <p>
+          EXPLORAR
+        </p>
+
+        <h1>
+          Encuentra lo que buscas
+        </h1>
+      </section>
+
+      <div className="catalog-search">
+        🔍
+
+        <input
+          value={search}
+          onChange={(event) =>
+            setSearch(
+              event.target.value
+            )
+          }
+          placeholder="Buscar productos..."
+        />
+      </div>
+
+      <div className="filters">
+        {[
+          "Todas",
+          ...categories.map(
+            (item) => item.name
+          ),
+        ].map((item) => (
+          <button
+            type="button"
+            key={item}
+            className={
+              category === item
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setCategory(item)
+            }
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
+      <ProductGrid
+        products={products}
+      />
+    </main>
   );
 }
 
@@ -613,40 +700,42 @@ function Product() {
     ) || demoProducts[0];
 
   return (
-    <section className="section product-detail">
-      <div className="product-detail-image">
-        {product.emoji}
-      </div>
+    <main className="page">
+      <section className="product-detail">
+        <div className="detail-image">
+          {product.emoji}
+        </div>
 
-      <div className="product-detail-info">
-        <span>
-          {product.category}
-        </span>
+        <div className="detail-info">
+          <small>
+            {product.category}
+          </small>
 
-        <h1>
-          {product.name}
-        </h1>
+          <h1>
+            {product.name}
+          </h1>
 
-        <h2>
-          {money(product.price)}
-        </h2>
+          <h2>
+            {money(product.price)}
+          </h2>
 
-        <p>
-          Producto disponible en
-          VaniDaxi.
-        </p>
+          <p>
+            Producto disponible en
+            VaniDaxi.
+          </p>
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() =>
-            addToCart(product)
-          }
-        >
-          Agregar al carrito
-        </button>
-      </div>
-    </section>
+          <button
+            type="button"
+            className="gradient-button"
+            onClick={() =>
+              addToCart(product)
+            }
+          >
+            Agregar al carrito
+          </button>
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -678,96 +767,88 @@ function Cart() {
     0
   );
 
-  const removeItem = (index) => {
-    const newCart =
-      items.filter(
-        (_, i) => i !== index
-      );
-
-    saveCart(newCart);
-    setItems(newCart);
-  };
-
-  const changeQuantity = (
+  function updateQuantity(
     index,
     amount
-  ) => {
-    const newCart = [...items];
+  ) {
+    const newItems = [...items];
 
-    newCart[index].quantity =
+    newItems[index].quantity =
       Number(
-        newCart[index].quantity || 1
+        newItems[index].quantity || 1
       ) + amount;
 
     if (
-      newCart[index].quantity <= 0
+      newItems[index].quantity <= 0
     ) {
-      newCart.splice(index, 1);
+      newItems.splice(index, 1);
     }
 
-    saveCart(newCart);
-    setItems(newCart);
-  };
+    saveCart(newItems);
+    setItems(newItems);
+  }
 
   return (
-    <section className="section">
-      <span>
-        CARRITO
-      </span>
+    <main className="page">
+      <section className="page-heading">
+        <p>
+          MI COMPRA
+        </p>
 
-      <h1>
-        Tu carrito
-      </h1>
+        <h1>
+          Tu carrito
+        </h1>
+      </section>
 
       {items.length === 0 ? (
-        <div className="empty-box">
-          <div>🛒</div>
+        <div className="empty-state">
+          <div>
+            🛒
+          </div>
 
           <h2>
             Tu carrito está vacío
           </h2>
 
           <p>
-            Agrega productos para
-            comenzar tu compra.
+            Descubre productos increíbles
+            en VaniDaxi.
           </p>
 
           <Link
             to="/catalogo"
-            className="primary-button"
+            className="gradient-button"
           >
-            Ver productos
+            Explorar productos
           </Link>
         </div>
       ) : (
-        <div className="cart-layout">
+        <>
           <div className="cart-list">
             {items.map(
               (item, index) => (
-                <div
+                <article
                   className="cart-item"
                   key={`${item.id}-${index}`}
                 >
-                  <div className="cart-item-icon">
+                  <div className="cart-product-image">
                     {item.emoji}
                   </div>
 
-                  <div className="cart-item-info">
+                  <div className="cart-product-info">
                     <h3>
                       {item.name}
                     </h3>
 
                     <strong>
-                      {money(
-                        item.price
-                      )}
+                      {money(item.price)}
                     </strong>
 
-                    <div className="quantity">
+                    <div className="quantity-control">
                       <button
                         type="button"
                         onClick={() =>
-                          changeQuantity(
+                          updateQuantity(
                             index,
                             -1
                           )
@@ -777,14 +858,13 @@ function Cart() {
                       </button>
 
                       <span>
-                        {item.quantity ||
-                          1}
+                        {item.quantity || 1}
                       </span>
 
                       <button
                         type="button"
                         onClick={() =>
-                          changeQuantity(
+                          updateQuantity(
                             index,
                             1
                           )
@@ -794,44 +874,16 @@ function Cart() {
                       </button>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    className="remove-button"
-                    onClick={() =>
-                      removeItem(
-                        index
-                      )
-                    }
-                  >
-                    Eliminar
-                  </button>
-                </div>
+                </article>
               )
             )}
           </div>
 
-          <aside className="summary">
-            <h2>
-              Resumen
-            </h2>
-
+          <div className="cart-total">
             <div>
               <span>
-                Productos
-              </span>
-
-              <strong>
-                {money(total)}
-              </strong>
-            </div>
-
-            <hr />
-
-            <div>
-              <strong>
                 Total
-              </strong>
+              </span>
 
               <strong>
                 {money(total)}
@@ -840,14 +892,14 @@ function Cart() {
 
             <Link
               to="/checkout"
-              className="primary-button"
+              className="gradient-button"
             >
-              Continuar al pago
+              Continuar
             </Link>
-          </aside>
-        </div>
+          </div>
+        </>
       )}
-    </section>
+    </main>
   );
 }
 
@@ -862,563 +914,222 @@ function Checkout() {
     0
   );
 
-  const [message, setMessage] =
-    useState("");
-
   return (
-    <section className="section">
-      <span>
-        FINALIZAR COMPRA
-      </span>
+    <main className="page">
+      <section className="page-heading">
+        <p>
+          FINALIZAR COMPRA
+        </p>
 
-      <h1>
-        Confirmar pedido
-      </h1>
+        <h1>
+          Resumen de tu pedido
+        </h1>
+      </section>
 
-      <div className="checkout-layout">
-        <div className="checkout-card">
-          <h2>
-            Tus productos
-          </h2>
+      <div className="checkout-card">
+        {items.map(
+          (item, index) => (
+            <div
+              className="checkout-item"
+              key={`${item.id}-${index}`}
+            >
+              <span>
+                {item.emoji}
+              </span>
 
-          {items.length === 0 ? (
-            <p>
-              Tu carrito está vacío.
-            </p>
-          ) : (
-            items.map(
-              (item, index) => (
-                <div
-                  className="checkout-item"
-                  key={`${item.id}-${index}`}
-                >
-                  <span>
-                    {item.emoji}
-                  </span>
+              <div>
+                <strong>
+                  {item.name}
+                </strong>
 
-                  <div>
-                    <strong>
-                      {item.name}
-                    </strong>
+                <small>
+                  Cantidad:{" "}
+                  {item.quantity || 1}
+                </small>
+              </div>
 
-                    <small>
-                      Cantidad:{" "}
-                      {item.quantity ||
-                        1}
-                    </small>
-                  </div>
+              <b>
+                {money(
+                  Number(item.price) *
+                    Number(
+                      item.quantity || 1
+                    )
+                )}
+              </b>
+            </div>
+          )
+        )}
 
-                  <b>
-                    {money(
-                      Number(
-                        item.price
-                      ) *
-                        Number(
-                          item.quantity ||
-                            1
-                        )
-                    )}
-                  </b>
-                </div>
-              )
-            )
-          )}
+        <div className="checkout-total">
+          <span>
+            Total
+          </span>
+
+          <strong>
+            {money(total)}
+          </strong>
         </div>
 
-        <aside className="summary">
-          <h2>
-            Total
-          </h2>
-
-          <h3>
-            {money(total)}
-          </h3>
-
-          <p>
-            El envío será calculado
-            según el vendedor y destino.
-          </p>
-
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() =>
-              setMessage(
-                "La conexión con Mercado Pago se configurará aquí."
-              )
-            }
-          >
-            Pagar con Mercado Pago
-          </button>
-
-          {message && (
-            <div className="notice">
-              {message}
-            </div>
-          )}
-        </aside>
+        <button
+          type="button"
+          className="gradient-button"
+          onClick={() =>
+            alert(
+              "La conexión de pago se integrará aquí."
+            )
+          }
+        >
+          Continuar al pago
+        </button>
       </div>
-    </section>
+    </main>
   );
 }
 
 function Account({
   session,
+  openAuth,
 }) {
   if (!session) {
     return (
-      <section className="section">
-        <span>
-          MI CUENTA
-        </span>
-
-        <h1>
-          Tu cuenta VaniDaxi
-        </h1>
-
-        <div className="empty-box">
-          <div>✨</div>
+      <main className="page">
+        <div className="empty-state">
+          <div>
+            ✨
+          </div>
 
           <h2>
-            Inicia sesión
+            Bienvenido a VaniDaxi
           </h2>
 
           <p>
-            Inicia sesión para
-            administrar tu cuenta,
-            compras y pedidos.
+            Inicia sesión o crea una
+            cuenta para continuar.
           </p>
+
+          <button
+            type="button"
+            className="gradient-button"
+            onClick={openAuth}
+          >
+            Iniciar sesión
+          </button>
         </div>
-      </section>
+      </main>
     );
   }
 
   return (
-    <section className="section">
-      <span>
-        MI CUENTA
-      </span>
+    <main className="page">
+      <section className="page-heading">
+        <p>
+          MI CUENTA
+        </p>
 
-      <h1>
-        Tu cuenta VaniDaxi
-      </h1>
+        <h1>
+          Hola, {session.user?.email}
+        </h1>
+      </section>
 
       <div className="account-grid">
-        <div className="account-card">
-          <div>✨</div>
-
-          <h2>
-            Mi perfil
-          </h2>
-
-          <p>
-            {session.user?.email}
-          </p>
-        </div>
-
-        <div className="account-card">
-          <div>📦</div>
-
-          <h2>
-            Mis pedidos
-          </h2>
-
-          <p>
-            Tus compras aparecerán aquí.
-          </p>
-        </div>
-
         <Link
-          to="/privacidad"
+          to="/carrito"
           className="account-card"
         >
-          <div>🔐</div>
-
-          <h2>
-            Privacidad y seguridad
-          </h2>
-
-          <p>
-            Protege tu cuenta.
-          </p>
+          🛒
+          <strong>
+            Mis compras
+          </strong>
         </Link>
 
         <Link
           to="/vender"
           className="account-card"
         >
-          <div>🏪</div>
-
-          <h2>
+          🏪
+          <strong>
             Mi tienda
-          </h2>
-
-          <p>
-            Administra tus ventas.
-          </p>
+          </strong>
         </Link>
 
-        <div className="account-card">
-          <div>❤️</div>
-
-          <h2>
-            Favoritos
-          </h2>
-
-          <p>
-            Productos guardados.
-          </p>
-        </div>
-
-        <div className="account-card">
-          <div>💰</div>
-
-          <h2>
-            Crédito VaniDaxi
-          </h2>
-
-          <p>
-            Crédito para comprar dentro
-            de la tienda.
-          </p>
-        </div>
-
-        <div className="account-card">
-          <div>🎁</div>
-
-          <h2>
-            Referidos
-          </h2>
-
-          <p>
-            Invita a nuevos compradores.
-          </p>
-        </div>
+        <Link
+          to="/ayuda"
+          className="account-card"
+        >
+          💬
+          <strong>
+            Ayuda
+          </strong>
+        </Link>
       </div>
-    </section>
+    </main>
   );
 }
 
-function Seller({
-  session,
-}) {
+function Seller() {
   return (
-    <section className="section">
-      <span>
-        VENDE EN VANIDAXI
-      </span>
-
-      <h1>
-        Comienza a vender
-      </h1>
-
-      <p>
-        Publica tus productos y llega
-        a nuevos compradores.
-      </p>
-
-      <div className="seller-panel">
-        <div>
+    <main className="page">
+      <section className="seller-page">
+        <div className="seller-icon">
           🏪
         </div>
 
-        <h2>
-          Panel de vendedor
-        </h2>
-
         <p>
-          Las primeras publicaciones de
-          nuevos vendedores pueden
-          requerir revisión y aprobación
-          administrativa.
+          VENDE EN VANIDAXI
         </p>
 
-        {!session ? (
-          <Link
-            to="/"
-            className="primary-button"
-          >
-            Iniciar sesión
-          </Link>
-        ) : (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() =>
-              alert(
-                "La publicación de productos se conectará aquí."
-              )
-            }
-          >
-            Publicar producto
-          </button>
-        )}
-      </div>
+        <h1>
+          Convierte tus productos
+          en ventas.
+        </h1>
 
-      <div className="rules">
-        <h2>
-          Reglas para vendedores
-        </h2>
+        <span>
+          Publica tus productos y llega
+          a nuevos compradores.
+        </span>
 
-        <p>
-          • Los nuevos vendedores pueden
-          necesitar revisión.
-        </p>
-
-        <p>
-          • Después de 2 publicaciones
-          aprobadas, la revisión podrá
-          cambiar.
-        </p>
-
-        <p>
-          • Una infracción puede activar
-          nuevamente la revisión.
-        </p>
-
-        <p>
-          • Inicialmente, cada vendedor
-          administra sus propios envíos.
-        </p>
-      </div>
-    </section>
+        <button
+          type="button"
+          className="gradient-button"
+          onClick={() =>
+            alert(
+              "La publicación de productos se conectará aquí."
+            )
+          }
+        >
+          Publicar producto
+        </button>
+      </section>
+    </main>
   );
 }
 
 function Support() {
   return (
-    <section className="section">
-      <span>
-        AYUDA
-      </span>
-
-      <h1>
-        Ayuda y soporte
-      </h1>
-
-      <div className="support-grid">
-        <div className="support-card">
-          <div>🤖</div>
-
-          <h2>
-            Asistente VaniDaxi
-          </h2>
-
-          <p>
-            Atención virtual para
-            ayudarte con tus dudas.
-          </p>
-        </div>
-
-        <div className="support-card">
-          <div>📦</div>
-
-          <h2>
-            Pedidos
-          </h2>
-
-          <p>
-            Consulta información sobre
-            tus compras.
-          </p>
-        </div>
-
-        <div className="support-card">
-          <div>📩</div>
-
-          <h2>
-            Soporte
-          </h2>
-
-          <p>
-            El contacto directo con
-            soporte se conectará aquí.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Privacy() {
-  return (
-    <section className="section">
-      <span>
-        SEGURIDAD
-      </span>
-
-      <h1>
-        Privacidad y seguridad
-      </h1>
-
-      <div className="settings-list">
-        <Link
-          to="/sesiones"
-          className="settings-row"
-        >
-          <span>📱</span>
-
-          <div>
-            <strong>
-              Sesiones activas
-            </strong>
-
-            <small>
-              Revisa las sesiones de tu
-              cuenta.
-            </small>
-          </div>
-
-          <b>›</b>
-        </Link>
-
-        <Link
-          to="/verificacion"
-          className="settings-row"
-        >
-          <span>🛡️</span>
-
-          <div>
-            <strong>
-              Verificación de seguridad
-            </strong>
-
-            <small>
-              Revisa la seguridad de tu
-              cuenta.
-            </small>
-          </div>
-
-          <b>›</b>
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function ActiveSessions() {
-  return (
-    <section className="section">
-      <span>
-        SEGURIDAD
-      </span>
-
-      <h1>
-        Sesiones activas
-      </h1>
-
-      <div className="security-card">
+    <main className="page">
+      <div className="empty-state">
         <div>
-          📱
+          💬
         </div>
 
         <h2>
-          Sesiones activas
+          ¿Necesitas ayuda?
         </h2>
 
         <p>
-          La administración de sesiones
-          se conectará aquí.
+          El asistente de VaniDaxi estará
+          disponible para ayudarte.
         </p>
-
-        <div className="session-status">
-          <strong>
-            Sesión actual
-          </strong>
-
-          <span>
-            Activa
-          </span>
-        </div>
       </div>
-    </section>
-  );
-}
-
-function SecurityVerification({
-  session,
-}) {
-  return (
-    <section className="section">
-      <span>
-        SEGURIDAD
-      </span>
-
-      <h1>
-        Verificación de seguridad
-      </h1>
-
-      <div className="security-card">
-        <div>
-          🛡️
-        </div>
-
-        <h2>
-          Seguridad de tu cuenta
-        </h2>
-
-        <p>
-          Aquí puedes revisar el estado
-          básico de seguridad de tu cuenta.
-        </p>
-
-        <div className="security-check">
-          <span>✓</span>
-
-          <div>
-            <strong>
-              Correo electrónico
-            </strong>
-
-            <small>
-              {session?.user?.email ||
-                "No hay una sesión iniciada."}
-            </small>
-          </div>
-        </div>
-
-        <div className="security-check">
-          <span>✓</span>
-
-          <div>
-            <strong>
-              Supabase Auth
-            </strong>
-
-            <small>
-              Inicio de sesión protegido.
-            </small>
-          </div>
-        </div>
-
-        <div className="security-check">
-          <span>✓</span>
-
-          <div>
-            <strong>
-              Código de verificación
-            </strong>
-
-            <small>
-              Código enviado al correo
-              durante el registro.
-            </small>
-          </div>
-        </div>
-      </div>
-    </section>
+    </main>
   );
 }
 
 function AuthModal({
   onClose,
-  initialMode = "login",
 }) {
   const [mode, setMode] =
-    useState(initialMode);
-
-  const [name, setName] =
-    useState("");
+    useState("login");
 
   const [email, setEmail] =
     useState("");
@@ -1426,72 +1137,29 @@ function AuthModal({
   const [password, setPassword] =
     useState("");
 
-  const [code, setCode] =
-    useState("");
-
-  const [waitingForCode, setWaitingForCode] =
-    useState(false);
-
   const [loading, setLoading] =
     useState(false);
 
   const [message, setMessage] =
     useState("");
 
-  const [success, setSuccess] =
-    useState(false);
-
-  const showMessage = (
-    text,
-    isSuccess = false
-  ) => {
-    setMessage(text);
-    setSuccess(isSuccess);
-  };
-
-  const handleAuth = async (
+  async function handleSubmit(
     event
-  ) => {
+  ) {
     event.preventDefault();
 
-    const cleanEmail =
-      email.trim().toLowerCase();
-
-    if (!cleanEmail) {
-      showMessage(
-        "Escribe tu correo electrónico."
-      );
-      return;
-    }
-
-    if (!password) {
-      showMessage(
-        "Escribe tu contraseña."
-      );
-      return;
-    }
-
-    if (
-      mode === "register" &&
-      !name.trim()
-    ) {
-      showMessage(
-        "Escribe tu nombre."
-      );
-      return;
-    }
-
     setLoading(true);
-    showMessage("");
+    setMessage("");
 
     try {
       if (mode === "login") {
-        const {
-          error,
-        } =
+        const { error } =
           await supabase.auth.signInWithPassword(
             {
-              email: cleanEmail,
+              email:
+                email
+                  .trim()
+                  .toLowerCase(),
               password,
             }
           );
@@ -1501,461 +1169,194 @@ function AuthModal({
         }
 
         onClose();
-        return;
-      }
-
-      const {
-        data,
-        error,
-      } =
-        await supabase.auth.signUp({
-          email: cleanEmail,
-          password,
-          options: {
-            data: {
-              full_name:
-                name.trim(),
-            },
-          },
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      if (
-        data?.user &&
-        !data.user.email_confirmed_at
-      ) {
-        setWaitingForCode(true);
-
-        showMessage(
-          "Te enviamos un código de 6 dígitos a tu correo.",
-          true
-        );
       } else {
-        showMessage(
-          "Tu cuenta fue creada correctamente.",
-          true
+        const { error } =
+          await supabase.auth.signUp({
+            email:
+              email
+                .trim()
+                .toLowerCase(),
+            password,
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        setMessage(
+          "Cuenta creada. Revisa tu correo para confirmar tu registro."
         );
-
-        setTimeout(
-          onClose,
-          700
-        );
       }
     } catch (error) {
-      console.error(
-        "Error de autenticación:",
-        error
-      );
-
-      showMessage(
-        error?.message ||
-          "No pudimos completar la operación."
+      setMessage(
+        error.message ||
+          "Ocurrió un error."
       );
     } finally {
       setLoading(false);
     }
-  };
-
-  const verifyCode = async (
-    event
-  ) => {
-    event.preventDefault();
-
-    if (code.length !== 6) {
-      showMessage(
-        "Escribe el código de 6 dígitos."
-      );
-      return;
-    }
-
-    setLoading(true);
-    showMessage("");
-
-    try {
-      const {
-        error,
-      } =
-        await supabase.auth.verifyOtp({
-          email:
-            email.trim().toLowerCase(),
-          token: code,
-          type: "signup",
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      showMessage(
-        "Cuenta verificada correctamente.",
-        true
-      );
-
-      setTimeout(
-        onClose,
-        700
-      );
-    } catch (error) {
-      console.error(
-        "Error verificando código:",
-        error
-      );
-
-      showMessage(
-        error?.message ||
-          "El código no es válido o ya expiró."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendCode = async () => {
-    setLoading(true);
-    showMessage("");
-
-    try {
-      const {
-        error,
-      } =
-        await supabase.auth.resend({
-          type: "signup",
-          email:
-            email.trim().toLowerCase(),
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      showMessage(
-        "Enviamos un nuevo código a tu correo.",
-        true
-      );
-    } catch (error) {
-      console.error(
-        "Error reenviando código:",
-        error
-      );
-
-      showMessage(
-        error?.message ||
-          "No pudimos reenviar el código."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  }
 
   return (
     <div className="auth-overlay">
       <div className="auth-modal">
         <button
           type="button"
-          className="close-auth"
+          className="auth-close"
           onClick={onClose}
         >
           ×
         </button>
 
-        <div className="auth-logo">
-          V
+        <div className="auth-brand">
+          Vani<span>Daxi</span>
         </div>
 
-        {waitingForCode ? (
-          <>
-            <div className="auth-heading">
-              <span>
-                VERIFICACIÓN
-              </span>
+        <div className="auth-tabs">
+          <button
+            type="button"
+            className={
+              mode === "login"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMode("login")
+            }
+          >
+            Iniciar sesión
+          </button>
 
-              <h2>
-                Revisa tu correo
-              </h2>
+          <button
+            type="button"
+            className={
+              mode === "register"
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setMode("register")
+            }
+          >
+            Crear cuenta
+          </button>
+        </div>
 
-              <p>
-                Enviamos un código de 6
-                dígitos a:
-              </p>
+        <form
+          onSubmit={handleSubmit}
+        >
+          <label>
+            Correo electrónico
 
-              <strong>
-                {email}
-              </strong>
-            </div>
-
-            <form
-              className="auth-form"
-              onSubmit={
-                verifyCode
+            <input
+              type="email"
+              value={email}
+              onChange={(event) =>
+                setEmail(
+                  event.target.value
+                )
               }
-            >
-              <label>
-                Código de verificación
+              required
+            />
+          </label>
 
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={code}
-                  onChange={(event) =>
-                    setCode(
-                      event.target.value.replace(
-                        /\D/g,
-                        ""
-                      )
-                    )
-                  }
-                  placeholder="000000"
-                  autoComplete="one-time-code"
-                />
-              </label>
+          <label>
+            Contraseña
 
-              {message && (
-                <div
-                  className={
-                    success
-                      ? "auth-message success"
-                      : "auth-message"
-                  }
-                >
-                  {message}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="primary-button full"
-                disabled={loading}
-              >
-                {loading
-                  ? "Verificando..."
-                  : "Verificar código"}
-              </button>
-
-              <button
-                type="button"
-                className="secondary-button full"
-                onClick={
-                  resendCode
-                }
-                disabled={loading}
-              >
-                Reenviar código
-              </button>
-
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  setWaitingForCode(
-                    false
-                  );
-                  setCode("");
-                  setMessage("");
-                }}
-              >
-                ← Regresar
-              </button>
-            </form>
-          </>
-        ) : (
-          <>
-            <div className="auth-heading">
-              <span>
-                VaniDaxi
-              </span>
-
-              <h2>
-                {mode === "login"
-                  ? "Bienvenido de nuevo"
-                  : "Crea tu cuenta"}
-              </h2>
-
-              <p>
-                {mode === "login"
-                  ? "Entra para comprar, vender y administrar tu cuenta."
-                  : "Compra y vende de todo en un solo lugar."}
-              </p>
-            </div>
-
-            <div className="auth-tabs">
-              <button
-                type="button"
-                className={
-                  mode === "login"
-                    ? "active"
-                    : ""
-                }
-                onClick={() => {
-                  setMode(
-                    "login"
-                  );
-                  setMessage("");
-                }}
-              >
-                Iniciar sesión
-              </button>
-
-              <button
-                type="button"
-                className={
-                  mode ===
-                  "register"
-                    ? "active"
-                    : ""
-                }
-                onClick={() => {
-                  setMode(
-                    "register"
-                  );
-                  setMessage("");
-                }}
-              >
-                Crear cuenta
-              </button>
-            </div>
-
-            <form
-              className="auth-form"
-              onSubmit={
-                handleAuth
+            <input
+              type="password"
+              value={password}
+              onChange={(event) =>
+                setPassword(
+                  event.target.value
+                )
               }
-            >
-              {mode ===
-                "register" && (
-                <label>
-                  Nombre completo
+              required
+            />
+          </label>
 
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(event) =>
-                      setName(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Tu nombre"
-                  />
-                </label>
-              )}
+          {message && (
+            <p className="auth-message">
+              {message}
+            </p>
+          )}
 
-              <label>
-                Correo electrónico
-
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) =>
-                    setEmail(
-                      event.target.value
-                    )
-                  }
-                  placeholder="correo@ejemplo.com"
-                  autoComplete="email"
-                />
-              </label>
-
-              <label>
-                Contraseña
-
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(
-                      event.target.value
-                    )
-                  }
-                  placeholder="Tu contraseña"
-                  autoComplete={
-                    mode ===
-                    "login"
-                      ? "current-password"
-                      : "new-password"
-                  }
-                />
-              </label>
-
-              {message && (
-                <div
-                  className={
-                    success
-                      ? "auth-message success"
-                      : "auth-message"
-                  }
-                >
-                  {message}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="primary-button full"
-                disabled={loading}
-              >
-                {loading
-                  ? "Procesando..."
-                  : mode ===
-                    "login"
-                  ? "Iniciar sesión"
-                  : "Crear mi cuenta"}
-              </button>
-            </form>
-          </>
-        )}
+          <button
+            type="submit"
+            className="gradient-button"
+            disabled={loading}
+          >
+            {loading
+              ? "Procesando..."
+              : mode === "login"
+              ? "Entrar"
+              : "Crear cuenta"}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
 
+function BottomNavigation({
+  onAccount,
+}) {
+  return (
+    <nav className="bottom-navigation">
+      <NavLink to="/">
+        <span>⌂</span>
+        Inicio
+      </NavLink>
+
+      <NavLink to="/catalogo">
+        <span>🔍</span>
+        Explorar
+      </NavLink>
+
+      <NavLink to="/vender">
+        <span>＋</span>
+        Vender
+      </NavLink>
+
+      <NavLink to="/carrito">
+        <span>🛒</span>
+        Carrito
+      </NavLink>
+
+      <button
+        type="button"
+        onClick={onAccount}
+      >
+        <span>✨</span>
+        Cuenta
+      </button>
+    </nav>
+  );
+}
+
 function App() {
+  const navigate = useNavigate();
+
   const [session, setSession] =
     useState(null);
 
   const [authOpen, setAuthOpen] =
     useState(false);
 
-  const [authMode, setAuthMode] =
-    useState("login");
-
   const [cartCount, setCartCount] =
-    useState(() =>
-      getCart().reduce(
-        (total, item) =>
-          total +
-          Number(
-            item.quantity || 1
-          ),
-        0
-      )
-    );
-
-  const navigate = useNavigate();
+    useState(0);
 
   useEffect(() => {
-    let active = true;
-
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (active) {
-          setSession(
-            data?.session || null
-          );
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "Error obteniendo sesión:",
-          error
+        setSession(
+          data?.session || null
         );
       });
 
     const {
-      data: authListener,
+      data: listener,
     } =
       supabase.auth.onAuthStateChange(
         (_event, newSession) => {
@@ -1965,15 +1366,12 @@ function App() {
         }
       );
 
-    return () => {
-      active = false;
-
-      authListener?.subscription?.unsubscribe();
-    };
+    return () =>
+      listener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    const updateCart = () => {
+    function updateCart() {
       const cart = getCart();
 
       setCartCount(
@@ -1986,180 +1384,115 @@ function App() {
           0
         )
       );
-    };
+    }
+
+    updateCart();
 
     window.addEventListener(
       "cartchange",
       updateCart
     );
 
-    window.addEventListener(
-      "storage",
-      updateCart
-    );
-
-    return () => {
+    return () =>
       window.removeEventListener(
         "cartchange",
         updateCart
       );
-
-      window.removeEventListener(
-        "storage",
-        updateCart
-      );
-    };
   }, []);
 
-  const accountAction = () => {
+  function openAccount() {
     if (session) {
       navigate("/cuenta");
-    } else {
-      setAuthMode("login");
-      setAuthOpen(true);
+      return;
     }
-  };
 
-  const logout = async () => {
+    setAuthOpen(true);
+  }
+
+  async function logout() {
     await supabase.auth.signOut();
-    setSession(null);
+
     navigate("/");
-  };
+  }
 
   return (
     <div className="app">
       <Header
         cartCount={cartCount}
         session={session}
-        onAccount={
-          accountAction
-        }
+        onAccount={openAccount}
         onLogout={logout}
       />
 
-      <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
+      <div className="app-content">
+        <Routes>
+          <Route
+            path="/"
+            element={<Home />}
+          />
 
-        <Route
-          path="/catalogo"
-          element={<Catalog />}
-        />
+          <Route
+            path="/catalogo"
+            element={<Catalog />}
+          />
 
-        <Route
-          path="/producto/:id"
-          element={<Product />}
-        />
+          <Route
+            path="/producto/:id"
+            element={<Product />}
+          />
 
-        <Route
-          path="/carrito"
-          element={<Cart />}
-        />
+          <Route
+            path="/carrito"
+            element={<Cart />}
+          />
 
-        <Route
-          path="/checkout"
-          element={<Checkout />}
-        />
+          <Route
+            path="/checkout"
+            element={<Checkout />}
+          />
 
-        <Route
-          path="/cuenta"
-          element={
-            <Account
-              session={session}
-            />
-          }
-        />
+          <Route
+            path="/cuenta"
+            element={
+              <Account
+                session={session}
+                openAuth={() =>
+                  setAuthOpen(true)
+                }
+              />
+            }
+          />
 
-        <Route
-          path="/vender"
-          element={
-            <Seller
-              session={session}
-            />
-          }
-        />
+          <Route
+            path="/vender"
+            element={<Seller />}
+          />
 
-        <Route
-          path="/ayuda"
-          element={<Support />}
-        />
+          <Route
+            path="/ayuda"
+            element={<Support />}
+          />
 
-        <Route
-          path="/privacidad"
-          element={<Privacy />}
-        />
+          <Route
+            path="*"
+            element={<Home />}
+          />
+        </Routes>
+      </div>
 
-        <Route
-          path="/sesiones"
-          element={
-            <ActiveSessions />
-          }
-        />
-
-        <Route
-          path="/verificacion"
-          element={
-            <SecurityVerification
-              session={session}
-            />
-          }
-        />
-
-        <Route
-          path="*"
-          element={<Home />}
-        />
-      </Routes>
-
-      <footer className="footer">
-        <div>
-          <strong>
-            VaniDaxi
-          </strong>
-
-          <p>
-            Compra y vende de todo en
-            un solo lugar.
-          </p>
-        </div>
-
-        <div className="footer-links">
-          <Link to="/catalogo">
-            Comprar
-          </Link>
-
-          <Link to="/vender">
-            Vender
-          </Link>
-
-          <Link to="/cuenta">
-            Mi cuenta
-          </Link>
-
-          <Link to="/ayuda">
-            Ayuda
-          </Link>
-        </div>
-
-        <small>
-          © 2026 VaniDaxi. Todos los
-          derechos reservados.
-        </small>
-      </footer>
+      <BottomNavigation
+        onAccount={openAccount}
+      />
 
       <Link
         to="/ayuda"
-        className="support-floating"
-        aria-label="Ayuda"
+        className="floating-support"
       >
         💬
       </Link>
 
       {authOpen && (
         <AuthModal
-          initialMode={authMode}
           onClose={() =>
             setAuthOpen(false)
           }
