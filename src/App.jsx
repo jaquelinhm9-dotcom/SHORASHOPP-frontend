@@ -115,9 +115,7 @@ const categories = [
 const CART_KEY = "vanidaxi_cart";
 
 function money(value) {
-  return `$${Number(value || 0).toLocaleString(
-    "es-MX"
-  )}`;
+  return `$${Number(value || 0).toLocaleString("es-MX")}`;
 }
 
 function getCart() {
@@ -349,30 +347,7 @@ function Header({
 function Home() {
   return (
     <main className="home">
-      <section className="welcome-section">
-        <div>
-          <p className="small-gradient-text">
-            BIENVENIDO A
-          </p>
-
-          <h1>
-            Todo lo que buscas
-            <span>
-              en un solo lugar.
-            </span>
-          </h1>
-
-          <p className="welcome-description">
-            Compra, vende y descubre
-            miles de productos.
-          </p>
-        </div>
-
-        <div className="welcome-icon">
-          🛍️
-        </div>
-      </section>
-
+      {/* BUSCADOR PRINCIPAL */}
       <section className="search-section">
         <Link
           to="/catalogo"
@@ -435,6 +410,7 @@ function Home() {
         </Link>
       </section>
 
+      {/* CATEGORÍAS */}
       <section className="home-section">
         <div className="section-title-row">
           <div>
@@ -473,6 +449,7 @@ function Home() {
         </div>
       </section>
 
+      {/* OFERTAS */}
       <section className="promo-banner">
         <div className="promo-content">
           <span>
@@ -499,6 +476,7 @@ function Home() {
         </div>
       </section>
 
+      {/* PRODUCTOS */}
       <section className="home-section products-section">
         <div className="section-title-row">
           <div>
@@ -521,6 +499,7 @@ function Home() {
         />
       </section>
 
+      {/* REGISTRO */}
       <section className="register-banner">
         <div>
           <span>
