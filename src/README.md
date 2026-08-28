@@ -1,1 +1,1 @@
-SHORASHOPP frontend
+VaniDaxi frontend
