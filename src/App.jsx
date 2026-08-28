@@ -4,7 +4,6 @@ import {
   NavLink,
   Route,
   Routes,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 
@@ -72,11 +71,7 @@ const products = [
   },
 ];
 
-function Icon({
-  name,
-  size = 24,
-  stroke = 1.8,
-}) {
+function Icon({ name, size = 24, stroke = 1.8 }) {
   const props = {
     width: size,
     height: size,
@@ -258,23 +253,15 @@ function Icon({
 
 function getCart() {
   try {
-    return JSON.parse(
-      localStorage.getItem(CART_KEY) || "[]"
-    );
+    return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
   } catch {
     return [];
   }
 }
 
 function saveCart(cart) {
-  localStorage.setItem(
-    CART_KEY,
-    JSON.stringify(cart)
-  );
-
-  window.dispatchEvent(
-    new Event("vanidaxi-cart-change")
-  );
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  window.dispatchEvent(new Event("vanidaxi-cart-change"));
 }
 
 function addProductToCart(product) {
@@ -297,10 +284,7 @@ function addProductToCart(product) {
   saveCart(cart);
 }
 
-function Header({
-  cartCount,
-  onOpenMenu,
-}) {
+function Header({ cartCount, onOpenMenu }) {
   return (
     <header className="vd-header">
       <button
@@ -309,17 +293,10 @@ function Header({
         onClick={onOpenMenu}
         aria-label="Abrir menú"
       >
-        <Icon
-          name="menu"
-          size={27}
-          stroke={1.8}
-        />
+        <Icon name="menu" size={27} stroke={1.8} />
       </button>
 
-      <Link
-        to="/"
-        className="vd-brand"
-      >
+      <Link to="/" className="vd-brand">
         <div>
           <span>Vani</span>
           <strong>Daxi</strong>
@@ -338,10 +315,7 @@ function Header({
           className="vd-header-icon"
           aria-label="Notificaciones"
         >
-          <Icon
-            name="bell"
-            size={24}
-          />
+          <Icon name="bell" size={24} />
           <i>3</i>
         </button>
 
@@ -350,313 +324,250 @@ function Header({
           className="vd-header-icon"
           aria-label="Carrito"
         >
-          <Icon
-            name="cart"
-            size={25}
-          />
-          <i>{cartCount || 2}</i>
+          <Icon name="cart" size={25} />
+          <i>{cartCount}</i>
         </Link>
       </div>
     </header>
   );
 }
 
-function Home({
-  onAccount,
-  onSell,
-}) {
-  const [search, setSearch] =
-    useState("");
+function Home({ onAccount, onSell }) {
+  const [search, setSearch] = useState("");
 
   const visibleProducts = useMemo(() => {
-    if (!search.trim()) {
-      return products;
-    }
+    if (!search.trim()) return products;
 
-    return products.filter(
-      (product) =>
-        product.name
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
+    return products.filter((product) =>
+      product.name
+        .toLowerCase()
+        .includes(search.toLowerCase())
     );
   }, [search]);
 
   return (
-    <>
-      <main className="vd-home">
-        {/* BUSCADOR */}
-        <section className="vd-search-section">
-          <div className="vd-search-box">
-            <Icon
-              name="search"
-              size={26}
-              stroke={1.55}
-            />
+    <main className="vd-home">
+      <section className="vd-search-section">
+        <div className="vd-search-box">
+          <Icon name="search" size={26} stroke={1.55} />
 
-            <input
-              value={search}
-              onChange={(event) =>
-                setSearch(
-                  event.target.value
-                )
-              }
-              placeholder="¿Qué estás buscando hoy?"
-            />
-
-            <button
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById(
-                    "vd-products"
-                  )
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-            >
-              <Icon
-                name="search"
-                size={25}
-              />
-            </button>
-          </div>
-        </section>
-
-        {/* TARJETAS PRINCIPALES */}
-        <section className="vd-main-cards">
-          <button
-            type="button"
-            className="vd-main-card vd-sell-card"
-            onClick={onSell}
-          >
-            <span className="vd-main-icon">
-              <Icon
-                name="store"
-                size={31}
-              />
-            </span>
-
-            <span className="vd-main-copy">
-              <strong>
-                Vende en
-                <br />
-                VaniDaxi
-              </strong>
-
-              <small>
-                Únete y comienza a vender
-                <br />
-                tus productos hoy
-              </small>
-            </span>
-
-            <span className="vd-card-arrow">
-              ›
-            </span>
-          </button>
+          <input
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
+            placeholder="¿Qué estás buscando hoy?"
+          />
 
           <button
             type="button"
-            className="vd-main-card vd-account-card"
-            onClick={onAccount}
+            onClick={() =>
+              document
+                .getElementById("vd-products")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                })
+            }
           >
-            <span className="vd-main-icon">
-              <Icon
-                name="user"
-                size={31}
-              />
-            </span>
-
-            <span className="vd-main-copy">
-              <strong>
-                Mi cuenta
-              </strong>
-
-              <small>
-                Inicia sesión o regístrate
-                <br />
-                como comprador o vendedor
-              </small>
-            </span>
-
-            <span className="vd-card-arrow">
-              ›
-            </span>
+            <Icon name="search" size={25} />
           </button>
-        </section>
+        </div>
+      </section>
 
-        {/* CATEGORÍAS */}
-        <section className="vd-section">
-          <div className="vd-section-title">
-            <h2>Categorías</h2>
+      <section className="vd-main-cards">
+        <button
+          type="button"
+          className="vd-main-card vd-sell-card"
+          onClick={onSell}
+        >
+          <span className="vd-main-icon">
+            <Icon name="store" size={31} />
+          </span>
 
-            <Link to="/catalogo">
-              Ver todas
-              <span>›</span>
-            </Link>
-          </div>
-
-          <div className="vd-category-row">
-            {categories.map(
-              (category) => (
-                <Link
-                  key={category.name}
-                  to="/catalogo"
-                  className="vd-category"
-                >
-                  <div>
-                    <Icon
-                      name={category.icon}
-                      size={35}
-                      stroke={1.55}
-                    />
-                  </div>
-
-                  <span>
-                    {category.name}
-                  </span>
-                </Link>
-              )
-            )}
-          </div>
-        </section>
-
-        {/* OFERTAS */}
-        <section className="vd-offer">
-          <div className="vd-offer-text">
-            <h2>
-              OFERTAS
+          <span className="vd-main-copy">
+            <strong>
+              Vende en
               <br />
-              EXCLUSIVAS
-            </h2>
+              VaniDaxi
+            </strong>
 
-            <p>
-              Descuentos increíbles
+            <small>
+              Únete y comienza a vender
               <br />
-              por tiempo limitado
-            </p>
+              tus productos hoy
+            </small>
+          </span>
 
-            <button
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById(
-                    "vd-products"
-                  )
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-            >
-              Ver ofertas
-              <span>›</span>
-            </button>
-          </div>
+          <span className="vd-card-arrow">›</span>
+        </button>
 
-          <div className="vd-offer-art">
-            <div className="vd-offer-bag vd-bag-one" />
-            <div className="vd-offer-bag vd-bag-two" />
+        <button
+          type="button"
+          className="vd-main-card vd-account-card"
+          onClick={onAccount}
+        >
+          <span className="vd-main-icon">
+            <Icon name="user" size={31} />
+          </span>
 
-            <img
-              src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=380&q=80"
-              alt="Smartwatch"
-            />
+          <span className="vd-main-copy">
+            <strong>Mi cuenta</strong>
 
-            <img
-              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=380&q=80"
-              alt="Tenis"
-            />
+            <small>
+              Inicia sesión o regístrate
+              <br />
+              como comprador o vendedor
+            </small>
+          </span>
 
-            <b className="vd-percent">
-              %
-            </b>
-          </div>
-        </section>
+          <span className="vd-card-arrow">›</span>
+        </button>
+      </section>
 
-        <div className="vd-dots">
-          <span className="active" />
-          <span />
-          <span />
-          <span />
+      <section className="vd-section">
+        <div className="vd-section-title">
+          <h2>Categorías</h2>
+
+          <Link to="/catalogo">
+            Ver todas
+            <span>›</span>
+          </Link>
         </div>
 
-        {/* PRODUCTOS DESTACADOS */}
-        <section
-          className="vd-section vd-products-section"
-          id="vd-products"
-        >
-          <div className="vd-section-title">
-            <h2>
-              Productos destacados
-            </h2>
-
-            <Link to="/catalogo">
-              Ver todos
-              <span>›</span>
-            </Link>
-          </div>
-
-          <div className="vd-product-grid">
-            {visibleProducts.map(
-              (product) => (
-                <ProductCard
-                  product={product}
-                  key={product.id}
+        <div className="vd-category-row">
+          {categories.map((category) => (
+            <Link
+              key={category.name}
+              to="/catalogo"
+              className="vd-category"
+            >
+              <div>
+                <Icon
+                  name={category.icon}
+                  size={35}
+                  stroke={1.55}
                 />
-              )
-            )}
-          </div>
-        </section>
+              </div>
 
-        {/* BENEFICIOS */}
-        <section className="vd-benefits">
-          <Benefit
-            icon="shield"
-            title="Compra segura"
-            text="Protegemos tus datos y compras"
+              <span>{category.name}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="vd-offer">
+        <div className="vd-offer-text">
+          <h2>
+            OFERTAS
+            <br />
+            EXCLUSIVAS
+          </h2>
+
+          <p>
+            Descuentos increíbles
+            <br />
+            por tiempo limitado
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("vd-products")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                })
+            }
+          >
+            Ver ofertas
+            <span>›</span>
+          </button>
+        </div>
+
+        <div className="vd-offer-art">
+          <div className="vd-offer-bag vd-bag-one" />
+          <div className="vd-offer-bag vd-bag-two" />
+
+          <img
+            src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=380&q=80"
+            alt="Smartwatch"
           />
 
-          <Benefit
-            icon="truck"
-            title="Envíos rápidos"
-            text="Recibe tus productos en tiempo récord"
+          <img
+            src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=380&q=80"
+            alt="Tenis"
           />
 
-          <Benefit
-            icon="badge"
-            title="Vendedores verificados"
-            text="Más confianza para ti"
-          />
+          <b className="vd-percent">%</b>
+        </div>
+      </section>
 
-          <Benefit
-            icon="chat"
-            title="Soporte 24/7"
-            text="Estamos aquí para ayudarte"
-          />
-        </section>
+      <div className="vd-dots">
+        <span className="active" />
+        <span />
+        <span />
+        <span />
+      </div>
 
-        <div className="vd-bottom-space" />
-      </main>
-    </>
+      <section
+        className="vd-section vd-products-section"
+        id="vd-products"
+      >
+        <div className="vd-section-title">
+          <h2>Productos destacados</h2>
+
+          <Link to="/catalogo">
+            Ver todos
+            <span>›</span>
+          </Link>
+        </div>
+
+        <div className="vd-product-grid">
+          {visibleProducts.map((product) => (
+            <ProductCard
+              product={product}
+              key={product.id}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="vd-benefits">
+        <Benefit
+          icon="shield"
+          title="Compra segura"
+          text="Protegemos tus datos y compras"
+        />
+
+        <Benefit
+          icon="truck"
+          title="Envíos rápidos"
+          text="Recibe tus productos en tiempo récord"
+        />
+
+        <Benefit
+          icon="badge"
+          title="Vendedores verificados"
+          text="Más confianza para ti"
+        />
+
+        <Benefit
+          icon="chat"
+          title="Soporte 24/7"
+          text="Estamos aquí para ayudarte"
+        />
+      </section>
+
+      <div className="vd-bottom-space" />
+    </main>
   );
 }
 
-function Benefit({
-  icon,
-  title,
-  text,
-}) {
+function Benefit({ icon, title, text }) {
   return (
     <div className="vd-benefit">
       <span>
-        <Icon
-          name={icon}
-          size={29}
-          stroke={1.6}
-        />
+        <Icon name={icon} size={29} stroke={1.6} />
       </span>
 
       <div>
@@ -667,19 +578,15 @@ function Benefit({
   );
 }
 
-function ProductCard({
-  product,
-}) {
-  const [favorite, setFavorite] =
-    useState(false);
+function ProductCard({ product }) {
+  const [favorite, setFavorite] = useState(false);
 
   return (
     <article className="vd-product-card">
       <div className="vd-product-top">
         <span
           className={
-            product.badgeType ===
-            "new"
+            product.badgeType === "new"
               ? "vd-product-badge vd-new"
               : "vd-product-badge"
           }
@@ -752,16 +659,12 @@ function ProductCard({
 }
 
 function Catalog() {
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const filtered = products.filter(
-    (product) =>
-      product.name
-        .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        )
+  const filtered = products.filter((product) =>
+    product.name
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
 
   return (
@@ -777,9 +680,7 @@ function Catalog() {
         <input
           value={search}
           onChange={(event) =>
-            setSearch(
-              event.target.value
-            )
+            setSearch(event.target.value)
           }
           placeholder="Buscar productos..."
         />
@@ -790,24 +691,20 @@ function Catalog() {
           Todos
         </button>
 
-        {categories.map(
-          (category) => (
-            <button key={category.name}>
-              {category.name}
-            </button>
-          )
-        )}
+        {categories.map((category) => (
+          <button key={category.name}>
+            {category.name}
+          </button>
+        ))}
       </div>
 
       <div className="vd-product-grid vd-catalog-grid">
-        {filtered.map(
-          (product) => (
-            <ProductCard
-              product={product}
-              key={product.id}
-            />
-          )
-        )}
+        {filtered.map((product) => (
+          <ProductCard
+            product={product}
+            key={product.id}
+          />
+        ))}
       </div>
     </main>
   );
@@ -834,8 +731,7 @@ function ProductPage() {
 
         <div className="vd-detail-info">
           <small>
-            {product.category ||
-              "Producto"}
+            {product.category || "Producto"}
           </small>
 
           <h1>{product.name}</h1>
@@ -917,39 +813,36 @@ function Cart() {
       ) : (
         <>
           <div className="vd-cart-list">
-            {items.map(
-              (item) => (
-                <div
-                  key={item.id}
-                  className="vd-cart-item"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                  />
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="vd-cart-item"
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                />
 
-                  <div>
-                    <strong>
-                      {item.name}
-                    </strong>
+                <div>
+                  <strong>
+                    {item.name}
+                  </strong>
 
-                    <span>
-                      $
-                      {Number(
-                        item.price
-                      ).toLocaleString("es-MX")}
-                      .00
-                    </span>
+                  <span>
+                    $
+                    {Number(
+                      item.price
+                    ).toLocaleString("es-MX")}
+                    .00
+                  </span>
 
-                    <small>
-                      Cantidad:{" "}
-                      {item.quantity ||
-                        1}
-                    </small>
-                  </div>
+                  <small>
+                    Cantidad:{" "}
+                    {item.quantity || 1}
+                  </small>
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
 
           <div className="vd-cart-total">
@@ -970,10 +863,7 @@ function AccountPage() {
     <main className="vd-page">
       <div className="vd-account-page">
         <div className="vd-account-icon">
-          <Icon
-            name="user"
-            size={48}
-          />
+          <Icon name="user" size={48} />
         </div>
 
         <p>MI CUENTA</p>
@@ -1000,10 +890,7 @@ function SellerPage() {
     <main className="vd-page">
       <div className="vd-seller-page">
         <div className="vd-account-icon">
-          <Icon
-            name="store"
-            size={46}
-          />
+          <Icon name="store" size={46} />
         </div>
 
         <p>VENDE EN VANIDAXI</p>
@@ -1051,10 +938,7 @@ function BottomNavigation({
             : ""
         }
       >
-        <Icon
-          name="grid"
-          size={24}
-        />
+        <Icon name="grid" size={24} />
         <small>Categorías</small>
       </NavLink>
 
@@ -1064,22 +948,14 @@ function BottomNavigation({
         onClick={onSell}
       >
         <span>
-          <Icon
-            name="store"
-            size={28}
-          />
+          <Icon name="store" size={28} />
         </span>
 
         <small>Vender</small>
       </button>
 
-      <button
-        type="button"
-      >
-        <Icon
-          name="heart"
-          size={25}
-        />
+      <button type="button">
+        <Icon name="heart" size={25} />
         <small>Favoritos</small>
       </button>
 
@@ -1087,10 +963,7 @@ function BottomNavigation({
         type="button"
         onClick={onAccount}
       >
-        <Icon
-          name="user"
-          size={25}
-        />
+        <Icon name="user" size={25} />
         <small>Cuenta</small>
       </button>
     </nav>
@@ -1213,9 +1086,7 @@ function App() {
         type="button"
         className="vd-chat"
         onClick={() =>
-          alert(
-            "Soporte VaniDaxi"
-          )
+          alert("Soporte VaniDaxi")
         }
       >
         <Icon
@@ -1339,10 +1210,7 @@ function App() {
             </button>
 
             <div className="vd-modal-icon vd-purple-modal">
-              <Icon
-                name="user"
-                size={40}
-              />
+              <Icon name="user" size={40} />
             </div>
 
             <h2>Mi cuenta</h2>
@@ -1387,10 +1255,7 @@ function App() {
             </button>
 
             <div className="vd-modal-icon">
-              <Icon
-                name="store"
-                size={40}
-              />
+              <Icon name="store" size={40} />
             </div>
 
             <h2>
@@ -1476,19 +1341,14 @@ function App() {
           position: sticky;
           top: 0;
           z-index: 50;
-
           width: 100%;
           height: 66px;
-
           padding: 7px 14px;
-
           display: grid;
           grid-template-columns: 42px 1fr 88px;
           align-items: center;
-
           background: rgba(255,255,255,.97);
           border-bottom: 1px solid #ededed;
-
           backdrop-filter: blur(14px);
         }
 
@@ -1567,21 +1427,15 @@ function App() {
           position: absolute;
           top: 0;
           right: -1px;
-
           min-width: 17px;
           height: 17px;
-
           padding: 0 4px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 50%;
-
           background: #e31549;
           color: white;
-
           font-size: 9px;
           font-style: normal;
           font-weight: 800;
@@ -1594,8 +1448,6 @@ function App() {
           padding: 13px 18px 20px;
         }
 
-        /* SEARCH */
-
         .vd-search-section {
           margin-bottom: 12px;
         }
@@ -1603,38 +1455,26 @@ function App() {
         .vd-search-box {
           width: 100%;
           height: 52px;
-
           display: flex;
           align-items: center;
-
           gap: 10px;
-
           padding-left: 15px;
-
-          border: 1px solid #e6e4e9;
+          border: 1px solid #f0eef2;
           border-radius: 17px;
-
           background: white;
-
           box-shadow:
-            0 5px 18px rgba(42, 26, 57, .07);
-
+            0 5px 18px rgba(42, 26, 57, .045);
           color: #67656d;
         }
 
         .vd-search-box input {
           flex: 1;
           min-width: 0;
-
           height: 100%;
-
           border: 0;
           outline: 0;
-
           color: #3b3a40;
-
           font-size: 14px;
-
           background: transparent;
         }
 
@@ -1645,56 +1485,54 @@ function App() {
         .vd-search-box button {
           width: 52px;
           height: 52px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
-
+          border-radius: 0 17px 17px 0;
           background:
             linear-gradient(
               135deg,
               #ec1450,
               #7c1aa3
             );
-
           color: white;
         }
 
-        /* MAIN CARDS */
+        /* TARJETAS CENTRALES SUAVIZADAS */
 
         .vd-main-cards {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 8px;
-
           margin-bottom: 20px;
         }
 
         .vd-main-card {
           min-width: 0;
           height: 105px;
-
           padding: 12px;
-
           display: grid;
           grid-template-columns: 48px 1fr;
-
           gap: 9px;
-
           position: relative;
-
           overflow: hidden;
 
-          border: 0;
-          border-radius: 17px;
+          /* Bordes mucho menos marcados */
+          border: 1px solid rgba(255,255,255,.10);
+          outline: none;
 
+          border-radius: 17px;
           text-align: left;
           color: white;
 
+          /* Sombra mucho más suave */
           box-shadow:
-            0 9px 20px rgba(101, 18, 108, .14);
+            0 6px 16px rgba(101, 18, 108, .09);
+        }
+
+        .vd-main-card:active {
+          transform: scale(.99);
         }
 
         .vd-sell-card {
@@ -1718,19 +1556,18 @@ function App() {
         .vd-main-icon {
           width: 47px;
           height: 47px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 13px;
 
-          background: white;
+          /* Caja del icono más integrada */
+          background: rgba(255,255,255,.94);
 
           color: #db174c;
 
           box-shadow:
-            0 5px 10px rgba(0,0,0,.07);
+            0 3px 9px rgba(0,0,0,.045);
         }
 
         .vd-account-card .vd-main-icon {
@@ -1744,7 +1581,6 @@ function App() {
 
         .vd-main-copy strong {
           display: block;
-
           font-size: 14px;
           line-height: 1.12;
           font-weight: 850;
@@ -1752,11 +1588,8 @@ function App() {
 
         .vd-main-copy small {
           display: block;
-
           margin-top: 5px;
-
           color: rgba(255,255,255,.9);
-
           font-size: 9.5px;
           line-height: 1.32;
         }
@@ -1765,21 +1598,22 @@ function App() {
           position: absolute;
           right: 10px;
           bottom: 10px;
-
           width: 29px;
           height: 29px;
-
           border-radius: 50%;
-
           display: flex;
           align-items: center;
           justify-content: center;
 
-          background: white;
-          color: #722396;
+          /* Menos contraste en el círculo */
+          background: rgba(255,255,255,.94);
 
+          color: #722396;
           font-size: 25px;
           line-height: 1;
+
+          box-shadow:
+            0 2px 7px rgba(0,0,0,.04);
         }
 
         /* TITLES */
@@ -1792,13 +1626,11 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-
           margin-bottom: 10px;
         }
 
         .vd-section-title h2 {
           margin: 0;
-
           font-size: 19px;
           line-height: 1.15;
           font-weight: 850;
@@ -1806,7 +1638,6 @@ function App() {
 
         .vd-section-title a {
           color: #702292;
-
           font-size: 12px;
           font-weight: 800;
         }
@@ -1822,11 +1653,8 @@ function App() {
         .vd-category-row {
           display: flex;
           gap: 7px;
-
           overflow-x: auto;
-
           padding: 3px 1px 5px;
-
           scrollbar-width: none;
         }
 
@@ -1836,32 +1664,35 @@ function App() {
 
         .vd-category {
           flex: 0 0 79px;
-
           display: flex;
           flex-direction: column;
           align-items: center;
-
           gap: 6px;
         }
 
         .vd-category > div {
           width: 72px;
           height: 72px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 18px;
 
-          border: 1px solid #ededee;
+          /* ORILLAS MUY SUAVES */
+          border: 1px solid rgba(120, 110, 135, .075);
 
-          background: white;
+          background:
+            linear-gradient(
+              145deg,
+              #ffffff,
+              #fcfbfd
+            );
 
           color: #d8184c;
 
+          /* Sombra más ligera para que no parezca un recuadro marcado */
           box-shadow:
-            0 5px 13px rgba(40, 26, 57, .05);
+            0 4px 11px rgba(40, 26, 57, .035);
         }
 
         .vd-category:nth-child(2) > div,
@@ -1872,9 +1703,7 @@ function App() {
 
         .vd-category > span {
           text-align: center;
-
           color: #36353b;
-
           font-size: 9px;
           line-height: 1.15;
           font-weight: 650;
@@ -1885,16 +1714,11 @@ function App() {
         .vd-offer {
           width: 100%;
           min-height: 155px;
-
           display: grid;
           grid-template-columns: 43% 57%;
-
           overflow: hidden;
-
           position: relative;
-
           border-radius: 18px;
-
           background:
             radial-gradient(
               circle at 65% 25%,
@@ -1907,23 +1731,19 @@ function App() {
               #a90b86 50%,
               #58179c
             );
-
           color: white;
-
           box-shadow:
-            0 9px 20px rgba(94, 15, 115, .14);
+            0 7px 17px rgba(94, 15, 115, .10);
         }
 
         .vd-offer-text {
           position: relative;
           z-index: 3;
-
           padding: 17px 0 14px 18px;
         }
 
         .vd-offer-text h2 {
           margin: 0;
-
           font-size: 22px;
           line-height: 1.02;
           font-weight: 900;
@@ -1931,23 +1751,17 @@ function App() {
 
         .vd-offer-text p {
           margin: 7px 0 10px;
-
           font-size: 10px;
           line-height: 1.35;
         }
 
         .vd-offer-text button {
           min-height: 31px;
-
           padding: 0 12px;
-
           border: 0;
           border-radius: 18px;
-
-          background: white;
-
+          background: rgba(255,255,255,.96);
           color: #d31961;
-
           font-size: 10px;
           font-weight: 850;
         }
@@ -1964,49 +1778,36 @@ function App() {
 
         .vd-offer-art img {
           position: absolute;
-
           object-fit: cover;
-
-          border: 4px solid rgba(255,255,255,.08);
-
+          border: 3px solid rgba(255,255,255,.06);
           box-shadow:
-            0 10px 18px rgba(0,0,0,.18);
+            0 8px 15px rgba(0,0,0,.13);
         }
 
         .vd-offer-art img:first-of-type {
           width: 83px;
           height: 94px;
-
           left: 7px;
           bottom: 11px;
-
           border-radius: 16px;
-
           transform: rotate(4deg);
         }
 
         .vd-offer-art img:nth-of-type(2) {
           width: 108px;
           height: 69px;
-
           right: -2px;
           bottom: 2px;
-
           border-radius: 15px;
-
           transform: rotate(-7deg);
         }
 
         .vd-offer-bag {
           position: absolute;
-
           bottom: 13px;
-
           width: 55px;
           height: 64px;
-
           border-radius: 7px 7px 9px 9px;
-
           opacity: .9;
         }
 
@@ -2023,22 +1824,16 @@ function App() {
 
         .vd-percent {
           position: absolute;
-
           top: 10px;
           right: 12px;
-
           width: 43px;
           height: 48px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           background: #f40049;
-
           font-size: 34px;
           font-weight: 900;
-
           transform: rotate(8deg);
         }
 
@@ -2046,16 +1841,13 @@ function App() {
           display: flex;
           justify-content: center;
           gap: 5px;
-
           padding: 7px 0 8px;
         }
 
         .vd-dots span {
           width: 6px;
           height: 6px;
-
           border-radius: 50%;
-
           background: #bab9bf;
         }
 
@@ -2071,47 +1863,39 @@ function App() {
 
         .vd-product-grid {
           display: grid;
-
           grid-template-columns:
             repeat(4, minmax(0, 1fr));
-
           gap: 8px;
         }
 
         .vd-product-card {
           min-width: 0;
 
-          border: 1px solid #ebeaed;
+          /* Borde casi imperceptible */
+          border: 1px solid rgba(100, 90, 110, .07);
+
           border-radius: 13px;
-
           background: white;
-
           overflow: hidden;
 
           box-shadow:
-            0 5px 14px rgba(35, 24, 47, .045);
+            0 4px 12px rgba(35, 24, 47, .035);
         }
 
         .vd-product-top {
           height: 0;
-
           position: relative;
           z-index: 4;
         }
 
         .vd-product-badge {
           position: absolute;
-
           top: 7px;
           left: 7px;
-
           padding: 4px 6px;
-
           border-radius: 5px;
-
           background: #e7164c;
           color: white;
-
           font-size: 8px;
           font-weight: 850;
         }
@@ -2122,20 +1906,16 @@ function App() {
 
         .vd-favorite {
           position: absolute;
-
           top: 5px;
           right: 6px;
-
           width: 26px;
           height: 26px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
-          background: white;
-
+          border-radius: 50%;
+          background: rgba(255,255,255,.92);
           color: #6d6a70;
         }
 
@@ -2146,18 +1926,14 @@ function App() {
         .vd-product-image {
           width: 100%;
           height: 102px;
-
           display: block;
-
-          background: #f8f8f8;
+          background: #faf9fa;
         }
 
         .vd-product-image img {
           width: 100%;
           height: 100%;
-
           object-fit: contain;
-
           mix-blend-mode: multiply;
         }
 
@@ -2167,11 +1943,8 @@ function App() {
 
         .vd-product-info h3 {
           min-height: 27px;
-
           margin: 0 0 5px;
-
           color: #302f35;
-
           font-size: 9px;
           line-height: 1.3;
           font-weight: 750;
@@ -2180,9 +1953,7 @@ function App() {
         .vd-price {
           display: flex;
           align-items: baseline;
-
           gap: 4px;
-
           white-space: nowrap;
         }
 
@@ -2198,9 +1969,7 @@ function App() {
 
         .vd-rating {
           margin-top: 5px;
-
           color: #77747b;
-
           font-size: 7.5px;
           white-space: nowrap;
         }
@@ -2216,23 +1985,17 @@ function App() {
 
         .vd-product-info > button {
           width: 100%;
-
           height: 27px;
-
           margin-top: 6px;
-
           border: 0;
           border-radius: 7px;
-
           background:
             linear-gradient(
               135deg,
-              #f2eef5,
-              #eee7f6
+              #f7f4f8,
+              #f3edf8
             );
-
           color: #702098;
-
           font-size: 8px;
           font-weight: 800;
         }
@@ -2243,26 +2006,22 @@ function App() {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
 
-          border: 1px solid #ebeaed;
-          border-radius: 15px;
+          border: 1px solid rgba(100, 90, 110, .06);
 
+          border-radius: 15px;
           background: white;
 
           box-shadow:
-            0 6px 15px rgba(40,28,55,.045);
+            0 5px 13px rgba(40,28,55,.035);
         }
 
         .vd-benefit {
           min-width: 0;
-
           padding: 12px 7px;
-
           display: flex;
           flex-direction: column;
           align-items: center;
-
           gap: 6px;
-
           text-align: center;
         }
 
@@ -2277,18 +2036,14 @@ function App() {
 
         .vd-benefit strong {
           display: block;
-
           font-size: 8px;
           line-height: 1.2;
         }
 
         .vd-benefit small {
           display: block;
-
           margin-top: 2px;
-
           color: #747079;
-
           font-size: 7px;
           line-height: 1.25;
         }
@@ -2301,50 +2056,35 @@ function App() {
 
         .vd-bottom-nav {
           position: fixed;
-
           left: 50%;
           bottom: 0;
-
           transform: translateX(-50%);
-
           z-index: 60;
-
           width: min(100%, 560px);
           height: 68px;
-
           display: grid;
           grid-template-columns: repeat(5, 1fr);
           align-items: end;
-
           padding:
             4px 7px
             max(5px, env(safe-area-inset-bottom));
-
           background: rgba(255,255,255,.98);
-
-          border-top: 1px solid #eceaed;
-
+          border-top: 1px solid #f0eef1;
           box-shadow:
-            0 -6px 18px rgba(28,20,38,.05);
+            0 -5px 16px rgba(28,20,38,.035);
         }
 
         .vd-bottom-nav > a,
         .vd-bottom-nav > button {
           height: 55px;
-
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-
           gap: 2px;
-
           border: 0;
-
           background: transparent;
-
           color: #727079;
-
           font-size: 21px;
         }
 
@@ -2360,25 +2100,19 @@ function App() {
         .vd-sell-nav {
           width: 62px !important;
           height: 62px !important;
-
           justify-self: center;
-
           margin-top: -26px;
-
           border-radius: 21px !important;
-
           background:
             linear-gradient(
               145deg,
               #ee174e,
               #72169e
             ) !important;
-
           color: white !important;
-
           box-shadow:
-            0 10px 22px
-            rgba(167,19,99,.28);
+            0 8px 18px
+            rgba(167,19,99,.20);
         }
 
         .vd-sell-nav span {
@@ -2390,40 +2124,31 @@ function App() {
 
         .vd-chat {
           position: fixed;
-
           right: max(
             15px,
             calc(
               (100vw - 560px) / 2 + 15px
             )
           );
-
           bottom: 80px;
-
           z-index: 55;
-
           width: 50px;
           height: 50px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
           border-radius: 50%;
-
           background:
             linear-gradient(
               135deg,
               #ef164e,
               #70169f
             );
-
           color: white;
-
           box-shadow:
-            0 9px 20px
-            rgba(130,19,116,.23);
+            0 7px 17px
+            rgba(130,19,116,.18);
         }
 
         /* GENERIC PAGES */
@@ -2431,7 +2156,6 @@ function App() {
         .vd-page {
           width: 100%;
           min-height: calc(100vh - 144px);
-
           padding: 22px 18px;
         }
 
@@ -2443,35 +2167,29 @@ function App() {
         .vd-account-page > p,
         .vd-seller-page > p {
           margin: 0 0 6px;
-
           color: #77747d;
-
           font-size: 9px;
           font-weight: 850;
-
           letter-spacing: 2px;
         }
 
         .vd-page-title h1 {
           margin: 0;
-
           font-size: 27px;
           line-height: 1.1;
         }
 
         .vd-catalog-search {
           height: 49px;
-
           display: flex;
           align-items: center;
           gap: 9px;
-
           padding: 0 14px;
-
-          border: 1px solid #e8e6eb;
+          border: 1px solid rgba(100,90,110,.08);
           border-radius: 15px;
-
           background: white;
+          box-shadow:
+            0 4px 12px rgba(35,24,47,.025);
         }
 
         .vd-catalog-search input {
@@ -2483,9 +2201,7 @@ function App() {
         .vd-filters {
           display: flex;
           gap: 7px;
-
           margin: 13px 0 17px;
-
           overflow-x: auto;
           scrollbar-width: none;
         }
@@ -2496,28 +2212,22 @@ function App() {
 
         .vd-filters button {
           flex: 0 0 auto;
-
           padding: 8px 12px;
-
-          border: 1px solid #e5e4e7;
+          border: 1px solid rgba(100,90,110,.08);
           border-radius: 999px;
-
           background: white;
           color: #68656c;
-
           font-size: 9px;
         }
 
         .vd-filters button.active {
           border-color: transparent;
-
           background:
             linear-gradient(
               135deg,
               #ed164d,
               #72179e
             );
-
           color: white;
         }
 
@@ -2525,8 +2235,7 @@ function App() {
           grid-template-columns: repeat(2, 1fr);
         }
 
-        .vd-catalog-grid
-          .vd-product-image {
+        .vd-catalog-grid .vd-product-image {
           height: 135px;
         }
 
@@ -2539,14 +2248,11 @@ function App() {
 
         .vd-detail-image {
           min-height: 290px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 20px;
-
-          background: #f5f4f6;
+          background: #f8f7f9;
         }
 
         .vd-detail-image img {
@@ -2572,42 +2278,33 @@ function App() {
 
         .vd-gradient-button {
           min-height: 44px;
-
           padding: 0 18px;
-
           display: inline-flex;
           align-items: center;
           justify-content: center;
-
           border: 0;
           border-radius: 13px;
-
           background:
             linear-gradient(
               135deg,
               #ed164e,
               #75179f
             );
-
           color: white;
-
           font-size: 11px;
           font-weight: 800;
+          box-shadow:
+            0 6px 14px rgba(130,19,100,.12);
         }
 
         .vd-light-button {
           width: 100%;
           min-height: 42px;
-
           margin-top: 9px;
-
           border: 0;
           border-radius: 12px;
-
-          background: #f4f1f6;
-
+          background: #f7f4f8;
           color: #6d228f;
-
           font-weight: 800;
         }
 
@@ -2615,12 +2312,10 @@ function App() {
         .vd-account-page,
         .vd-seller-page {
           min-height: 380px;
-
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-
           text-align: center;
         }
 
@@ -2628,24 +2323,18 @@ function App() {
         .vd-account-icon {
           width: 82px;
           height: 82px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           margin-bottom: 15px;
-
           border-radius: 25px;
-
           background:
             linear-gradient(
               135deg,
               #fff0f5,
               #f2e8fc
             );
-
           color: #731b9d;
-
           font-size: 44px;
         }
 
@@ -2660,29 +2349,23 @@ function App() {
 
         .vd-cart-item {
           min-height: 75px;
-
           padding: 10px;
-
           display: grid;
           grid-template-columns: 65px 1fr;
-
           gap: 11px;
-
           align-items: center;
-
-          border: 1px solid #ecebef;
+          border: 1px solid rgba(100,90,110,.07);
           border-radius: 15px;
-
           background: white;
+          box-shadow:
+            0 4px 10px rgba(35,24,47,.025);
         }
 
         .vd-cart-item img {
           width: 65px;
           height: 65px;
-
           object-fit: contain;
-
-          background: #f6f6f7;
+          background: #faf9fa;
         }
 
         .vd-cart-item strong {
@@ -2692,11 +2375,8 @@ function App() {
 
         .vd-cart-item span {
           display: block;
-
           margin-top: 4px;
-
           color: #da164a;
-
           font-size: 12px;
           font-weight: 800;
         }
@@ -2708,22 +2388,19 @@ function App() {
 
         .vd-cart-total {
           margin-top: 15px;
-
           padding: 17px;
-
           display: flex;
           justify-content: space-between;
-
           border-radius: 16px;
-
           background:
             linear-gradient(
               135deg,
               #ef174e,
               #74169d
             );
-
           color: white;
+          box-shadow:
+            0 6px 15px rgba(130,19,100,.10);
         }
 
         /* OVERLAYS */
@@ -2732,9 +2409,7 @@ function App() {
           position: fixed;
           inset: 0;
           z-index: 100;
-
           background: rgba(16,12,21,.44);
-
           backdrop-filter: blur(4px);
         }
 
@@ -2742,32 +2417,25 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: center;
-
           padding: 20px;
         }
 
         .vd-side-menu {
           width: min(80%, 310px);
           height: 100%;
-
           padding: 20px;
-
           background: white;
-
           box-shadow:
-            15px 0 35px rgba(0,0,0,.15);
+            12px 0 28px rgba(0,0,0,.11);
         }
 
         .vd-menu-head {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-
           margin-bottom: 20px;
-
           padding-bottom: 17px;
-
-          border-bottom: 1px solid #eeeeee;
+          border-bottom: 1px solid #f3f2f4;
         }
 
         .vd-menu-brand {
@@ -2797,70 +2465,52 @@ function App() {
         .vd-side-menu > a,
         .vd-side-menu > button {
           width: 100%;
-
           padding: 13px 5px;
-
           display: block;
-
           border: 0;
-          border-bottom: 1px solid #f0eff1;
-
+          border-bottom: 1px solid #f4f3f5;
           background: transparent;
-
           text-align: left;
-
           color: #36333b;
-
           font-size: 13px;
           font-weight: 700;
         }
 
         .vd-modal {
           width: min(100%, 340px);
-
           position: relative;
-
           padding: 25px 20px;
-
           border-radius: 23px;
-
           background: white;
-
           text-align: center;
+          box-shadow:
+            0 15px 40px rgba(0,0,0,.12);
         }
 
         .vd-modal-close {
           position: absolute;
           top: 9px;
           right: 11px;
-
           border: 0;
           background: transparent;
-
           color: #67636a;
-
           font-size: 27px;
         }
 
         .vd-modal-icon {
           width: 67px;
           height: 67px;
-
           margin: 0 auto 13px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           border-radius: 19px;
-
           background:
             linear-gradient(
               135deg,
               #ef164e,
               #74169f
             );
-
           color: white;
         }
 
@@ -2880,9 +2530,7 @@ function App() {
 
         .vd-modal p {
           margin: 0 0 17px;
-
           color: #706c74;
-
           font-size: 12px;
           line-height: 1.5;
         }
@@ -3006,12 +2654,14 @@ function App() {
 
           .vd-benefit:nth-child(1),
           .vd-benefit:nth-child(2) {
-            border-bottom: 1px solid #efedf0;
+            border-bottom:
+              1px solid rgba(100,90,110,.06);
           }
 
           .vd-benefit:nth-child(1),
           .vd-benefit:nth-child(3) {
-            border-right: 1px solid #efedf0;
+            border-right:
+              1px solid rgba(100,90,110,.06);
           }
         }
       `}</style>
