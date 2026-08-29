@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Link,
-  NavLink,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
 const CART_KEY = "vanidaxi_cart";
@@ -18,42 +9,69 @@ const categories = [
   {
     name: "Ropa y Moda",
     image:
-      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Hogar y Vida",
     image:
-      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Belleza y Salud",
     image:
-      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Autos y Motos",
     image:
-      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Comida",
     image:
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Juguetes",
     image:
-      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85",
   },
   {
     name: "Deportes",
     image:
-      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85",
+  },
+];
+
+const topCards = [
+  {
+    title: "Ofertas",
+    subtitle: "Hasta 50% menos",
+    image:
+      "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=700&q=85",
+  },
+  {
+    title: "Novedades",
+    subtitle: "Lo más reciente",
+    image:
+      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=85",
+  },
+  {
+    title: "Vendedores",
+    subtitle: "Descubre nuevos productos",
+    image:
+      "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=700&q=85",
+  },
+  {
+    title: "Envíos",
+    subtitle: "Compra fácilmente",
+    image:
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=700&q=85",
   },
 ];
 
@@ -66,10 +84,9 @@ const initialProducts = [
     rating: 4.8,
     reviews: 124,
     discount: 31,
-    type: "Producto",
     category: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
     description:
       "Smartwatch moderno con funciones inteligentes para todos los días.",
     specifications: [
@@ -87,10 +104,9 @@ const initialProducts = [
     rating: 4.7,
     reviews: 89,
     discount: 25,
-    type: "Producto",
     category: "Hogar y Vida",
     image:
-      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=85",
     description:
       "Licuadora potente ideal para preparar bebidas, salsas y alimentos.",
     specifications: [
@@ -108,10 +124,9 @@ const initialProducts = [
     rating: 4.9,
     reviews: 156,
     discount: 25,
-    type: "Producto",
     category: "Ropa y Moda",
     image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
     description:
       "Tenis cómodos y modernos para complementar cualquier estilo.",
     specifications: [
@@ -129,10 +144,9 @@ const initialProducts = [
     rating: 4.6,
     reviews: 203,
     discount: 29,
-    type: "Producto",
     category: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
     description:
       "Audífonos inalámbricos con sonido envolvente y batería de larga duración.",
     specifications: [
@@ -144,12 +158,12 @@ const initialProducts = [
   },
 ];
 
-const formatPrice = (price) =>
+const formatPrice = (value) =>
   new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(Number(value) || 0);
 
 function loadStorage(key, fallback) {
   try {
@@ -161,18 +175,27 @@ function loadStorage(key, fallback) {
 }
 
 function App() {
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState(initialProducts);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [cart, setCart] = useState(() => loadStorage(CART_KEY, []));
   const [favorites, setFavorites] = useState(() =>
     loadStorage(FAVORITES_KEY, [])
   );
+
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [search, setSearch] = useState("");
+
   const [showMenu, setShowMenu] = useState(false);
+  const [showCart, setShowCart] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
-  const [showCart, setShowCart] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(1);
+  const [orderComplete, setOrderComplete] = useState(false);
+
   const [user, setUser] = useState(null);
   const [authMode, setAuthMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
@@ -180,6 +203,19 @@ function App() {
   const [authName, setAuthName] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [checkout, setCheckout] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    notes: "",
+    delivery: "standard",
+    payment: "card",
+  });
+
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: "",
@@ -218,7 +254,8 @@ function App() {
 
     return products.filter((product) => {
       const categoryMatch =
-        activeCategory === "Todos" || product.category === activeCategory;
+        activeCategory === "Todos" ||
+        product.category === activeCategory;
 
       const searchMatch =
         !term ||
@@ -230,28 +267,54 @@ function App() {
     });
   }, [products, activeCategory, search]);
 
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const cartCount = cart.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
-  const addToCart = (product) => {
+  const cartSubtotal = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const shippingCost =
+    checkout.delivery === "express" && cart.length > 0 ? 99 : 0;
+
+  const cartTotal = cartSubtotal + shippingCost;
+
+  const addToCart = (product, openCart = true) => {
     setCart((current) => {
       const existing = current.find((item) => item.id === product.id);
 
       if (existing) {
         return current.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
             : item
         );
       }
 
-      return [...current, { ...product, quantity: 1 }];
+      return [
+        ...current,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ];
     });
 
-    setShowCart(true);
+    if (openCart) {
+      setShowCart(true);
+    }
   };
 
   const removeFromCart = (id) => {
-    setCart((current) => current.filter((item) => item.id !== id));
+    setCart((current) =>
+      current.filter((item) => item.id !== id)
+    );
   };
 
   const changeQuantity = (id, amount) => {
@@ -259,27 +322,45 @@ function App() {
       current
         .map((item) =>
           item.id === id
-            ? { ...item, quantity: Math.max(1, item.quantity + amount) }
+            ? {
+                ...item,
+                quantity: Math.max(
+                  1,
+                  item.quantity + amount
+                ),
+              }
             : item
         )
-        .filter((item) => item.quantity > 0)
     );
   };
 
   const toggleFavorite = (product) => {
     setFavorites((current) => {
-      const exists = current.some((item) => item.id === product.id);
+      const exists = current.some(
+        (item) => item.id === product.id
+      );
 
-      if (exists) {
-        return current.filter((item) => item.id !== product.id);
-      }
-
-      return [...current, product];
+      return exists
+        ? current.filter((item) => item.id !== product.id)
+        : [...current, product];
     });
   };
 
-  const buyNow = (product) => {
-    addToCart(product);
+  const startCheckout = (product = null) => {
+    if (product) {
+      addToCart(product, false);
+    }
+
+    if (cart.length === 0 && !product) {
+      setShowCart(true);
+      return;
+    }
+
+    setShowCart(false);
+    setSelectedProduct(null);
+    setOrderComplete(false);
+    setCheckoutStep(1);
+    setShowCheckout(true);
   };
 
   const handleAuth = async (event) => {
@@ -310,26 +391,36 @@ function App() {
           );
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: authEmail,
-          password: authPassword,
-        });
+        const { data, error } =
+          await supabase.auth.signInWithPassword({
+            email: authEmail,
+            password: authPassword,
+          });
 
         if (error) throw error;
 
         setUser(data.user);
         setShowAuth(false);
-        setAuthMessage("");
       }
     } catch (error) {
       const message = error?.message || "";
 
-      if (message.toLowerCase().includes("invalid login credentials")) {
+      if (
+        message
+          .toLowerCase()
+          .includes("invalid login credentials")
+      ) {
         setAuthMessage("Correo o contraseña incorrectos.");
-      } else if (message.toLowerCase().includes("email not confirmed")) {
-        setAuthMessage("Primero confirma tu correo electrónico.");
+      } else if (
+        message.toLowerCase().includes("email not confirmed")
+      ) {
+        setAuthMessage(
+          "Primero confirma tu correo electrónico."
+        );
       } else {
-        setAuthMessage(message || "No fue posible completar la operación.");
+        setAuthMessage(
+          message || "No fue posible completar la operación."
+        );
       }
     } finally {
       setLoading(false);
@@ -355,13 +446,13 @@ function App() {
       rating: 5,
       reviews: 0,
       discount: 0,
-      type: "Producto",
       category: newProduct.category,
       image:
         newProduct.image ||
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
       description:
-        newProduct.description || "Producto publicado en VaniDaxi.",
+        newProduct.description ||
+        "Producto publicado en VaniDaxi.",
       specifications: [],
     };
 
@@ -378,6 +469,38 @@ function App() {
     setShowPublish(false);
   };
 
+  const handleCheckoutNext = () => {
+    if (checkoutStep === 1) {
+      if (
+        !checkout.name ||
+        !checkout.phone ||
+        !checkout.address ||
+        !checkout.city ||
+        !checkout.state ||
+        !checkout.zip
+      ) {
+        alert("Completa todos los datos de entrega.");
+        return;
+      }
+
+      setCheckoutStep(2);
+      return;
+    }
+
+    if (checkoutStep === 2) {
+      setCheckoutStep(3);
+      return;
+    }
+
+    setOrderComplete(true);
+  };
+
+  const resetCheckout = () => {
+    setShowCheckout(false);
+    setOrderComplete(false);
+    setCheckoutStep(1);
+  };
+
   return (
     <div className="app">
       <style>{`
@@ -391,9 +514,9 @@ function App() {
 
         body {
           margin: 0;
-          font-family: Arial, Helvetica, sans-serif;
           background: #fff;
           color: #202020;
+          font-family: Arial, Helvetica, sans-serif;
         }
 
         button,
@@ -412,92 +535,112 @@ function App() {
           background: #fff;
         }
 
+        /* =========================
+           BARRA SUPERIOR
+        ========================= */
+
         .top-header {
           position: sticky;
           top: 0;
-          z-index: 50;
-          background: rgba(255,255,255,.97);
-          border-bottom: 1px solid #eee;
-          backdrop-filter: blur(10px);
+          z-index: 80;
+          background: rgba(255,255,255,.98);
+          border-bottom: 1px solid #ededed;
+          backdrop-filter: blur(12px);
         }
 
         .header-main {
-          max-width: 1250px;
+          width: min(1180px, calc(100% - 24px));
+          min-height: 58px;
           margin: auto;
-          min-height: 70px;
           display: flex;
           align-items: center;
-          gap: 18px;
-          padding: 10px 20px;
+          gap: 10px;
+          padding: 7px 0;
         }
 
         .brand {
+          flex: 0 0 auto;
           text-decoration: none;
+          font-size: 23px;
           font-weight: 900;
-          font-size: 27px;
           letter-spacing: -1px;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           -webkit-background-clip: text;
+          background-clip: text;
           color: transparent;
-          white-space: nowrap;
         }
 
         .menu-button {
-          width: 45px;
-          height: 45px;
+          flex: 0 0 auto;
+          width: 39px;
+          height: 39px;
           border: 0;
-          border-radius: 13px;
-          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
+          border-radius: 11px;
           color: white;
-          font-size: 23px;
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          font-size: 20px;
           display: grid;
           place-items: center;
         }
 
         .search-box {
           flex: 1;
+          height: 39px;
+          min-width: 0;
+          max-width: 540px;
+          margin-left: auto;
+          margin-right: auto;
           display: flex;
-          align-items: center;
-          max-width: 620px;
-          margin: auto;
           border: 1px solid #ddd;
-          border-radius: 30px;
+          border-radius: 22px;
           overflow: hidden;
           background: #fff;
         }
 
         .search-box input {
           flex: 1;
+          min-width: 0;
           border: 0;
           outline: 0;
-          padding: 13px 17px;
-          min-width: 0;
+          padding: 0 14px;
+          font-size: 13px;
         }
 
         .search-box button {
+          width: 43px;
           border: 0;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           color: white;
-          width: 52px;
-          height: 48px;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
         }
 
         .header-actions {
           display: flex;
-          align-items: center;
-          gap: 9px;
+          gap: 7px;
+          flex: 0 0 auto;
         }
 
         .header-action {
+          width: 39px;
+          height: 39px;
           border: 0;
-          background: #f7f7f7;
-          border-radius: 12px;
-          min-width: 44px;
-          height: 44px;
-          font-size: 20px;
-        }
-
-        .cart-button {
+          border-radius: 11px;
+          background: #f5f5f7;
+          font-size: 18px;
           position: relative;
         }
 
@@ -505,25 +648,26 @@ function App() {
           position: absolute;
           top: -5px;
           right: -4px;
-          min-width: 19px;
-          height: 19px;
-          padding: 0 5px;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 4px;
           border-radius: 20px;
-          background: #ef233c;
-          color: #fff;
-          font-size: 11px;
           display: grid;
           place-items: center;
-          font-weight: bold;
+          background: #ef233c;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 800;
         }
 
         .category-bar {
-          max-width: 1250px;
+          width: min(1180px, calc(100% - 24px));
           margin: auto;
-          padding: 0 20px 12px;
-          overflow-x: auto;
+          padding: 0 0 8px;
           display: flex;
-          gap: 9px;
+          gap: 7px;
+          overflow-x: auto;
+          scrollbar-width: none;
         }
 
         .category-bar::-webkit-scrollbar {
@@ -531,428 +675,538 @@ function App() {
         }
 
         .category-pill {
-          border: 1px solid #e5e5e5;
-          background: white;
-          padding: 8px 15px;
-          border-radius: 22px;
+          flex: 0 0 auto;
+          border: 1px solid #e4e4e4;
+          background: #fff;
+          color: #444;
+          border-radius: 18px;
+          padding: 6px 12px;
+          font-size: 11px;
           white-space: nowrap;
-          font-size: 13px;
-          transition: .2s;
         }
 
         .category-pill.active,
         .category-pill:hover {
           color: white;
           border-color: transparent;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+        }
+
+        /* =========================
+           CONTENIDO CENTRAL
+        ========================= */
+
+        .page-content {
+          width: min(1180px, calc(100% - 24px));
+          margin: auto;
         }
 
         .hero {
-          max-width: 1250px;
-          margin: 20px auto;
-          padding: 45px 35px;
-          border-radius: 27px;
+          margin: 14px 0;
+          min-height: 185px;
+          border-radius: 21px;
+          padding: 28px 30px;
           color: white;
-          background: linear-gradient(110deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            110deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 25px;
           overflow: hidden;
         }
 
         .hero h1 {
-          margin: 0 0 10px;
-          font-size: clamp(32px,5vw,57px);
+          margin: 0 0 8px;
+          font-size: clamp(29px, 4vw, 45px);
           line-height: 1;
         }
 
         .hero p {
-          margin: 0 0 20px;
-          font-size: 17px;
-          opacity: .95;
+          margin: 0 0 15px;
+          font-size: 13px;
+          opacity: .96;
         }
 
         .hero-button {
           border: 0;
-          border-radius: 25px;
-          padding: 13px 23px;
+          border-radius: 20px;
+          padding: 10px 18px;
           background: white;
-          color: #b21bc3;
-          font-weight: bold;
+          color: #b41bc1;
+          font-size: 12px;
+          font-weight: 800;
         }
 
         .hero-icon {
-          font-size: 100px;
-          opacity: .95;
+          font-size: 75px;
+          margin-right: 25px;
         }
 
+        /* =========================
+           TARJETAS SUPERIORES
+        ========================= */
+
+        .top-cards {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          margin: 12px 0 22px;
+        }
+
+        .top-card {
+          height: 94px;
+          position: relative;
+          overflow: hidden;
+          border-radius: 14px;
+          border: 1px solid #eee;
+          background: #f5f5f5;
+          text-align: left;
+          padding: 0;
+        }
+
+        .top-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .top-card-overlay {
+          position: absolute;
+          inset: 0;
+          padding: 13px;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          background: linear-gradient(
+            transparent 15%,
+            rgba(0,0,0,.65)
+          );
+          color: white;
+        }
+
+        .top-card-title {
+          font-weight: 900;
+          font-size: 14px;
+        }
+
+        .top-card-subtitle {
+          font-size: 10px;
+          margin-top: 2px;
+        }
+
+        /* =========================
+           CATEGORÍAS
+        ========================= */
+
         .section {
-          max-width: 1250px;
-          margin: 0 auto;
-          padding: 15px 20px 35px;
+          margin: 20px 0;
         }
 
         .section-title {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 17px;
+          margin-bottom: 12px;
         }
 
         .section-title h2 {
           margin: 0;
-          font-size: 25px;
+          font-size: 21px;
         }
 
         .gradient-text {
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           -webkit-background-clip: text;
+          background-clip: text;
           color: transparent;
         }
 
         .categories-grid {
           display: grid;
-          grid-template-columns: repeat(8,1fr);
-          gap: 12px;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 9px;
         }
 
         .category-card {
-          border: 1px solid #eee;
-          background: white;
-          border-radius: 17px;
           padding: 0;
           overflow: hidden;
-          transition: transform .2s, box-shadow .2s;
+          border: 1px solid #eee;
+          border-radius: 14px;
+          background: white;
           text-align: center;
+          transition: .2s;
         }
 
         .category-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 25px rgba(0,0,0,.09);
+          transform: translateY(-3px);
+          box-shadow: 0 7px 22px rgba(0,0,0,.09);
         }
 
         .category-image {
           width: 100%;
-          aspect-ratio: 1/1;
-          display: block;
+          aspect-ratio: 1 / 1;
           object-fit: cover;
+          display: block;
         }
 
         .category-name {
           display: block;
-          padding: 11px 5px 13px;
-          font-size: 12px;
-          font-weight: 700;
-          line-height: 1.2;
+          padding: 8px 3px 9px;
+          font-size: 10px;
+          font-weight: 800;
+          line-height: 1.15;
         }
 
-        .promo {
-          max-width: 1250px;
-          margin: 5px auto 20px;
-          padding: 0 20px;
-        }
+        /* =========================
+           PROMOCIÓN
+        ========================= */
 
         .promo-card {
-          border-radius: 19px;
-          padding: 20px 25px;
-          background: #fafafa;
+          min-height: 70px;
           border: 1px solid #eee;
+          border-radius: 15px;
+          padding: 13px 17px;
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          gap: 20px;
+          justify-content: space-between;
+          gap: 15px;
+          background: #fafafa;
         }
 
         .promo-card strong {
           display: block;
-          margin-bottom: 5px;
-          font-size: 18px;
+          font-size: 14px;
+          margin-bottom: 3px;
         }
 
         .promo-card span {
-          font-size: 13px;
           color: #777;
+          font-size: 10px;
         }
 
-        .promo-button {
+        .promo-button,
+        .primary-button {
           border: 0;
-          border-radius: 22px;
-          padding: 11px 18px;
+          border-radius: 20px;
+          padding: 10px 16px;
           color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          font-weight: bold;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          font-weight: 800;
+          font-size: 11px;
           white-space: nowrap;
         }
 
+        /* =========================
+           PRODUCTOS
+        ========================= */
+
         .products-grid {
           display: grid;
-          grid-template-columns: repeat(4,1fr);
-          gap: 17px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
         }
 
         .product-card {
-          border: 1px solid #eee;
-          border-radius: 18px;
           overflow: hidden;
+          border: 1px solid #eee;
+          border-radius: 15px;
           background: white;
           transition: .2s;
         }
 
         .product-card:hover {
           transform: translateY(-3px);
-          box-shadow: 0 9px 30px rgba(0,0,0,.09);
+          box-shadow: 0 8px 25px rgba(0,0,0,.08);
         }
 
         .product-image-wrap {
           position: relative;
-          background: #f7f7f7;
+          background: #f5f5f5;
         }
 
         .product-image {
           width: 100%;
-          aspect-ratio: 1/1;
+          aspect-ratio: 1 / 1;
           object-fit: cover;
           display: block;
         }
 
         .discount {
           position: absolute;
-          top: 10px;
-          left: 10px;
+          top: 8px;
+          left: 8px;
+          border-radius: 7px;
+          padding: 4px 6px;
           background: #ef233c;
           color: white;
-          padding: 5px 8px;
-          border-radius: 8px;
-          font-size: 11px;
-          font-weight: bold;
+          font-size: 9px;
+          font-weight: 900;
         }
 
         .favorite {
           position: absolute;
-          top: 9px;
-          right: 9px;
+          top: 7px;
+          right: 7px;
+          width: 31px;
+          height: 31px;
           border: 0;
-          width: 35px;
-          height: 35px;
           border-radius: 50%;
-          background: rgba(255,255,255,.92);
-          font-size: 18px;
+          background: rgba(255,255,255,.94);
+          font-size: 16px;
         }
 
         .product-info {
-          padding: 13px;
+          padding: 10px;
         }
 
         .product-name {
-          margin: 0 0 7px;
-          font-size: 15px;
-          font-weight: 700;
+          margin: 0 0 5px;
+          font-size: 13px;
         }
 
         .rating {
-          font-size: 12px;
+          margin-bottom: 6px;
           color: #f39c12;
-          margin-bottom: 8px;
+          font-size: 10px;
         }
 
         .price {
-          font-size: 20px;
+          font-size: 17px;
           font-weight: 900;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           -webkit-background-clip: text;
+          background-clip: text;
           color: transparent;
         }
 
         .old-price {
-          font-size: 12px;
+          margin-left: 5px;
           color: #999;
+          font-size: 10px;
           text-decoration: line-through;
-          margin-left: 7px;
         }
 
         .product-actions {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-top: 12px;
+          gap: 6px;
+          margin-top: 9px;
         }
 
         .product-actions button {
           border: 0;
-          border-radius: 10px;
-          padding: 10px 6px;
-          font-size: 12px;
-          font-weight: bold;
+          border-radius: 8px;
+          padding: 8px 4px;
+          font-size: 10px;
+          font-weight: 800;
         }
 
         .details-button {
-          background: #f3f3f3;
+          background: #f2f2f2;
         }
 
         .add-button {
           color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
         }
 
-        .empty {
-          text-align: center;
-          padding: 50px 20px;
-          color: #777;
-        }
-
-        .bottom-bar {
-          max-width: 1250px;
-          margin: 10px auto 0;
-          padding: 18px 20px 30px;
-          display: flex;
-          justify-content: center;
-          gap: 15px;
-        }
-
-        .bottom-button {
-          border: 0;
-          border-radius: 25px;
-          padding: 12px 20px;
-          color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          font-weight: bold;
-        }
+        /* =========================
+           OVERLAYS
+        ========================= */
 
         .overlay {
           position: fixed;
           inset: 0;
-          z-index: 100;
-          background: rgba(0,0,0,.48);
+          z-index: 200;
+          background: rgba(0,0,0,.52);
           display: flex;
+        }
+
+        .center-overlay {
           align-items: center;
           justify-content: center;
-          padding: 20px;
+          padding: 15px;
         }
 
-        .modal {
-          width: min(520px,100%);
-          max-height: 90vh;
-          overflow-y: auto;
-          background: white;
-          border-radius: 22px;
-          padding: 25px;
-          position: relative;
-        }
-
-        .modal h2 {
-          margin-top: 0;
-        }
-
-        .close {
-          position: absolute;
-          right: 15px;
-          top: 15px;
-          width: 35px;
-          height: 35px;
-          border: 0;
-          border-radius: 50%;
-          background: #f2f2f2;
-        }
+        /* =========================
+           MENÚ HAMBURGUESA
+        ========================= */
 
         .menu-panel {
-          position: fixed;
-          z-index: 90;
-          top: 0;
-          left: 0;
-          width: min(340px,88vw);
-          height: 100vh;
+          width: min(360px, 88vw);
+          height: 100%;
           background: white;
-          box-shadow: 5px 0 30px rgba(0,0,0,.15);
-          padding: 25px 20px;
+          box-shadow: 8px 0 30px rgba(0,0,0,.2);
+          padding: 22px 18px;
+          overflow-y: auto;
+          animation: menuIn .2s ease-out;
         }
 
-        .menu-panel h2 {
-          margin: 0 0 25px;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+        @keyframes menuIn {
+          from {
+            transform: translateX(-100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .menu-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+
+        .menu-head h2 {
+          margin: 0;
+          font-size: 24px;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           -webkit-background-clip: text;
           color: transparent;
         }
 
+        .close-button {
+          width: 35px;
+          height: 35px;
+          border: 0;
+          border-radius: 50%;
+          background: #f1f1f1;
+          font-size: 16px;
+        }
+
         .menu-item {
           width: 100%;
+          min-height: 48px;
+          margin-bottom: 8px;
           border: 0;
-          background: #fafafa;
-          margin-bottom: 9px;
-          padding: 14px;
-          border-radius: 12px;
-          text-align: left;
-          font-weight: 600;
-        }
-
-        .form {
-          display: grid;
-          gap: 12px;
-        }
-
-        .form input,
-        .form textarea,
-        .form select {
-          width: 100%;
-          border: 1px solid #ddd;
           border-radius: 11px;
-          padding: 12px;
-          outline: none;
-        }
-
-        .form textarea {
-          min-height: 90px;
-          resize: vertical;
-        }
-
-        .primary-button {
-          border: 0;
-          border-radius: 12px;
-          padding: 13px;
-          color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          font-weight: bold;
-        }
-
-        .auth-switch {
-          border: 0;
-          background: none;
-          color: #b51ac4;
-          font-weight: bold;
-          padding: 8px;
-        }
-
-        .message {
-          background: #fff4f7;
-          color: #b21b43;
-          padding: 10px;
-          border-radius: 10px;
+          background: #f7f7f8;
+          text-align: left;
+          padding: 0 15px;
           font-size: 13px;
+          font-weight: 700;
+          color: #333;
+        }
+
+        .menu-item:hover {
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9
+          );
+          color: white;
+        }
+
+        /* =========================
+           CARRITO — PANEL COMPLETO
+        ========================= */
+
+        .cart-panel {
+          width: min(520px, 100%);
+          height: 100%;
+          margin-left: auto;
+          background: white;
+          box-shadow: -8px 0 30px rgba(0,0,0,.18);
+          display: flex;
+          flex-direction: column;
+          animation: cartIn .2s ease-out;
+        }
+
+        @keyframes cartIn {
+          from {
+            transform: translateX(100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .cart-header {
+          min-height: 66px;
+          padding: 12px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid #eee;
+        }
+
+        .cart-header h2 {
+          margin: 0;
+          font-size: 20px;
+        }
+
+        .cart-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 10px 18px;
         }
 
         .cart-item {
           display: flex;
-          gap: 12px;
+          gap: 11px;
           padding: 12px 0;
           border-bottom: 1px solid #eee;
         }
 
         .cart-item img {
-          width: 70px;
-          height: 70px;
+          width: 74px;
+          height: 74px;
           object-fit: cover;
           border-radius: 10px;
         }
 
         .cart-item-info {
           flex: 1;
+          min-width: 0;
+        }
+
+        .cart-item-name {
+          font-size: 13px;
+          font-weight: 800;
+          margin-bottom: 5px;
         }
 
         .quantity {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-top: 7px;
+          gap: 7px;
+          margin-top: 8px;
         }
 
         .quantity button {
@@ -963,26 +1217,329 @@ function App() {
           background: #eee;
         }
 
-        .cart-total {
-          padding-top: 17px;
-          font-size: 20px;
+        .delete-button {
+          margin-left: auto;
+        }
+
+        .cart-footer {
+          border-top: 1px solid #eee;
+          padding: 15px 18px 18px;
+          background: white;
+        }
+
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 7px;
+          font-size: 12px;
+        }
+
+        .summary-total {
+          display: flex;
+          justify-content: space-between;
+          padding-top: 9px;
+          margin-top: 8px;
+          border-top: 1px solid #eee;
+          font-size: 19px;
           font-weight: 900;
-          text-align: right;
+        }
+
+        .checkout-button {
+          width: 100%;
+          margin-top: 13px;
+          border: 0;
+          border-radius: 12px;
+          padding: 13px;
+          color: white;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          font-weight: 900;
+        }
+
+        /* =========================
+           MODALES
+        ========================= */
+
+        .modal {
+          width: min(540px, 100%);
+          max-height: 92vh;
+          overflow-y: auto;
+          position: relative;
+          padding: 22px;
+          border-radius: 20px;
+          background: white;
+        }
+
+        .modal h2 {
+          margin: 0 0 17px;
+          font-size: 22px;
+        }
+
+        .form {
+          display: grid;
+          gap: 10px;
+        }
+
+        .form input,
+        .form textarea,
+        .form select {
+          width: 100%;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          padding: 11px;
+          outline: 0;
+          font-size: 13px;
+        }
+
+        .form textarea {
+          min-height: 85px;
+          resize: vertical;
+        }
+
+        .message {
+          padding: 10px;
+          border-radius: 9px;
+          background: #fff0f4;
+          color: #b21b43;
+          font-size: 12px;
+        }
+
+        .auth-switch {
+          border: 0;
+          background: transparent;
+          color: #b21bc3;
+          font-size: 12px;
+          font-weight: 800;
         }
 
         .detail-image {
           width: 100%;
-          border-radius: 17px;
-          max-height: 500px;
+          max-height: 430px;
           object-fit: cover;
+          border-radius: 14px;
+        }
+
+        .detail-price {
+          margin: 10px 0;
+          font-size: 25px;
+          font-weight: 900;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          -webkit-background-clip: text;
+          color: transparent;
         }
 
         .specifications {
           padding-left: 20px;
           line-height: 1.8;
+          font-size: 13px;
         }
 
-        @media (max-width: 950px) {
+        /* =========================
+           CHECKOUT
+        ========================= */
+
+        .checkout-overlay {
+          align-items: stretch;
+          justify-content: center;
+          background: #f7f7f9;
+          overflow-y: auto;
+        }
+
+        .checkout-page {
+          width: min(1050px, 100%);
+          min-height: 100%;
+          background: white;
+          padding: 20px;
+        }
+
+        .checkout-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .checkout-title {
+          margin: 0;
+          font-size: 25px;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          -webkit-background-clip: text;
+          color: transparent;
+        }
+
+        .checkout-steps {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 7px;
+          margin-bottom: 20px;
+        }
+
+        .checkout-step {
+          height: 7px;
+          border-radius: 10px;
+          background: #e9e9e9;
+        }
+
+        .checkout-step.active {
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+        }
+
+        .checkout-layout {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 20px;
+        }
+
+        .checkout-card {
+          border: 1px solid #eee;
+          border-radius: 16px;
+          padding: 18px;
+          margin-bottom: 12px;
+        }
+
+        .checkout-card h3 {
+          margin: 0 0 13px;
+          font-size: 17px;
+        }
+
+        .checkout-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 9px;
+        }
+
+        .checkout-grid .full {
+          grid-column: 1 / -1;
+        }
+
+        .checkout-input {
+          width: 100%;
+          border: 1px solid #ddd;
+          border-radius: 9px;
+          padding: 11px;
+          outline: 0;
+          font-size: 12px;
+        }
+
+        .delivery-option,
+        .payment-option {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          border: 1px solid #ddd;
+          border-radius: 11px;
+          padding: 12px;
+          margin-bottom: 8px;
+          text-align: left;
+          background: white;
+        }
+
+        .delivery-option.selected,
+        .payment-option.selected {
+          border-color: #d414c9;
+          background: #fff7fd;
+        }
+
+        .order-summary {
+          position: sticky;
+          top: 15px;
+          height: fit-content;
+        }
+
+        .checkout-product {
+          display: flex;
+          gap: 9px;
+          margin-bottom: 10px;
+        }
+
+        .checkout-product img {
+          width: 52px;
+          height: 52px;
+          object-fit: cover;
+          border-radius: 8px;
+        }
+
+        .checkout-product-info {
+          flex: 1;
+          font-size: 11px;
+        }
+
+        .checkout-actions {
+          display: flex;
+          gap: 9px;
+          margin-top: 15px;
+        }
+
+        .secondary-button {
+          flex: 1;
+          border: 1px solid #ddd;
+          border-radius: 11px;
+          background: white;
+          padding: 12px;
+          font-weight: 800;
+          font-size: 11px;
+        }
+
+        .checkout-actions .primary-button {
+          flex: 1;
+        }
+
+        .success-box {
+          max-width: 570px;
+          margin: 70px auto;
+          text-align: center;
+          padding: 30px;
+          border-radius: 22px;
+          border: 1px solid #eee;
+        }
+
+        .success-icon {
+          font-size: 65px;
+          margin-bottom: 10px;
+        }
+
+        .success-box h2 {
+          margin: 0 0 8px;
+        }
+
+        .success-box p {
+          color: #666;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+
+        .empty {
+          text-align: center;
+          padding: 55px 20px;
+          color: #777;
+        }
+
+        /* =========================
+           RESPONSIVO
+        ========================= */
+
+        @media (max-width: 900px) {
           .categories-grid {
             grid-template-columns: repeat(4,1fr);
           }
@@ -990,94 +1547,63 @@ function App() {
           .products-grid {
             grid-template-columns: repeat(3,1fr);
           }
+
+          .checkout-layout {
+            grid-template-columns: 1fr;
+          }
+
+          .order-summary {
+            position: static;
+          }
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 650px) {
           .header-main {
+            min-height: 52px;
             flex-wrap: wrap;
-            padding: 9px 12px;
-            gap: 8px;
           }
 
           .brand {
-            order: 2;
-            font-size: 23px;
+            font-size: 20px;
           }
 
-          .menu-button {
-            order: 1;
-          }
-
-          .header-actions {
-            order: 3;
-            margin-left: auto;
+          .menu-button,
+          .header-action {
+            width: 36px;
+            height: 36px;
           }
 
           .search-box {
-            order: 4;
+            order: 5;
             flex-basis: 100%;
             max-width: none;
           }
 
-          .category-bar {
-            padding-left: 12px;
-            padding-right: 12px;
+          .top-header {
+            padding-bottom: 4px;
           }
 
           .hero {
-            margin: 12px;
-            padding: 30px 23px;
-            border-radius: 20px;
+            min-height: 165px;
+            padding: 23px 20px;
+            margin-top: 10px;
           }
 
           .hero-icon {
             display: none;
           }
 
-          .section {
-            padding-left: 12px;
-            padding-right: 12px;
-          }
-
-          .categories-grid {
-            grid-template-columns: repeat(4,1fr);
-            gap: 8px;
-          }
-
-          .category-name {
-            font-size: 10px;
-            padding: 8px 3px 10px;
-          }
-
-          .products-grid {
+          .top-cards {
             grid-template-columns: repeat(2,1fr);
-            gap: 10px;
           }
 
-          .product-info {
-            padding: 10px;
+          .top-card {
+            height: 82px;
           }
 
-          .product-name {
-            font-size: 13px;
-          }
-
-          .price {
-            font-size: 17px;
-          }
-
-          .promo {
-            padding: 0 12px;
-          }
-
-          .promo-card {
-            padding: 17px;
-          }
-        }
-
-        @media (max-width: 430px) {
           .categories-grid {
             grid-template-columns: repeat(4,1fr);
+            gap: 7px;
           }
 
           .category-name {
@@ -1085,10 +1611,46 @@ function App() {
           }
 
           .products-grid {
-            gap: 8px;
+            grid-template-columns: repeat(2,1fr);
+            gap: 9px;
+          }
+
+          .promo-card {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .checkout-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .checkout-grid .full {
+            grid-column: auto;
+          }
+
+          .checkout-page {
+            padding: 13px;
+          }
+        }
+
+        @media (max-width: 390px) {
+          .brand {
+            font-size: 18px;
+          }
+
+          .categories-grid {
+            gap: 5px;
+          }
+
+          .category-name {
+            font-size: 8px;
           }
         }
       `}</style>
+
+      {/* =========================
+          BARRA SUPERIOR
+      ========================= */}
 
       <header className="top-header">
         <div className="header-main">
@@ -1120,19 +1682,21 @@ function App() {
                 setAuthMode("login");
                 setShowAuth(true);
               }}
-              title="Cuenta"
+              title="Mi cuenta"
             >
               ✨
             </button>
 
             <button
-              className="header-action cart-button"
+              className="header-action"
               onClick={() => setShowCart(true)}
               title="Carrito"
             >
               🛒
               {cartCount > 0 && (
-                <span className="cart-count">{cartCount}</span>
+                <span className="cart-count">
+                  {cartCount}
+                </span>
               )}
             </button>
           </div>
@@ -1154,7 +1718,9 @@ function App() {
               className={`category-pill ${
                 activeCategory === category.name ? "active" : ""
               }`}
-              onClick={() => setActiveCategory(category.name)}
+              onClick={() =>
+                setActiveCategory(category.name)
+              }
             >
               {category.name}
             </button>
@@ -1162,69 +1728,25 @@ function App() {
         </div>
       </header>
 
-      {showMenu && (
-        <>
-          <div
-            className="overlay"
-            style={{ background: "rgba(0,0,0,.28)" }}
-            onClick={() => setShowMenu(false)}
-          />
+      <main className="page-content">
+        {/* HERO */}
 
-          <aside className="menu-panel">
-            <button className="close" onClick={() => setShowMenu(false)}>
-              ✕
-            </button>
-
-            <h2>VaniDaxi</h2>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setAuthMode("login");
-                setShowAuth(true);
-              }}
-            >
-              ✨ Mi cuenta
-            </button>
-
-            <button className="menu-item">👤 Perfil</button>
-            <button className="menu-item">⚙️ Configuración</button>
-            <button className="menu-item">📦 Mis pedidos</button>
-            <button className="menu-item">💬 Mensajes</button>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowPublish(true);
-              }}
-            >
-              ➕ Publicar producto
-            </button>
-
-            {user && (
-              <button className="menu-item" onClick={logout}>
-                🚪 Cerrar sesión
-              </button>
-            )}
-          </aside>
-        </>
-      )}
-
-      <main>
         <section className="hero">
           <div>
             <h1>Todo en un solo lugar</h1>
             <p>
-              Compra, vende y descubre productos de diferentes categorías.
+              Compra, vende y descubre productos de diferentes
+              categorías.
             </p>
+
             <button
               className="hero-button"
               onClick={() =>
                 document
                   .getElementById("productos")
-                  ?.scrollIntoView({ behavior: "smooth" })
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  })
               }
             >
               Comprar ahora
@@ -1234,9 +1756,59 @@ function App() {
           <div className="hero-icon">🛍️</div>
         </section>
 
+        {/* TARJETAS SUPERIORES */}
+
+        <section className="top-cards">
+          {topCards.map((card) => (
+            <button
+              className="top-card"
+              key={card.title}
+              onClick={() => {
+                if (card.title === "Ofertas") {
+                  setSearch("");
+                  setActiveCategory("Todos");
+                  document
+                    .getElementById("productos")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                }
+
+                if (card.title === "Novedades") {
+                  document
+                    .getElementById("productos")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                }
+
+                if (card.title === "Vendedores") {
+                  setShowPublish(true);
+                }
+              }}
+            >
+              <img src={card.image} alt={card.title} />
+
+              <span className="top-card-overlay">
+                <span className="top-card-title">
+                  {card.title}
+                </span>
+
+                <span className="top-card-subtitle">
+                  {card.subtitle}
+                </span>
+              </span>
+            </button>
+          ))}
+        </section>
+
+        {/* CATEGORÍAS */}
+
         <section className="section">
           <div className="section-title">
-            <h2 className="gradient-text">Categorías</h2>
+            <h2 className="gradient-text">
+              Categorías
+            </h2>
           </div>
 
           <div className="categories-grid">
@@ -1246,9 +1818,12 @@ function App() {
                 className="category-card"
                 onClick={() => {
                   setActiveCategory(category.name);
+
                   document
                     .getElementById("productos")
-                    ?.scrollIntoView({ behavior: "smooth" });
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    });
                 }}
               >
                 <img
@@ -1258,19 +1833,26 @@ function App() {
                   loading="lazy"
                 />
 
-                <span className="category-name">{category.name}</span>
+                <span className="category-name">
+                  {category.name}
+                </span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="promo">
+        {/* REGISTRO */}
+
+        <section className="section">
           <div className="promo-card">
             <div>
-              <strong>✨ Regístrate en VaniDaxi</strong>
+              <strong>
+                ✨ Regístrate en VaniDaxi
+              </strong>
+
               <span>
-                Crea tu cuenta para disfrutar de todas las funciones de la
-                tienda.
+                Crea tu cuenta para disfrutar de todas
+                las funciones.
               </span>
             </div>
 
@@ -1286,6 +1868,8 @@ function App() {
           </div>
         </section>
 
+        {/* PRODUCTOS */}
+
         <section className="section" id="productos">
           <div className="section-title">
             <h2 className="gradient-text">
@@ -1297,7 +1881,9 @@ function App() {
             {activeCategory !== "Todos" && (
               <button
                 className="category-pill"
-                onClick={() => setActiveCategory("Todos")}
+                onClick={() =>
+                  setActiveCategory("Todos")
+                }
               >
                 Ver todos
               </button>
@@ -1307,17 +1893,22 @@ function App() {
           {filteredProducts.length === 0 ? (
             <div className="empty">
               <h3>No encontramos productos</h3>
-              <p>Prueba con otra búsqueda o categoría.</p>
+              <p>
+                Prueba con otra búsqueda o categoría.
+              </p>
             </div>
           ) : (
             <div className="products-grid">
               {filteredProducts.map((product) => {
-                const isFavorite = favorites.some(
+                const favorite = favorites.some(
                   (item) => item.id === product.id
                 );
 
                 return (
-                  <article className="product-card" key={product.id}>
+                  <article
+                    className="product-card"
+                    key={product.id}
+                  >
                     <div className="product-image-wrap">
                       <img
                         className="product-image"
@@ -1334,18 +1925,22 @@ function App() {
 
                       <button
                         className="favorite"
-                        onClick={() => toggleFavorite(product)}
-                        aria-label="Favorito"
+                        onClick={() =>
+                          toggleFavorite(product)
+                        }
                       >
-                        {isFavorite ? "❤️" : "♡"}
+                        {favorite ? "❤️" : "♡"}
                       </button>
                     </div>
 
                     <div className="product-info">
-                      <h3 className="product-name">{product.name}</h3>
+                      <h3 className="product-name">
+                        {product.name}
+                      </h3>
 
                       <div className="rating">
-                        ★ {product.rating} · {product.reviews} reseñas
+                        ★ {product.rating} ·{" "}
+                        {product.reviews} reseñas
                       </div>
 
                       <div>
@@ -1363,14 +1958,18 @@ function App() {
                       <div className="product-actions">
                         <button
                           className="details-button"
-                          onClick={() => setSelectedProduct(product)}
+                          onClick={() =>
+                            setSelectedProduct(product)
+                          }
                         >
                           Ver producto
                         </button>
 
                         <button
                           className="add-button"
-                          onClick={() => addToCart(product)}
+                          onClick={() =>
+                            addToCart(product)
+                          }
                         >
                           🛒 Agregar
                         </button>
@@ -1382,30 +1981,276 @@ function App() {
             </div>
           )}
         </section>
-
-        <div className="bottom-bar">
-          <button
-            className="bottom-button"
-            onClick={() => setShowPublish(true)}
-          >
-            ➕ Vender en VaniDaxi
-          </button>
-
-          <button
-            className="bottom-button"
-            onClick={() => setShowCart(true)}
-          >
-            🛒 Mi carrito
-          </button>
-        </div>
       </main>
 
-      {selectedProduct && (
-        <div className="overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+      {/* =========================
+          MENÚ HAMBURGUESA
+      ========================= */}
+
+      {showMenu && (
+        <div
+          className="overlay"
+          onClick={() => setShowMenu(false)}
+        >
+          <aside
+            className="menu-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="menu-head">
+              <h2>VaniDaxi</h2>
+
+              <button
+                className="close-button"
+                onClick={() => setShowMenu(false)}
+              >
+                ✕
+              </button>
+            </div>
+
             <button
-              className="close"
-              onClick={() => setSelectedProduct(null)}
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setAuthMode("login");
+                setShowAuth(true);
+              }}
+            >
+              ✨ Mi cuenta
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setAuthMode("login");
+                setShowAuth(true);
+              }}
+            >
+              👤 Perfil
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                alert(
+                  "La configuración estará disponible aquí."
+                )
+              }
+            >
+              ⚙️ Configuración
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setShowCart(true);
+              }}
+            >
+              📦 Mis pedidos
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                alert(
+                  "El centro de mensajes estará disponible aquí."
+                )
+              }
+            >
+              💬 Mensajes
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setShowPublish(true);
+              }}
+            >
+              ➕ Publicar producto
+            </button>
+
+            {user && (
+              <button
+                className="menu-item"
+                onClick={logout}
+              >
+                🚪 Cerrar sesión
+              </button>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {/* =========================
+          CARRITO COMPLETO
+      ========================= */}
+
+      {showCart && (
+        <div
+          className="overlay"
+          onClick={() => setShowCart(false)}
+        >
+          <aside
+            className="cart-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="cart-header">
+              <h2>🛒 Mi carrito</h2>
+
+              <button
+                className="close-button"
+                onClick={() => setShowCart(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="cart-body">
+              {cart.length === 0 ? (
+                <div className="empty">
+                  <div style={{ fontSize: 55 }}>
+                    🛒
+                  </div>
+
+                  <h3>Tu carrito está vacío</h3>
+
+                  <p>
+                    Agrega productos para comenzar tu
+                    compra.
+                  </p>
+                </div>
+              ) : (
+                cart.map((item) => (
+                  <div
+                    className="cart-item"
+                    key={item.id}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                    />
+
+                    <div className="cart-item-info">
+                      <div className="cart-item-name">
+                        {item.name}
+                      </div>
+
+                      <div>
+                        {formatPrice(item.price)}
+                      </div>
+
+                      <div className="quantity">
+                        <button
+                          onClick={() =>
+                            changeQuantity(
+                              item.id,
+                              -1
+                            )
+                          }
+                        >
+                          −
+                        </button>
+
+                        <strong>
+                          {item.quantity}
+                        </strong>
+
+                        <button
+                          onClick={() =>
+                            changeQuantity(
+                              item.id,
+                              1
+                            )
+                          }
+                        >
+                          +
+                        </button>
+
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            removeFromCart(
+                              item.id
+                            )
+                          }
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="cart-footer">
+                <div className="summary-row">
+                  <span>Subtotal</span>
+                  <strong>
+                    {formatPrice(cartSubtotal)}
+                  </strong>
+                </div>
+
+                <div className="summary-row">
+                  <span>Envío</span>
+                  <strong>
+                    {shippingCost === 0
+                      ? "Gratis"
+                      : formatPrice(shippingCost)}
+                  </strong>
+                </div>
+
+                <div className="summary-total">
+                  <span>Total</span>
+                  <span>
+                    {formatPrice(cartTotal)}
+                  </span>
+                </div>
+
+                <button
+                  className="checkout-button"
+                  onClick={() =>
+                    startCheckout()
+                  }
+                >
+                  Continuar al pago
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {/* =========================
+          PRODUCTO
+      ========================= */}
+
+      {selectedProduct && (
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setSelectedProduct(null)
+          }
+        >
+          <div
+            className="modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+              }}
+              onClick={() =>
+                setSelectedProduct(null)
+              }
             >
               ✕
             </button>
@@ -1416,62 +2261,121 @@ function App() {
               alt={selectedProduct.name}
             />
 
-            <h2>{selectedProduct.name}</h2>
+            <h2 style={{ marginTop: 15 }}>
+              {selectedProduct.name}
+            </h2>
 
             <div className="rating">
-              ★ {selectedProduct.rating} · {selectedProduct.reviews} reseñas
+              ★ {selectedProduct.rating} ·{" "}
+              {selectedProduct.reviews} reseñas
             </div>
 
-            <div className="price">
-              {formatPrice(selectedProduct.price)}
+            <div className="detail-price">
+              {formatPrice(
+                selectedProduct.price
+              )}
             </div>
 
-            <p>{selectedProduct.description}</p>
+            <p style={{ fontSize: 13 }}>
+              {selectedProduct.description}
+            </p>
 
-            {selectedProduct.specifications?.length > 0 && (
+            {selectedProduct.specifications
+              ?.length > 0 && (
               <>
                 <h3>Características</h3>
+
                 <ul className="specifications">
-                  {selectedProduct.specifications.map((specification) => (
-                    <li key={specification}>{specification}</li>
-                  ))}
+                  {selectedProduct.specifications.map(
+                    (item) => (
+                      <li key={item}>{item}</li>
+                    )
+                  )}
                 </ul>
               </>
             )}
 
             <button
               className="primary-button"
-              onClick={() => {
-                buyNow(selectedProduct);
-                setSelectedProduct(null);
+              style={{
+                width: "100%",
+                marginTop: 10,
               }}
+              onClick={() =>
+                startCheckout(
+                  selectedProduct
+                )
+              }
             >
               Comprar ahora
+            </button>
+
+            <button
+              className="secondary-button"
+              style={{
+                width: "100%",
+                marginTop: 8,
+              }}
+              onClick={() => {
+                addToCart(
+                  selectedProduct,
+                  false
+                );
+                setSelectedProduct(null);
+                setShowCart(true);
+              }}
+            >
+              🛒 Agregar al carrito
             </button>
           </div>
         </div>
       )}
 
+      {/* =========================
+          AUTENTICACIÓN
+      ========================= */}
+
       {showAuth && (
-        <div className="overlay" onClick={() => setShowAuth(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="close" onClick={() => setShowAuth(false)}>
+        <div
+          className="overlay center-overlay"
+          onClick={() => setShowAuth(false)}
+        >
+          <div
+            className="modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+              }}
+              onClick={() => setShowAuth(false)}
+            >
               ✕
             </button>
 
             <h2>
               {authMode === "login"
                 ? "Iniciar sesión"
-                : "Crear cuenta en VaniDaxi"}
+                : "Crear cuenta"}
             </h2>
 
-            <form className="form" onSubmit={handleAuth}>
+            <form
+              className="form"
+              onSubmit={handleAuth}
+            >
               {authMode === "register" && (
                 <input
                   type="text"
                   placeholder="Nombre"
                   value={authName}
-                  onChange={(e) => setAuthName(e.target.value)}
+                  onChange={(e) =>
+                    setAuthName(e.target.value)
+                  }
                   required
                 />
               )}
@@ -1480,7 +2384,9 @@ function App() {
                 type="email"
                 placeholder="Correo electrónico"
                 value={authEmail}
-                onChange={(e) => setAuthEmail(e.target.value)}
+                onChange={(e) =>
+                  setAuthEmail(e.target.value)
+                }
                 required
               />
 
@@ -1488,15 +2394,24 @@ function App() {
                 type="password"
                 placeholder="Contraseña"
                 value={authPassword}
-                onChange={(e) => setAuthPassword(e.target.value)}
+                onChange={(e) =>
+                  setAuthPassword(
+                    e.target.value
+                  )
+                }
                 required
               />
 
               {authMessage && (
-                <div className="message">{authMessage}</div>
+                <div className="message">
+                  {authMessage}
+                </div>
               )}
 
-              <button className="primary-button" disabled={loading}>
+              <button
+                className="primary-button"
+                disabled={loading}
+              >
                 {loading
                   ? "Procesando..."
                   : authMode === "login"
@@ -1509,7 +2424,9 @@ function App() {
                 className="auth-switch"
                 onClick={() => {
                   setAuthMode(
-                    authMode === "login" ? "register" : "login"
+                    authMode === "login"
+                      ? "register"
+                      : "login"
                   );
                   setAuthMessage("");
                 }}
@@ -1523,16 +2440,43 @@ function App() {
         </div>
       )}
 
+      {/* =========================
+          PUBLICAR
+      ========================= */}
+
       {showPublish && (
-        <div className="overlay" onClick={() => setShowPublish(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="close" onClick={() => setShowPublish(false)}>
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setShowPublish(false)
+          }
+        >
+          <div
+            className="modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+              }}
+              onClick={() =>
+                setShowPublish(false)
+              }
+            >
               ✕
             </button>
 
             <h2>Publicar producto</h2>
 
-            <form className="form" onSubmit={handlePublish}>
+            <form
+              className="form"
+              onSubmit={handlePublish}
+            >
               <input
                 type="text"
                 placeholder="Nombre del producto"
@@ -1569,7 +2513,10 @@ function App() {
                 }
               >
                 {categories.map((category) => (
-                  <option key={category.name} value={category.name}>
+                  <option
+                    key={category.name}
+                    value={category.name}
+                  >
                     {category.name}
                   </option>
                 ))}
@@ -1589,11 +2536,14 @@ function App() {
 
               <textarea
                 placeholder="Descripción"
-                value={newProduct.description}
+                value={
+                  newProduct.description
+                }
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    description: e.target.value,
+                    description:
+                      e.target.value,
                   })
                 }
               />
@@ -1606,80 +2556,566 @@ function App() {
         </div>
       )}
 
-      {showCart && (
-        <div className="overlay" onClick={() => setShowCart(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="close" onClick={() => setShowCart(false)}>
-              ✕
-            </button>
+      {/* =========================
+          CHECKOUT / PAGO
+      ========================= */}
 
-            <h2>🛒 Mi carrito</h2>
+      {showCheckout && (
+        <div className="overlay checkout-overlay">
+          <div className="checkout-page">
+            <div className="checkout-header">
+              <h1 className="checkout-title">
+                VaniDaxi · Finalizar compra
+              </h1>
 
-            {cart.length === 0 ? (
-              <div className="empty">
-                <p>Tu carrito está vacío.</p>
-              </div>
-            ) : (
-              <>
-                {cart.map((item) => (
-                  <div className="cart-item" key={item.id}>
-                    <img src={item.image} alt={item.name} />
+              {!orderComplete && (
+                <button
+                  className="close-button"
+                  onClick={
+                    resetCheckout
+                  }
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-                    <div className="cart-item-info">
-                      <strong>{item.name}</strong>
-                      <div>{formatPrice(item.price)}</div>
-
-                      <div className="quantity">
-                        <button
-                          onClick={() => changeQuantity(item.id, -1)}
-                        >
-                          −
-                        </button>
-
-                        <span>{item.quantity}</span>
-
-                        <button
-                          onClick={() => changeQuantity(item.id, 1)}
-                        >
-                          +
-                        </button>
-
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          style={{
-                            marginLeft: "auto",
-                            background: "#ffe8ed",
-                          }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="cart-total">
-                  Total:{" "}
-                  {formatPrice(
-                    cart.reduce(
-                      (total, item) =>
-                        total + item.price * item.quantity,
-                      0
-                    )
-                  )}
+            {orderComplete ? (
+              <div className="success-box">
+                <div className="success-icon">
+                  ✅
                 </div>
+
+                <h2>
+                  ¡Pedido realizado!
+                </h2>
+
+                <p>
+                  Tu pedido fue registrado
+                  correctamente. En el siguiente
+                  paso se conectará el pago real
+                  y el vendedor recibirá la
+                  información correspondiente.
+                </p>
+
+                <p>
+                  <strong>
+                    Total del pedido:
+                  </strong>{" "}
+                  {formatPrice(cartTotal)}
+                </p>
 
                 <button
                   className="primary-button"
-                  style={{ marginTop: 15, width: "100%" }}
-                  onClick={() =>
-                    alert(
-                      "El proceso de compra se conectará con el sistema de pagos."
-                    )
-                  }
+                  onClick={() => {
+                    setCart([]);
+                    resetCheckout();
+                  }}
                 >
-                  Continuar con la compra
+                  Volver a VaniDaxi
                 </button>
+              </div>
+            ) : (
+              <>
+                <div className="checkout-steps">
+                  <div
+                    className={`checkout-step ${
+                      checkoutStep >= 1
+                        ? "active"
+                        : ""
+                    }`}
+                  />
+
+                  <div
+                    className={`checkout-step ${
+                      checkoutStep >= 2
+                        ? "active"
+                        : ""
+                    }`}
+                  />
+
+                  <div
+                    className={`checkout-step ${
+                      checkoutStep >= 3
+                        ? "active"
+                        : ""
+                    }`}
+                  />
+                </div>
+
+                <div className="checkout-layout">
+                  <div>
+                    {checkoutStep === 1 && (
+                      <div className="checkout-card">
+                        <h3>
+                          📍 Datos de entrega
+                        </h3>
+
+                        <div className="checkout-grid">
+                          <input
+                            className="checkout-input"
+                            placeholder="Nombre completo"
+                            value={
+                              checkout.name
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                name: e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            className="checkout-input"
+                            placeholder="Teléfono"
+                            value={
+                              checkout.phone
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                phone: e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            className="checkout-input full"
+                            placeholder="Calle y número"
+                            value={
+                              checkout.address
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                address:
+                                  e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            className="checkout-input"
+                            placeholder="Ciudad"
+                            value={
+                              checkout.city
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                city: e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            className="checkout-input"
+                            placeholder="Estado"
+                            value={
+                              checkout.state
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                state: e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            className="checkout-input"
+                            placeholder="Código postal"
+                            value={
+                              checkout.zip
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                zip: e.target.value,
+                              })
+                            }
+                          />
+
+                          <textarea
+                            className="checkout-input full"
+                            placeholder="Notas para el vendedor o repartidor"
+                            value={
+                              checkout.notes
+                            }
+                            onChange={(e) =>
+                              setCheckout({
+                                ...checkout,
+                                notes:
+                                  e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <h3
+                          style={{
+                            marginTop: 20,
+                          }}
+                        >
+                          🚚 Tipo de entrega
+                        </h3>
+
+                        <button
+                          className={`delivery-option ${
+                            checkout.delivery ===
+                            "standard"
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCheckout({
+                              ...checkout,
+                              delivery:
+                                "standard",
+                            })
+                          }
+                        >
+                          <input
+                            type="radio"
+                            checked={
+                              checkout.delivery ===
+                              "standard"
+                            }
+                            readOnly
+                          />
+
+                          <span>
+                            <strong>
+                              Envío estándar
+                            </strong>
+                            <br />
+                            <small>
+                              Envío gratis
+                            </small>
+                          </span>
+                        </button>
+
+                        <button
+                          className={`delivery-option ${
+                            checkout.delivery ===
+                            "express"
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCheckout({
+                              ...checkout,
+                              delivery:
+                                "express",
+                            })
+                          }
+                        >
+                          <input
+                            type="radio"
+                            checked={
+                              checkout.delivery ===
+                              "express"
+                            }
+                            readOnly
+                          />
+
+                          <span>
+                            <strong>
+                              Envío express
+                            </strong>
+                            <br />
+                            <small>
+                              + $99 MXN
+                            </small>
+                          </span>
+                        </button>
+                      </div>
+                    )}
+
+                    {checkoutStep === 2 && (
+                      <div className="checkout-card">
+                        <h3>
+                          💳 Método de pago
+                        </h3>
+
+                        <button
+                          className={`payment-option ${
+                            checkout.payment ===
+                            "card"
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCheckout({
+                              ...checkout,
+                              payment: "card",
+                            })
+                          }
+                        >
+                          <input
+                            type="radio"
+                            checked={
+                              checkout.payment ===
+                              "card"
+                            }
+                            readOnly
+                          />
+
+                          <span>
+                            💳 Tarjeta
+                            <br />
+                            <small>
+                              Visa, Mastercard y
+                              otras tarjetas
+                            </small>
+                          </span>
+                        </button>
+
+                        <button
+                          className={`payment-option ${
+                            checkout.payment ===
+                            "mercadopago"
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCheckout({
+                              ...checkout,
+                              payment:
+                                "mercadopago",
+                            })
+                          }
+                        >
+                          <input
+                            type="radio"
+                            checked={
+                              checkout.payment ===
+                              "mercadopago"
+                            }
+                            readOnly
+                          />
+
+                          <span>
+                            💙 Mercado Pago
+                            <br />
+                            <small>
+                              Pago mediante
+                              Mercado Pago
+                            </small>
+                          </span>
+                        </button>
+
+                        <button
+                          className={`payment-option ${
+                            checkout.payment ===
+                            "cash"
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCheckout({
+                              ...checkout,
+                              payment: "cash",
+                            })
+                          }
+                        >
+                          <input
+                            type="radio"
+                            checked={
+                              checkout.payment ===
+                              "cash"
+                            }
+                            readOnly
+                          />
+
+                          <span>
+                            💵 Pago disponible
+                            según el vendedor
+                          </span>
+                        </button>
+                      </div>
+                    )}
+
+                    {checkoutStep === 3 && (
+                      <div className="checkout-card">
+                        <h3>
+                          🧾 Confirmar pedido
+                        </h3>
+
+                        <p
+                          style={{
+                            fontSize: 12,
+                            color: "#666",
+                          }}
+                        >
+                          Revisa que los datos de
+                          entrega, productos,
+                          envío y método de pago
+                          sean correctos antes de
+                          confirmar.
+                        </p>
+
+                        <div
+                          style={{
+                            padding: 12,
+                            background:
+                              "#fafafa",
+                            borderRadius: 10,
+                            fontSize: 12,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          <strong>
+                            Entrega
+                          </strong>
+                          <br />
+                          {checkout.name}
+                          <br />
+                          {checkout.address}
+                          <br />
+                          {checkout.city},{" "}
+                          {checkout.state}{" "}
+                          {checkout.zip}
+                          <br />
+                          Tel.{" "}
+                          {checkout.phone}
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: 12,
+                            padding: 12,
+                            background:
+                              "#fafafa",
+                            borderRadius: 10,
+                            fontSize: 12,
+                          }}
+                        >
+                          <strong>
+                            Pago:
+                          </strong>{" "}
+                          {checkout.payment ===
+                          "card"
+                            ? "Tarjeta"
+                            : checkout.payment ===
+                              "mercadopago"
+                            ? "Mercado Pago"
+                            : "Pago disponible según vendedor"}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="checkout-actions">
+                      <button
+                        className="secondary-button"
+                        onClick={() => {
+                          if (
+                            checkoutStep ===
+                            1
+                          ) {
+                            resetCheckout();
+                          } else {
+                            setCheckoutStep(
+                              checkoutStep - 1
+                            );
+                          }
+                        }}
+                      >
+                        {checkoutStep === 1
+                          ? "Cancelar"
+                          : "Regresar"}
+                      </button>
+
+                      <button
+                        className="primary-button"
+                        onClick={
+                          handleCheckoutNext
+                        }
+                      >
+                        {checkoutStep === 3
+                          ? "Confirmar pedido"
+                          : "Continuar"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <aside className="checkout-card order-summary">
+                    <h3>
+                      Resumen de compra
+                    </h3>
+
+                    {cart.map((item) => (
+                      <div
+                        className="checkout-product"
+                        key={item.id}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                        />
+
+                        <div className="checkout-product-info">
+                          <strong>
+                            {item.name}
+                          </strong>
+
+                          <div>
+                            {item.quantity} ×{" "}
+                            {formatPrice(
+                              item.price
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div
+                      style={{
+                        marginTop: 15,
+                      }}
+                    >
+                      <div className="summary-row">
+                        <span>
+                          Subtotal
+                        </span>
+
+                        <strong>
+                          {formatPrice(
+                            cartSubtotal
+                          )}
+                        </strong>
+                      </div>
+
+                      <div className="summary-row">
+                        <span>
+                          Envío
+                        </span>
+
+                        <strong>
+                          {shippingCost ===
+                          0
+                            ? "Gratis"
+                            : formatPrice(
+                                shippingCost
+                              )}
+                        </strong>
+                      </div>
+
+                      <div className="summary-total">
+                        <span>
+                          Total
+                        </span>
+
+                        <span>
+                          {formatPrice(
+                            cartTotal
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
               </>
             )}
           </div>
