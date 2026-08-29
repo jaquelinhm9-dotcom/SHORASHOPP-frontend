@@ -4,41 +4,78 @@ import { supabase } from "./supabaseClient";
 
 const CART_KEY = "vanidaxi_cart";
 const FAVORITES_KEY = "vanidaxi_favorites";
+const SETTINGS_KEY = "vanidaxi_settings";
 
 const WHATSAPP_NUMBER = "";
 const WHATSAPP_MESSAGE = "Hola, necesito ayuda con VaniDaxi.";
 
 const categories = [
-  { name: "Ropa y Moda", image: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85" },
-  { name: "Tecnología", image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85" },
-  { name: "Hogar y Vida", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85" },
-  { name: "Belleza y Salud", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85" },
-  { name: "Autos y Motos", image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85" },
-  { name: "Comida", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85" },
-  { name: "Juguetes", image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85" },
-  { name: "Deportes", image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85" },
+  {
+    name: "Ropa y Moda",
+    image:
+      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Tecnología",
+    image:
+      "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Hogar y Vida",
+    image:
+      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Belleza y Salud",
+    image:
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Autos y Motos",
+    image:
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Comida",
+    image:
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Juguetes",
+    image:
+      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85",
+  },
+  {
+    name: "Deportes",
+    image:
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85",
+  },
 ];
 
 const topCards = [
   {
     title: "Ofertas",
     subtitle: "Hasta 50% menos",
-    image: "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=700&q=85",
   },
   {
     title: "Novedades",
     subtitle: "Lo más reciente",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=85",
   },
   {
     title: "Vendedores",
     subtitle: "Descubre nuevos productos",
-    image: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=700&q=85",
   },
   {
     title: "Envíos",
     subtitle: "Compra fácilmente",
-    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=700&q=85",
   },
 ];
 
@@ -52,9 +89,16 @@ const initialProducts = [
     reviews: 124,
     discount: 31,
     category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
-    description: "Smartwatch moderno con funciones inteligentes para todos los días.",
-    specifications: ["Pantalla táctil", "Monitor de actividad", "Resistente al agua", "Batería de larga duración"],
+    image:
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
+    description:
+      "Smartwatch moderno con funciones inteligentes para todos los días.",
+    specifications: [
+      "Pantalla táctil",
+      "Monitor de actividad",
+      "Resistente al agua",
+      "Batería de larga duración",
+    ],
   },
   {
     id: 2,
@@ -65,9 +109,16 @@ const initialProducts = [
     reviews: 89,
     discount: 25,
     category: "Hogar y Vida",
-    image: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=85",
-    description: "Licuadora potente ideal para preparar bebidas, salsas y alimentos.",
-    specifications: ["Motor de alta potencia", "Vaso de gran capacidad", "Varias velocidades", "Cuchillas de acero"],
+    image:
+      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=85",
+    description:
+      "Licuadora potente ideal para preparar bebidas, salsas y alimentos.",
+    specifications: [
+      "Motor de alta potencia",
+      "Vaso de gran capacidad",
+      "Varias velocidades",
+      "Cuchillas de acero",
+    ],
   },
   {
     id: 3,
@@ -78,9 +129,16 @@ const initialProducts = [
     reviews: 156,
     discount: 25,
     category: "Ropa y Moda",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
-    description: "Tenis cómodos y modernos para complementar cualquier estilo.",
-    specifications: ["Diseño urbano", "Suela antiderrapante", "Material resistente", "Disponible en varias tallas"],
+    image:
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
+    description:
+      "Tenis cómodos y modernos para complementar cualquier estilo.",
+    specifications: [
+      "Diseño urbano",
+      "Suela antiderrapante",
+      "Material resistente",
+      "Disponible en varias tallas",
+    ],
   },
   {
     id: 4,
@@ -91,9 +149,16 @@ const initialProducts = [
     reviews: 203,
     discount: 29,
     category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
-    description: "Audífonos inalámbricos con sonido envolvente y batería de larga duración.",
-    specifications: ["Bluetooth", "Micrófono integrado", "Controles táctiles", "Estuche de carga"],
+    image:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
+    description:
+      "Audífonos inalámbricos con sonido envolvente y batería de larga duración.",
+    specifications: [
+      "Bluetooth",
+      "Micrófono integrado",
+      "Controles táctiles",
+      "Estuche de carga",
+    ],
   },
 ];
 
@@ -118,38 +183,8 @@ function normalizeText(text = "") {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9ñáéíóúü\s]/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function getSearchScore(product, searchTerm) {
-  const term = normalizeText(searchTerm);
-  if (!term) return 0;
-
-  const words = term.split(" ").filter((word) => word.length > 1);
-
-  const searchable = normalizeText(
-    [
-      product.name,
-      product.category,
-      product.description,
-      ...(product.specifications || []),
-    ].join(" ")
-  );
-
-  const productName = normalizeText(product.name);
-  let score = 0;
-
-  if (searchable.includes(term)) score += 100;
-  if (productName.includes(term)) score += 80;
-
-  words.forEach((word) => {
-    if (productName.includes(word)) score += 25;
-    else if (searchable.includes(word)) score += 10;
-  });
-
-  return score;
 }
 
 function App() {
@@ -157,7 +192,18 @@ function App() {
 
   const [products, setProducts] = useState(initialProducts);
   const [cart, setCart] = useState(() => loadStorage(CART_KEY, []));
-  const [favorites, setFavorites] = useState(() => loadStorage(FAVORITES_KEY, []));
+  const [favorites, setFavorites] = useState(() =>
+    loadStorage(FAVORITES_KEY, [])
+  );
+
+  const [settings, setSettings] = useState(() =>
+    loadStorage(SETTINGS_KEY, {
+      notifications: true,
+      promotions: true,
+      darkMode: false,
+    })
+  );
+
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [search, setSearch] = useState("");
 
@@ -166,6 +212,7 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const [showCheckout, setShowCheckout] = useState(false);
@@ -226,25 +273,35 @@ function App() {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   }, [favorites]);
 
-  const filteredProducts = useMemo(() => {
-    const term = search.trim();
+  useEffect(() => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 
+    document.body.classList.toggle("dark-theme", settings.darkMode);
+  }, [settings]);
+
+  const filteredProducts = useMemo(() => {
     let result = products.filter(
       (product) =>
         activeCategory === "Todos" ||
         product.category === activeCategory
     );
 
+    const term = normalizeText(search);
+
     if (!term) return result;
 
-    return result
-      .map((product) => ({
-        product,
-        score: getSearchScore(product, term),
-      }))
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((item) => item.product);
+    return result.filter((product) => {
+      const searchable = normalizeText(
+        [
+          product.name,
+          product.category,
+          product.description,
+          ...(product.specifications || []),
+        ].join(" ")
+      );
+
+      return searchable.includes(term);
+    });
   }, [products, activeCategory, search]);
 
   const cartCount = cart.reduce(
@@ -262,20 +319,15 @@ function App() {
 
   const cartTotal = cartSubtotal + shippingCost;
 
-  const scrollToProducts = () => {
-    setTimeout(() => {
-      document.getElementById("productos")?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }, 30);
-  };
-
   const goHome = () => {
     setShowMenu(false);
     setActiveCategory("Todos");
     setSearch("");
     navigate("/");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const openAuth = (mode = "login") => {
@@ -283,29 +335,43 @@ function App() {
     setAuthMessage("");
     setShowMenu(false);
     setShowMessages(false);
+    setShowSettings(false);
     setShowAuth(true);
   };
 
   const addToCart = (product, openCart = true) => {
     setCart((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const existing = current.find(
+        (item) => item.id === product.id
+      );
 
       if (existing) {
         return current.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
             : item
         );
       }
 
-      return [...current, { ...product, quantity: 1 }];
+      return [
+        ...current,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ];
     });
 
     if (openCart) setShowCart(true);
   };
 
   const removeFromCart = (id) => {
-    setCart((current) => current.filter((item) => item.id !== id));
+    setCart((current) =>
+      current.filter((item) => item.id !== id)
+    );
   };
 
   const changeQuantity = (id, amount) => {
@@ -314,7 +380,10 @@ function App() {
         item.id === id
           ? {
               ...item,
-              quantity: Math.max(1, item.quantity + amount),
+              quantity: Math.max(
+                1,
+                item.quantity + amount
+              ),
             }
           : item
       )
@@ -323,18 +392,26 @@ function App() {
 
   const toggleFavorite = (product) => {
     setFavorites((current) => {
-      const exists = current.some((item) => item.id === product.id);
+      const exists = current.some(
+        (item) => item.id === product.id
+      );
 
       return exists
-        ? current.filter((item) => item.id !== product.id)
+        ? current.filter(
+            (item) => item.id !== product.id
+          )
         : [...current, product];
     });
+  };
+
+  const openProduct = (product) => {
+    setSelectedProduct(product);
   };
 
   const startCheckout = (product = null) => {
     if (product) addToCart(product, false);
 
-    if (cart.length === 0 && !product) {
+    if (!product && cart.length === 0) {
       setShowCart(true);
       return;
     }
@@ -348,6 +425,7 @@ function App() {
 
   const handleAuth = async (event) => {
     event.preventDefault();
+
     setLoading(true);
     setAuthMessage("");
 
@@ -357,19 +435,19 @@ function App() {
           setAuthMessage(
             "La contraseña debe tener al menos 6 caracteres."
           );
-          setLoading(false);
           return;
         }
 
-        const { data, error } = await supabase.auth.signUp({
-          email: authEmail,
-          password: authPassword,
-          options: {
-            data: {
-              full_name: authName,
+        const { data, error } =
+          await supabase.auth.signUp({
+            email: authEmail,
+            password: authPassword,
+            options: {
+              data: {
+                full_name: authName,
+              },
             },
-          },
-        });
+          });
 
         if (error) throw error;
 
@@ -394,25 +472,30 @@ function App() {
         setShowAuth(false);
       }
     } catch (error) {
-      const message = error?.message || "";
+      const message = error?.message?.toLowerCase() || "";
 
       if (
-        message.toLowerCase().includes("invalid login credentials")
+        message.includes("invalid login credentials")
       ) {
-        setAuthMessage("Correo o contraseña incorrectos.");
+        setAuthMessage(
+          "Correo o contraseña incorrectos."
+        );
       } else if (
-        message.toLowerCase().includes("email not confirmed")
+        message.includes("email not confirmed")
       ) {
-        setAuthMessage("Primero confirma tu correo electrónico.");
+        setAuthMessage(
+          "Primero confirma tu correo electrónico."
+        );
       } else if (
-        message.toLowerCase().includes("user already registered")
+        message.includes("already registered")
       ) {
         setAuthMessage(
           "Este correo ya tiene una cuenta. Intenta iniciar sesión."
         );
       } else {
         setAuthMessage(
-          message || "No fue posible completar la operación."
+          error?.message ||
+            "No fue posible completar la operación."
         );
       }
     } finally {
@@ -444,11 +527,15 @@ function App() {
         newProduct.image ||
         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
       description:
-        newProduct.description || "Producto publicado en VaniDaxi.",
+        newProduct.description ||
+        "Producto publicado en VaniDaxi.",
       specifications: [],
     };
 
-    setProducts((current) => [product, ...current]);
+    setProducts((current) => [
+      product,
+      ...current,
+    ]);
 
     setNewProduct({
       name: "",
@@ -471,7 +558,9 @@ function App() {
         !checkout.state ||
         !checkout.zip
       ) {
-        alert("Completa todos los datos de entrega.");
+        alert(
+          "Completa todos los datos de entrega."
+        );
         return;
       }
 
@@ -494,13 +583,53 @@ function App() {
   };
 
   const openWhatsApp = () => {
-    const text = encodeURIComponent(WHATSAPP_MESSAGE);
+    const text = encodeURIComponent(
+      WHATSAPP_MESSAGE
+    );
 
     const url = WHATSAPP_NUMBER
       ? `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
       : `https://wa.me/?text=${text}`;
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  const openFavorites = () => {
+    setActiveCategory("Todos");
+    setSearch("");
+    setShowMenu(false);
+
+    if (favorites.length === 0) {
+      alert(
+        "Todavía no tienes productos guardados en favoritos."
+      );
+      return;
+    }
+
+    setProducts((current) => {
+      const favoriteIds = favorites.map(
+        (item) => item.id
+      );
+
+      return [
+        ...current.filter((item) =>
+          favoriteIds.includes(item.id)
+        ),
+        ...current.filter(
+          (item) =>
+            !favoriteIds.includes(item.id)
+        ),
+      ];
+    });
+
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -516,9 +645,14 @@ function App() {
 
         body {
           margin: 0;
-          background: #fff;
+          background: #ffffff;
           color: #202020;
           font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body.dark-theme {
+          background: #111111;
+          color: #ffffff;
         }
 
         button,
@@ -534,18 +668,27 @@ function App() {
 
         .app {
           min-height: 100vh;
-          background: #fff;
+          background: #ffffff;
+          transition: .25s;
         }
 
-        /* HEADER */
+        body.dark-theme .app {
+          background: #111111;
+          color: #ffffff;
+        }
 
         .top-header {
           position: sticky;
           top: 0;
           z-index: 80;
-          background: rgba(255,255,255,.98);
-          border-bottom: 1px solid #ededed;
+          background: rgba(255,255,255,.97);
+          border-bottom: 1px solid #eeeeee;
           backdrop-filter: blur(12px);
+        }
+
+        body.dark-theme .top-header {
+          background: rgba(17,17,17,.97);
+          border-color: #292929;
         }
 
         .header-main {
@@ -559,27 +702,32 @@ function App() {
         }
 
         .menu-button {
-          flex: 0 0 auto;
           width: 39px;
           height: 39px;
           border: 0;
           border-radius: 11px;
-          color: white;
-          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
+          color: #ffffff;
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           font-size: 20px;
-          display: grid;
-          place-items: center;
         }
 
         .brand {
-          flex: 0 0 auto;
           border: 0;
           background: transparent;
-          text-decoration: none;
           font-size: 23px;
           font-weight: 900;
           letter-spacing: -1px;
-          background-image: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background-image: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -588,19 +736,19 @@ function App() {
         .search-box {
           flex: 1;
           height: 39px;
-          min-width: 120px;
+          min-width: 100px;
           max-width: 540px;
           margin: 0 auto;
           display: flex;
-          border: 1px solid #ddd;
+          border: 1px solid #dddddd;
           border-radius: 22px;
           overflow: hidden;
-          background: #fff;
+          background: #ffffff;
         }
 
-        .search-box:focus-within {
-          border-color: #d414c9;
-          box-shadow: 0 0 0 3px rgba(212,20,201,.08);
+        body.dark-theme .search-box {
+          background: #202020;
+          border-color: #333333;
         }
 
         .search-box input {
@@ -609,6 +757,8 @@ function App() {
           border: 0;
           outline: 0;
           padding: 0 14px;
+          background: transparent;
+          color: inherit;
           font-size: 13px;
         }
 
@@ -616,13 +766,17 @@ function App() {
           width: 43px;
           border: 0;
           color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
         }
 
         .header-actions {
           display: flex;
           gap: 7px;
-          flex: 0 0 auto;
         }
 
         .header-action {
@@ -633,6 +787,10 @@ function App() {
           background: #f5f5f7;
           font-size: 18px;
           position: relative;
+        }
+
+        body.dark-theme .header-action {
+          background: #242424;
         }
 
         .cart-count {
@@ -646,7 +804,7 @@ function App() {
           display: grid;
           place-items: center;
           background: #ef233c;
-          color: #fff;
+          color: white;
           font-size: 10px;
           font-weight: 800;
         }
@@ -654,7 +812,7 @@ function App() {
         .category-bar {
           width: min(1180px, calc(100% - 24px));
           margin: auto;
-          padding: 0 0 7px;
+          padding: 0 0 8px;
           display: flex;
           gap: 6px;
           overflow-x: auto;
@@ -668,1310 +826,859 @@ function App() {
         .category-pill {
           flex: 0 0 auto;
           border: 1px solid #e4e4e4;
-          background: #fff;
-          color: #444;
+          background: #ffffff;
+          color: #444444;
           border-radius: 16px;
-          padding: 5px 10px;
+          padding: 6px 11px;
           font-size: 10px;
           white-space: nowrap;
         }
 
-        .category-pill.active,
-        .category-pill:hover {
-          color: white;
-          border-color: transparent;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+        body.dark-theme .category-pill {
+          background: #202020;
+          border-color: #333333;
+          color: #eeeeee;
         }
 
-        /* CONTENIDO */
+        .category-pill.active {
+          color: white;
+          border-color: transparent;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+        }
 
         .page-content {
           width: min(1180px, calc(100% - 24px));
           margin: auto;
+          padding-bottom: 50px;
         }
 
         .hero {
           margin: 13px 0;
-          min-height: 175px;
-          border-radius: 20px;
-          padding: 26px 28px;
+          min-height: 190px;
+          border-radius: 22px;
+          padding: 28px;
           color: white;
-          background: linear-gradient(110deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            110deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 25px;
           overflow: hidden;
         }
 
         .hero h1 {
-          margin: 0 0 8px;
-          font-size: clamp(28px,4vw,43px);
+          margin: 0 0 9px;
+          font-size: clamp(29px, 5vw, 48px);
           line-height: 1;
         }
 
         .hero p {
-          margin: 0 0 15px;
-          font-size: 13px;
+          margin: 0 0 16px;
+          font-size: 14px;
+          opacity: .95;
+        }
+
+        .hero-button,
+        .primary-button {
+          border: 0;
+          border-radius: 14px;
+          padding: 11px 18px;
+          color: white;
+          font-weight: 800;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
         }
 
         .hero-button {
-          border: 0;
-          border-radius: 20px;
-          padding: 10px 18px;
           background: white;
           color: #b41bc1;
-          font-size: 12px;
-          font-weight: 800;
         }
 
         .hero-icon {
-          font-size: 70px;
-          margin-right: 20px;
+          font-size: clamp(75px, 12vw, 145px);
+          opacity: .9;
+          transform: rotate(-7deg);
         }
-
-        /* TARJETAS SUPERIORES */
 
         .top-cards {
           display: grid;
-          grid-template-columns: repeat(4,1fr);
-          gap: 9px;
-          margin: 10px 0 18px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          margin-bottom: 24px;
         }
 
         .top-card {
-          height: 88px;
-          position: relative;
+          min-height: 130px;
+          border: 0;
+          border-radius: 18px;
           overflow: hidden;
-          border-radius: 13px;
-          border: 1px solid #eee;
-          background: #f5f5f5;
+          position: relative;
           text-align: left;
-          padding: 0;
+          color: white;
+          padding: 14px;
+          background-size: cover;
+          background-position: center;
         }
 
-        .top-card img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+        .top-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            180deg,
+            rgba(0,0,0,.05),
+            rgba(0,0,0,.68)
+          );
+        }
+
+        .top-card span {
+          position: relative;
+          z-index: 1;
           display: block;
         }
 
-        .top-card-overlay {
-          position: absolute;
-          inset: 0;
-          padding: 11px;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          background: linear-gradient(transparent 10%,rgba(0,0,0,.67));
-          color: white;
+        .top-card strong {
+          font-size: 18px;
         }
 
-        .top-card-title {
-          font-weight: 900;
-          font-size: 13px;
-        }
-
-        .top-card-subtitle {
-          font-size: 9px;
-          margin-top: 2px;
-        }
-
-        /* SECCIONES */
-
-        .section {
-          margin: 17px 0;
+        .top-card small {
+          margin-top: 3px;
+          font-size: 11px;
         }
 
         .section-title {
+          margin: 22px 0 12px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 10px;
+          gap: 10px;
         }
 
         .section-title h2 {
           margin: 0;
-          font-size: 20px;
+          font-size: 21px;
         }
-
-        .gradient-text {
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-        }
-
-        /* ================================
-           CATEGORÍAS — COMPACTAS
-        ================================= */
 
         .categories-grid {
           display: grid;
-          grid-template-columns: repeat(8,minmax(0,1fr));
-          gap: 7px;
-          width: 100%;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 9px;
         }
 
         .category-card {
-          width: 100%;
-          height: 82px;
+          border: 0;
           padding: 0;
+          border-radius: 16px;
           overflow: hidden;
-          border: 1px solid #ededed;
-          border-radius: 10px;
-          background: white;
-          text-align: center;
-          transition: .18s;
-          display: flex;
-          flex-direction: column;
+          background: #f5f5f5;
+          text-align: left;
         }
 
-        .category-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(0,0,0,.08);
-        }
-
-        .category-image {
+        .category-card img {
           width: 100%;
-          height: 56px;
+          aspect-ratio: 1;
           object-fit: cover;
           display: block;
-          flex: 0 0 56px;
         }
 
-        .category-name {
-          width: 100%;
-          height: 26px;
-          padding: 5px 2px 3px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 8px;
-          font-weight: 800;
-          line-height: 1;
-          color: #333;
-          overflow: hidden;
-        }
-
-        /* PROMOCIÓN */
-
-        .promo-card {
-          min-height: 66px;
-          border: 1px solid #eee;
-          border-radius: 14px;
-          padding: 12px 15px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 15px;
-          background: #fafafa;
-        }
-
-        .promo-card strong {
+        .category-card span {
           display: block;
-          font-size: 14px;
-          margin-bottom: 3px;
-        }
-
-        .promo-card span {
-          color: #777;
+          padding: 7px;
           font-size: 10px;
+          font-weight: 700;
         }
-
-        .promo-button,
-        .primary-button {
-          border: 0;
-          border-radius: 20px;
-          padding: 10px 16px;
-          color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          font-weight: 800;
-          font-size: 11px;
-          white-space: nowrap;
-        }
-
-        /* PRODUCTOS */
 
         .products-grid {
           display: grid;
-          grid-template-columns: repeat(4,1fr);
-          gap: 11px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
         }
 
         .product-card {
+          border: 1px solid #eeeeee;
+          border-radius: 18px;
           overflow: hidden;
-          border: 1px solid #eee;
-          border-radius: 14px;
-          background: white;
-          transition: .18s;
+          background: #ffffff;
+          transition: .2s;
+        }
+
+        body.dark-theme .product-card {
+          background: #191919;
+          border-color: #303030;
         }
 
         .product-card:hover {
           transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0,0,0,.08);
-        }
-
-        .product-image-wrap {
-          position: relative;
-          background: #f5f5f5;
+          box-shadow: 0 12px 28px rgba(0,0,0,.09);
         }
 
         .product-image {
+          position: relative;
+          cursor: pointer;
+        }
+
+        .product-image img {
           width: 100%;
-          aspect-ratio: 1 / 1;
+          aspect-ratio: 1;
           object-fit: cover;
           display: block;
         }
 
         .discount {
           position: absolute;
-          top: 8px;
-          left: 8px;
-          border-radius: 7px;
-          padding: 4px 6px;
+          top: 9px;
+          left: 9px;
+          padding: 5px 8px;
+          border-radius: 10px;
           background: #ef233c;
           color: white;
-          font-size: 9px;
-          font-weight: 900;
+          font-size: 10px;
+          font-weight: 800;
         }
 
-        .favorite {
+        .favorite-button {
           position: absolute;
-          top: 7px;
-          right: 7px;
-          width: 31px;
-          height: 31px;
+          top: 8px;
+          right: 8px;
+          width: 34px;
+          height: 34px;
           border: 0;
           border-radius: 50%;
-          background: rgba(255,255,255,.94);
+          background: rgba(255,255,255,.92);
           font-size: 16px;
         }
 
         .product-info {
-          padding: 9px;
+          padding: 12px;
+        }
+
+        .product-category {
+          color: #a61ac3;
+          font-size: 10px;
+          font-weight: 700;
         }
 
         .product-name {
-          margin: 0 0 5px;
-          font-size: 13px;
+          margin: 5px 0 7px;
+          font-size: 14px;
+          line-height: 1.25;
+          min-height: 35px;
         }
 
-        .rating {
-          margin-bottom: 6px;
-          color: #f39c12;
-          font-size: 10px;
+        .prices {
+          display: flex;
+          align-items: center;
+          gap: 7px;
         }
 
         .price {
           font-size: 17px;
           font-weight: 900;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
         }
 
         .old-price {
-          margin-left: 5px;
           color: #999;
-          font-size: 10px;
+          font-size: 11px;
           text-decoration: line-through;
         }
 
+        .rating {
+          margin: 8px 0;
+          color: #666;
+          font-size: 11px;
+        }
+
         .product-actions {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 6px;
-          margin-top: 9px;
+          display: flex;
+          gap: 7px;
         }
 
         .product-actions button {
+          flex: 1;
           border: 0;
-          border-radius: 8px;
-          padding: 8px 4px;
-          font-size: 10px;
+          border-radius: 10px;
+          padding: 9px 7px;
+          font-size: 11px;
           font-weight: 800;
         }
 
         .details-button {
-          background: #f2f2f2;
+          background: #f2f2f4;
+        }
+
+        body.dark-theme .details-button {
+          background: #282828;
+          color: white;
         }
 
         .add-button {
           color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
         }
 
-        /* WHATSAPP */
+        .empty-state {
+          padding: 35px;
+          text-align: center;
+          border: 1px dashed #cccccc;
+          border-radius: 18px;
+          color: #777;
+        }
 
-        .whatsapp-float {
+        .floating-whatsapp {
           position: fixed;
-          right: 17px;
-          bottom: 17px;
-          z-index: 150;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .whatsapp-label {
-          padding: 8px 11px;
-          border-radius: 15px;
-          background: white;
-          box-shadow: 0 5px 20px rgba(0,0,0,.14);
-          color: #333;
-          font-size: 10px;
-          font-weight: 800;
-          white-space: nowrap;
-        }
-
-        .whatsapp-button {
-          width: 52px;
-          height: 52px;
+          right: 18px;
+          bottom: 20px;
+          z-index: 120;
+          width: 58px;
+          height: 58px;
           border: 0;
           border-radius: 50%;
-          display: grid;
-          place-items: center;
           color: white;
-          background: #25D366;
-          box-shadow: 0 7px 22px rgba(0,0,0,.22),0 0 0 4px rgba(37,211,102,.12);
           font-size: 27px;
+          box-shadow: 0 8px 25px rgba(0,0,0,.22);
+          background: linear-gradient(
+            135deg,
+            #25d366,
+            #18a957
+          );
         }
-
-        /* OVERLAYS */
 
         .overlay {
           position: fixed;
           inset: 0;
           z-index: 200;
-          background: rgba(0,0,0,.52);
-          display: flex;
+          background: rgba(0,0,0,.48);
+          backdrop-filter: blur(3px);
         }
 
-        .center-overlay {
-          align-items: center;
-          justify-content: center;
-          padding: 15px;
-        }
-
-        /* MENÚ */
-
-        .menu-panel {
-          width: min(360px,88vw);
+        .side-menu {
+          width: min(350px, 88vw);
           height: 100%;
-          background: white;
-          box-shadow: 8px 0 30px rgba(0,0,0,.2);
-          padding: 22px 18px;
+          padding: 18px;
           overflow-y: auto;
-          animation: menuIn .2s ease-out;
+          background: white;
+          box-shadow: 10px 0 40px rgba(0,0,0,.18);
         }
 
-        @keyframes menuIn {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(0); }
+        body.dark-theme .side-menu,
+        body.dark-theme .modal {
+          background: #181818;
+          color: white;
         }
 
-        .menu-head {
+        .menu-top {
           display: flex;
           align-items: center;
           justify-content: space-between;
           margin-bottom: 18px;
         }
 
-        .menu-head h2 {
-          margin: 0;
-          font-size: 24px;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          -webkit-background-clip: text;
-          color: transparent;
+        .close-button {
+          width: 38px;
+          height: 38px;
+          border: 0;
+          border-radius: 10px;
+          background: #f1f1f1;
+          font-size: 17px;
+        }
+
+        body.dark-theme .close-button {
+          background: #292929;
+          color: white;
+        }
+
+        .account-box {
+          padding: 15px;
+          border-radius: 17px;
+          margin-bottom: 16px;
+          color: white;
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+        }
+
+        .account-box strong,
+        .account-box small {
+          display: block;
+        }
+
+        .account-box small {
+          margin-top: 4px;
+          opacity: .9;
         }
 
         .menu-item {
           width: 100%;
-          min-height: 48px;
-          margin-bottom: 8px;
           border: 0;
-          border-radius: 11px;
-          background: #f7f7f8;
-          text-align: left;
-          padding: 0 15px;
-          font-size: 13px;
-          font-weight: 700;
-          color: #333;
-        }
-
-        .menu-item:hover {
-          background: linear-gradient(90deg,#ef233c,#d414c9);
-          color: white;
-        }
-
-        /* CARRITO */
-
-        .cart-panel {
-          width: min(520px,100%);
-          height: 100%;
-          margin-left: auto;
-          background: white;
-          box-shadow: -8px 0 30px rgba(0,0,0,.18);
-          display: flex;
-          flex-direction: column;
-          animation: cartIn .2s ease-out;
-        }
-
-        @keyframes cartIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-
-        .cart-header {
-          min-height: 66px;
-          padding: 12px 18px;
+          background: transparent;
+          padding: 13px 8px;
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          border-bottom: 1px solid #eee;
+          gap: 12px;
+          text-align: left;
+          border-bottom: 1px solid #eeeeee;
+          color: inherit;
         }
 
-        .cart-header h2 {
-          margin: 0;
+        body.dark-theme .menu-item {
+          border-color: #2c2c2c;
+        }
+
+        .menu-item-icon {
+          width: 34px;
+          text-align: center;
           font-size: 20px;
         }
 
-        .cart-body {
-          flex: 1;
+        .center-overlay {
+          display: grid;
+          place-items: center;
+          padding: 18px;
+        }
+
+        .modal {
+          width: min(500px, 100%);
+          max-height: 90vh;
           overflow-y: auto;
-          padding: 10px 18px;
+          position: relative;
+          border-radius: 22px;
+          padding: 24px;
+          background: white;
+          box-shadow: 0 25px 70px rgba(0,0,0,.22);
+        }
+
+        .modal h2 {
+          margin-top: 0;
+        }
+
+        .form {
+          display: grid;
+          gap: 11px;
+        }
+
+        .form input,
+        .form textarea,
+        .form select,
+        .checkout-input {
+          width: 100%;
+          border: 1px solid #dddddd;
+          border-radius: 11px;
+          padding: 12px;
+          outline: 0;
+          background: transparent;
+          color: inherit;
+        }
+
+        .form textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
+
+        .auth-switch {
+          margin-top: 12px;
+          text-align: center;
+          font-size: 12px;
+        }
+
+        .text-button {
+          border: 0;
+          color: #b018be;
+          background: transparent;
+          font-weight: 800;
+        }
+
+        .auth-message {
+          margin: 0;
+          padding: 10px;
+          border-radius: 10px;
+          background: #f6eef8;
+          color: #8d1998;
+          font-size: 12px;
+        }
+
+        .cart-modal {
+          width: min(650px, 100%);
         }
 
         .cart-item {
           display: flex;
           gap: 11px;
-          padding: 12px 0;
-          border-bottom: 1px solid #eee;
+          padding: 11px 0;
+          border-bottom: 1px solid #eeeeee;
         }
 
         .cart-item img {
-          width: 74px;
-          height: 74px;
+          width: 70px;
+          height: 70px;
+          border-radius: 12px;
           object-fit: cover;
-          border-radius: 10px;
         }
 
         .cart-item-info {
           flex: 1;
-          min-width: 0;
         }
 
         .cart-item-name {
-          font-size: 13px;
-          font-weight: 800;
-          margin-bottom: 5px;
+          margin: 0 0 5px;
+          font-size: 14px;
         }
 
-        .quantity {
+        .cart-controls {
           display: flex;
           align-items: center;
           gap: 7px;
           margin-top: 8px;
         }
 
-        .quantity button {
+        .quantity-button {
           width: 27px;
           height: 27px;
           border: 0;
-          border-radius: 7px;
-          background: #eee;
+          border-radius: 8px;
+          background: #f0f0f0;
         }
 
-        .delete-button {
+        .remove-button {
           margin-left: auto;
-        }
-
-        .cart-footer {
-          border-top: 1px solid #eee;
-          padding: 15px 18px 18px;
-          background: white;
-        }
-
-        .summary-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 7px;
-          font-size: 12px;
-        }
-
-        .summary-total {
-          display: flex;
-          justify-content: space-between;
-          padding-top: 9px;
-          margin-top: 8px;
-          border-top: 1px solid #eee;
-          font-size: 19px;
-          font-weight: 900;
-        }
-
-        .checkout-button {
-          width: 100%;
-          margin-top: 13px;
           border: 0;
-          border-radius: 12px;
-          padding: 13px;
-          color: white;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          font-weight: 900;
-        }
-
-        /* MODALES */
-
-        .modal {
-          width: min(540px,100%);
-          max-height: 92vh;
-          overflow-y: auto;
-          position: relative;
-          padding: 22px;
-          border-radius: 20px;
-          background: white;
-        }
-
-        .modal h2 {
-          margin: 0 0 17px;
-          font-size: 22px;
-        }
-
-        .close-button {
-          width: 35px;
-          height: 35px;
-          border: 0;
-          border-radius: 50%;
-          background: #f1f1f1;
-          font-size: 16px;
-        }
-
-        .form {
-          display: grid;
-          gap: 10px;
-        }
-
-        .form input,
-        .form textarea,
-        .form select {
-          width: 100%;
-          border: 1px solid #ddd;
-          border-radius: 10px;
-          padding: 11px;
-          outline: 0;
-          font-size: 13px;
-        }
-
-        .form textarea {
-          min-height: 85px;
-          resize: vertical;
-        }
-
-        .message {
-          padding: 10px;
-          border-radius: 9px;
-          background: #fff0f4;
-          color: #b21b43;
-          font-size: 12px;
-        }
-
-        /* AUTENTICACIÓN */
-
-        .auth-modal {
-          width: min(820px,100%);
-          max-height: 94vh;
-          overflow: hidden;
-          padding: 0;
-          border-radius: 25px;
-          background: white;
-          box-shadow: 0 25px 70px rgba(0,0,0,.25);
-          display: grid;
-          grid-template-columns: .9fr 1.1fr;
-          position: relative;
-        }
-
-        .auth-visual {
-          min-height: 510px;
-          padding: 34px 27px;
-          color: white;
-          background: linear-gradient(145deg,#ef233c,#d414c9,#6d28d9);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .auth-visual::before,
-        .auth-visual::after {
-          content: "";
-          position: absolute;
-          border-radius: 50%;
-          background: rgba(255,255,255,.10);
-        }
-
-        .auth-visual::before {
-          width: 230px;
-          height: 230px;
-          top: -90px;
-          right: -80px;
-        }
-
-        .auth-visual::after {
-          width: 180px;
-          height: 180px;
-          bottom: -80px;
-          left: -65px;
-        }
-
-        .auth-logo-icon {
-          width: 56px;
-          height: 56px;
-          border-radius: 17px;
-          display: grid;
-          place-items: center;
-          background: rgba(255,255,255,.18);
-          border: 1px solid rgba(255,255,255,.3);
-          font-size: 28px;
-          margin-bottom: 25px;
-        }
-
-        .auth-visual h2 {
-          margin: 0 0 12px;
-          color: white;
-          font-size: 29px;
-          line-height: 1.05;
-        }
-
-        .auth-visual p {
-          margin: 0;
-          color: rgba(255,255,255,.92);
-          font-size: 12px;
-          line-height: 1.6;
-        }
-
-        .auth-benefits {
-          display: grid;
-          gap: 10px;
-          margin-top: 28px;
-        }
-
-        .auth-benefit {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          font-size: 11px;
-          font-weight: 700;
-        }
-
-        .auth-benefit-icon {
-          width: 29px;
-          height: 29px;
-          border-radius: 9px;
-          display: grid;
-          place-items: center;
-          background: rgba(255,255,255,.16);
-        }
-
-        .auth-form-side {
-          padding: 34px 30px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          position: relative;
-        }
-
-        .auth-close {
-          position: absolute;
-          right: 15px;
-          top: 15px;
-        }
-
-        .auth-heading {
-          margin-bottom: 22px;
-        }
-
-        .auth-heading h2 {
-          margin: 0 0 5px;
-          font-size: 25px;
-        }
-
-        .auth-heading p {
-          margin: 0;
-          color: #777;
-          font-size: 11px;
-        }
-
-        .auth-field {
-          position: relative;
-        }
-
-        .auth-field-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #999;
-          font-size: 14px;
-          pointer-events: none;
-        }
-
-        .auth-field input {
-          width: 100%;
-          height: 45px;
-          border: 1px solid #ddd;
-          border-radius: 11px;
-          outline: 0;
-          padding: 0 12px 0 37px;
-          font-size: 12px;
-          background: #fff;
-        }
-
-        .auth-field input:focus {
-          border-color: #d414c9;
-          box-shadow: 0 0 0 3px rgba(212,20,201,.08);
-        }
-
-        .auth-submit {
-          width: 100%;
-          min-height: 46px;
-          margin-top: 4px;
-          border: 0;
-          border-radius: 12px;
-          color: white;
-          font-weight: 900;
-          font-size: 12px;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          box-shadow: 0 7px 18px rgba(212,20,201,.20);
-        }
-
-        .auth-submit:disabled {
-          opacity: .65;
-          cursor: wait;
-        }
-
-        .auth-switch-box {
-          margin-top: 17px;
-          padding-top: 15px;
-          border-top: 1px solid #eee;
-          text-align: center;
-          font-size: 11px;
-          color: #777;
-        }
-
-        .auth-switch {
-          border: 0;
+          color: #ef233c;
           background: transparent;
-          color: #b21bc3;
-          font-size: 11px;
-          font-weight: 900;
-          padding: 4px;
         }
 
-        /* MENSAJES */
-
-        .messages-modal {
-          width: min(720px,100%);
-          max-height: 90vh;
-          border-radius: 22px;
-          overflow: hidden;
-          background: white;
-          box-shadow: 0 25px 70px rgba(0,0,0,.22);
-        }
-
-        .messages-header {
-          padding: 18px 20px;
-          color: white;
-          background: linear-gradient(100deg,#ef233c,#d414c9,#6d28d9);
+        .cart-total {
+          margin-top: 18px;
+          padding-top: 15px;
           display: flex;
           justify-content: space-between;
-          align-items: center;
-        }
-
-        .messages-header h2 {
-          margin: 0;
-          font-size: 20px;
-        }
-
-        .messages-content {
-          padding: 22px;
-        }
-
-        .message-welcome {
-          padding: 18px;
-          border-radius: 15px;
-          background: #faf7ff;
-          border: 1px solid #eee;
-          margin-bottom: 12px;
-        }
-
-        .message-welcome h3 {
-          margin: 0 0 7px;
-          font-size: 15px;
-        }
-
-        .message-welcome p {
-          margin: 0;
-          color: #666;
-          font-size: 11px;
-          line-height: 1.6;
-        }
-
-        .message-option {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 14px;
-          margin-bottom: 8px;
-          border: 1px solid #eee;
-          border-radius: 13px;
-          background: white;
-          text-align: left;
-        }
-
-        .message-option:hover {
-          border-color: #d414c9;
-          background: #fff9ff;
-        }
-
-        .message-option-icon {
-          width: 39px;
-          height: 39px;
-          border-radius: 12px;
-          display: grid;
-          place-items: center;
-          background: #f5e9ff;
           font-size: 18px;
-        }
-
-        .message-option strong {
-          display: block;
-          font-size: 12px;
-        }
-
-        .message-option small {
-          color: #777;
-          font-size: 10px;
-        }
-
-        /* PRODUCTO */
-
-        .detail-image {
-          width: 100%;
-          max-height: 430px;
-          object-fit: cover;
-          border-radius: 14px;
-        }
-
-        .detail-price {
-          margin: 10px 0;
-          font-size: 25px;
           font-weight: 900;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          -webkit-background-clip: text;
-          color: transparent;
         }
 
-        .specifications {
-          padding-left: 20px;
-          line-height: 1.8;
-          font-size: 13px;
+        .cart-buttons {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: 15px;
         }
 
         .secondary-button {
-          flex: 1;
-          border: 1px solid #ddd;
-          border-radius: 11px;
-          background: white;
-          padding: 12px;
+          border: 1px solid #dddddd;
+          border-radius: 14px;
+          padding: 11px 16px;
+          background: transparent;
+          color: inherit;
           font-weight: 800;
-          font-size: 11px;
         }
 
-        /* CHECKOUT */
+        .product-modal-image {
+          width: 100%;
+          max-height: 330px;
+          border-radius: 16px;
+          object-fit: cover;
+        }
+
+        .specifications {
+          padding-left: 18px;
+          color: #666;
+          font-size: 13px;
+          line-height: 1.8;
+        }
+
+        body.dark-theme .specifications {
+          color: #cccccc;
+        }
 
         .checkout-overlay {
-          align-items: stretch;
-          justify-content: center;
-          background: #f7f7f9;
           overflow-y: auto;
+          padding: 20px;
         }
 
         .checkout-page {
-          width: min(1050px,100%);
-          min-height: 100%;
+          width: min(1000px, 100%);
+          margin: 20px auto;
+          padding: 22px;
+          border-radius: 22px;
           background: white;
-          padding: 20px;
+        }
+
+        body.dark-theme .checkout-page {
+          background: #181818;
         }
 
         .checkout-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 15px;
-          margin-bottom: 20px;
         }
 
         .checkout-title {
           margin: 0;
-          font-size: 25px;
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
-          -webkit-background-clip: text;
-          color: transparent;
+          font-size: 24px;
         }
 
         .checkout-steps {
-          display: grid;
-          grid-template-columns: repeat(3,1fr);
-          gap: 7px;
-          margin-bottom: 20px;
+          display: flex;
+          gap: 8px;
+          margin: 20px 0;
         }
 
         .checkout-step {
-          height: 7px;
+          flex: 1;
+          height: 6px;
           border-radius: 10px;
-          background: #e9e9e9;
+          background: #e4e4e4;
         }
 
         .checkout-step.active {
-          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
         }
 
         .checkout-layout {
           display: grid;
-          grid-template-columns: 1fr 340px;
-          gap: 20px;
+          grid-template-columns: 1.5fr .8fr;
+          gap: 18px;
         }
 
         .checkout-card {
-          border: 1px solid #eee;
-          border-radius: 16px;
           padding: 18px;
-          margin-bottom: 12px;
+          border: 1px solid #e7e7e7;
+          border-radius: 18px;
+        }
+
+        body.dark-theme .checkout-card {
+          border-color: #303030;
         }
 
         .checkout-card h3 {
-          margin: 0 0 13px;
-          font-size: 17px;
+          margin-top: 0;
         }
 
         .checkout-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 9px;
+          gap: 10px;
         }
 
-        .checkout-grid .full {
+        .full {
           grid-column: 1 / -1;
-        }
-
-        .checkout-input {
-          width: 100%;
-          border: 1px solid #ddd;
-          border-radius: 9px;
-          padding: 11px;
-          outline: 0;
-          font-size: 12px;
         }
 
         .delivery-option,
         .payment-option {
           width: 100%;
+          margin-top: 10px;
+          padding: 13px;
+          border: 1px solid #dddddd;
+          border-radius: 13px;
           display: flex;
           align-items: center;
-          gap: 9px;
-          border: 1px solid #ddd;
-          border-radius: 11px;
-          padding: 12px;
-          margin-bottom: 8px;
+          gap: 10px;
           text-align: left;
-          background: white;
+          background: transparent;
+          color: inherit;
         }
 
         .delivery-option.selected,
         .payment-option.selected {
-          border-color: #d414c9;
-          background: #fff7fd;
+          border-color: #c91ac4;
+          box-shadow: 0 0 0 2px rgba(201,26,196,.08);
         }
 
-        .order-summary {
-          position: sticky;
-          top: 15px;
-          height: fit-content;
+        .checkout-actions {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: 15px;
         }
 
         .checkout-product {
           display: flex;
           gap: 9px;
-          margin-bottom: 10px;
+          margin-bottom: 11px;
         }
 
         .checkout-product img {
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
+          border-radius: 9px;
           object-fit: cover;
-          border-radius: 8px;
         }
 
         .checkout-product-info {
-          flex: 1;
           font-size: 11px;
         }
 
-        .checkout-actions {
+        .summary-row,
+        .summary-total {
           display: flex;
-          gap: 9px;
-          margin-top: 15px;
+          justify-content: space-between;
+          margin-top: 10px;
+          font-size: 12px;
+        }
+
+        .summary-total {
+          padding-top: 12px;
+          border-top: 1px solid #e6e6e6;
+          font-size: 16px;
+          font-weight: 900;
         }
 
         .success-box {
-          max-width: 570px;
-          margin: 70px auto;
+          padding: 40px 15px;
           text-align: center;
-          padding: 30px;
-          border-radius: 22px;
-          border: 1px solid #eee;
         }
 
         .success-icon {
-          font-size: 65px;
-          margin-bottom: 10px;
+          font-size: 60px;
         }
 
-        .empty {
-          text-align: center;
-          padding: 55px 20px;
+        .settings-option {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+
+        body.dark-theme .settings-option {
+          border-color: #303030;
+        }
+
+        .settings-option strong,
+        .settings-option small {
+          display: block;
+        }
+
+        .settings-option small {
+          margin-top: 4px;
           color: #777;
         }
 
-        /* RESPONSIVE */
+        .switch {
+          position: relative;
+          width: 48px;
+          height: 27px;
+          border: 0;
+          border-radius: 30px;
+          background: #cccccc;
+          transition: .2s;
+        }
+
+        .switch.active {
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+        }
+
+        .switch::after {
+          content: "";
+          position: absolute;
+          width: 21px;
+          height: 21px;
+          top: 3px;
+          left: 3px;
+          border-radius: 50%;
+          background: white;
+          transition: .2s;
+        }
+
+        .switch.active::after {
+          left: 24px;
+        }
 
         @media (max-width: 900px) {
+          .top-cards {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
           .categories-grid {
-            grid-template-columns: repeat(4,1fr);
+            grid-template-columns: repeat(4, 1fr);
           }
 
           .products-grid {
-            grid-template-columns: repeat(3,1fr);
+            grid-template-columns: repeat(3, 1fr);
           }
 
           .checkout-layout {
             grid-template-columns: 1fr;
           }
-
-          .order-summary {
-            position: static;
-          }
-
-          .auth-modal {
-            grid-template-columns: 1fr;
-          }
-
-          .auth-visual {
-            min-height: 190px;
-            padding: 24px;
-          }
-
-          .auth-benefits {
-            grid-template-columns: repeat(3,1fr);
-            margin-top: 18px;
-          }
-
-          .auth-benefit {
-            font-size: 9px;
-          }
-
-          .auth-form-side {
-            padding: 28px;
-          }
         }
 
-        @media (max-width: 650px) {
-          .header-main {
-            min-height: 52px;
-            flex-wrap: wrap;
-            gap: 7px;
-          }
-
+        @media (max-width: 620px) {
           .brand {
-            font-size: 20px;
-          }
-
-          .menu-button,
-          .header-action {
-            width: 36px;
-            height: 36px;
-          }
-
-          .header-actions {
-            margin-left: auto;
-          }
-
-          .search-box {
-            order: 5;
-            flex-basis: 100%;
-            max-width: none;
-          }
-
-          .top-header {
-            padding-bottom: 4px;
+            font-size: 18px;
           }
 
           .hero {
-            min-height: 155px;
-            padding: 22px 19px;
-            margin-top: 9px;
-          }
-
-          .hero h1 {
-            font-size: 28px;
+            min-height: 180px;
+            padding: 22px;
           }
 
           .hero-icon {
             display: none;
           }
 
-          .top-cards {
-            grid-template-columns: repeat(2,1fr);
-          }
-
-          .top-card {
-            height: 78px;
-          }
-
-          .categories-grid {
-            grid-template-columns: repeat(4,1fr);
-            gap: 5px;
-          }
-
-          .category-card {
-            height: 68px;
-            border-radius: 8px;
-          }
-
-          .category-image {
-            height: 45px;
-            flex-basis: 45px;
-          }
-
-          .category-name {
-            height: 23px;
-            min-height: 23px;
-            padding: 3px 1px;
-            font-size: 7px;
-          }
-
           .products-grid {
-            grid-template-columns: repeat(2,1fr);
-            gap: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 9px;
           }
 
-          .promo-card {
-            align-items: flex-start;
-            flex-direction: column;
+          .product-info {
+            padding: 9px;
+          }
+
+          .product-name {
+            font-size: 12px;
+          }
+
+          .cart-buttons {
+            grid-template-columns: 1fr;
           }
 
           .checkout-grid {
             grid-template-columns: 1fr;
           }
 
-          .checkout-grid .full {
+          .full {
             grid-column: auto;
           }
 
-          .checkout-page {
-            padding: 13px;
-          }
-
-          .whatsapp-float {
-            right: 12px;
-            bottom: 12px;
-          }
-
-          .whatsapp-label {
+          .header-action.account-action {
             display: none;
-          }
-
-          .whatsapp-button {
-            width: 48px;
-            height: 48px;
-            font-size: 24px;
-          }
-
-          .auth-modal {
-            max-height: 94vh;
-            overflow-y: auto;
-          }
-
-          .auth-visual {
-            min-height: 155px;
-            padding: 21px;
-          }
-
-          .auth-logo-icon {
-            width: 43px;
-            height: 43px;
-            border-radius: 13px;
-            font-size: 21px;
-            margin-bottom: 13px;
-          }
-
-          .auth-visual h2 {
-            font-size: 23px;
-            margin-bottom: 6px;
-          }
-
-          .auth-visual p {
-            font-size: 10px;
-          }
-
-          .auth-benefits {
-            display: none;
-          }
-
-          .auth-form-side {
-            padding: 25px 20px;
-          }
-
-          .auth-heading h2 {
-            font-size: 22px;
-          }
-
-          .messages-content {
-            padding: 15px;
-          }
-        }
-
-        @media (max-width: 390px) {
-          .brand {
-            font-size: 18px;
-          }
-
-          .categories-grid {
-            gap: 4px;
-          }
-
-          .category-card {
-            height: 63px;
-          }
-
-          .category-image {
-            height: 41px;
-            flex-basis: 41px;
-          }
-
-          .category-name {
-            height: 22px;
-            font-size: 6.7px;
-          }
-
-          .header-action {
-            font-size: 16px;
           }
         }
       `}</style>
-
-      {/* HEADER */}
 
       <header className="top-header">
         <div className="header-main">
@@ -1983,32 +1690,43 @@ function App() {
             ☰
           </button>
 
-          <button className="brand" onClick={goHome}>
+          <button
+            className="brand"
+            onClick={goHome}
+          >
             VaniDaxi
           </button>
 
           <div className="search-box">
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="¿Qué estás buscando?"
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              placeholder="Buscar productos..."
             />
 
             <button
-              type="button"
-              onClick={scrollToProducts}
-              aria-label="Buscar"
+              onClick={() =>
+                document
+                  .getElementById("productos")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+              }
             >
-              ⌕
+              🔍
             </button>
           </div>
 
           <div className="header-actions">
             <button
-              className="header-action"
-              onClick={() => openAuth("login")}
-              title="Mi cuenta"
-              aria-label="Mi cuenta"
+              className="header-action account-action"
+              onClick={() =>
+                user
+                  ? setShowMenu(true)
+                  : openAuth("login")
+              }
             >
               ✨
             </button>
@@ -2016,12 +1734,13 @@ function App() {
             <button
               className="header-action"
               onClick={() => setShowCart(true)}
-              title="Carrito"
-              aria-label="Carrito"
             >
               🛒
+
               {cartCount > 0 && (
-                <span className="cart-count">{cartCount}</span>
+                <span className="cart-count">
+                  {cartCount}
+                </span>
               )}
             </button>
           </div>
@@ -2030,26 +1749,28 @@ function App() {
         <div className="category-bar">
           <button
             className={`category-pill ${
-              activeCategory === "Todos" ? "active" : ""
+              activeCategory === "Todos"
+                ? "active"
+                : ""
             }`}
-            onClick={() => {
-              setActiveCategory("Todos");
-              setSearch("");
-            }}
+            onClick={() =>
+              setActiveCategory("Todos")
+            }
           >
-            Todo
+            Todos
           </button>
 
           {categories.map((category) => (
             <button
               key={category.name}
               className={`category-pill ${
-                activeCategory === category.name ? "active" : ""
+                activeCategory === category.name
+                  ? "active"
+                  : ""
               }`}
-              onClick={() => {
-                setActiveCategory(category.name);
-                scrollToProducts();
-              }}
+              onClick={() =>
+                setActiveCategory(category.name)
+              }
             >
               {category.name}
             </button>
@@ -2057,22 +1778,31 @@ function App() {
         </div>
       </header>
 
-      {/* CONTENIDO */}
-
       <main className="page-content">
         <section className="hero">
           <div>
-            <h1>Todo en un solo lugar</h1>
+            <h1>
+              Todo lo que buscas,
+              <br />
+              en un solo lugar.
+            </h1>
 
             <p>
-              Compra, vende y descubre productos de diferentes categorías.
+              Compra, vende y descubre productos
+              increíbles en VaniDaxi.
             </p>
 
             <button
               className="hero-button"
-              onClick={scrollToProducts}
+              onClick={() =>
+                document
+                  .getElementById("productos")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+              }
             >
-              Comprar ahora
+              Explorar productos
             </button>
           </div>
 
@@ -2082,159 +1812,108 @@ function App() {
         <section className="top-cards">
           {topCards.map((card) => (
             <button
-              className="top-card"
               key={card.title}
-              onClick={() => {
-                if (card.title === "Ofertas") {
-                  setSearch("");
-                  setActiveCategory("Todos");
-                  scrollToProducts();
-                }
-
-                if (card.title === "Novedades") {
-                  scrollToProducts();
-                }
-
-                if (card.title === "Vendedores") {
-                  setShowPublish(true);
-                }
-
-                if (card.title === "Envíos") {
-                  setShowMessages(true);
-                }
+              className="top-card"
+              style={{
+                backgroundImage: `url(${card.image})`,
               }}
+              onClick={() =>
+                document
+                  .getElementById("productos")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+              }
             >
-              <img src={card.image} alt={card.title} />
-
-              <span className="top-card-overlay">
-                <span className="top-card-title">{card.title}</span>
-                <span className="top-card-subtitle">{card.subtitle}</span>
+              <span>
+                <strong>{card.title}</strong>
+                <small>{card.subtitle}</small>
               </span>
             </button>
           ))}
         </section>
 
-        {/* CATEGORÍAS */}
-
-        <section className="section">
+        <section>
           <div className="section-title">
-            <h2 className="gradient-text">Categorías</h2>
-
-            <button
-              className="category-pill"
-              onClick={() => {
-                setActiveCategory("Todos");
-                setSearch("");
-              }}
-            >
-              Ver todo
-            </button>
+            <h2>Categorías</h2>
           </div>
 
           <div className="categories-grid">
             {categories.map((category) => (
               <button
-                key={category.name}
                 className="category-card"
+                key={category.name}
                 onClick={() => {
                   setActiveCategory(category.name);
-                  scrollToProducts();
+
+                  setTimeout(() => {
+                    document
+                      .getElementById("productos")
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                      });
+                  }, 50);
                 }}
               >
                 <img
-                  className="category-image"
                   src={category.image}
                   alt={category.name}
-                  loading="lazy"
                 />
 
-                <span className="category-name">
-                  {category.name}
-                </span>
+                <span>{category.name}</span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* REGISTRO */}
-
-        <section className="section">
-          <div className="promo-card">
-            <div>
-              <strong>✨ Únete a VaniDaxi</strong>
-
-              <span>
-                Compra, vende y disfruta de más funciones con tu cuenta.
-              </span>
-            </div>
-
-            <button
-              className="promo-button"
-              onClick={() => openAuth("register")}
-            >
-              Crear cuenta
-            </button>
-          </div>
-        </section>
-
-        {/* PRODUCTOS */}
-
-        <section className="section" id="productos">
+        <section id="productos">
           <div className="section-title">
-            <h2 className="gradient-text">
-              {search.trim()
-                ? `Resultados para "${search}"`
+            <h2>
+              {search
+                ? "Resultados de búsqueda"
                 : activeCategory === "Todos"
                 ? "Productos destacados"
                 : activeCategory}
             </h2>
 
-            {activeCategory !== "Todos" && (
+            {user && (
               <button
-                className="category-pill"
-                onClick={() => setActiveCategory("Todos")}
+                className="primary-button"
+                onClick={() =>
+                  setShowPublish(true)
+                }
               >
-                Ver todos
+                + Publicar
               </button>
             )}
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="empty">
-              <div style={{ fontSize: 45 }}>🔎</div>
-
-              <h3>No encontramos productos</h3>
-
-              <p>
-                Prueba con otras palabras, una categoría diferente o una
-                búsqueda más general.
-              </p>
-
-              <button
-                className="primary-button"
-                onClick={() => {
-                  setSearch("");
-                  setActiveCategory("Todos");
-                }}
-              >
-                Ver todos los productos
-              </button>
+            <div className="empty-state">
+              No encontramos productos con esa
+              búsqueda.
             </div>
           ) : (
             <div className="products-grid">
               {filteredProducts.map((product) => {
-                const favorite = favorites.some(
-                  (item) => item.id === product.id
-                );
+                const isFavorite =
+                  favorites.some(
+                    (item) =>
+                      item.id === product.id
+                  );
 
                 return (
-                  <article className="product-card" key={product.id}>
-                    <div className="product-image-wrap">
+                  <article
+                    className="product-card"
+                    key={product.id}
+                  >
+                    <div className="product-image">
                       <img
-                        className="product-image"
                         src={product.image}
                         alt={product.name}
-                        loading="lazy"
+                        onClick={() =>
+                          openProduct(product)
+                        }
                       />
 
                       {product.discount > 0 && (
@@ -2244,46 +1923,60 @@ function App() {
                       )}
 
                       <button
-                        className="favorite"
-                        onClick={() => toggleFavorite(product)}
-                        aria-label="Agregar a favoritos"
+                        className="favorite-button"
+                        onClick={() =>
+                          toggleFavorite(product)
+                        }
                       >
-                        {favorite ? "❤️" : "♡"}
+                        {isFavorite ? "❤️" : "🤍"}
                       </button>
                     </div>
 
                     <div className="product-info">
+                      <div className="product-category">
+                        {product.category}
+                      </div>
+
                       <h3 className="product-name">
                         {product.name}
                       </h3>
 
-                      <div className="rating">
-                        ★ {product.rating} · {product.reviews} reseñas
-                      </div>
-
-                      <div>
+                      <div className="prices">
                         <span className="price">
-                          {formatPrice(product.price)}
+                          {formatPrice(
+                            product.price
+                          )}
                         </span>
 
                         {product.oldPrice && (
                           <span className="old-price">
-                            {formatPrice(product.oldPrice)}
+                            {formatPrice(
+                              product.oldPrice
+                            )}
                           </span>
                         )}
+                      </div>
+
+                      <div className="rating">
+                        ⭐ {product.rating} ·{" "}
+                        {product.reviews} opiniones
                       </div>
 
                       <div className="product-actions">
                         <button
                           className="details-button"
-                          onClick={() => setSelectedProduct(product)}
+                          onClick={() =>
+                            openProduct(product)
+                          }
                         >
-                          Ver producto
+                          Ver
                         </button>
 
                         <button
                           className="add-button"
-                          onClick={() => addToCart(product)}
+                          onClick={() =>
+                            addToCart(product)
+                          }
                         >
                           🛒 Agregar
                         </button>
@@ -2297,61 +1990,142 @@ function App() {
         </section>
       </main>
 
-      {/* WHATSAPP */}
-
-      <div className="whatsapp-float">
-        <span className="whatsapp-label">
-          ¿Necesitas ayuda?
-        </span>
-
-        <button
-          className="whatsapp-button"
-          onClick={openWhatsApp}
-          aria-label="Atención al cliente por WhatsApp"
-          title="Atención al cliente"
-        >
-          ☏
-        </button>
-      </div>
-
-      {/* MENÚ */}
+      <button
+        className="floating-whatsapp"
+        onClick={openWhatsApp}
+        aria-label="Atención por WhatsApp"
+        title="Atención al cliente"
+      >
+        ☎
+      </button>
 
       {showMenu && (
         <div
           className="overlay"
-          onClick={() => setShowMenu(false)}
+          onClick={() =>
+            setShowMenu(false)
+          }
         >
           <aside
-            className="menu-panel"
-            onClick={(e) => e.stopPropagation()}
+            className="side-menu"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
-            <div className="menu-head">
-              <h2>VaniDaxi</h2>
+            <div className="menu-top">
+              <strong>VaniDaxi</strong>
 
               <button
                 className="close-button"
-                onClick={() => setShowMenu(false)}
+                onClick={() =>
+                  setShowMenu(false)
+                }
               >
                 ✕
               </button>
             </div>
 
-            <button className="menu-item" onClick={goHome}>
-              🏠 Inicio
+            <div className="account-box">
+              {user ? (
+                <>
+                  <strong>
+                    {user.user_metadata
+                      ?.full_name ||
+                      "Mi cuenta"}
+                  </strong>
+
+                  <small>{user.email}</small>
+                </>
+              ) : (
+                <>
+                  <strong>
+                    ¡Hola! 👋
+                  </strong>
+
+                  <small>
+                    Inicia sesión para disfrutar
+                    todas las funciones.
+                  </small>
+                </>
+              )}
+            </div>
+
+            {!user ? (
+              <>
+                <button
+                  className="menu-item"
+                  onClick={() =>
+                    openAuth("login")
+                  }
+                >
+                  <span className="menu-item-icon">
+                    ✨
+                  </span>
+                  <span>
+                    <strong>
+                      Iniciar sesión
+                    </strong>
+                  </span>
+                </button>
+
+                <button
+                  className="menu-item"
+                  onClick={() =>
+                    openAuth("register")
+                  }
+                >
+                  <span className="menu-item-icon">
+                    📝
+                  </span>
+                  <span>
+                    <strong>
+                      Crear cuenta
+                    </strong>
+                  </span>
+                </button>
+              </>
+            ) : (
+              <button
+                className="menu-item"
+                onClick={() =>
+                  setShowPublish(true)
+                }
+              >
+                <span className="menu-item-icon">
+                  ➕
+                </span>
+                <span>
+                  <strong>
+                    Publicar producto
+                  </strong>
+                </span>
+              </button>
+            )}
+
+            <button
+              className="menu-item"
+              onClick={goHome}
+            >
+              <span className="menu-item-icon">
+                🏠
+              </span>
+
+              <span>
+                <strong>Inicio</strong>
+              </span>
             </button>
 
             <button
               className="menu-item"
-              onClick={() => openAuth("login")}
+              onClick={openFavorites}
             >
-              ✨ Mi cuenta
-            </button>
+              <span className="menu-item-icon">
+                ❤️
+              </span>
 
-            <button
-              className="menu-item"
-              onClick={() => openAuth("login")}
-            >
-              👤 Perfil
+              <span>
+                <strong>Favoritos</strong>
+              </span>
             </button>
 
             <button
@@ -2361,191 +2135,465 @@ function App() {
                 setShowMessages(true);
               }}
             >
-              💬 Centro de mensajes
+              <span className="menu-item-icon">
+                💬
+              </span>
+
+              <span>
+                <strong>Mensajes</strong>
+              </span>
             </button>
 
             <button
               className="menu-item"
               onClick={() => {
                 setShowMenu(false);
-                setShowPublish(true);
+                setShowSettings(true);
               }}
             >
-              ➕ Publicar producto
-            </button>
+              <span className="menu-item-icon">
+                ⚙️
+              </span>
 
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowCart(true);
-              }}
-            >
-              🛒 Mi carrito
-              {cartCount > 0 ? ` (${cartCount})` : ""}
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setActiveCategory("Todos");
-                scrollToProducts();
-              }}
-            >
-              🛍️ Explorar productos
+              <span>
+                <strong>
+                  Configuración
+                </strong>
+              </span>
             </button>
 
             <button
               className="menu-item"
               onClick={openWhatsApp}
             >
-              💚 Atención al cliente
-            </button>
+              <span className="menu-item-icon">
+                🟢
+              </span>
 
-            <button
-              className="menu-item"
-              onClick={() =>
-                alert("La configuración estará disponible aquí.")
-              }
-            >
-              ⚙️ Configuración
+              <span>
+                <strong>
+                  Atención al cliente
+                </strong>
+              </span>
             </button>
 
             {user && (
-              <button className="menu-item" onClick={logout}>
-                🚪 Cerrar sesión
+              <button
+                className="menu-item"
+                onClick={logout}
+              >
+                <span className="menu-item-icon">
+                  🚪
+                </span>
+
+                <span>
+                  <strong>
+                    Cerrar sesión
+                  </strong>
+                </span>
               </button>
             )}
           </aside>
         </div>
       )}
 
-      {/* CARRITO */}
+      {showAuth && (
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setShowAuth(false)
+          }
+        >
+          <div
+            className="modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+              }}
+              onClick={() =>
+                setShowAuth(false)
+              }
+            >
+              ✕
+            </button>
+
+            <h2>
+              {authMode === "login"
+                ? "✨ Bienvenido de nuevo"
+                : "🚀 Crea tu cuenta"}
+            </h2>
+
+            <p
+              style={{
+                color: "#777",
+                fontSize: 12,
+                marginTop: -5,
+              }}
+            >
+              {authMode === "login"
+                ? "Inicia sesión para comprar, vender y administrar tu cuenta."
+                : "Únete a VaniDaxi y comienza a comprar o vender fácilmente."}
+            </p>
+
+            <form
+              className="form"
+              onSubmit={handleAuth}
+            >
+              {authMode === "register" && (
+                <input
+                  type="text"
+                  placeholder="Nombre completo"
+                  value={authName}
+                  onChange={(event) =>
+                    setAuthName(
+                      event.target.value
+                    )
+                  }
+                  required
+                />
+              )}
+
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                value={authEmail}
+                onChange={(event) =>
+                  setAuthEmail(
+                    event.target.value
+                  )
+                }
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={authPassword}
+                onChange={(event) =>
+                  setAuthPassword(
+                    event.target.value
+                  )
+                }
+                required
+              />
+
+              {authMessage && (
+                <p className="auth-message">
+                  {authMessage}
+                </p>
+              )}
+
+              <button
+                className="primary-button"
+                disabled={loading}
+              >
+                {loading
+                  ? "Procesando..."
+                  : authMode === "login"
+                  ? "Iniciar sesión"
+                  : "Crear mi cuenta"}
+              </button>
+            </form>
+
+            <div className="auth-switch">
+              {authMode === "login" ? (
+                <>
+                  ¿Aún no tienes cuenta?{" "}
+
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      setAuthMode(
+                        "register"
+                      );
+                      setAuthMessage("");
+                    }}
+                  >
+                    Crear cuenta
+                  </button>
+                </>
+              ) : (
+                <>
+                  ¿Ya tienes cuenta?{" "}
+
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      setAuthMode(
+                        "login"
+                      );
+                      setAuthMessage("");
+                    }}
+                  >
+                    Iniciar sesión
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedProduct && (
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setSelectedProduct(null)
+          }
+        >
+          <div
+            className="modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+                zIndex: 2,
+              }}
+              onClick={() =>
+                setSelectedProduct(null)
+              }
+            >
+              ✕
+            </button>
+
+            <img
+              className="product-modal-image"
+              src={selectedProduct.image}
+              alt={selectedProduct.name}
+            />
+
+            <h2>
+              {selectedProduct.name}
+            </h2>
+
+            <div className="product-category">
+              {selectedProduct.category}
+            </div>
+
+            <p>
+              {selectedProduct.description}
+            </p>
+
+            <div className="price">
+              {formatPrice(
+                selectedProduct.price
+              )}
+            </div>
+
+            {selectedProduct.specifications
+              ?.length > 0 && (
+              <>
+                <h3>Especificaciones</h3>
+
+                <ul className="specifications">
+                  {selectedProduct.specifications.map(
+                    (specification) => (
+                      <li
+                        key={specification}
+                      >
+                        {specification}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </>
+            )}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "1fr 1fr",
+                gap: 10,
+                marginTop: 20,
+              }}
+            >
+              <button
+                className="secondary-button"
+                onClick={() =>
+                  addToCart(
+                    selectedProduct
+                  )
+                }
+              >
+                🛒 Agregar
+              </button>
+
+              <button
+                className="primary-button"
+                onClick={() =>
+                  startCheckout(
+                    selectedProduct
+                  )
+                }
+              >
+                Comprar ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCart && (
         <div
-          className="overlay"
-          onClick={() => setShowCart(false)}
+          className="overlay center-overlay"
+          onClick={() =>
+            setShowCart(false)
+          }
         >
-          <aside
-            className="cart-panel"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="modal cart-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
-            <div className="cart-header">
-              <h2>🛒 Mi carrito</h2>
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+              }}
+              onClick={() =>
+                setShowCart(false)
+              }
+            >
+              ✕
+            </button>
 
-              <button
-                className="close-button"
-                onClick={() => setShowCart(false)}
-              >
-                ✕
-              </button>
-            </div>
+            <h2>🛒 Mi carrito</h2>
 
-            <div className="cart-body">
-              {cart.length === 0 ? (
-                <div className="empty">
-                  <div style={{ fontSize: 55 }}>🛒</div>
-
-                  <h3>Tu carrito está vacío</h3>
-
-                  <p>
-                    Agrega productos para comenzar tu compra.
-                  </p>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div className="cart-item" key={item.id}>
-                    <img src={item.image} alt={item.name} />
+            {cart.length === 0 ? (
+              <div className="empty-state">
+                Tu carrito está vacío.
+              </div>
+            ) : (
+              <>
+                {cart.map((item) => (
+                  <div
+                    className="cart-item"
+                    key={item.id}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                    />
 
                     <div className="cart-item-info">
-                      <div className="cart-item-name">
+                      <h3 className="cart-item-name">
                         {item.name}
-                      </div>
+                      </h3>
 
-                      <div>{formatPrice(item.price)}</div>
+                      <strong>
+                        {formatPrice(
+                          item.price
+                        )}
+                      </strong>
 
-                      <div className="quantity">
+                      <div className="cart-controls">
                         <button
+                          className="quantity-button"
                           onClick={() =>
-                            changeQuantity(item.id, -1)
+                            changeQuantity(
+                              item.id,
+                              -1
+                            )
                           }
                         >
                           −
                         </button>
 
-                        <strong>{item.quantity}</strong>
+                        <strong>
+                          {item.quantity}
+                        </strong>
 
                         <button
+                          className="quantity-button"
                           onClick={() =>
-                            changeQuantity(item.id, 1)
+                            changeQuantity(
+                              item.id,
+                              1
+                            )
                           }
                         >
                           +
                         </button>
 
                         <button
-                          className="delete-button"
+                          className="remove-button"
                           onClick={() =>
-                            removeFromCart(item.id)
+                            removeFromCart(
+                              item.id
+                            )
                           }
                         >
-                          🗑️
+                          Eliminar
                         </button>
                       </div>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
 
-            {cart.length > 0 && (
-              <div className="cart-footer">
-                <div className="summary-row">
-                  <span>Subtotal</span>
-
-                  <strong>{formatPrice(cartSubtotal)}</strong>
-                </div>
-
-                <div className="summary-row">
-                  <span>Envío</span>
-
-                  <strong>
-                    {shippingCost === 0
-                      ? "Gratis"
-                      : formatPrice(shippingCost)}
-                  </strong>
-                </div>
-
-                <div className="summary-total">
+                <div className="cart-total">
                   <span>Total</span>
 
-                  <span>{formatPrice(cartTotal)}</span>
+                  <span>
+                    {formatPrice(
+                      cartSubtotal
+                    )}
+                  </span>
                 </div>
 
-                <button
-                  className="checkout-button"
-                  onClick={() => startCheckout()}
-                >
-                  Continuar al pago
-                </button>
-              </div>
+                <div className="cart-buttons">
+                  <button
+                    className="secondary-button"
+                    onClick={() =>
+                      setShowCart(false)
+                    }
+                  >
+                    Seguir comprando
+                  </button>
+
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      startCheckout()
+                    }
+                  >
+                    Finalizar compra
+                  </button>
+                </div>
+              </>
             )}
-          </aside>
+          </div>
         </div>
       )}
 
-      {/* DETALLE PRODUCTO */}
-
-      {selectedProduct && (
+      {showMessages && (
         <div
           className="overlay center-overlay"
-          onClick={() => setSelectedProduct(null)}
+          onClick={() =>
+            setShowMessages(false)
+          }
         >
           <div
             className="modal"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <button
               className="close-button"
@@ -2554,323 +2602,52 @@ function App() {
                 right: 15,
                 top: 15,
               }}
-              onClick={() => setSelectedProduct(null)}
+              onClick={() =>
+                setShowMessages(false)
+              }
             >
               ✕
             </button>
 
-            <img
-              className="detail-image"
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
-            />
+            <h2>💬 Mensajes</h2>
 
-            <h2 style={{ marginTop: 15 }}>
-              {selectedProduct.name}
-            </h2>
-
-            <div className="rating">
-              ★ {selectedProduct.rating} ·{" "}
-              {selectedProduct.reviews} reseñas
-            </div>
-
-            <div className="detail-price">
-              {formatPrice(selectedProduct.price)}
-            </div>
-
-            <p style={{ fontSize: 13 }}>
-              {selectedProduct.description}
+            <p
+              style={{
+                color: "#777",
+                fontSize: 13,
+              }}
+            >
+              Aquí podrás consultar tus
+              conversaciones relacionadas con
+              compras y ventas.
             </p>
-
-            {selectedProduct.specifications?.length > 0 && (
-              <>
-                <h3>Características</h3>
-
-                <ul className="specifications">
-                  {selectedProduct.specifications.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </>
-            )}
 
             <button
               className="primary-button"
               style={{
                 width: "100%",
-                marginTop: 10,
+                marginTop: 12,
               }}
-              onClick={() => startCheckout(selectedProduct)}
+              onClick={openWhatsApp}
             >
-              Comprar ahora
-            </button>
-
-            <button
-              className="secondary-button"
-              style={{
-                width: "100%",
-                marginTop: 8,
-              }}
-              onClick={() => {
-                addToCart(selectedProduct, false);
-                setSelectedProduct(null);
-                setShowCart(true);
-              }}
-            >
-              🛒 Agregar al carrito
+              🟢 Contactar atención al cliente
             </button>
           </div>
         </div>
       )}
 
-      {/* AUTENTICACIÓN */}
-
-      {showAuth && (
+      {showSettings && (
         <div
           className="overlay center-overlay"
-          onClick={() => setShowAuth(false)}
-        >
-          <div
-            className="auth-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="auth-visual">
-              <div className="auth-logo-icon">🛍️</div>
-
-              <h2>
-                {authMode === "login"
-                  ? "Bienvenido de nuevo"
-                  : "Únete a VaniDaxi"}
-              </h2>
-
-              <p>
-                {authMode === "login"
-                  ? "Inicia sesión para continuar disfrutando de todo lo que VaniDaxi tiene para ti."
-                  : "Crea tu cuenta y descubre una nueva forma de comprar y vender."}
-              </p>
-
-              <div className="auth-benefits">
-                <div className="auth-benefit">
-                  <span className="auth-benefit-icon">🛒</span>
-                  Compra fácilmente
-                </div>
-
-                <div className="auth-benefit">
-                  <span className="auth-benefit-icon">💬</span>
-                  Mantén tus mensajes
-                </div>
-
-                <div className="auth-benefit">
-                  <span className="auth-benefit-icon">✨</span>
-                  Más funciones
-                </div>
-              </div>
-            </div>
-
-            <div className="auth-form-side">
-              <button
-                className="close-button auth-close"
-                onClick={() => setShowAuth(false)}
-              >
-                ✕
-              </button>
-
-              <div className="auth-heading">
-                <h2>
-                  {authMode === "login"
-                    ? "Iniciar sesión"
-                    : "Crear cuenta"}
-                </h2>
-
-                <p>
-                  {authMode === "login"
-                    ? "Accede a tu cuenta de VaniDaxi."
-                    : "Completa tus datos para comenzar."}
-                </p>
-              </div>
-
-              <form className="form" onSubmit={handleAuth}>
-                {authMode === "register" && (
-                  <div className="auth-field">
-                    <span className="auth-field-icon">👤</span>
-
-                    <input
-                      type="text"
-                      placeholder="Nombre"
-                      value={authName}
-                      onChange={(e) =>
-                        setAuthName(e.target.value)
-                      }
-                      required
-                    />
-                  </div>
-                )}
-
-                <div className="auth-field">
-                  <span className="auth-field-icon">✉️</span>
-
-                  <input
-                    type="email"
-                    placeholder="Correo electrónico"
-                    value={authEmail}
-                    onChange={(e) =>
-                      setAuthEmail(e.target.value)
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="auth-field">
-                  <span className="auth-field-icon">🔒</span>
-
-                  <input
-                    type="password"
-                    placeholder="Contraseña"
-                    value={authPassword}
-                    onChange={(e) =>
-                      setAuthPassword(e.target.value)
-                    }
-                    required
-                  />
-                </div>
-
-                {authMessage && (
-                  <div className="message">
-                    {authMessage}
-                  </div>
-                )}
-
-                <button
-                  className="auth-submit"
-                  disabled={loading}
-                >
-                  {loading
-                    ? "Procesando..."
-                    : authMode === "login"
-                    ? "✨ Entrar a mi cuenta"
-                    : "🚀 Crear mi cuenta"}
-                </button>
-
-                <div className="auth-switch-box">
-                  {authMode === "login"
-                    ? "¿Todavía no tienes una cuenta? "
-                    : "¿Ya tienes una cuenta? "}
-
-                  <button
-                    type="button"
-                    className="auth-switch"
-                    onClick={() => {
-                      setAuthMode(
-                        authMode === "login"
-                          ? "register"
-                          : "login"
-                      );
-                      setAuthMessage("");
-                    }}
-                  >
-                    {authMode === "login"
-                      ? "Crear cuenta"
-                      : "Iniciar sesión"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CENTRO DE MENSAJES */}
-
-      {showMessages && (
-        <div
-          className="overlay center-overlay"
-          onClick={() => setShowMessages(false)}
-        >
-          <div
-            className="messages-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="messages-header">
-              <h2>💬 Centro de mensajes</h2>
-
-              <button
-                className="close-button"
-                onClick={() => setShowMessages(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="messages-content">
-              <div className="message-welcome">
-                <h3>¿En qué podemos ayudarte?</h3>
-
-                <p>
-                  Desde aquí podrás consultar comunicaciones
-                  relacionadas con tus compras, ventas y atención
-                  al cliente.
-                </p>
-              </div>
-
-              <button
-                className="message-option"
-                onClick={openWhatsApp}
-              >
-                <span className="message-option-icon">💚</span>
-
-                <span>
-                  <strong>Atención al cliente</strong>
-
-                  <small>
-                    Habla con nosotros por WhatsApp.
-                  </small>
-                </span>
-              </button>
-
-              <button
-                className="message-option"
-                onClick={() => openAuth("login")}
-              >
-                <span className="message-option-icon">📦</span>
-
-                <span>
-                  <strong>Mis pedidos</strong>
-
-                  <small>
-                    Inicia sesión para consultar tus pedidos.
-                  </small>
-                </span>
-              </button>
-
-              <button
-                className="message-option"
-                onClick={() => openAuth("login")}
-              >
-                <span className="message-option-icon">🏪</span>
-
-                <span>
-                  <strong>Mis ventas</strong>
-
-                  <small>
-                    Accede a tu cuenta de vendedor.
-                  </small>
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PUBLICAR PRODUCTO */}
-
-      {showPublish && (
-        <div
-          className="overlay center-overlay"
-          onClick={() => setShowPublish(false)}
+          onClick={() =>
+            setShowSettings(false)
+          }
         >
           <div
             className="modal"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <button
               className="close-button"
@@ -2879,7 +2656,142 @@ function App() {
                 right: 15,
                 top: 15,
               }}
-              onClick={() => setShowPublish(false)}
+              onClick={() =>
+                setShowSettings(false)
+              }
+            >
+              ✕
+            </button>
+
+            <h2>⚙️ Configuración</h2>
+
+            <div className="settings-option">
+              <div>
+                <strong>
+                  Notificaciones
+                </strong>
+
+                <small>
+                  Recibe avisos sobre tu cuenta,
+                  compras y ventas.
+                </small>
+              </div>
+
+              <button
+                className={`switch ${
+                  settings.notifications
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setSettings(
+                    (current) => ({
+                      ...current,
+                      notifications:
+                        !current.notifications,
+                    })
+                  )
+                }
+              />
+            </div>
+
+            <div className="settings-option">
+              <div>
+                <strong>
+                  Promociones
+                </strong>
+
+                <small>
+                  Recibe información sobre
+                  ofertas y novedades.
+                </small>
+              </div>
+
+              <button
+                className={`switch ${
+                  settings.promotions
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setSettings(
+                    (current) => ({
+                      ...current,
+                      promotions:
+                        !current.promotions,
+                    })
+                  )
+                }
+              />
+            </div>
+
+            <div className="settings-option">
+              <div>
+                <strong>
+                  Modo oscuro
+                </strong>
+
+                <small>
+                  Cambia la apariencia de
+                  VaniDaxi.
+                </small>
+              </div>
+
+              <button
+                className={`switch ${
+                  settings.darkMode
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setSettings(
+                    (current) => ({
+                      ...current,
+                      darkMode:
+                        !current.darkMode,
+                    })
+                  )
+                }
+              />
+            </div>
+
+            <button
+              className="secondary-button"
+              style={{
+                width: "100%",
+                marginTop: 18,
+              }}
+              onClick={openWhatsApp}
+            >
+              🟢 Ayuda y atención al cliente
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showPublish && (
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setShowPublish(false)
+          }
+        >
+          <div
+            className="modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <button
+              className="close-button"
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 15,
+              }}
+              onClick={() =>
+                setShowPublish(false)
+              }
             >
               ✕
             </button>
@@ -2888,24 +2800,26 @@ function App() {
 
             <p
               style={{
-                marginTop: -8,
-                marginBottom: 17,
                 color: "#777",
-                fontSize: 11,
+                fontSize: 12,
               }}
             >
-              Agrega tu producto y comienza a vender en VaniDaxi.
+              Agrega tu producto y comienza a
+              vender en VaniDaxi.
             </p>
 
-            <form className="form" onSubmit={handlePublish}>
+            <form
+              className="form"
+              onSubmit={handlePublish}
+            >
               <input
                 type="text"
                 placeholder="Nombre del producto"
                 value={newProduct.name}
-                onChange={(e) =>
+                onChange={(event) =>
                   setNewProduct({
                     ...newProduct,
-                    name: e.target.value,
+                    name: event.target.value,
                   })
                 }
                 required
@@ -2916,10 +2830,10 @@ function App() {
                 placeholder="Precio en MXN"
                 min="1"
                 value={newProduct.price}
-                onChange={(e) =>
+                onChange={(event) =>
                   setNewProduct({
                     ...newProduct,
-                    price: e.target.value,
+                    price: event.target.value,
                   })
                 }
                 required
@@ -2927,42 +2841,48 @@ function App() {
 
               <select
                 value={newProduct.category}
-                onChange={(e) =>
+                onChange={(event) =>
                   setNewProduct({
                     ...newProduct,
-                    category: e.target.value,
+                    category:
+                      event.target.value,
                   })
                 }
               >
-                {categories.map((category) => (
-                  <option
-                    key={category.name}
-                    value={category.name}
-                  >
-                    {category.name}
-                  </option>
-                ))}
+                {categories.map(
+                  (category) => (
+                    <option
+                      key={category.name}
+                      value={category.name}
+                    >
+                      {category.name}
+                    </option>
+                  )
+                )}
               </select>
 
               <input
                 type="url"
                 placeholder="URL de la imagen"
                 value={newProduct.image}
-                onChange={(e) =>
+                onChange={(event) =>
                   setNewProduct({
                     ...newProduct,
-                    image: e.target.value,
+                    image: event.target.value,
                   })
                 }
               />
 
               <textarea
                 placeholder="Describe tu producto..."
-                value={newProduct.description}
-                onChange={(e) =>
+                value={
+                  newProduct.description
+                }
+                onChange={(event) =>
                   setNewProduct({
                     ...newProduct,
-                    description: e.target.value,
+                    description:
+                      event.target.value,
                   })
                 }
               />
@@ -2974,8 +2894,6 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* CHECKOUT */}
 
       {showCheckout && (
         <div className="overlay checkout-overlay">
@@ -2997,16 +2915,23 @@ function App() {
 
             {orderComplete ? (
               <div className="success-box">
-                <div className="success-icon">✅</div>
+                <div className="success-icon">
+                  ✅
+                </div>
 
-                <h2>¡Pedido realizado!</h2>
+                <h2>
+                  ¡Pedido realizado!
+                </h2>
 
                 <p>
-                  Tu pedido fue registrado correctamente.
+                  Tu pedido fue registrado
+                  correctamente.
                 </p>
 
                 <p>
-                  <strong>Total del pedido:</strong>{" "}
+                  <strong>
+                    Total del pedido:
+                  </strong>{" "}
                   {formatPrice(cartTotal)}
                 </p>
 
@@ -3023,40 +2948,39 @@ function App() {
             ) : (
               <>
                 <div className="checkout-steps">
-                  <div
-                    className={`checkout-step ${
-                      checkoutStep >= 1 ? "active" : ""
-                    }`}
-                  />
-
-                  <div
-                    className={`checkout-step ${
-                      checkoutStep >= 2 ? "active" : ""
-                    }`}
-                  />
-
-                  <div
-                    className={`checkout-step ${
-                      checkoutStep >= 3 ? "active" : ""
-                    }`}
-                  />
+                  {[1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className={`checkout-step ${
+                        checkoutStep >= step
+                          ? "active"
+                          : ""
+                      }`}
+                    />
+                  ))}
                 </div>
 
                 <div className="checkout-layout">
                   <div>
                     {checkoutStep === 1 && (
                       <div className="checkout-card">
-                        <h3>📍 Datos de entrega</h3>
+                        <h3>
+                          📍 Datos de entrega
+                        </h3>
 
                         <div className="checkout-grid">
                           <input
                             className="checkout-input"
                             placeholder="Nombre completo"
-                            value={checkout.name}
-                            onChange={(e) =>
+                            value={
+                              checkout.name
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                name: e.target.value,
+                                name:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
@@ -3064,11 +2988,15 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Teléfono"
-                            value={checkout.phone}
-                            onChange={(e) =>
+                            value={
+                              checkout.phone
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                phone: e.target.value,
+                                phone:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
@@ -3076,11 +3004,15 @@ function App() {
                           <input
                             className="checkout-input full"
                             placeholder="Calle y número"
-                            value={checkout.address}
-                            onChange={(e) =>
+                            value={
+                              checkout.address
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                address: e.target.value,
+                                address:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
@@ -3088,11 +3020,15 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Ciudad"
-                            value={checkout.city}
-                            onChange={(e) =>
+                            value={
+                              checkout.city
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                city: e.target.value,
+                                city:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
@@ -3100,11 +3036,15 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Estado"
-                            value={checkout.state}
-                            onChange={(e) =>
+                            value={
+                              checkout.state
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                state: e.target.value,
+                                state:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
@@ -3112,11 +3052,15 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Código postal"
-                            value={checkout.zip}
-                            onChange={(e) =>
+                            value={
+                              checkout.zip
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                zip: e.target.value,
+                                zip:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
@@ -3124,73 +3068,95 @@ function App() {
                           <textarea
                             className="checkout-input full"
                             placeholder="Notas para el vendedor o repartidor"
-                            value={checkout.notes}
-                            onChange={(e) =>
+                            value={
+                              checkout.notes
+                            }
+                            onChange={(event) =>
                               setCheckout({
                                 ...checkout,
-                                notes: e.target.value,
+                                notes:
+                                  event.target
+                                    .value,
                               })
                             }
                           />
                         </div>
 
-                        <h3 style={{ marginTop: 20 }}>
+                        <h3
+                          style={{
+                            marginTop: 20,
+                          }}
+                        >
                           🚚 Tipo de entrega
                         </h3>
 
                         <button
                           className={`delivery-option ${
-                            checkout.delivery === "standard"
+                            checkout.delivery ===
+                            "standard"
                               ? "selected"
                               : ""
                           }`}
                           onClick={() =>
                             setCheckout({
                               ...checkout,
-                              delivery: "standard",
+                              delivery:
+                                "standard",
                             })
                           }
                         >
                           <input
                             type="radio"
                             checked={
-                              checkout.delivery === "standard"
+                              checkout.delivery ===
+                              "standard"
                             }
                             readOnly
                           />
 
                           <span>
-                            <strong>Envío estándar</strong>
+                            <strong>
+                              Envío estándar
+                            </strong>
                             <br />
-                            <small>Envío gratis</small>
+                            <small>
+                              Envío gratis
+                            </small>
                           </span>
                         </button>
 
                         <button
                           className={`delivery-option ${
-                            checkout.delivery === "express"
+                            checkout.delivery ===
+                            "express"
                               ? "selected"
                               : ""
                           }`}
                           onClick={() =>
                             setCheckout({
                               ...checkout,
-                              delivery: "express",
+                              delivery:
+                                "express",
                             })
                           }
                         >
                           <input
                             type="radio"
                             checked={
-                              checkout.delivery === "express"
+                              checkout.delivery ===
+                              "express"
                             }
                             readOnly
                           />
 
                           <span>
-                            <strong>Envío express</strong>
+                            <strong>
+                              Envío express
+                            </strong>
                             <br />
-                            <small>+ $99 MXN</small>
+                            <small>
+                              + $99 MXN
+                            </small>
                           </span>
                         </button>
                       </div>
@@ -3198,95 +3164,126 @@ function App() {
 
                     {checkoutStep === 2 && (
                       <div className="checkout-card">
-                        <h3>💳 Método de pago</h3>
+                        <h3>
+                          💳 Método de pago
+                        </h3>
 
                         {[
                           {
                             id: "card",
-                            title: "💳 Tarjeta",
-                            text: "Visa, Mastercard y otras tarjetas",
+                            title:
+                              "💳 Tarjeta",
+                            text:
+                              "Visa, Mastercard y otras tarjetas",
                           },
                           {
-                            id: "mercadopago",
-                            title: "💙 Mercado Pago",
-                            text: "Pago mediante Mercado Pago",
+                            id:
+                              "mercadopago",
+                            title:
+                              "💙 Mercado Pago",
+                            text:
+                              "Pago mediante Mercado Pago",
                           },
                           {
                             id: "cash",
-                            title: "💵 Pago disponible según el vendedor",
+                            title:
+                              "💵 Pago disponible según el vendedor",
                             text: "",
                           },
-                        ].map((option) => (
-                          <button
-                            key={option.id}
-                            className={`payment-option ${
-                              checkout.payment === option.id
-                                ? "selected"
-                                : ""
-                            }`}
-                            onClick={() =>
-                              setCheckout({
-                                ...checkout,
-                                payment: option.id,
-                              })
-                            }
-                          >
-                            <input
-                              type="radio"
-                              checked={
-                                checkout.payment === option.id
+                        ].map(
+                          (option) => (
+                            <button
+                              key={option.id}
+                              className={`payment-option ${
+                                checkout.payment ===
+                                option.id
+                                  ? "selected"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                setCheckout({
+                                  ...checkout,
+                                  payment:
+                                    option.id,
+                                })
                               }
-                              readOnly
-                            />
+                            >
+                              <input
+                                type="radio"
+                                checked={
+                                  checkout.payment ===
+                                  option.id
+                                }
+                                readOnly
+                              />
 
-                            <span>
-                              <strong>{option.title}</strong>
+                              <span>
+                                <strong>
+                                  {option.title}
+                                </strong>
 
-                              {option.text && (
-                                <>
-                                  <br />
-                                  <small>{option.text}</small>
-                                </>
-                              )}
-                            </span>
-                          </button>
-                        ))}
+                                {option.text && (
+                                  <>
+                                    <br />
+
+                                    <small>
+                                      {
+                                        option.text
+                                      }
+                                    </small>
+                                  </>
+                                )}
+                              </span>
+                            </button>
+                          )
+                        )}
                       </div>
                     )}
 
                     {checkoutStep === 3 && (
                       <div className="checkout-card">
-                        <h3>🧾 Confirmar pedido</h3>
+                        <h3>
+                          🧾 Confirmar pedido
+                        </h3>
 
                         <p
                           style={{
                             fontSize: 12,
-                            color: "#666",
+                            color: "#777",
                           }}
                         >
-                          Revisa que los datos de entrega,
-                          productos, envío y método de pago
+                          Revisa que los datos
+                          de entrega, productos,
+                          envío y método de pago
                           sean correctos.
                         </p>
 
                         <div
                           style={{
                             padding: 12,
-                            background: "#fafafa",
+                            background:
+                              "rgba(150,150,150,.08)",
                             borderRadius: 10,
                             fontSize: 12,
                             lineHeight: 1.7,
                           }}
                         >
-                          <strong>Entrega</strong>
+                          <strong>
+                            Entrega
+                          </strong>
                           <br />
+
                           {checkout.name}
                           <br />
+
                           {checkout.address}
                           <br />
-                          {checkout.city}, {checkout.state}{" "}
+
+                          {checkout.city},{" "}
+                          {checkout.state}{" "}
                           {checkout.zip}
                           <br />
+
                           Tel. {checkout.phone}
                         </div>
 
@@ -3294,13 +3291,17 @@ function App() {
                           style={{
                             marginTop: 12,
                             padding: 12,
-                            background: "#fafafa",
+                            background:
+                              "rgba(150,150,150,.08)",
                             borderRadius: 10,
                             fontSize: 12,
                           }}
                         >
-                          <strong>Pago:</strong>{" "}
-                          {checkout.payment === "card"
+                          <strong>
+                            Pago:
+                          </strong>{" "}
+                          {checkout.payment ===
+                          "card"
                             ? "Tarjeta"
                             : checkout.payment ===
                               "mercadopago"
@@ -3314,10 +3315,14 @@ function App() {
                       <button
                         className="secondary-button"
                         onClick={() => {
-                          if (checkoutStep === 1) {
+                          if (
+                            checkoutStep === 1
+                          ) {
                             resetCheckout();
                           } else {
-                            setCheckoutStep(checkoutStep - 1);
+                            setCheckoutStep(
+                              checkoutStep - 1
+                            );
                           }
                         }}
                       >
@@ -3328,7 +3333,9 @@ function App() {
 
                       <button
                         className="primary-button"
-                        onClick={handleCheckoutNext}
+                        onClick={
+                          handleCheckoutNext
+                        }
                       >
                         {checkoutStep === 3
                           ? "Confirmar pedido"
@@ -3337,8 +3344,10 @@ function App() {
                     </div>
                   </div>
 
-                  <aside className="checkout-card order-summary">
-                    <h3>Resumen de compra</h3>
+                  <aside className="checkout-card">
+                    <h3>
+                      Resumen de compra
+                    </h3>
 
                     {cart.map((item) => (
                       <div
@@ -3351,22 +3360,34 @@ function App() {
                         />
 
                         <div className="checkout-product-info">
-                          <strong>{item.name}</strong>
+                          <strong>
+                            {item.name}
+                          </strong>
 
                           <div>
                             {item.quantity} ×{" "}
-                            {formatPrice(item.price)}
+                            {formatPrice(
+                              item.price
+                            )}
                           </div>
                         </div>
                       </div>
                     ))}
 
-                    <div style={{ marginTop: 15 }}>
+                    <div
+                      style={{
+                        marginTop: 15,
+                      }}
+                    >
                       <div className="summary-row">
-                        <span>Subtotal</span>
+                        <span>
+                          Subtotal
+                        </span>
 
                         <strong>
-                          {formatPrice(cartSubtotal)}
+                          {formatPrice(
+                            cartSubtotal
+                          )}
                         </strong>
                       </div>
 
@@ -3376,14 +3397,20 @@ function App() {
                         <strong>
                           {shippingCost === 0
                             ? "Gratis"
-                            : formatPrice(shippingCost)}
+                            : formatPrice(
+                                shippingCost
+                              )}
                         </strong>
                       </div>
 
                       <div className="summary-total">
                         <span>Total</span>
 
-                        <span>{formatPrice(cartTotal)}</span>
+                        <span>
+                          {formatPrice(
+                            cartTotal
+                          )}
+                        </span>
                       </div>
                     </div>
                   </aside>
