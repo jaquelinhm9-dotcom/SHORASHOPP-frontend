@@ -1,86 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
 const CART_KEY = "vanidaxi_cart";
 const FAVORITES_KEY = "vanidaxi_favorites";
 
-/*
-  WhatsApp:
-  Puedes cambiar este número cuando tengas el número oficial de atención.
-  Formato: 52 + lada + número, sin espacios ni signos.
-*/
 const WHATSAPP_NUMBER = "";
-const WHATSAPP_MESSAGE =
-  "Hola, necesito ayuda con VaniDaxi.";
+const WHATSAPP_MESSAGE = "Hola, necesito ayuda con VaniDaxi.";
 
 const categories = [
-  {
-    name: "Ropa y Moda",
-    image:
-      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Tecnología",
-    image:
-      "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Hogar y Vida",
-    image:
-      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Belleza y Salud",
-    image:
-      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Autos y Motos",
-    image:
-      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Comida",
-    image:
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Juguetes",
-    image:
-      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85",
-  },
-  {
-    name: "Deportes",
-    image:
-      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85",
-  },
+  { name: "Ropa y Moda", image: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85" },
+  { name: "Tecnología", image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85" },
+  { name: "Hogar y Vida", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85" },
+  { name: "Belleza y Salud", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85" },
+  { name: "Autos y Motos", image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85" },
+  { name: "Comida", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85" },
+  { name: "Juguetes", image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85" },
+  { name: "Deportes", image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85" },
 ];
 
 const topCards = [
   {
     title: "Ofertas",
     subtitle: "Hasta 50% menos",
-    image:
-      "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=700&q=85",
+    image: "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=700&q=85",
   },
   {
     title: "Novedades",
     subtitle: "Lo más reciente",
-    image:
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=85",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=85",
   },
   {
     title: "Vendedores",
     subtitle: "Descubre nuevos productos",
-    image:
-      "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=700&q=85",
+    image: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=700&q=85",
   },
   {
     title: "Envíos",
     subtitle: "Compra fácilmente",
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=700&q=85",
+    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=700&q=85",
   },
 ];
 
@@ -94,16 +52,9 @@ const initialProducts = [
     reviews: 124,
     discount: 31,
     category: "Tecnología",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
-    description:
-      "Smartwatch moderno con funciones inteligentes para todos los días.",
-    specifications: [
-      "Pantalla táctil",
-      "Monitor de actividad",
-      "Resistente al agua",
-      "Batería de larga duración",
-    ],
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
+    description: "Smartwatch moderno con funciones inteligentes para todos los días.",
+    specifications: ["Pantalla táctil", "Monitor de actividad", "Resistente al agua", "Batería de larga duración"],
   },
   {
     id: 2,
@@ -114,16 +65,9 @@ const initialProducts = [
     reviews: 89,
     discount: 25,
     category: "Hogar y Vida",
-    image:
-      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=85",
-    description:
-      "Licuadora potente ideal para preparar bebidas, salsas y alimentos.",
-    specifications: [
-      "Motor de alta potencia",
-      "Vaso de gran capacidad",
-      "Varias velocidades",
-      "Cuchillas de acero",
-    ],
+    image: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=85",
+    description: "Licuadora potente ideal para preparar bebidas, salsas y alimentos.",
+    specifications: ["Motor de alta potencia", "Vaso de gran capacidad", "Varias velocidades", "Cuchillas de acero"],
   },
   {
     id: 3,
@@ -134,16 +78,9 @@ const initialProducts = [
     reviews: 156,
     discount: 25,
     category: "Ropa y Moda",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
-    description:
-      "Tenis cómodos y modernos para complementar cualquier estilo.",
-    specifications: [
-      "Diseño urbano",
-      "Suela antiderrapante",
-      "Material resistente",
-      "Disponible en varias tallas",
-    ],
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
+    description: "Tenis cómodos y modernos para complementar cualquier estilo.",
+    specifications: ["Diseño urbano", "Suela antiderrapante", "Material resistente", "Disponible en varias tallas"],
   },
   {
     id: 4,
@@ -154,16 +91,9 @@ const initialProducts = [
     reviews: 203,
     discount: 29,
     category: "Tecnología",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
-    description:
-      "Audífonos inalámbricos con sonido envolvente y batería de larga duración.",
-    specifications: [
-      "Bluetooth",
-      "Micrófono integrado",
-      "Controles táctiles",
-      "Estuche de carga",
-    ],
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
+    description: "Audífonos inalámbricos con sonido envolvente y batería de larga duración.",
+    specifications: ["Bluetooth", "Micrófono integrado", "Controles táctiles", "Estuche de carga"],
   },
 ];
 
@@ -195,7 +125,6 @@ function normalizeText(text = "") {
 
 function getSearchScore(product, searchTerm) {
   const term = normalizeText(searchTerm);
-
   if (!term) return 0;
 
   const words = term.split(" ").filter((word) => word.length > 1);
@@ -213,7 +142,6 @@ function getSearchScore(product, searchTerm) {
   let score = 0;
 
   if (searchable.includes(term)) score += 100;
-
   if (productName.includes(term)) score += 80;
 
   words.forEach((word) => {
@@ -228,18 +156,9 @@ function App() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState(initialProducts);
-
-  const [cart, setCart] = useState(() =>
-    loadStorage(CART_KEY, [])
-  );
-
-  const [favorites, setFavorites] = useState(() =>
-    loadStorage(FAVORITES_KEY, [])
-  );
-
-  const [activeCategory, setActiveCategory] =
-    useState("Todos");
-
+  const [cart, setCart] = useState(() => loadStorage(CART_KEY, []));
+  const [favorites, setFavorites] = useState(() => loadStorage(FAVORITES_KEY, []));
+  const [activeCategory, setActiveCategory] = useState("Todos");
   const [search, setSearch] = useState("");
 
   const [showMenu, setShowMenu] = useState(false);
@@ -247,33 +166,20 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
-  const [selectedProduct, setSelectedProduct] =
-    useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const [showCheckout, setShowCheckout] =
-    useState(false);
-
-  const [checkoutStep, setCheckoutStep] =
-    useState(1);
-
-  const [orderComplete, setOrderComplete] =
-    useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(1);
+  const [orderComplete, setOrderComplete] = useState(false);
 
   const [user, setUser] = useState(null);
 
-  const [authMode, setAuthMode] =
-    useState("login");
-
+  const [authMode, setAuthMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] =
-    useState("");
-
+  const [authPassword, setAuthPassword] = useState("");
   const [authName, setAuthName] = useState("");
-  const [authMessage, setAuthMessage] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [checkout, setCheckout] = useState({
     name: "",
@@ -287,20 +193,17 @@ function App() {
     payment: "card",
   });
 
-  const [newProduct, setNewProduct] =
-    useState({
-      name: "",
-      price: "",
-      category: "Ropa y Moda",
-      image: "",
-      description: "",
-    });
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    price: "",
+    category: "Ropa y Moda",
+    image: "",
+    description: "",
+  });
 
   useEffect(() => {
     const getUser = async () => {
-      const { data } =
-        await supabase.auth.getUser();
-
+      const { data } = await supabase.auth.getUser();
       setUser(data?.user || null);
     };
 
@@ -308,38 +211,29 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      CART_KEY,
-      JSON.stringify(cart)
-    );
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem(
-      FAVORITES_KEY,
-      JSON.stringify(favorites)
-    );
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   }, [favorites]);
 
   const filteredProducts = useMemo(() => {
     const term = search.trim();
 
-    let result = products.filter((product) => {
-      return (
+    let result = products.filter(
+      (product) =>
         activeCategory === "Todos" ||
         product.category === activeCategory
-      );
-    });
+    );
 
     if (!term) return result;
 
@@ -354,104 +248,73 @@ function App() {
   }, [products, activeCategory, search]);
 
   const cartCount = cart.reduce(
-    (total, item) =>
-      total + item.quantity,
+    (total, item) => total + item.quantity,
     0
   );
 
   const cartSubtotal = cart.reduce(
-    (total, item) =>
-      total + item.price * item.quantity,
+    (total, item) => total + item.price * item.quantity,
     0
   );
 
   const shippingCost =
-    checkout.delivery === "express" &&
-    cart.length > 0
-      ? 99
-      : 0;
+    checkout.delivery === "express" && cart.length > 0 ? 99 : 0;
 
-  const cartTotal =
-    cartSubtotal + shippingCost;
+  const cartTotal = cartSubtotal + shippingCost;
+
+  const scrollToProducts = () => {
+    setTimeout(() => {
+      document.getElementById("productos")?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 30);
+  };
 
   const goHome = () => {
     setShowMenu(false);
     setActiveCategory("Todos");
     setSearch("");
-
     navigate("/");
-
-    setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }, 50);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setAuthMessage("");
     setShowMenu(false);
+    setShowMessages(false);
     setShowAuth(true);
   };
 
-  const addToCart = (
-    product,
-    openCart = true
-  ) => {
+  const addToCart = (product, openCart = true) => {
     setCart((current) => {
-      const existing = current.find(
-        (item) => item.id === product.id
-      );
+      const existing = current.find((item) => item.id === product.id);
 
       if (existing) {
         return current.map((item) =>
           item.id === product.id
-            ? {
-                ...item,
-                quantity:
-                  item.quantity + 1,
-              }
+            ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
 
-      return [
-        ...current,
-        {
-          ...product,
-          quantity: 1,
-        },
-      ];
+      return [...current, { ...product, quantity: 1 }];
     });
 
-    if (openCart) {
-      setShowCart(true);
-    }
+    if (openCart) setShowCart(true);
   };
 
   const removeFromCart = (id) => {
-    setCart((current) =>
-      current.filter(
-        (item) => item.id !== id
-      )
-    );
+    setCart((current) => current.filter((item) => item.id !== id));
   };
 
-  const changeQuantity = (
-    id,
-    amount
-  ) => {
+  const changeQuantity = (id, amount) => {
     setCart((current) =>
       current.map((item) =>
         item.id === id
           ? {
               ...item,
-              quantity: Math.max(
-                1,
-                item.quantity + amount
-              ),
+              quantity: Math.max(1, item.quantity + amount),
             }
           : item
       )
@@ -460,29 +323,18 @@ function App() {
 
   const toggleFavorite = (product) => {
     setFavorites((current) => {
-      const exists = current.some(
-        (item) => item.id === product.id
-      );
+      const exists = current.some((item) => item.id === product.id);
 
       return exists
-        ? current.filter(
-            (item) => item.id !== product.id
-          )
+        ? current.filter((item) => item.id !== product.id)
         : [...current, product];
     });
   };
 
-  const startCheckout = (
-    product = null
-  ) => {
-    if (product) {
-      addToCart(product, false);
-    }
+  const startCheckout = (product = null) => {
+    if (product) addToCart(product, false);
 
-    if (
-      cart.length === 0 &&
-      !product
-    ) {
+    if (cart.length === 0 && !product) {
       setShowCart(true);
       return;
     }
@@ -494,21 +346,14 @@ function App() {
     setShowCheckout(true);
   };
 
-  const handleAuth = async (
-    event
-  ) => {
+  const handleAuth = async (event) => {
     event.preventDefault();
-
     setLoading(true);
     setAuthMessage("");
 
     try {
-      if (
-        authMode === "register"
-      ) {
-        if (
-          authPassword.length < 6
-        ) {
+      if (authMode === "register") {
+        if (authPassword.length < 6) {
           setAuthMessage(
             "La contraseña debe tener al menos 6 caracteres."
           );
@@ -516,16 +361,15 @@ function App() {
           return;
         }
 
-        const { data, error } =
-          await supabase.auth.signUp({
-            email: authEmail,
-            password: authPassword,
-            options: {
-              data: {
-                full_name: authName,
-              },
+        const { data, error } = await supabase.auth.signUp({
+          email: authEmail,
+          password: authPassword,
+          options: {
+            data: {
+              full_name: authName,
             },
-          });
+          },
+        });
 
         if (error) throw error;
 
@@ -539,12 +383,10 @@ function App() {
         }
       } else {
         const { data, error } =
-          await supabase.auth.signInWithPassword(
-            {
-              email: authEmail,
-              password: authPassword,
-            }
-          );
+          await supabase.auth.signInWithPassword({
+            email: authEmail,
+            password: authPassword,
+          });
 
         if (error) throw error;
 
@@ -552,43 +394,25 @@ function App() {
         setShowAuth(false);
       }
     } catch (error) {
-      const message =
-        error?.message || "";
+      const message = error?.message || "";
 
       if (
-        message
-          .toLowerCase()
-          .includes(
-            "invalid login credentials"
-          )
+        message.toLowerCase().includes("invalid login credentials")
       ) {
-        setAuthMessage(
-          "Correo o contraseña incorrectos."
-        );
+        setAuthMessage("Correo o contraseña incorrectos.");
       } else if (
-        message
-          .toLowerCase()
-          .includes(
-            "email not confirmed"
-          )
+        message.toLowerCase().includes("email not confirmed")
       ) {
-        setAuthMessage(
-          "Primero confirma tu correo electrónico."
-        );
+        setAuthMessage("Primero confirma tu correo electrónico.");
       } else if (
-        message
-          .toLowerCase()
-          .includes(
-            "user already registered"
-          )
+        message.toLowerCase().includes("user already registered")
       ) {
         setAuthMessage(
           "Este correo ya tiene una cuenta. Intenta iniciar sesión."
         );
       } else {
         setAuthMessage(
-          message ||
-            "No fue posible completar la operación."
+          message || "No fue posible completar la operación."
         );
       }
     } finally {
@@ -602,43 +426,29 @@ function App() {
     setShowMenu(false);
   };
 
-  const handlePublish = (
-    event
-  ) => {
+  const handlePublish = (event) => {
     event.preventDefault();
 
-    if (
-      !newProduct.name ||
-      !newProduct.price
-    ) {
-      return;
-    }
+    if (!newProduct.name || !newProduct.price) return;
 
     const product = {
       id: Date.now(),
       name: newProduct.name,
-      price: Number(
-        newProduct.price
-      ),
+      price: Number(newProduct.price),
       oldPrice: null,
       rating: 5,
       reviews: 0,
       discount: 0,
-      category:
-        newProduct.category,
+      category: newProduct.category,
       image:
         newProduct.image ||
         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
       description:
-        newProduct.description ||
-        "Producto publicado en VaniDaxi.",
+        newProduct.description || "Producto publicado en VaniDaxi.",
       specifications: [],
     };
 
-    setProducts((current) => [
-      product,
-      ...current,
-    ]);
+    setProducts((current) => [product, ...current]);
 
     setNewProduct({
       name: "",
@@ -661,9 +471,7 @@ function App() {
         !checkout.state ||
         !checkout.zip
       ) {
-        alert(
-          "Completa todos los datos de entrega."
-        );
+        alert("Completa todos los datos de entrega.");
         return;
       }
 
@@ -686,19 +494,13 @@ function App() {
   };
 
   const openWhatsApp = () => {
-    const text = encodeURIComponent(
-      WHATSAPP_MESSAGE
-    );
+    const text = encodeURIComponent(WHATSAPP_MESSAGE);
 
     const url = WHATSAPP_NUMBER
       ? `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
       : `https://wa.me/?text=${text}`;
 
-    window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -735,9 +537,7 @@ function App() {
           background: #fff;
         }
 
-        /* =========================
-           HEADER
-        ========================= */
+        /* HEADER */
 
         .top-header {
           position: sticky;
@@ -765,12 +565,7 @@ function App() {
           border: 0;
           border-radius: 11px;
           color: white;
-          background: linear-gradient(
-            135deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
           font-size: 20px;
           display: grid;
           place-items: center;
@@ -778,20 +573,16 @@ function App() {
 
         .brand {
           flex: 0 0 auto;
+          border: 0;
+          background: transparent;
           text-decoration: none;
           font-size: 23px;
           font-weight: 900;
           letter-spacing: -1px;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background-image: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
-          cursor: pointer;
         }
 
         .search-box {
@@ -825,12 +616,7 @@ function App() {
           width: 43px;
           border: 0;
           color: white;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .header-actions {
@@ -847,10 +633,6 @@ function App() {
           background: #f5f5f7;
           font-size: 18px;
           position: relative;
-        }
-
-        .header-action:hover {
-          background: #f0eafa;
         }
 
         .cart-count {
@@ -892,24 +674,16 @@ function App() {
           padding: 5px 10px;
           font-size: 10px;
           white-space: nowrap;
-          transition: .18s;
         }
 
         .category-pill.active,
         .category-pill:hover {
           color: white;
           border-color: transparent;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
-        /* =========================
-           CONTENIDO
-        ========================= */
+        /* CONTENIDO */
 
         .page-content {
           width: min(1180px, calc(100% - 24px));
@@ -922,12 +696,7 @@ function App() {
           border-radius: 20px;
           padding: 26px 28px;
           color: white;
-          background: linear-gradient(
-            110deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(110deg,#ef233c,#d414c9,#6d28d9);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -936,14 +705,13 @@ function App() {
 
         .hero h1 {
           margin: 0 0 8px;
-          font-size: clamp(28px, 4vw, 43px);
+          font-size: clamp(28px,4vw,43px);
           line-height: 1;
         }
 
         .hero p {
           margin: 0 0 15px;
           font-size: 13px;
-          opacity: .96;
         }
 
         .hero-button {
@@ -961,13 +729,11 @@ function App() {
           margin-right: 20px;
         }
 
-        /* =========================
-           TARJETAS
-        ========================= */
+        /* TARJETAS SUPERIORES */
 
         .top-cards {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(4,1fr);
           gap: 9px;
           margin: 10px 0 18px;
         }
@@ -997,10 +763,7 @@ function App() {
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
-          background: linear-gradient(
-            transparent 10%,
-            rgba(0,0,0,.67)
-          );
+          background: linear-gradient(transparent 10%,rgba(0,0,0,.67));
           color: white;
         }
 
@@ -1014,9 +777,7 @@ function App() {
           margin-top: 2px;
         }
 
-        /* =========================
-           SECCIONES
-        ========================= */
+        /* SECCIONES */
 
         .section {
           margin: 17px 0;
@@ -1035,35 +796,35 @@ function App() {
         }
 
         .gradient-text {
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
         }
 
-        /* =========================
-           CATEGORÍAS COMPACTAS
-        ========================= */
+        /* ================================
+           CATEGORÍAS — COMPACTAS
+        ================================= */
 
         .categories-grid {
           display: grid;
-          grid-template-columns: repeat(8, minmax(0,1fr));
+          grid-template-columns: repeat(8,minmax(0,1fr));
           gap: 7px;
+          width: 100%;
         }
 
         .category-card {
+          width: 100%;
+          height: 82px;
           padding: 0;
           overflow: hidden;
           border: 1px solid #ededed;
-          border-radius: 11px;
+          border-radius: 10px;
           background: white;
           text-align: center;
           transition: .18s;
+          display: flex;
+          flex-direction: column;
         }
 
         .category-card:hover {
@@ -1073,23 +834,27 @@ function App() {
 
         .category-image {
           width: 100%;
-          aspect-ratio: 1 / .72;
+          height: 56px;
           object-fit: cover;
           display: block;
+          flex: 0 0 56px;
         }
 
         .category-name {
-          display: block;
-          min-height: 30px;
-          padding: 5px 2px 6px;
-          font-size: 9px;
+          width: 100%;
+          height: 26px;
+          padding: 5px 2px 3px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 8px;
           font-weight: 800;
-          line-height: 1.05;
+          line-height: 1;
+          color: #333;
+          overflow: hidden;
         }
 
-        /* =========================
-           PROMOCIÓN
-        ========================= */
+        /* PROMOCIÓN */
 
         .promo-card {
           min-height: 66px;
@@ -1120,29 +885,17 @@ function App() {
           border-radius: 20px;
           padding: 10px 16px;
           color: white;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           font-weight: 800;
           font-size: 11px;
           white-space: nowrap;
         }
 
-        .primary-button:hover,
-        .promo-button:hover {
-          filter: brightness(1.05);
-        }
-
-        /* =========================
-           PRODUCTOS
-        ========================= */
+        /* PRODUCTOS */
 
         .products-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(4,1fr);
           gap: 11px;
         }
 
@@ -1213,12 +966,7 @@ function App() {
         .price {
           font-size: 17px;
           font-weight: 900;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -1252,17 +1000,10 @@ function App() {
 
         .add-button {
           color: white;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
-        /* =========================
-           BOTÓN WHATSAPP
-        ========================= */
+        /* WHATSAPP */
 
         .whatsapp-float {
           position: fixed;
@@ -1294,20 +1035,11 @@ function App() {
           place-items: center;
           color: white;
           background: #25D366;
-          box-shadow:
-            0 7px 22px rgba(0,0,0,.22),
-            0 0 0 4px rgba(37,211,102,.12);
-          font-size: 26px;
-          transition: .2s;
+          box-shadow: 0 7px 22px rgba(0,0,0,.22),0 0 0 4px rgba(37,211,102,.12);
+          font-size: 27px;
         }
 
-        .whatsapp-button:hover {
-          transform: scale(1.06);
-        }
-
-        /* =========================
-           OVERLAYS
-        ========================= */
+        /* OVERLAYS */
 
         .overlay {
           position: fixed;
@@ -1323,12 +1055,10 @@ function App() {
           padding: 15px;
         }
 
-        /* =========================
-           MENÚ
-        ========================= */
+        /* MENÚ */
 
         .menu-panel {
-          width: min(360px, 88vw);
+          width: min(360px,88vw);
           height: 100%;
           background: white;
           box-shadow: 8px 0 30px rgba(0,0,0,.2);
@@ -1338,13 +1068,8 @@ function App() {
         }
 
         @keyframes menuIn {
-          from {
-            transform: translateX(-100%);
-          }
-
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
         }
 
         .menu-head {
@@ -1357,12 +1082,7 @@ function App() {
         .menu-head h2 {
           margin: 0;
           font-size: 24px;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           color: transparent;
         }
@@ -1382,20 +1102,14 @@ function App() {
         }
 
         .menu-item:hover {
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9);
           color: white;
         }
 
-        /* =========================
-           CARRITO
-        ========================= */
+        /* CARRITO */
 
         .cart-panel {
-          width: min(520px, 100%);
+          width: min(520px,100%);
           height: 100%;
           margin-left: auto;
           background: white;
@@ -1406,13 +1120,8 @@ function App() {
         }
 
         @keyframes cartIn {
-          from {
-            transform: translateX(100%);
-          }
-
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
         }
 
         .cart-header {
@@ -1509,21 +1218,14 @@ function App() {
           border-radius: 12px;
           padding: 13px;
           color: white;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           font-weight: 900;
         }
 
-        /* =========================
-           MODALES GENERALES
-        ========================= */
+        /* MODALES */
 
         .modal {
-          width: min(540px, 100%);
+          width: min(540px,100%);
           max-height: 92vh;
           overflow-y: auto;
           position: relative;
@@ -1562,13 +1264,6 @@ function App() {
           font-size: 13px;
         }
 
-        .form input:focus,
-        .form textarea:focus,
-        .form select:focus {
-          border-color: #d414c9;
-          box-shadow: 0 0 0 3px rgba(212,20,201,.08);
-        }
-
         .form textarea {
           min-height: 85px;
           resize: vertical;
@@ -1582,12 +1277,10 @@ function App() {
           font-size: 12px;
         }
 
-        /* =========================
-           LOGIN / REGISTRO NUEVO
-        ========================= */
+        /* AUTENTICACIÓN */
 
         .auth-modal {
-          width: min(820px, 100%);
+          width: min(820px,100%);
           max-height: 94vh;
           overflow: hidden;
           padding: 0;
@@ -1603,12 +1296,7 @@ function App() {
           min-height: 510px;
           padding: 34px 27px;
           color: white;
-          background: linear-gradient(
-            145deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(145deg,#ef233c,#d414c9,#6d28d9);
           position: relative;
           overflow: hidden;
         }
@@ -1752,12 +1440,7 @@ function App() {
           color: white;
           font-weight: 900;
           font-size: 12px;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           box-shadow: 0 7px 18px rgba(212,20,201,.20);
         }
 
@@ -1784,16 +1467,10 @@ function App() {
           padding: 4px;
         }
 
-        .auth-message {
-          margin-top: 2px;
-        }
-
-        /* =========================
-           MENSAJES
-        ========================= */
+        /* MENSAJES */
 
         .messages-modal {
-          width: min(720px, 100%);
+          width: min(720px,100%);
           max-height: 90vh;
           border-radius: 22px;
           overflow: hidden;
@@ -1804,12 +1481,7 @@ function App() {
         .messages-header {
           padding: 18px 20px;
           color: white;
-          background: linear-gradient(
-            100deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(100deg,#ef233c,#d414c9,#6d28d9);
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -1882,9 +1554,7 @@ function App() {
           font-size: 10px;
         }
 
-        /* =========================
-           DETALLE PRODUCTO
-        ========================= */
+        /* PRODUCTO */
 
         .detail-image {
           width: 100%;
@@ -1897,12 +1567,7 @@ function App() {
           margin: 10px 0;
           font-size: 25px;
           font-weight: 900;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           color: transparent;
         }
@@ -1923,9 +1588,7 @@ function App() {
           font-size: 11px;
         }
 
-        /* =========================
-           CHECKOUT
-        ========================= */
+        /* CHECKOUT */
 
         .checkout-overlay {
           align-items: stretch;
@@ -1935,7 +1598,7 @@ function App() {
         }
 
         .checkout-page {
-          width: min(1050px, 100%);
+          width: min(1050px,100%);
           min-height: 100%;
           background: white;
           padding: 20px;
@@ -1952,12 +1615,7 @@ function App() {
         .checkout-title {
           margin: 0;
           font-size: 25px;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           color: transparent;
         }
@@ -1976,12 +1634,7 @@ function App() {
         }
 
         .checkout-step.active {
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .checkout-layout {
@@ -2085,25 +1738,13 @@ function App() {
           margin-bottom: 10px;
         }
 
-        .success-box h2 {
-          margin: 0 0 8px;
-        }
-
-        .success-box p {
-          color: #666;
-          font-size: 13px;
-          line-height: 1.6;
-        }
-
         .empty {
           text-align: center;
           padding: 55px 20px;
           color: #777;
         }
 
-        /* =========================
-           RESPONSIVO
-        ========================= */
+        /* RESPONSIVE */
 
         @media (max-width: 900px) {
           .categories-grid {
@@ -2204,17 +1845,20 @@ function App() {
           }
 
           .category-card {
-            border-radius: 9px;
+            height: 68px;
+            border-radius: 8px;
           }
 
           .category-image {
-            aspect-ratio: 1 / .67;
+            height: 45px;
+            flex-basis: 45px;
           }
 
           .category-name {
-            min-height: 27px;
-            padding: 5px 1px;
-            font-size: 8px;
+            height: 23px;
+            min-height: 23px;
+            padding: 3px 1px;
+            font-size: 7px;
           }
 
           .products-grid {
@@ -2307,8 +1951,18 @@ function App() {
             gap: 4px;
           }
 
+          .category-card {
+            height: 63px;
+          }
+
+          .category-image {
+            height: 41px;
+            flex-basis: 41px;
+          }
+
           .category-name {
-            font-size: 7.5px;
+            height: 22px;
+            font-size: 6.7px;
           }
 
           .header-action {
@@ -2317,51 +1971,32 @@ function App() {
         }
       `}</style>
 
-      {/* =========================
-          HEADER
-      ========================= */}
+      {/* HEADER */}
 
       <header className="top-header">
         <div className="header-main">
           <button
             className="menu-button"
-            onClick={() =>
-              setShowMenu(true)
-            }
+            onClick={() => setShowMenu(true)}
             aria-label="Abrir menú"
           >
             ☰
           </button>
 
-          <button
-            className="brand"
-            onClick={goHome}
-          >
+          <button className="brand" onClick={goHome}>
             VaniDaxi
           </button>
 
           <div className="search-box">
             <input
               value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="¿Qué estás buscando?"
             />
 
             <button
               type="button"
-              onClick={() => {
-                document
-                  .getElementById(
-                    "productos"
-                  )
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  });
-              }}
+              onClick={scrollToProducts}
               aria-label="Buscar"
             >
               ⌕
@@ -2371,9 +2006,7 @@ function App() {
           <div className="header-actions">
             <button
               className="header-action"
-              onClick={() =>
-                openAuth("login")
-              }
+              onClick={() => openAuth("login")}
               title="Mi cuenta"
               aria-label="Mi cuenta"
             >
@@ -2382,18 +2015,13 @@ function App() {
 
             <button
               className="header-action"
-              onClick={() =>
-                setShowCart(true)
-              }
+              onClick={() => setShowCart(true)}
               title="Carrito"
               aria-label="Carrito"
             >
               🛒
-
               {cartCount > 0 && (
-                <span className="cart-count">
-                  {cartCount}
-                </span>
+                <span className="cart-count">{cartCount}</span>
               )}
             </button>
           </div>
@@ -2402,90 +2030,53 @@ function App() {
         <div className="category-bar">
           <button
             className={`category-pill ${
-              activeCategory ===
-              "Todos"
-                ? "active"
-                : ""
+              activeCategory === "Todos" ? "active" : ""
             }`}
             onClick={() => {
-              setActiveCategory(
-                "Todos"
-              );
+              setActiveCategory("Todos");
               setSearch("");
             }}
           >
             Todo
           </button>
 
-          {categories.map(
-            (category) => (
-              <button
-                key={category.name}
-                className={`category-pill ${
-                  activeCategory ===
-                  category.name
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() => {
-                  setActiveCategory(
-                    category.name
-                  );
-
-                  document
-                    .getElementById(
-                      "productos"
-                    )
-                    ?.scrollIntoView({
-                      behavior:
-                        "smooth",
-                    });
-                }}
-              >
-                {category.name}
-              </button>
-            )
-          )}
+          {categories.map((category) => (
+            <button
+              key={category.name}
+              className={`category-pill ${
+                activeCategory === category.name ? "active" : ""
+              }`}
+              onClick={() => {
+                setActiveCategory(category.name);
+                scrollToProducts();
+              }}
+            >
+              {category.name}
+            </button>
+          ))}
         </div>
       </header>
 
-      {/* =========================
-          CONTENIDO
-      ========================= */}
+      {/* CONTENIDO */}
 
       <main className="page-content">
         <section className="hero">
           <div>
-            <h1>
-              Todo en un solo lugar
-            </h1>
+            <h1>Todo en un solo lugar</h1>
 
             <p>
-              Compra, vende y descubre
-              productos de diferentes
-              categorías.
+              Compra, vende y descubre productos de diferentes categorías.
             </p>
 
             <button
               className="hero-button"
-              onClick={() =>
-                document
-                  .getElementById(
-                    "productos"
-                  )
-                  ?.scrollIntoView({
-                    behavior:
-                      "smooth",
-                  })
-              }
+              onClick={scrollToProducts}
             >
               Comprar ahora
             </button>
           </div>
 
-          <div className="hero-icon">
-            🛍️
-          </div>
+          <div className="hero-icon">🛍️</div>
         </section>
 
         <section className="top-cards">
@@ -2494,89 +2085,45 @@ function App() {
               className="top-card"
               key={card.title}
               onClick={() => {
-                if (
-                  card.title ===
-                  "Ofertas"
-                ) {
+                if (card.title === "Ofertas") {
                   setSearch("");
-                  setActiveCategory(
-                    "Todos"
-                  );
-                  document
-                    .getElementById(
-                      "productos"
-                    )
-                    ?.scrollIntoView({
-                      behavior:
-                        "smooth",
-                    });
+                  setActiveCategory("Todos");
+                  scrollToProducts();
                 }
 
-                if (
-                  card.title ===
-                  "Novedades"
-                ) {
-                  document
-                    .getElementById(
-                      "productos"
-                    )
-                    ?.scrollIntoView({
-                      behavior:
-                        "smooth",
-                    });
+                if (card.title === "Novedades") {
+                  scrollToProducts();
                 }
 
-                if (
-                  card.title ===
-                  "Vendedores"
-                ) {
-                  setShowPublish(
-                    true
-                  );
+                if (card.title === "Vendedores") {
+                  setShowPublish(true);
                 }
 
-                if (
-                  card.title ===
-                  "Envíos"
-                ) {
-                  setShowMessages(
-                    true
-                  );
+                if (card.title === "Envíos") {
+                  setShowMessages(true);
                 }
               }}
             >
-              <img
-                src={card.image}
-                alt={card.title}
-              />
+              <img src={card.image} alt={card.title} />
 
               <span className="top-card-overlay">
-                <span className="top-card-title">
-                  {card.title}
-                </span>
-
-                <span className="top-card-subtitle">
-                  {card.subtitle}
-                </span>
+                <span className="top-card-title">{card.title}</span>
+                <span className="top-card-subtitle">{card.subtitle}</span>
               </span>
             </button>
           ))}
         </section>
 
-        {/* CATEGORÍAS COMPACTAS */}
+        {/* CATEGORÍAS */}
 
         <section className="section">
           <div className="section-title">
-            <h2 className="gradient-text">
-              Categorías
-            </h2>
+            <h2 className="gradient-text">Categorías</h2>
 
             <button
               className="category-pill"
               onClick={() => {
-                setActiveCategory(
-                  "Todos"
-                );
+                setActiveCategory("Todos");
                 setSearch("");
               }}
             >
@@ -2585,43 +2132,27 @@ function App() {
           </div>
 
           <div className="categories-grid">
-            {categories.map(
-              (category) => (
-                <button
-                  key={category.name}
-                  className="category-card"
-                  onClick={() => {
-                    setActiveCategory(
-                      category.name
-                    );
+            {categories.map((category) => (
+              <button
+                key={category.name}
+                className="category-card"
+                onClick={() => {
+                  setActiveCategory(category.name);
+                  scrollToProducts();
+                }}
+              >
+                <img
+                  className="category-image"
+                  src={category.image}
+                  alt={category.name}
+                  loading="lazy"
+                />
 
-                    document
-                      .getElementById(
-                        "productos"
-                      )
-                      ?.scrollIntoView({
-                        behavior:
-                          "smooth",
-                      });
-                  }}
-                >
-                  <img
-                    className="category-image"
-                    src={
-                      category.image
-                    }
-                    alt={
-                      category.name
-                    }
-                    loading="lazy"
-                  />
-
-                  <span className="category-name">
-                    {category.name}
-                  </span>
-                </button>
-              )
-            )}
+                <span className="category-name">
+                  {category.name}
+                </span>
+              </button>
+            ))}
           </div>
         </section>
 
@@ -2630,22 +2161,16 @@ function App() {
         <section className="section">
           <div className="promo-card">
             <div>
-              <strong>
-                ✨ Únete a VaniDaxi
-              </strong>
+              <strong>✨ Únete a VaniDaxi</strong>
 
               <span>
-                Compra, vende y disfruta
-                de más funciones con tu
-                cuenta.
+                Compra, vende y disfruta de más funciones con tu cuenta.
               </span>
             </div>
 
             <button
               className="promo-button"
-              onClick={() =>
-                openAuth("register")
-              }
+              onClick={() => openAuth("register")}
             >
               Crear cuenta
             </button>
@@ -2654,65 +2179,42 @@ function App() {
 
         {/* PRODUCTOS */}
 
-        <section
-          className="section"
-          id="productos"
-        >
+        <section className="section" id="productos">
           <div className="section-title">
             <h2 className="gradient-text">
               {search.trim()
                 ? `Resultados para "${search}"`
-                : activeCategory ===
-                  "Todos"
+                : activeCategory === "Todos"
                 ? "Productos destacados"
                 : activeCategory}
             </h2>
 
-            {activeCategory !==
-              "Todos" && (
+            {activeCategory !== "Todos" && (
               <button
                 className="category-pill"
-                onClick={() =>
-                  setActiveCategory(
-                    "Todos"
-                  )
-                }
+                onClick={() => setActiveCategory("Todos")}
               >
                 Ver todos
               </button>
             )}
           </div>
 
-          {filteredProducts.length ===
-          0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="empty">
-              <div
-                style={{
-                  fontSize: 45,
-                }}
-              >
-                🔎
-              </div>
+              <div style={{ fontSize: 45 }}>🔎</div>
 
-              <h3>
-                No encontramos
-                productos
-              </h3>
+              <h3>No encontramos productos</h3>
 
               <p>
-                Prueba con otras
-                palabras, una categoría
-                diferente o una búsqueda
-                más general.
+                Prueba con otras palabras, una categoría diferente o una
+                búsqueda más general.
               </p>
 
               <button
                 className="primary-button"
                 onClick={() => {
                   setSearch("");
-                  setActiveCategory(
-                    "Todos"
-                  );
+                  setActiveCategory("Todos");
                 }}
               >
                 Ver todos los productos
@@ -2720,129 +2222,82 @@ function App() {
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProducts.map(
-                (product) => {
-                  const favorite =
-                    favorites.some(
-                      (item) =>
-                        item.id ===
-                        product.id
-                    );
+              {filteredProducts.map((product) => {
+                const favorite = favorites.some(
+                  (item) => item.id === product.id
+                );
 
-                  return (
-                    <article
-                      className="product-card"
-                      key={product.id}
-                    >
-                      <div className="product-image-wrap">
-                        <img
-                          className="product-image"
-                          src={
-                            product.image
-                          }
-                          alt={
-                            product.name
-                          }
-                          loading="lazy"
-                        />
+                return (
+                  <article className="product-card" key={product.id}>
+                    <div className="product-image-wrap">
+                      <img
+                        className="product-image"
+                        src={product.image}
+                        alt={product.name}
+                        loading="lazy"
+                      />
 
-                        {product.discount >
-                          0 && (
-                          <span className="discount">
-                            -
-                            {
-                              product.discount
-                            }
-                            %
+                      {product.discount > 0 && (
+                        <span className="discount">
+                          -{product.discount}%
+                        </span>
+                      )}
+
+                      <button
+                        className="favorite"
+                        onClick={() => toggleFavorite(product)}
+                        aria-label="Agregar a favoritos"
+                      >
+                        {favorite ? "❤️" : "♡"}
+                      </button>
+                    </div>
+
+                    <div className="product-info">
+                      <h3 className="product-name">
+                        {product.name}
+                      </h3>
+
+                      <div className="rating">
+                        ★ {product.rating} · {product.reviews} reseñas
+                      </div>
+
+                      <div>
+                        <span className="price">
+                          {formatPrice(product.price)}
+                        </span>
+
+                        {product.oldPrice && (
+                          <span className="old-price">
+                            {formatPrice(product.oldPrice)}
                           </span>
                         )}
+                      </div>
+
+                      <div className="product-actions">
+                        <button
+                          className="details-button"
+                          onClick={() => setSelectedProduct(product)}
+                        >
+                          Ver producto
+                        </button>
 
                         <button
-                          className="favorite"
-                          onClick={() =>
-                            toggleFavorite(
-                              product
-                            )
-                          }
-                          aria-label="Agregar a favoritos"
+                          className="add-button"
+                          onClick={() => addToCart(product)}
                         >
-                          {favorite
-                            ? "❤️"
-                            : "♡"}
+                          🛒 Agregar
                         </button>
                       </div>
-
-                      <div className="product-info">
-                        <h3 className="product-name">
-                          {
-                            product.name
-                          }
-                        </h3>
-
-                        <div className="rating">
-                          ★{" "}
-                          {
-                            product.rating
-                          }{" "}
-                          ·{" "}
-                          {
-                            product.reviews
-                          }{" "}
-                          reseñas
-                        </div>
-
-                        <div>
-                          <span className="price">
-                            {formatPrice(
-                              product.price
-                            )}
-                          </span>
-
-                          {product.oldPrice && (
-                            <span className="old-price">
-                              {formatPrice(
-                                product.oldPrice
-                              )}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="product-actions">
-                          <button
-                            className="details-button"
-                            onClick={() =>
-                              setSelectedProduct(
-                                product
-                              )
-                            }
-                          >
-                            Ver producto
-                          </button>
-
-                          <button
-                            className="add-button"
-                            onClick={() =>
-                              addToCart(
-                                product
-                              )
-                            }
-                          >
-                            🛒 Agregar
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                }
-              )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
       </main>
 
-      {/* =========================
-          WHATSAPP
-      ========================= */}
+      {/* WHATSAPP */}
 
       <div className="whatsapp-float">
         <span className="whatsapp-label">
@@ -2851,78 +2306,60 @@ function App() {
 
         <button
           className="whatsapp-button"
-          onClick={
-            openWhatsApp
-          }
+          onClick={openWhatsApp}
           aria-label="Atención al cliente por WhatsApp"
           title="Atención al cliente"
         >
-          <span>☏</span>
+          ☏
         </button>
       </div>
 
-      {/* =========================
-          MENÚ
-      ========================= */}
+      {/* MENÚ */}
 
       {showMenu && (
         <div
           className="overlay"
-          onClick={() =>
-            setShowMenu(false)
-          }
+          onClick={() => setShowMenu(false)}
         >
           <aside
             className="menu-panel"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="menu-head">
               <h2>VaniDaxi</h2>
 
               <button
                 className="close-button"
-                onClick={() =>
-                  setShowMenu(false)
-                }
+                onClick={() => setShowMenu(false)}
               >
                 ✕
               </button>
             </div>
 
-            <button
-              className="menu-item"
-              onClick={goHome}
-            >
+            <button className="menu-item" onClick={goHome}>
               🏠 Inicio
             </button>
 
             <button
               className="menu-item"
-              onClick={() =>
-                openAuth("login")
-              }
+              onClick={() => openAuth("login")}
             >
               ✨ Mi cuenta
             </button>
 
             <button
               className="menu-item"
-              onClick={() =>
-                openAuth("login")
-              }
+              onClick={() => openAuth("login")}
             >
               👤 Perfil
             </button>
 
             <button
               className="menu-item"
-              onClick={() =>
-                setShowMessages(
-                  true
-                )
-              }
+              onClick={() => {
+                setShowMenu(false);
+                setShowMessages(true);
+              }}
             >
               💬 Centro de mensajes
             </button>
@@ -2931,9 +2368,7 @@ function App() {
               className="menu-item"
               onClick={() => {
                 setShowMenu(false);
-                setShowPublish(
-                  true
-                );
+                setShowPublish(true);
               }}
             >
               ➕ Publicar producto
@@ -2947,26 +2382,15 @@ function App() {
               }}
             >
               🛒 Mi carrito
-              {cartCount > 0
-                ? ` (${cartCount})`
-                : ""}
+              {cartCount > 0 ? ` (${cartCount})` : ""}
             </button>
 
             <button
               className="menu-item"
               onClick={() => {
                 setShowMenu(false);
-                setActiveCategory(
-                  "Todos"
-                );
-                document
-                  .getElementById(
-                    "productos"
-                  )
-                  ?.scrollIntoView({
-                    behavior:
-                      "smooth",
-                  });
+                setActiveCategory("Todos");
+                scrollToProducts();
               }}
             >
               🛍️ Explorar productos
@@ -2974,9 +2398,7 @@ function App() {
 
             <button
               className="menu-item"
-              onClick={() =>
-                openWhatsApp()
-              }
+              onClick={openWhatsApp}
             >
               💚 Atención al cliente
             </button>
@@ -2984,19 +2406,14 @@ function App() {
             <button
               className="menu-item"
               onClick={() =>
-                alert(
-                  "La configuración estará disponible aquí."
-                )
+                alert("La configuración estará disponible aquí.")
               }
             >
               ⚙️ Configuración
             </button>
 
             {user && (
-              <button
-                className="menu-item"
-                onClick={logout}
-              >
+              <button className="menu-item" onClick={logout}>
                 🚪 Cerrar sesión
               </button>
             )}
@@ -3004,107 +2421,65 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          CARRITO
-      ========================= */}
+      {/* CARRITO */}
 
       {showCart && (
         <div
           className="overlay"
-          onClick={() =>
-            setShowCart(false)
-          }
+          onClick={() => setShowCart(false)}
         >
           <aside
             className="cart-panel"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="cart-header">
-              <h2>
-                🛒 Mi carrito
-              </h2>
+              <h2>🛒 Mi carrito</h2>
 
               <button
                 className="close-button"
-                onClick={() =>
-                  setShowCart(false)
-                }
+                onClick={() => setShowCart(false)}
               >
                 ✕
               </button>
             </div>
 
             <div className="cart-body">
-              {cart.length ===
-              0 ? (
+              {cart.length === 0 ? (
                 <div className="empty">
-                  <div
-                    style={{
-                      fontSize: 55,
-                    }}
-                  >
-                    🛒
-                  </div>
+                  <div style={{ fontSize: 55 }}>🛒</div>
 
-                  <h3>
-                    Tu carrito está
-                    vacío
-                  </h3>
+                  <h3>Tu carrito está vacío</h3>
 
                   <p>
-                    Agrega productos
-                    para comenzar tu
-                    compra.
+                    Agrega productos para comenzar tu compra.
                   </p>
                 </div>
               ) : (
                 cart.map((item) => (
-                  <div
-                    className="cart-item"
-                    key={item.id}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                    />
+                  <div className="cart-item" key={item.id}>
+                    <img src={item.image} alt={item.name} />
 
                     <div className="cart-item-info">
                       <div className="cart-item-name">
                         {item.name}
                       </div>
 
-                      <div>
-                        {formatPrice(
-                          item.price
-                        )}
-                      </div>
+                      <div>{formatPrice(item.price)}</div>
 
                       <div className="quantity">
                         <button
                           onClick={() =>
-                            changeQuantity(
-                              item.id,
-                              -1
-                            )
+                            changeQuantity(item.id, -1)
                           }
                         >
                           −
                         </button>
 
-                        <strong>
-                          {
-                            item.quantity
-                          }
-                        </strong>
+                        <strong>{item.quantity}</strong>
 
                         <button
                           onClick={() =>
-                            changeQuantity(
-                              item.id,
-                              1
-                            )
+                            changeQuantity(item.id, 1)
                           }
                         >
                           +
@@ -3113,9 +2488,7 @@ function App() {
                         <button
                           className="delete-button"
                           onClick={() =>
-                            removeFromCart(
-                              item.id
-                            )
+                            removeFromCart(item.id)
                           }
                         >
                           🗑️
@@ -3130,49 +2503,30 @@ function App() {
             {cart.length > 0 && (
               <div className="cart-footer">
                 <div className="summary-row">
-                  <span>
-                    Subtotal
-                  </span>
+                  <span>Subtotal</span>
 
-                  <strong>
-                    {formatPrice(
-                      cartSubtotal
-                    )}
-                  </strong>
+                  <strong>{formatPrice(cartSubtotal)}</strong>
                 </div>
 
                 <div className="summary-row">
-                  <span>
-                    Envío
-                  </span>
+                  <span>Envío</span>
 
                   <strong>
-                    {shippingCost ===
-                    0
+                    {shippingCost === 0
                       ? "Gratis"
-                      : formatPrice(
-                          shippingCost
-                        )}
+                      : formatPrice(shippingCost)}
                   </strong>
                 </div>
 
                 <div className="summary-total">
-                  <span>
-                    Total
-                  </span>
+                  <span>Total</span>
 
-                  <span>
-                    {formatPrice(
-                      cartTotal
-                    )}
-                  </span>
+                  <span>{formatPrice(cartTotal)}</span>
                 </div>
 
                 <button
                   className="checkout-button"
-                  onClick={() =>
-                    startCheckout()
-                  }
+                  onClick={() => startCheckout()}
                 >
                   Continuar al pago
                 </button>
@@ -3182,108 +2536,60 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          PRODUCTO
-      ========================= */}
+      {/* DETALLE PRODUCTO */}
 
       {selectedProduct && (
         <div
           className="overlay center-overlay"
-          onClick={() =>
-            setSelectedProduct(
-              null
-            )
-          }
+          onClick={() => setSelectedProduct(null)}
         >
           <div
             className="modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className="close-button"
               style={{
-                position:
-                  "absolute",
+                position: "absolute",
                 right: 15,
                 top: 15,
               }}
-              onClick={() =>
-                setSelectedProduct(
-                  null
-                )
-              }
+              onClick={() => setSelectedProduct(null)}
             >
               ✕
             </button>
 
             <img
               className="detail-image"
-              src={
-                selectedProduct.image
-              }
-              alt={
-                selectedProduct.name
-              }
+              src={selectedProduct.image}
+              alt={selectedProduct.name}
             />
 
-            <h2
-              style={{
-                marginTop: 15,
-              }}
-            >
-              {
-                selectedProduct.name
-              }
+            <h2 style={{ marginTop: 15 }}>
+              {selectedProduct.name}
             </h2>
 
             <div className="rating">
-              ★{" "}
-              {
-                selectedProduct.rating
-              }{" "}
-              ·{" "}
-              {
-                selectedProduct.reviews
-              }{" "}
-              reseñas
+              ★ {selectedProduct.rating} ·{" "}
+              {selectedProduct.reviews} reseñas
             </div>
 
             <div className="detail-price">
-              {formatPrice(
-                selectedProduct.price
-              )}
+              {formatPrice(selectedProduct.price)}
             </div>
 
-            <p
-              style={{
-                fontSize: 13,
-              }}
-            >
-              {
-                selectedProduct.description
-              }
+            <p style={{ fontSize: 13 }}>
+              {selectedProduct.description}
             </p>
 
-            {selectedProduct
-              .specifications
-              ?.length > 0 && (
+            {selectedProduct.specifications?.length > 0 && (
               <>
-                <h3>
-                  Características
-                </h3>
+                <h3>Características</h3>
 
                 <ul className="specifications">
-                  {selectedProduct.specifications.map(
-                    (item) => (
-                      <li
-                        key={item}
-                      >
-                        {item}
-                      </li>
-                    )
-                  )}
+                  {selectedProduct.specifications.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
                 </ul>
               </>
             )}
@@ -3294,11 +2600,7 @@ function App() {
                 width: "100%",
                 marginTop: 10,
               }}
-              onClick={() =>
-                startCheckout(
-                  selectedProduct
-                )
-              }
+              onClick={() => startCheckout(selectedProduct)}
             >
               Comprar ahora
             </button>
@@ -3310,15 +2612,8 @@ function App() {
                 marginTop: 8,
               }}
               onClick={() => {
-                addToCart(
-                  selectedProduct,
-                  false
-                );
-
-                setSelectedProduct(
-                  null
-                );
-
+                addToCart(selectedProduct, false);
+                setSelectedProduct(null);
                 setShowCart(true);
               }}
             >
@@ -3328,61 +2623,45 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          AUTENTICACIÓN
-      ========================= */}
+      {/* AUTENTICACIÓN */}
 
       {showAuth && (
         <div
           className="overlay center-overlay"
-          onClick={() =>
-            setShowAuth(false)
-          }
+          onClick={() => setShowAuth(false)}
         >
           <div
             className="auth-modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="auth-visual">
-              <div className="auth-logo-icon">
-                🛍️
-              </div>
+              <div className="auth-logo-icon">🛍️</div>
 
               <h2>
-                {authMode ===
-                "login"
+                {authMode === "login"
                   ? "Bienvenido de nuevo"
                   : "Únete a VaniDaxi"}
               </h2>
 
               <p>
-                {authMode ===
-                "login"
+                {authMode === "login"
                   ? "Inicia sesión para continuar disfrutando de todo lo que VaniDaxi tiene para ti."
                   : "Crea tu cuenta y descubre una nueva forma de comprar y vender."}
               </p>
 
               <div className="auth-benefits">
                 <div className="auth-benefit">
-                  <span className="auth-benefit-icon">
-                    🛒
-                  </span>
+                  <span className="auth-benefit-icon">🛒</span>
                   Compra fácilmente
                 </div>
 
                 <div className="auth-benefit">
-                  <span className="auth-benefit-icon">
-                    💬
-                  </span>
+                  <span className="auth-benefit-icon">💬</span>
                   Mantén tus mensajes
                 </div>
 
                 <div className="auth-benefit">
-                  <span className="auth-benefit-icon">
-                    ✨
-                  </span>
+                  <span className="auth-benefit-icon">✨</span>
                   Más funciones
                 </div>
               </div>
@@ -3391,52 +2670,36 @@ function App() {
             <div className="auth-form-side">
               <button
                 className="close-button auth-close"
-                onClick={() =>
-                  setShowAuth(false)
-                }
+                onClick={() => setShowAuth(false)}
               >
                 ✕
               </button>
 
               <div className="auth-heading">
                 <h2>
-                  {authMode ===
-                  "login"
+                  {authMode === "login"
                     ? "Iniciar sesión"
                     : "Crear cuenta"}
                 </h2>
 
                 <p>
-                  {authMode ===
-                  "login"
+                  {authMode === "login"
                     ? "Accede a tu cuenta de VaniDaxi."
                     : "Completa tus datos para comenzar."}
                 </p>
               </div>
 
-              <form
-                className="form"
-                onSubmit={
-                  handleAuth
-                }
-              >
-                {authMode ===
-                  "register" && (
+              <form className="form" onSubmit={handleAuth}>
+                {authMode === "register" && (
                   <div className="auth-field">
-                    <span className="auth-field-icon">
-                      👤
-                    </span>
+                    <span className="auth-field-icon">👤</span>
 
                     <input
                       type="text"
                       placeholder="Nombre"
-                      value={
-                        authName
-                      }
+                      value={authName}
                       onChange={(e) =>
-                        setAuthName(
-                          e.target.value
-                        )
+                        setAuthName(e.target.value)
                       }
                       required
                     />
@@ -3444,47 +2707,35 @@ function App() {
                 )}
 
                 <div className="auth-field">
-                  <span className="auth-field-icon">
-                    ✉️
-                  </span>
+                  <span className="auth-field-icon">✉️</span>
 
                   <input
                     type="email"
                     placeholder="Correo electrónico"
-                    value={
-                      authEmail
-                    }
+                    value={authEmail}
                     onChange={(e) =>
-                      setAuthEmail(
-                        e.target.value
-                      )
+                      setAuthEmail(e.target.value)
                     }
                     required
                   />
                 </div>
 
                 <div className="auth-field">
-                  <span className="auth-field-icon">
-                    🔒
-                  </span>
+                  <span className="auth-field-icon">🔒</span>
 
                   <input
                     type="password"
                     placeholder="Contraseña"
-                    value={
-                      authPassword
-                    }
+                    value={authPassword}
                     onChange={(e) =>
-                      setAuthPassword(
-                        e.target.value
-                      )
+                      setAuthPassword(e.target.value)
                     }
                     required
                   />
                 </div>
 
                 {authMessage && (
-                  <div className="message auth-message">
+                  <div className="message">
                     {authMessage}
                   </div>
                 )}
@@ -3495,15 +2746,13 @@ function App() {
                 >
                   {loading
                     ? "Procesando..."
-                    : authMode ===
-                      "login"
+                    : authMode === "login"
                     ? "✨ Entrar a mi cuenta"
                     : "🚀 Crear mi cuenta"}
                 </button>
 
                 <div className="auth-switch-box">
-                  {authMode ===
-                  "login"
+                  {authMode === "login"
                     ? "¿Todavía no tienes una cuenta? "
                     : "¿Ya tienes una cuenta? "}
 
@@ -3512,19 +2761,14 @@ function App() {
                     className="auth-switch"
                     onClick={() => {
                       setAuthMode(
-                        authMode ===
-                          "login"
+                        authMode === "login"
                           ? "register"
                           : "login"
                       );
-
-                      setAuthMessage(
-                        ""
-                      );
+                      setAuthMessage("");
                     }}
                   >
-                    {authMode ===
-                    "login"
+                    {authMode === "login"
                       ? "Crear cuenta"
                       : "Iniciar sesión"}
                   </button>
@@ -3535,37 +2779,23 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          CENTRO DE MENSAJES
-      ========================= */}
+      {/* CENTRO DE MENSAJES */}
 
       {showMessages && (
         <div
           className="overlay center-overlay"
-          onClick={() =>
-            setShowMessages(
-              false
-            )
-          }
+          onClick={() => setShowMessages(false)}
         >
           <div
             className="messages-modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="messages-header">
-              <h2>
-                💬 Centro de mensajes
-              </h2>
+              <h2>💬 Centro de mensajes</h2>
 
               <button
                 className="close-button"
-                onClick={() =>
-                  setShowMessages(
-                    false
-                  )
-                }
+                onClick={() => setShowMessages(false)}
               >
                 ✕
               </button>
@@ -3573,80 +2803,56 @@ function App() {
 
             <div className="messages-content">
               <div className="message-welcome">
-                <h3>
-                  ¿En qué podemos ayudarte?
-                </h3>
+                <h3>¿En qué podemos ayudarte?</h3>
 
                 <p>
-                  Desde aquí podrás
-                  consultar comunicaciones
-                  relacionadas con tus compras,
-                  ventas y atención al cliente.
+                  Desde aquí podrás consultar comunicaciones
+                  relacionadas con tus compras, ventas y atención
+                  al cliente.
                 </p>
               </div>
 
               <button
                 className="message-option"
-                onClick={() =>
-                  openWhatsApp()
-                }
+                onClick={openWhatsApp}
               >
-                <span className="message-option-icon">
-                  💚
-                </span>
+                <span className="message-option-icon">💚</span>
 
                 <span>
-                  <strong>
-                    Atención al cliente
-                  </strong>
+                  <strong>Atención al cliente</strong>
 
                   <small>
-                    Habla con nosotros por
-                    WhatsApp.
+                    Habla con nosotros por WhatsApp.
                   </small>
                 </span>
               </button>
 
               <button
                 className="message-option"
-                onClick={() =>
-                  openAuth("login")
-                }
+                onClick={() => openAuth("login")}
               >
-                <span className="message-option-icon">
-                  📦
-                </span>
+                <span className="message-option-icon">📦</span>
 
                 <span>
-                  <strong>
-                    Mis pedidos
-                  </strong>
+                  <strong>Mis pedidos</strong>
 
                   <small>
-                    Inicia sesión para
-                    consultar tus pedidos.
+                    Inicia sesión para consultar tus pedidos.
                   </small>
                 </span>
               </button>
 
               <button
                 className="message-option"
-                onClick={() =>
-                  openAuth("login")
-                }
+                onClick={() => openAuth("login")}
               >
-                <span className="message-option-icon">
-                  🏪
-                </span>
+                <span className="message-option-icon">🏪</span>
 
                 <span>
-                  <strong>
-                    Mis ventas
-                  </strong>
+                  <strong>Mis ventas</strong>
 
                   <small>
-                    Accede a tu cuenta de
-                    vendedor.
+                    Accede a tu cuenta de vendedor.
                   </small>
                 </span>
               </button>
@@ -3655,45 +2861,30 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          PUBLICAR PRODUCTO
-      ========================= */}
+      {/* PUBLICAR PRODUCTO */}
 
       {showPublish && (
         <div
           className="overlay center-overlay"
-          onClick={() =>
-            setShowPublish(
-              false
-            )
-          }
+          onClick={() => setShowPublish(false)}
         >
           <div
             className="modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className="close-button"
               style={{
-                position:
-                  "absolute",
+                position: "absolute",
                 right: 15,
                 top: 15,
               }}
-              onClick={() =>
-                setShowPublish(
-                  false
-                )
-              }
+              onClick={() => setShowPublish(false)}
             >
               ✕
             </button>
 
-            <h2>
-              ➕ Publicar producto
-            </h2>
+            <h2>➕ Publicar producto</h2>
 
             <p
               style={{
@@ -3703,28 +2894,18 @@ function App() {
                 fontSize: 11,
               }}
             >
-              Agrega tu producto y
-              comienza a vender en
-              VaniDaxi.
+              Agrega tu producto y comienza a vender en VaniDaxi.
             </p>
 
-            <form
-              className="form"
-              onSubmit={
-                handlePublish
-              }
-            >
+            <form className="form" onSubmit={handlePublish}>
               <input
                 type="text"
                 placeholder="Nombre del producto"
-                value={
-                  newProduct.name
-                }
+                value={newProduct.name}
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    name: e.target
-                      .value,
+                    name: e.target.value,
                   })
                 }
                 required
@@ -3734,76 +2915,54 @@ function App() {
                 type="number"
                 placeholder="Precio en MXN"
                 min="1"
-                value={
-                  newProduct.price
-                }
+                value={newProduct.price}
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    price: e.target
-                      .value,
+                    price: e.target.value,
                   })
                 }
                 required
               />
 
               <select
-                value={
-                  newProduct.category
-                }
+                value={newProduct.category}
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    category:
-                      e.target
-                        .value,
+                    category: e.target.value,
                   })
                 }
               >
-                {categories.map(
-                  (category) => (
-                    <option
-                      key={
-                        category.name
-                      }
-                      value={
-                        category.name
-                      }
-                    >
-                      {
-                        category.name
-                      }
-                    </option>
-                  )
-                )}
+                {categories.map((category) => (
+                  <option
+                    key={category.name}
+                    value={category.name}
+                  >
+                    {category.name}
+                  </option>
+                ))}
               </select>
 
               <input
                 type="url"
                 placeholder="URL de la imagen"
-                value={
-                  newProduct.image
-                }
+                value={newProduct.image}
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    image: e.target
-                      .value,
+                    image: e.target.value,
                   })
                 }
               />
 
               <textarea
                 placeholder="Describe tu producto..."
-                value={
-                  newProduct.description
-                }
+                value={newProduct.description}
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    description:
-                      e.target
-                        .value,
+                    description: e.target.value,
                   })
                 }
               />
@@ -3816,25 +2975,20 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          CHECKOUT
-      ========================= */}
+      {/* CHECKOUT */}
 
       {showCheckout && (
         <div className="overlay checkout-overlay">
           <div className="checkout-page">
             <div className="checkout-header">
               <h1 className="checkout-title">
-                VaniDaxi · Finalizar
-                compra
+                VaniDaxi · Finalizar compra
               </h1>
 
               {!orderComplete && (
                 <button
                   className="close-button"
-                  onClick={
-                    resetCheckout
-                  }
+                  onClick={resetCheckout}
                 >
                   ✕
                 </button>
@@ -3843,27 +2997,17 @@ function App() {
 
             {orderComplete ? (
               <div className="success-box">
-                <div className="success-icon">
-                  ✅
-                </div>
+                <div className="success-icon">✅</div>
 
-                <h2>
-                  ¡Pedido realizado!
-                </h2>
+                <h2>¡Pedido realizado!</h2>
 
                 <p>
-                  Tu pedido fue
-                  registrado
-                  correctamente.
+                  Tu pedido fue registrado correctamente.
                 </p>
 
                 <p>
-                  <strong>
-                    Total del pedido:
-                  </strong>{" "}
-                  {formatPrice(
-                    cartTotal
-                  )}
+                  <strong>Total del pedido:</strong>{" "}
+                  {formatPrice(cartTotal)}
                 </p>
 
                 <button
@@ -3881,57 +3025,38 @@ function App() {
                 <div className="checkout-steps">
                   <div
                     className={`checkout-step ${
-                      checkoutStep >=
-                      1
-                        ? "active"
-                        : ""
+                      checkoutStep >= 1 ? "active" : ""
                     }`}
                   />
 
                   <div
                     className={`checkout-step ${
-                      checkoutStep >=
-                      2
-                        ? "active"
-                        : ""
+                      checkoutStep >= 2 ? "active" : ""
                     }`}
                   />
 
                   <div
                     className={`checkout-step ${
-                      checkoutStep >=
-                      3
-                        ? "active"
-                        : ""
+                      checkoutStep >= 3 ? "active" : ""
                     }`}
                   />
                 </div>
 
                 <div className="checkout-layout">
                   <div>
-                    {checkoutStep ===
-                      1 && (
+                    {checkoutStep === 1 && (
                       <div className="checkout-card">
-                        <h3>
-                          📍 Datos de
-                          entrega
-                        </h3>
+                        <h3>📍 Datos de entrega</h3>
 
                         <div className="checkout-grid">
                           <input
                             className="checkout-input"
                             placeholder="Nombre completo"
-                            value={
-                              checkout.name
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.name}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                name: e
-                                  .target
-                                  .value,
+                                name: e.target.value,
                               })
                             }
                           />
@@ -3939,17 +3064,11 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Teléfono"
-                            value={
-                              checkout.phone
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.phone}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                phone: e
-                                  .target
-                                  .value,
+                                phone: e.target.value,
                               })
                             }
                           />
@@ -3957,18 +3076,11 @@ function App() {
                           <input
                             className="checkout-input full"
                             placeholder="Calle y número"
-                            value={
-                              checkout.address
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.address}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                address:
-                                  e
-                                    .target
-                                    .value,
+                                address: e.target.value,
                               })
                             }
                           />
@@ -3976,17 +3088,11 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Ciudad"
-                            value={
-                              checkout.city
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.city}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                city: e
-                                  .target
-                                  .value,
+                                city: e.target.value,
                               })
                             }
                           />
@@ -3994,18 +3100,11 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Estado"
-                            value={
-                              checkout.state
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.state}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                state:
-                                  e
-                                    .target
-                                    .value,
+                                state: e.target.value,
                               })
                             }
                           />
@@ -4013,17 +3112,11 @@ function App() {
                           <input
                             className="checkout-input"
                             placeholder="Código postal"
-                            value={
-                              checkout.zip
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.zip}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                zip: e
-                                  .target
-                                  .value,
+                                zip: e.target.value,
                               })
                             }
                           />
@@ -4031,302 +3124,183 @@ function App() {
                           <textarea
                             className="checkout-input full"
                             placeholder="Notas para el vendedor o repartidor"
-                            value={
-                              checkout.notes
-                            }
-                            onChange={(
-                              e
-                            ) =>
+                            value={checkout.notes}
+                            onChange={(e) =>
                               setCheckout({
                                 ...checkout,
-                                notes:
-                                  e
-                                    .target
-                                    .value,
+                                notes: e.target.value,
                               })
                             }
                           />
                         </div>
 
-                        <h3
-                          style={{
-                            marginTop: 20,
-                          }}
-                        >
-                          🚚 Tipo de
-                          entrega
+                        <h3 style={{ marginTop: 20 }}>
+                          🚚 Tipo de entrega
                         </h3>
 
                         <button
                           className={`delivery-option ${
-                            checkout.delivery ===
-                            "standard"
+                            checkout.delivery === "standard"
                               ? "selected"
                               : ""
                           }`}
                           onClick={() =>
                             setCheckout({
                               ...checkout,
-                              delivery:
-                                "standard",
+                              delivery: "standard",
                             })
                           }
                         >
                           <input
                             type="radio"
                             checked={
-                              checkout.delivery ===
-                              "standard"
+                              checkout.delivery === "standard"
                             }
                             readOnly
                           />
 
                           <span>
-                            <strong>
-                              Envío
-                              estándar
-                            </strong>
+                            <strong>Envío estándar</strong>
                             <br />
-                            <small>
-                              Envío
-                              gratis
-                            </small>
+                            <small>Envío gratis</small>
                           </span>
                         </button>
 
                         <button
                           className={`delivery-option ${
-                            checkout.delivery ===
-                            "express"
+                            checkout.delivery === "express"
                               ? "selected"
                               : ""
                           }`}
                           onClick={() =>
                             setCheckout({
                               ...checkout,
-                              delivery:
-                                "express",
+                              delivery: "express",
                             })
                           }
                         >
                           <input
                             type="radio"
                             checked={
-                              checkout.delivery ===
-                              "express"
+                              checkout.delivery === "express"
                             }
                             readOnly
                           />
 
                           <span>
-                            <strong>
-                              Envío
-                              express
-                            </strong>
+                            <strong>Envío express</strong>
                             <br />
-                            <small>
-                              + $99 MXN
-                            </small>
+                            <small>+ $99 MXN</small>
                           </span>
                         </button>
                       </div>
                     )}
 
-                    {checkoutStep ===
-                      2 && (
+                    {checkoutStep === 2 && (
                       <div className="checkout-card">
-                        <h3>
-                          💳 Método de
-                          pago
-                        </h3>
+                        <h3>💳 Método de pago</h3>
 
-                        <button
-                          className={`payment-option ${
-                            checkout.payment ===
-                            "card"
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCheckout({
-                              ...checkout,
-                              payment:
-                                "card",
-                            })
-                          }
-                        >
-                          <input
-                            type="radio"
-                            checked={
-                              checkout.payment ===
-                              "card"
+                        {[
+                          {
+                            id: "card",
+                            title: "💳 Tarjeta",
+                            text: "Visa, Mastercard y otras tarjetas",
+                          },
+                          {
+                            id: "mercadopago",
+                            title: "💙 Mercado Pago",
+                            text: "Pago mediante Mercado Pago",
+                          },
+                          {
+                            id: "cash",
+                            title: "💵 Pago disponible según el vendedor",
+                            text: "",
+                          },
+                        ].map((option) => (
+                          <button
+                            key={option.id}
+                            className={`payment-option ${
+                              checkout.payment === option.id
+                                ? "selected"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              setCheckout({
+                                ...checkout,
+                                payment: option.id,
+                              })
                             }
-                            readOnly
-                          />
+                          >
+                            <input
+                              type="radio"
+                              checked={
+                                checkout.payment === option.id
+                              }
+                              readOnly
+                            />
 
-                          <span>
-                            💳 Tarjeta
-                            <br />
-                            <small>
-                              Visa,
-                              Mastercard y
-                              otras
-                              tarjetas
-                            </small>
-                          </span>
-                        </button>
+                            <span>
+                              <strong>{option.title}</strong>
 
-                        <button
-                          className={`payment-option ${
-                            checkout.payment ===
-                            "mercadopago"
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCheckout({
-                              ...checkout,
-                              payment:
-                                "mercadopago",
-                            })
-                          }
-                        >
-                          <input
-                            type="radio"
-                            checked={
-                              checkout.payment ===
-                              "mercadopago"
-                            }
-                            readOnly
-                          />
-
-                          <span>
-                            💙 Mercado
-                            Pago
-                            <br />
-                            <small>
-                              Pago
-                              mediante
-                              Mercado
-                              Pago
-                            </small>
-                          </span>
-                        </button>
-
-                        <button
-                          className={`payment-option ${
-                            checkout.payment ===
-                            "cash"
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCheckout({
-                              ...checkout,
-                              payment:
-                                "cash",
-                            })
-                          }
-                        >
-                          <input
-                            type="radio"
-                            checked={
-                              checkout.payment ===
-                              "cash"
-                            }
-                            readOnly
-                          />
-
-                          <span>
-                            💵 Pago
-                            disponible
-                            según el
-                            vendedor
-                          </span>
-                        </button>
+                              {option.text && (
+                                <>
+                                  <br />
+                                  <small>{option.text}</small>
+                                </>
+                              )}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     )}
 
-                    {checkoutStep ===
-                      3 && (
+                    {checkoutStep === 3 && (
                       <div className="checkout-card">
-                        <h3>
-                          🧾 Confirmar
-                          pedido
-                        </h3>
+                        <h3>🧾 Confirmar pedido</h3>
 
                         <p
                           style={{
                             fontSize: 12,
-                            color:
-                              "#666",
+                            color: "#666",
                           }}
                         >
-                          Revisa que los
-                          datos de
-                          entrega,
-                          productos,
-                          envío y
-                          método de
-                          pago sean
-                          correctos.
+                          Revisa que los datos de entrega,
+                          productos, envío y método de pago
+                          sean correctos.
                         </p>
 
                         <div
                           style={{
                             padding: 12,
-                            background:
-                              "#fafafa",
+                            background: "#fafafa",
                             borderRadius: 10,
                             fontSize: 12,
-                            lineHeight:
-                              1.7,
+                            lineHeight: 1.7,
                           }}
                         >
-                          <strong>
-                            Entrega
-                          </strong>
+                          <strong>Entrega</strong>
                           <br />
-                          {
-                            checkout.name
-                          }
+                          {checkout.name}
                           <br />
-                          {
-                            checkout.address
-                          }
+                          {checkout.address}
                           <br />
-                          {
-                            checkout.city
-                          }
-                          ,{" "}
-                          {
-                            checkout.state
-                          }{" "}
-                          {
-                            checkout.zip
-                          }
+                          {checkout.city}, {checkout.state}{" "}
+                          {checkout.zip}
                           <br />
-                          Tel.{" "}
-                          {
-                            checkout.phone
-                          }
+                          Tel. {checkout.phone}
                         </div>
 
                         <div
                           style={{
                             marginTop: 12,
                             padding: 12,
-                            background:
-                              "#fafafa",
+                            background: "#fafafa",
                             borderRadius: 10,
                             fontSize: 12,
                           }}
                         >
-                          <strong>
-                            Pago:
-                          </strong>{" "}
-                          {checkout.payment ===
-                          "card"
+                          <strong>Pago:</strong>{" "}
+                          {checkout.payment === "card"
                             ? "Tarjeta"
                             : checkout.payment ===
                               "mercadopago"
@@ -4340,33 +3314,23 @@ function App() {
                       <button
                         className="secondary-button"
                         onClick={() => {
-                          if (
-                            checkoutStep ===
-                            1
-                          ) {
+                          if (checkoutStep === 1) {
                             resetCheckout();
                           } else {
-                            setCheckoutStep(
-                              checkoutStep -
-                                1
-                            );
+                            setCheckoutStep(checkoutStep - 1);
                           }
                         }}
                       >
-                        {checkoutStep ===
-                        1
+                        {checkoutStep === 1
                           ? "Cancelar"
                           : "Regresar"}
                       </button>
 
                       <button
                         className="primary-button"
-                        onClick={
-                          handleCheckoutNext
-                        }
+                        onClick={handleCheckoutNext}
                       >
-                        {checkoutStep ===
-                        3
+                        {checkoutStep === 3
                           ? "Confirmar pedido"
                           : "Continuar"}
                       </button>
@@ -4374,88 +3338,52 @@ function App() {
                   </div>
 
                   <aside className="checkout-card order-summary">
-                    <h3>
-                      Resumen de compra
-                    </h3>
+                    <h3>Resumen de compra</h3>
 
-                    {cart.map(
-                      (item) => (
-                        <div
-                          className="checkout-product"
-                          key={item.id}
-                        >
-                          <img
-                            src={
-                              item.image
-                            }
-                            alt={
-                              item.name
-                            }
-                          />
+                    {cart.map((item) => (
+                      <div
+                        className="checkout-product"
+                        key={item.id}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                        />
 
-                          <div className="checkout-product-info">
-                            <strong>
-                              {
-                                item.name
-                              }
-                            </strong>
+                        <div className="checkout-product-info">
+                          <strong>{item.name}</strong>
 
-                            <div>
-                              {
-                                item.quantity
-                              }{" "}
-                              ×{" "}
-                              {formatPrice(
-                                item.price
-                              )}
-                            </div>
+                          <div>
+                            {item.quantity} ×{" "}
+                            {formatPrice(item.price)}
                           </div>
                         </div>
-                      )
-                    )}
+                      </div>
+                    ))}
 
-                    <div
-                      style={{
-                        marginTop: 15,
-                      }}
-                    >
+                    <div style={{ marginTop: 15 }}>
                       <div className="summary-row">
-                        <span>
-                          Subtotal
-                        </span>
+                        <span>Subtotal</span>
 
                         <strong>
-                          {formatPrice(
-                            cartSubtotal
-                          )}
+                          {formatPrice(cartSubtotal)}
                         </strong>
                       </div>
 
                       <div className="summary-row">
-                        <span>
-                          Envío
-                        </span>
+                        <span>Envío</span>
 
                         <strong>
-                          {shippingCost ===
-                          0
+                          {shippingCost === 0
                             ? "Gratis"
-                            : formatPrice(
-                                shippingCost
-                              )}
+                            : formatPrice(shippingCost)}
                         </strong>
                       </div>
 
                       <div className="summary-total">
-                        <span>
-                          Total
-                        </span>
+                        <span>Total</span>
 
-                        <span>
-                          {formatPrice(
-                            cartTotal
-                          )}
-                        </span>
+                        <span>{formatPrice(cartTotal)}</span>
                       </div>
                     </div>
                   </aside>
