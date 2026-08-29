@@ -213,9 +213,14 @@ function App() {
   });
 
   useEffect(() => {
+    let mounted = true;
+
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
+
+      if (mounted) {
+        setUser(data?.user || null);
+      }
     };
 
     getUser();
@@ -223,10 +228,15 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      if (mounted) {
+        setUser(session?.user || null);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -234,16 +244,26 @@ function App() {
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    localStorage.setItem(
+      FAVORITES_KEY,
+      JSON.stringify(favorites)
+    );
   }, [favorites]);
 
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify(settings)
+    );
 
     document.body.classList.toggle(
       "dark-theme",
-      settings.darkMode
+      Boolean(settings.darkMode)
     );
+
+    return () => {
+      document.body.classList.remove("dark-theme");
+    };
   }, [settings]);
 
   const cartCount = cart.reduce(
@@ -285,7 +305,9 @@ function App() {
 
     const term = normalizeText(search);
 
-    if (!term) return result;
+    if (!term) {
+      return result;
+    }
 
     return result.filter((product) => {
       const searchable = normalizeText(
@@ -315,6 +337,14 @@ function App() {
     : null;
 
   const go = (path) => {
+    if (location.pathname === path) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+      return;
+    }
+
     navigate(path);
 
     window.scrollTo({
@@ -433,10 +463,28 @@ function App() {
   const handleAuth = async (event) => {
     event.preventDefault();
 
+    if (loading) return;
+
     setLoading(true);
     setAuthMessage("");
 
     try {
+      const email = authEmail.trim();
+
+      if (!email) {
+        setAuthMessage(
+          "Escribe tu correo electrónico."
+        );
+        return;
+      }
+
+      if (!authPassword) {
+        setAuthMessage(
+          "Escribe tu contraseña."
+        );
+        return;
+      }
+
       if (authMode === "register") {
         if (authPassword.length < 6) {
           setAuthMessage(
@@ -447,11 +495,11 @@ function App() {
 
         const { data, error } =
           await supabase.auth.signUp({
-            email: authEmail,
+            email,
             password: authPassword,
             options: {
               data: {
-                full_name: authName,
+                full_name: authName.trim(),
               },
             },
           });
@@ -469,7 +517,7 @@ function App() {
       } else {
         const { data, error } =
           await supabase.auth.signInWithPassword({
-            email: authEmail,
+            email,
             password: authPassword,
           });
 
@@ -480,9 +528,10 @@ function App() {
       }
     } catch (error) {
       const message = error?.message || "";
+      const normalizedMessage = normalizeText(message);
 
       if (
-        normalizeText(message).includes(
+        normalizedMessage.includes(
           "invalid login credentials"
         )
       ) {
@@ -490,7 +539,7 @@ function App() {
           "Correo o contraseña incorrectos."
         );
       } else if (
-        normalizeText(message).includes(
+        normalizedMessage.includes(
           "email not confirmed"
         )
       ) {
@@ -498,7 +547,7 @@ function App() {
           "Debes confirmar tu correo antes de iniciar sesión."
         );
       } else if (
-        normalizeText(message).includes(
+        normalizedMessage.includes(
           "user already registered"
         )
       ) {
@@ -525,11 +574,15 @@ function App() {
   const handlePublish = (event) => {
     event.preventDefault();
 
-    if (!newProduct.name.trim()) return;
+    const name = newProduct.name.trim();
+
+    if (!name) {
+      return;
+    }
 
     const product = {
       id: Date.now(),
-      name: newProduct.name.trim(),
+      name,
       price: Number(newProduct.price) || 0,
       oldPrice: 0,
       rating: 5,
@@ -615,6 +668,12 @@ function App() {
   const isFavorites =
     location.pathname === "/favoritos";
 
+  const isPublish =
+    location.pathname === "/publicar";
+
+  const isMenu =
+    location.pathname === "/menu";
+
   return (
     <div className="app">
       <style>{`
@@ -628,10 +687,15 @@ function App() {
 
         body {
           margin: 0;
-          font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
-            "Segoe UI", sans-serif;
+          font-family: Inter, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
           background: #ffffff;
           color: #202020;
+        }
+
+        body.dark-theme {
+          background: #121212;
+          color: #f5f5f5;
         }
 
         button,
@@ -643,6 +707,13 @@ function App() {
 
         button {
           cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        input,
+        textarea,
+        select {
+          -webkit-tap-highlight-color: transparent;
         }
 
         a {
@@ -655,20 +726,18 @@ function App() {
           background: #fff;
         }
 
-        .dark-theme {
+        .dark-theme .app {
           background: #121212;
           color: #f5f5f5;
         }
 
-        .dark-theme .app,
         .dark-theme .page,
         .dark-theme .section,
         .dark-theme .product-card,
-        .dark-theme .modal-card,
+        .dark-theme .auth-card,
         .dark-theme .account-card,
         .dark-theme .checkout-card,
         .dark-theme .cart-card {
-          background: #171717;
           color: #f5f5f5;
         }
 
@@ -701,11 +770,17 @@ function App() {
           font-weight: 900;
           font-size: 22px;
           letter-spacing: -.7px;
-          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
           white-space: nowrap;
+          padding: 4px 0;
         }
 
         .menu-btn,
@@ -742,6 +817,7 @@ function App() {
         .search-box {
           flex: 1;
           position: relative;
+          min-width: 0;
         }
 
         .search-box input {
@@ -752,6 +828,9 @@ function App() {
           padding: 0 42px 0 15px;
           outline: none;
           background: #fafafa;
+          color: #222;
+          appearance: none;
+          -webkit-appearance: none;
         }
 
         .search-box input:focus {
@@ -769,6 +848,7 @@ function App() {
           position: absolute;
           right: 13px;
           top: 10px;
+          pointer-events: none;
         }
 
         .cart-button {
@@ -785,7 +865,12 @@ function App() {
           border-radius: 20px;
           display: grid;
           place-items: center;
-          background: linear-gradient(135deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
           color: white;
           font-size: 11px;
           font-weight: 800;
@@ -805,7 +890,12 @@ function App() {
           border-radius: 28px;
           padding: 35px;
           color: white;
-          background: linear-gradient(120deg,#ef233c,#d4148e 52%,#7027c9);
+          background: linear-gradient(
+            120deg,
+            #ef233c,
+            #d4148e 52%,
+            #7027c9
+          );
           position: relative;
           overflow: hidden;
         }
@@ -841,7 +931,9 @@ function App() {
           border-radius: 13px;
           padding: 12px 18px;
           font-weight: 800;
-          transition: transform .18s ease, opacity .18s ease;
+          transition:
+            transform .18s ease,
+            opacity .18s ease;
         }
 
         .gradient-btn:hover,
@@ -851,9 +943,20 @@ function App() {
           transform: translateY(-2px);
         }
 
+        .gradient-btn:disabled {
+          opacity: .65;
+          cursor: wait;
+          transform: none;
+        }
+
         .gradient-btn {
           color: white;
-          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
         }
 
         .white-btn {
@@ -915,7 +1018,10 @@ function App() {
           content: "";
           position: absolute;
           inset: 0;
-          background: linear-gradient(transparent,rgba(0,0,0,.72));
+          background: linear-gradient(
+            transparent,
+            rgba(0,0,0,.72)
+          );
         }
 
         .category-name {
@@ -946,6 +1052,7 @@ function App() {
         }
 
         .dark-theme .product-card {
+          background: #171717;
           border-color: #333;
         }
 
@@ -1036,9 +1143,19 @@ function App() {
           background: #f2f2f2;
         }
 
+        .dark-theme .details-btn {
+          background: #292929;
+          color: white;
+        }
+
         .buy-btn {
           color: white;
-          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
         }
 
         .promo {
@@ -1049,7 +1166,11 @@ function App() {
 
         .promo-box {
           border: 1px solid #f1d8ed;
-          background: linear-gradient(135deg,#fff5fa,#faf3ff);
+          background: linear-gradient(
+            135deg,
+            #fff5fa,
+            #faf3ff
+          );
           border-radius: 20px;
           padding: 18px;
           display: flex;
@@ -1085,6 +1206,11 @@ function App() {
           color: #777;
         }
 
+        .dark-theme .empty {
+          border-color: #444;
+          color: #aaa;
+        }
+
         .floating-help {
           position: fixed;
           right: 17px;
@@ -1096,14 +1222,21 @@ function App() {
           display: grid;
           place-items: center;
           color: white;
-          background: linear-gradient(135deg,#ef233c,#d4148e,#7027c9);
-          box-shadow: 0 10px 30px rgba(120,30,100,.3);
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
+          box-shadow:
+            0 10px 30px rgba(120,30,100,.3);
           font-size: 25px;
         }
 
         .back-btn {
           border: 0;
           background: #f3f3f3;
+          color: #222;
           border-radius: 12px;
           padding: 9px 13px;
           font-weight: 750;
@@ -1203,7 +1336,12 @@ function App() {
           color: white;
           font-size: 29px;
           font-weight: 900;
-          background: linear-gradient(135deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
         }
 
         .auth-card h1 {
@@ -1230,6 +1368,11 @@ function App() {
           margin-bottom: 6px;
         }
 
+        /*
+          Importante para móvil:
+          los campos no reciben ninguna acción de navegación
+          mientras el usuario está escribiendo.
+        */
         .form-control {
           width: 100%;
           border: 1px solid #ddd;
@@ -1242,11 +1385,14 @@ function App() {
           -webkit-appearance: none;
           appearance: none;
           touch-action: manipulation;
+          user-select: text;
+          -webkit-user-select: text;
         }
 
         .form-control:focus {
           border-color: #d4148e;
-          box-shadow: 0 0 0 3px rgba(212,20,142,.1);
+          box-shadow:
+            0 0 0 3px rgba(212,20,142,.1);
         }
 
         .dark-theme .form-control {
@@ -1302,6 +1448,7 @@ function App() {
         .dark-theme .account-card,
         .dark-theme .checkout-card,
         .dark-theme .cart-card {
+          background: #171717;
           border-color: #333;
         }
 
@@ -1315,6 +1462,7 @@ function App() {
         .account-action {
           border: 1px solid #eee;
           background: white;
+          color: inherit;
           border-radius: 15px;
           padding: 17px;
           text-align: left;
@@ -1376,6 +1524,7 @@ function App() {
         .summary {
           display: flex;
           justify-content: space-between;
+          gap: 12px;
           padding: 8px 0;
         }
 
@@ -1408,9 +1557,20 @@ function App() {
           width: min(340px,88vw);
           height: 100%;
           background: white;
+          color: #222;
           padding: 22px;
           box-shadow: 12px 0 40px rgba(0,0,0,.2);
           overflow-y: auto;
+          animation: menuIn .18s ease-out;
+        }
+
+        @keyframes menuIn {
+          from {
+            transform: translateX(-100%);
+          }
+          to {
+            transform: translateX(0);
+          }
         }
 
         .dark-theme .menu-panel {
@@ -1437,10 +1597,16 @@ function App() {
           height: 38px;
         }
 
+        .dark-theme .menu-close {
+          background: #292929;
+          color: white;
+        }
+
         .menu-item {
           width: 100%;
           border: 0;
           background: transparent;
+          color: inherit;
           padding: 14px 8px;
           border-bottom: 1px solid #eee;
           text-align: left;
@@ -1473,6 +1639,7 @@ function App() {
           flex: 0 0 auto;
           border: 1px solid #e8e8e8;
           background: white;
+          color: #222;
           border-radius: 999px;
           padding: 8px 12px;
           font-size: 12px;
@@ -1488,7 +1655,12 @@ function App() {
         .category-pill.active {
           color: white;
           border-color: transparent;
-          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
         }
 
         .footer {
@@ -1502,7 +1674,12 @@ function App() {
         .footer-brand {
           font-size: 25px;
           font-weight: 900;
-          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d4148e,
+            #7027c9
+          );
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -1614,6 +1791,12 @@ function App() {
           .promo-box {
             padding: 14px;
             border-radius: 16px;
+            align-items: flex-start;
+          }
+
+          .promo-box .gradient-btn {
+            flex: 0 0 auto;
+            padding: 10px 12px;
           }
 
           .detail-grid {
@@ -1638,7 +1821,7 @@ function App() {
             grid-template-columns: 60px 1fr;
           }
 
-          .cart-item > div:last-child {
+          .cart-item > strong {
             grid-column: 2;
           }
 
@@ -1659,6 +1842,7 @@ function App() {
       <header className="topbar">
         <div className="header-inner">
           <button
+            type="button"
             className="menu-btn"
             onClick={() => go("/menu")}
             aria-label="Abrir menú"
@@ -1671,6 +1855,7 @@ function App() {
           </button>
 
           <button
+            type="button"
             className="brand"
             onClick={goHome}
           >
@@ -1687,24 +1872,31 @@ function App() {
               }
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
+                  event.preventDefault();
                   go("/productos");
                 }
               }}
               placeholder="Buscar productos..."
               autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck="false"
               enterKeyHint="search"
             />
+
             <span className="search-icon">
               🔎
             </span>
           </div>
 
           <button
+            type="button"
             className="icon-btn cart-button"
             onClick={() => go("/carrito")}
             aria-label="Carrito"
           >
             🛒
+
             {cartCount > 0 && (
               <span className="cart-badge">
                 {cartCount}
@@ -1715,6 +1907,7 @@ function App() {
 
         <div className="category-nav">
           <button
+            type="button"
             className={`category-pill ${
               activeCategory === "Todos" &&
               isProducts
@@ -1728,6 +1921,7 @@ function App() {
 
           {categories.map((category) => (
             <button
+              type="button"
               key={category.name}
               className={`category-pill ${
                 activeCategory === category.name
@@ -1762,6 +1956,7 @@ function App() {
                 </p>
 
                 <button
+                  type="button"
                   className="white-btn"
                   onClick={goProducts}
                 >
@@ -1776,6 +1971,7 @@ function App() {
                   <strong>
                     ✨ Crea tu cuenta gratis
                   </strong>
+
                   <span>
                     Guarda favoritos, administra
                     pedidos y disfruta una mejor
@@ -1784,6 +1980,7 @@ function App() {
                 </div>
 
                 <button
+                  type="button"
                   className="gradient-btn"
                   onClick={() =>
                     openAuth("register")
@@ -1799,6 +1996,7 @@ function App() {
                 <h2>Categorías</h2>
 
                 <button
+                  type="button"
                   onClick={goProducts}
                 >
                   Ver todas
@@ -1808,12 +2006,11 @@ function App() {
               <div className="categories">
                 {categories.map((category) => (
                   <button
+                    type="button"
                     key={category.name}
                     className="category-card"
                     onClick={() =>
-                      goCategory(
-                        category.name
-                      )
+                      goCategory(category.name)
                     }
                   >
                     <img
@@ -1836,6 +2033,7 @@ function App() {
                 </h2>
 
                 <button
+                  type="button"
                   onClick={goProducts}
                 >
                   Ver todos
@@ -1850,9 +2048,7 @@ function App() {
                       key={product.id}
                       product={product}
                       favorites={favorites}
-                      onFavorite={
-                        toggleFavorite
-                      }
+                      onFavorite={toggleFavorite}
                       onDetails={(item) =>
                         go(
                           `/producto/${item.id}`
@@ -1869,6 +2065,7 @@ function App() {
             <div className="footer-brand">
               VaniDaxi
             </div>
+
             <p>
               Todo lo que buscas, en un solo
               lugar.
@@ -1909,9 +2106,7 @@ function App() {
                       key={product.id}
                       product={product}
                       favorites={favorites}
-                      onFavorite={
-                        toggleFavorite
-                      }
+                      onFavorite={toggleFavorite}
                       onDetails={(item) =>
                         go(
                           `/producto/${item.id}`
@@ -1931,6 +2126,7 @@ function App() {
         <main className="page">
           <section className="detail">
             <button
+              type="button"
               className="back-btn"
               onClick={() =>
                 window.history.back()
@@ -2014,6 +2210,7 @@ function App() {
                   }}
                 >
                   <button
+                    type="button"
                     className="gradient-btn"
                     onClick={() =>
                       startCheckout(
@@ -2025,6 +2222,7 @@ function App() {
                   </button>
 
                   <button
+                    type="button"
                     className="back-btn"
                     onClick={() =>
                       addToCart(
@@ -2037,6 +2235,7 @@ function App() {
                   </button>
 
                   <button
+                    type="button"
                     className="back-btn"
                     onClick={() =>
                       toggleFavorite(
@@ -2065,11 +2264,7 @@ function App() {
             <form
               className="auth-card"
               onSubmit={handleAuth}
-              autoComplete={
-                authMode === "register"
-                  ? "on"
-                  : "on"
-              }
+              autoComplete="on"
             >
               <div className="auth-logo">
                 V
@@ -2106,7 +2301,9 @@ function App() {
                     }
                     autoComplete="name"
                     autoCorrect="off"
+                    autoCapitalize="words"
                     spellCheck="false"
+                    inputMode="text"
                   />
                 </div>
               )}
@@ -2159,6 +2356,7 @@ function App() {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck="false"
+                  inputMode="text"
                 />
               </div>
 
@@ -2175,8 +2373,7 @@ function App() {
               >
                 {loading
                   ? "Procesando..."
-                  : authMode ===
-                    "register"
+                  : authMode === "register"
                   ? "Crear cuenta"
                   : "Entrar"}
               </button>
@@ -2190,8 +2387,7 @@ function App() {
                   type="button"
                   onClick={() =>
                     openAuth(
-                      authMode ===
-                        "register"
+                      authMode === "register"
                         ? "login"
                         : "register"
                     )
@@ -2224,6 +2420,7 @@ function App() {
 
                   <div className="account-actions">
                     <button
+                      type="button"
                       className="account-action"
                       onClick={() =>
                         go("/favoritos")
@@ -2235,11 +2432,10 @@ function App() {
                     </button>
 
                     <button
+                      type="button"
                       className="account-action"
                       onClick={() =>
-                        go(
-                          "/publicar"
-                        )
+                        go("/publicar")
                       }
                     >
                       📦
@@ -2248,6 +2444,7 @@ function App() {
                     </button>
 
                     <button
+                      type="button"
                       className="account-action"
                       onClick={() =>
                         go("/carrito")
@@ -2259,6 +2456,7 @@ function App() {
                     </button>
 
                     <button
+                      type="button"
                       className="account-action"
                       onClick={() =>
                         setSettings(
@@ -2279,6 +2477,7 @@ function App() {
                   </div>
 
                   <button
+                    type="button"
                     className="back-btn"
                     style={{
                       marginTop: 18,
@@ -2303,6 +2502,7 @@ function App() {
                     }}
                   >
                     <button
+                      type="button"
                       className="gradient-btn"
                       onClick={() =>
                         openAuth("login")
@@ -2312,11 +2512,10 @@ function App() {
                     </button>
 
                     <button
+                      type="button"
                       className="back-btn"
                       onClick={() =>
-                        openAuth(
-                          "register"
-                        )
+                        openAuth("register")
                       }
                     >
                       Crear cuenta
@@ -2348,9 +2547,7 @@ function App() {
                     key={product.id}
                     product={product}
                     favorites={favorites}
-                    onFavorite={
-                      toggleFavorite
-                    }
+                    onFavorite={toggleFavorite}
                     onDetails={(item) =>
                       go(
                         `/producto/${item.id}`
@@ -2376,7 +2573,9 @@ function App() {
               <div className="empty">
                 Tu carrito está vacío.
                 <br />
+
                 <button
+                  type="button"
                   className="gradient-btn"
                   style={{
                     marginTop: 15,
@@ -2464,9 +2663,7 @@ function App() {
 
                       <strong>
                         {formatPrice(
-                          Number(
-                            item.price
-                          ) *
+                          Number(item.price) *
                             Number(
                               item.quantity
                             )
@@ -2479,6 +2676,7 @@ function App() {
                 <div className="cart-card">
                   <div className="summary">
                     <span>Subtotal</span>
+
                     <strong>
                       {formatPrice(
                         cartSubtotal
@@ -2488,6 +2686,7 @@ function App() {
 
                   <div className="summary">
                     <span>Envío</span>
+
                     <strong>
                       {shippingCost === 0
                         ? "Gratis"
@@ -2499,12 +2698,14 @@ function App() {
 
                   <div className="summary total">
                     <span>Total</span>
+
                     <strong>
                       {formatPrice(cartTotal)}
                     </strong>
                   </div>
 
                   <button
+                    type="button"
                     className="gradient-btn"
                     style={{
                       width: "100%",
@@ -2539,6 +2740,7 @@ function App() {
                   <label htmlFor="checkout-name">
                     Nombre completo
                   </label>
+
                   <input
                     id="checkout-name"
                     className="form-control"
@@ -2552,6 +2754,8 @@ function App() {
                       )
                     }
                     autoComplete="name"
+                    autoCorrect="off"
+                    inputMode="text"
                   />
                 </div>
 
@@ -2559,6 +2763,7 @@ function App() {
                   <label htmlFor="checkout-phone">
                     Teléfono
                   </label>
+
                   <input
                     id="checkout-phone"
                     className="form-control"
@@ -2580,6 +2785,7 @@ function App() {
                   <label htmlFor="checkout-address">
                     Dirección
                   </label>
+
                   <input
                     id="checkout-address"
                     className="form-control"
@@ -2593,6 +2799,7 @@ function App() {
                       )
                     }
                     autoComplete="street-address"
+                    autoCorrect="off"
                   />
                 </div>
 
@@ -2600,6 +2807,7 @@ function App() {
                   <label htmlFor="checkout-city">
                     Ciudad
                   </label>
+
                   <input
                     id="checkout-city"
                     className="form-control"
@@ -2613,6 +2821,7 @@ function App() {
                       )
                     }
                     autoComplete="address-level2"
+                    autoCorrect="off"
                   />
                 </div>
 
@@ -2620,6 +2829,7 @@ function App() {
                   <label htmlFor="checkout-state">
                     Estado
                   </label>
+
                   <input
                     id="checkout-state"
                     className="form-control"
@@ -2633,6 +2843,7 @@ function App() {
                       )
                     }
                     autoComplete="address-level1"
+                    autoCorrect="off"
                   />
                 </div>
 
@@ -2640,6 +2851,7 @@ function App() {
                   <label htmlFor="checkout-zip">
                     Código postal
                   </label>
+
                   <input
                     id="checkout-zip"
                     className="form-control"
@@ -2661,6 +2873,7 @@ function App() {
                   <label htmlFor="checkout-delivery">
                     Tipo de envío
                   </label>
+
                   <select
                     id="checkout-delivery"
                     className="form-control"
@@ -2676,6 +2889,7 @@ function App() {
                     <option value="standard">
                       Envío estándar — Gratis
                     </option>
+
                     <option value="express">
                       Envío express — $99
                     </option>
@@ -2686,6 +2900,7 @@ function App() {
                   <label htmlFor="checkout-payment">
                     Método de pago
                   </label>
+
                   <select
                     id="checkout-payment"
                     className="form-control"
@@ -2701,9 +2916,11 @@ function App() {
                     <option value="card">
                       Tarjeta
                     </option>
+
                     <option value="transfer">
                       Transferencia
                     </option>
+
                     <option value="cash">
                       Pago contra entrega
                     </option>
@@ -2714,6 +2931,7 @@ function App() {
                   <label htmlFor="checkout-notes">
                     Notas
                   </label>
+
                   <textarea
                     id="checkout-notes"
                     className="form-control"
@@ -2726,6 +2944,7 @@ function App() {
                       )
                     }
                     placeholder="Indicaciones para la entrega..."
+                    autoCorrect="off"
                   />
                 </div>
 
@@ -2769,6 +2988,7 @@ function App() {
 
                 <div className="summary">
                   <span>Envío</span>
+
                   <strong>
                     {shippingCost === 0
                       ? "Gratis"
@@ -2780,6 +3000,7 @@ function App() {
 
                 <div className="summary total">
                   <span>Total</span>
+
                   <strong>
                     {formatPrice(cartTotal)}
                   </strong>
@@ -2790,7 +3011,7 @@ function App() {
         </main>
       )}
 
-      {location.pathname === "/publicar" && (
+      {isPublish && (
         <main className="page">
           <section className="auth-page">
             <form
@@ -2824,14 +3045,16 @@ function App() {
                     setNewProduct(
                       (current) => ({
                         ...current,
-                        name: event.target
-                          .value,
+                        name:
+                          event.target.value,
                       })
                     )
                   }
                   autoComplete="off"
                   autoCorrect="off"
+                  autoCapitalize="sentences"
                   spellCheck="false"
+                  inputMode="text"
                 />
               </div>
 
@@ -2850,8 +3073,8 @@ function App() {
                     setNewProduct(
                       (current) => ({
                         ...current,
-                        price: event.target
-                          .value,
+                        price:
+                          event.target.value,
                       })
                     )
                   }
@@ -2909,13 +3132,15 @@ function App() {
                       (current) => ({
                         ...current,
                         image:
-                          event.target
-                            .value,
+                          event.target.value,
                       })
                     )
                   }
                   autoComplete="url"
                   inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                 />
               </div>
 
@@ -2936,12 +3161,12 @@ function App() {
                       (current) => ({
                         ...current,
                         description:
-                          event.target
-                            .value,
+                          event.target.value,
                       })
                     )
                   }
                   autoCorrect="off"
+                  spellCheck="false"
                 />
               </div>
 
@@ -2959,7 +3184,7 @@ function App() {
         </main>
       )}
 
-      {location.pathname === "/menu" && (
+      {isMenu && (
         <div
           className="menu-overlay"
           onClick={(event) => {
@@ -2976,6 +3201,7 @@ function App() {
               <h2>Menú</h2>
 
               <button
+                type="button"
                 className="menu-close"
                 onClick={goHome}
               >
@@ -2984,6 +3210,7 @@ function App() {
             </div>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 go("/cuenta")
@@ -2993,6 +3220,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 go("/favoritos")
@@ -3002,6 +3230,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 go("/carrito")
@@ -3011,6 +3240,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 go("/publicar")
@@ -3020,6 +3250,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 setSettings(
@@ -3038,6 +3269,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 setSettings(
@@ -3056,6 +3288,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               className="menu-item"
               onClick={() =>
                 setSettings(
@@ -3076,6 +3309,7 @@ function App() {
             {!user && (
               <>
                 <button
+                  type="button"
                   className="menu-item"
                   onClick={() =>
                     openAuth("login")
@@ -3085,11 +3319,10 @@ function App() {
                 </button>
 
                 <button
+                  type="button"
                   className="menu-item"
                   onClick={() =>
-                    openAuth(
-                      "register"
-                    )
+                    openAuth("register")
                   }
                 >
                   ✨ Crear cuenta
@@ -3099,6 +3332,7 @@ function App() {
 
             {user && (
               <button
+                type="button"
                 className="menu-item"
                 onClick={handleLogout}
               >
@@ -3149,6 +3383,7 @@ function ProductCard({
         )}
 
         <button
+          type="button"
           className="favorite"
           onClick={() =>
             onFavorite(product)
@@ -3188,6 +3423,7 @@ function ProductCard({
 
         <div className="product-actions">
           <button
+            type="button"
             className="small-btn details-btn"
             onClick={() =>
               onDetails(product)
@@ -3197,6 +3433,7 @@ function ProductCard({
           </button>
 
           <button
+            type="button"
             className="small-btn buy-btn"
             onClick={() =>
               onBuy(product)
