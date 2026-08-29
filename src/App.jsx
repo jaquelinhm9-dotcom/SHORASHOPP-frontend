@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
 const CART_KEY = "vanidaxi_cart";
@@ -189,9 +192,14 @@ function normalizeText(text = "") {
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [products, setProducts] = useState(initialProducts);
-  const [cart, setCart] = useState(() => loadStorage(CART_KEY, []));
+
+  const [cart, setCart] = useState(() =>
+    loadStorage(CART_KEY, [])
+  );
+
   const [favorites, setFavorites] = useState(() =>
     loadStorage(FAVORITES_KEY, [])
   );
@@ -204,22 +212,9 @@ function App() {
     })
   );
 
-  const [activeCategory, setActiveCategory] = useState("Todos");
-  const [search, setSearch] = useState("");
-
-  const [showMenu, setShowMenu] = useState(false);
-  const [showCart, setShowCart] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
-  const [showPublish, setShowPublish] = useState(false);
-  const [showMessages, setShowMessages] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState(1);
-  const [orderComplete, setOrderComplete] = useState(false);
-
   const [user, setUser] = useState(null);
+
+  const [search, setSearch] = useState("");
 
   const [authMode, setAuthMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
@@ -258,33 +253,92 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    localStorage.setItem(
+      CART_KEY,
+      JSON.stringify(cart)
+    );
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    localStorage.setItem(
+      FAVORITES_KEY,
+      JSON.stringify(favorites)
+    );
   }, [favorites]);
 
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify(settings)
+    );
 
-    document.body.classList.toggle("dark-theme", settings.darkMode);
+    document.body.classList.toggle(
+      "dark-theme",
+      settings.darkMode
+    );
   }, [settings]);
 
+  const cartCount = cart.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+
+  const cartSubtotal = cart.reduce(
+    (total, item) =>
+      total + Number(item.price || 0) * item.quantity,
+    0
+  );
+
+  const shippingCost =
+    checkout.delivery === "express" &&
+    cart.length > 0
+      ? 99
+      : 0;
+
+  const cartTotal =
+    cartSubtotal + shippingCost;
+
+  const getCategoryFromPath = () => {
+    if (!location.pathname.startsWith("/categoria/")) {
+      return "Todos";
+    }
+
+    try {
+      return decodeURIComponent(
+        location.pathname.replace(
+          "/categoria/",
+          ""
+        )
+      );
+    } catch {
+      return "Todos";
+    }
+  };
+
+  const activeCategory = getCategoryFromPath();
+
   const filteredProducts = useMemo(() => {
-    let result = products.filter(
-      (product) =>
-        activeCategory === "Todos" ||
-        product.category === activeCategory
-    );
+    let result = [...products];
+
+    if (
+      activeCategory &&
+      activeCategory !== "Todos"
+    ) {
+      result = result.filter(
+        (product) =>
+          product.category === activeCategory
+      );
+    }
 
     const term = normalizeText(search);
 
@@ -302,44 +356,70 @@ function App() {
 
       return searchable.includes(term);
     });
-  }, [products, activeCategory, search]);
+  }, [
+    products,
+    activeCategory,
+    search,
+  ]);
 
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  const currentProductId = location.pathname.startsWith(
+    "/producto/"
+  )
+    ? location.pathname.replace(
+        "/producto/",
+        ""
+      )
+    : null;
 
-  const cartSubtotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  const selectedProduct = currentProductId
+    ? products.find(
+        (product) =>
+          String(product.id) ===
+          String(currentProductId)
+      )
+    : null;
 
-  const shippingCost =
-    checkout.delivery === "express" && cart.length > 0 ? 99 : 0;
-
-  const cartTotal = cartSubtotal + shippingCost;
-
-  const goHome = () => {
-    setShowMenu(false);
-    setActiveCategory("Todos");
-    setSearch("");
-    navigate("/");
+  const go = (path) => {
+    navigate(path);
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
 
+  const goHome = () => {
+    setSearch("");
+    go("/");
+  };
+
+  const goProducts = () => {
+    setSearch("");
+    go("/productos");
+  };
+
+  const goCategory = (categoryName) => {
+    setSearch("");
+    go(
+      `/categoria/${encodeURIComponent(
+        categoryName
+      )}`
+    );
+  };
+
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
     setAuthMessage("");
-    setShowMenu(false);
-    setShowMessages(false);
-    setShowSettings(false);
-    setShowAuth(true);
+    go(
+      mode === "register"
+        ? "/cuenta/crear"
+        : "/cuenta/iniciar"
+    );
   };
 
-  const addToCart = (product, openCart = true) => {
+  const addToCart = (
+    product,
+    redirectToCart = true
+  ) => {
     setCart((current) => {
       const existing = current.find(
         (item) => item.id === product.id
@@ -350,7 +430,8 @@ function App() {
           item.id === product.id
             ? {
                 ...item,
-                quantity: item.quantity + 1,
+                quantity:
+                  item.quantity + 1,
               }
             : item
         );
@@ -365,16 +446,23 @@ function App() {
       ];
     });
 
-    if (openCart) setShowCart(true);
+    if (redirectToCart) {
+      go("/carrito");
+    }
   };
 
   const removeFromCart = (id) => {
     setCart((current) =>
-      current.filter((item) => item.id !== id)
+      current.filter(
+        (item) => item.id !== id
+      )
     );
   };
 
-  const changeQuantity = (id, amount) => {
+  const changeQuantity = (
+    id,
+    amount
+  ) => {
     setCart((current) =>
       current.map((item) =>
         item.id === id
@@ -404,26 +492,27 @@ function App() {
     });
   };
 
-  const openProduct = (product) => {
-    setSelectedProduct(product);
-  };
+  const startCheckout = (
+    product = null
+  ) => {
+    if (product) {
+      addToCart(product, false);
+    }
 
-  const startCheckout = (product = null) => {
-    if (product) addToCart(product, false);
-
-    if (!product && cart.length === 0) {
-      setShowCart(true);
+    if (
+      !product &&
+      cart.length === 0
+    ) {
+      go("/carrito");
       return;
     }
 
-    setShowCart(false);
-    setSelectedProduct(null);
-    setOrderComplete(false);
-    setCheckoutStep(1);
-    setShowCheckout(true);
+    go("/checkout/entrega");
   };
 
-  const handleAuth = async (event) => {
+  const handleAuth = async (
+    event
+  ) => {
     event.preventDefault();
 
     setLoading(true);
@@ -431,7 +520,9 @@ function App() {
 
     try {
       if (authMode === "register") {
-        if (authPassword.length < 6) {
+        if (
+          authPassword.length < 6
+        ) {
           setAuthMessage(
             "La contraseña debe tener al menos 6 caracteres."
           );
@@ -444,7 +535,8 @@ function App() {
             password: authPassword,
             options: {
               data: {
-                full_name: authName,
+                full_name:
+                  authName,
               },
             },
           });
@@ -453,7 +545,7 @@ function App() {
 
         if (data?.session) {
           setUser(data.user);
-          setShowAuth(false);
+          go("/cuenta");
         } else {
           setAuthMessage(
             "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
@@ -461,33 +553,43 @@ function App() {
         }
       } else {
         const { data, error } =
-          await supabase.auth.signInWithPassword({
-            email: authEmail,
-            password: authPassword,
-          });
+          await supabase.auth.signInWithPassword(
+            {
+              email: authEmail,
+              password: authPassword,
+            }
+          );
 
         if (error) throw error;
 
         setUser(data.user);
-        setShowAuth(false);
+        go("/cuenta");
       }
     } catch (error) {
-      const message = error?.message?.toLowerCase() || "";
+      const message =
+        error?.message?.toLowerCase() ||
+        "";
 
       if (
-        message.includes("invalid login credentials")
+        message.includes(
+          "invalid login credentials"
+        )
       ) {
         setAuthMessage(
           "Correo o contraseña incorrectos."
         );
       } else if (
-        message.includes("email not confirmed")
+        message.includes(
+          "email not confirmed"
+        )
       ) {
         setAuthMessage(
           "Primero confirma tu correo electrónico."
         );
       } else if (
-        message.includes("already registered")
+        message.includes(
+          "already registered"
+        )
       ) {
         setAuthMessage(
           "Este correo ya tiene una cuenta. Intenta iniciar sesión."
@@ -506,23 +608,31 @@ function App() {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    setShowMenu(false);
+    go("/");
   };
 
   const handlePublish = (event) => {
     event.preventDefault();
 
-    if (!newProduct.name || !newProduct.price) return;
+    if (
+      !newProduct.name ||
+      !newProduct.price
+    ) {
+      return;
+    }
 
     const product = {
       id: Date.now(),
       name: newProduct.name,
-      price: Number(newProduct.price),
+      price: Number(
+        newProduct.price
+      ),
       oldPrice: null,
       rating: 5,
       reviews: 0,
       discount: 0,
-      category: newProduct.category,
+      category:
+        newProduct.category,
       image:
         newProduct.image ||
         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
@@ -545,41 +655,7 @@ function App() {
       description: "",
     });
 
-    setShowPublish(false);
-  };
-
-  const handleCheckoutNext = () => {
-    if (checkoutStep === 1) {
-      if (
-        !checkout.name ||
-        !checkout.phone ||
-        !checkout.address ||
-        !checkout.city ||
-        !checkout.state ||
-        !checkout.zip
-      ) {
-        alert(
-          "Completa todos los datos de entrega."
-        );
-        return;
-      }
-
-      setCheckoutStep(2);
-      return;
-    }
-
-    if (checkoutStep === 2) {
-      setCheckoutStep(3);
-      return;
-    }
-
-    setOrderComplete(true);
-  };
-
-  const resetCheckout = () => {
-    setShowCheckout(false);
-    setOrderComplete(false);
-    setCheckoutStep(1);
+    go(`/producto/${product.id}`);
   };
 
   const openWhatsApp = () => {
@@ -598,38 +674,3101 @@ function App() {
     );
   };
 
-  const openFavorites = () => {
-    setActiveCategory("Todos");
-    setSearch("");
-    setShowMenu(false);
+  const handleCheckoutNext = () => {
+    if (
+      location.pathname ===
+      "/checkout/entrega"
+    ) {
+      if (
+        !checkout.name ||
+        !checkout.phone ||
+        !checkout.address ||
+        !checkout.city ||
+        !checkout.state ||
+        !checkout.zip
+      ) {
+        alert(
+          "Completa todos los datos de entrega."
+        );
+        return;
+      }
 
-    if (favorites.length === 0) {
-      alert(
-        "Todavía no tienes productos guardados en favoritos."
-      );
+      go("/checkout/pago");
       return;
     }
 
-    setProducts((current) => {
-      const favoriteIds = favorites.map(
-        (item) => item.id
+    if (
+      location.pathname ===
+      "/checkout/pago"
+    ) {
+      go("/checkout/confirmacion");
+      return;
+    }
+
+    if (
+      location.pathname ===
+      "/checkout/confirmacion"
+    ) {
+      go("/pedido/confirmado");
+    }
+  };
+
+  const Header = () => (
+    <header className="top-header">
+      <div className="header-main">
+        <button
+          className="menu-button"
+          onClick={() => go("/menu")}
+          aria-label="Abrir menú"
+        >
+          ☰
+        </button>
+
+        <button
+          className="brand"
+          onClick={goHome}
+        >
+          VaniDaxi
+        </button>
+
+        <div className="search-box">
+          <input
+            value={search}
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            placeholder="¿Qué estás buscando?"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                goProducts();
+              }
+            }}
+          />
+
+          <button
+            onClick={goProducts}
+            aria-label="Buscar"
+          >
+            🔍
+          </button>
+        </div>
+
+        <div className="header-actions">
+          <button
+            className="header-action"
+            onClick={() =>
+              user
+                ? go("/cuenta")
+                : go("/cuenta/iniciar")
+            }
+            aria-label="Mi cuenta"
+          >
+            ✨
+          </button>
+
+          <button
+            className="header-action"
+            onClick={() => go("/carrito")}
+            aria-label="Carrito"
+          >
+            🛒
+
+            {cartCount > 0 && (
+              <span className="cart-count">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="category-bar">
+        <button
+          className={`category-pill ${
+            activeCategory === "Todos"
+              ? "active"
+              : ""
+          }`}
+          onClick={() =>
+            goProducts()
+          }
+        >
+          Todo
+        </button>
+
+        {categories.map(
+          (category) => (
+            <button
+              key={category.name}
+              className={`category-pill ${
+                activeCategory ===
+                category.name
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                goCategory(
+                  category.name
+                )
+              }
+            >
+              {category.name}
+            </button>
+          )
+        )}
+      </div>
+    </header>
+  );
+
+  const BottomNav = () => (
+    <nav className="bottom-nav">
+      <button
+        onClick={goHome}
+      >
+        <span>🏠</span>
+        <small>Inicio</small>
+      </button>
+
+      <button
+        onClick={() =>
+          go("/favoritos")
+        }
+      >
+        <span>❤️</span>
+        <small>Favoritos</small>
+      </button>
+
+      <button
+        onClick={() =>
+          go("/productos")
+        }
+      >
+        <span>🛍️</span>
+        <small>Explorar</small>
+      </button>
+
+      <button
+        onClick={() =>
+          go("/cuenta")
+        }
+      >
+        <span>✨</span>
+        <small>Cuenta</small>
+      </button>
+    </nav>
+  );
+
+  const PageShell = ({
+    children,
+    title = "",
+    back = true,
+  }) => (
+    <>
+      <Header />
+
+      <main className="page-content inner-page">
+        {back && (
+          <button
+            className="back-button"
+            onClick={() =>
+              navigate(-1)
+            }
+          >
+            ← Atrás
+          </button>
+        )}
+
+        {title && (
+          <div className="page-title">
+            <h1>{title}</h1>
+          </div>
+        )}
+
+        {children}
+      </main>
+
+      <BottomNav />
+    </>
+  );
+
+  const HomePage = () => (
+    <>
+      <Header />
+
+      <main className="page-content">
+        <section className="hero">
+          <div>
+            <div className="hero-kicker">
+              VaniDaxi
+            </div>
+
+            <h1>
+              Todo en un solo lugar
+            </h1>
+
+            <p>
+              Compra, vende y descubre
+              productos de diferentes
+              categorías.
+            </p>
+
+            <button
+              className="hero-button"
+              onClick={goProducts}
+            >
+              Comprar ahora
+            </button>
+          </div>
+
+          <div className="hero-icon">
+            🛍️
+          </div>
+        </section>
+
+        <section className="top-cards">
+          {topCards.map(
+            (card) => (
+              <button
+                key={card.title}
+                className="top-card"
+                style={{
+                  backgroundImage: `url(${card.image})`,
+                }}
+                onClick={() => {
+                  if (
+                    card.title ===
+                    "Vendedores"
+                  ) {
+                    go("/publicar");
+                    return;
+                  }
+
+                  if (
+                    card.title ===
+                    "Envíos"
+                  ) {
+                    go(
+                      "/mensajes/envios"
+                    );
+                    return;
+                  }
+
+                  goProducts();
+                }}
+              >
+                <span>
+                  <strong>
+                    {card.title}
+                  </strong>
+
+                  <small>
+                    {card.subtitle}
+                  </small>
+                </span>
+              </button>
+            )
+          )}
+        </section>
+
+        <section>
+          <div className="section-title">
+            <h2>Categorías</h2>
+
+            <button
+              className="link-button"
+              onClick={goProducts}
+            >
+              Ver todo
+            </button>
+          </div>
+
+          <div className="categories-grid">
+            {categories.map(
+              (category) => (
+                <button
+                  className="category-card"
+                  key={
+                    category.name
+                  }
+                  onClick={() =>
+                    goCategory(
+                      category.name
+                    )
+                  }
+                >
+                  <img
+                    src={
+                      category.image
+                    }
+                    alt={
+                      category.name
+                    }
+                  />
+
+                  <span>
+                    {category.name}
+                  </span>
+                </button>
+              )
+            )}
+          </div>
+        </section>
+
+        <section className="join-card">
+          <div>
+            <strong>
+              ✨ Únete a VaniDaxi
+            </strong>
+
+            <p>
+              Compra, vende y disfruta
+              de más funciones con tu
+              cuenta.
+            </p>
+          </div>
+
+          <button
+            className="primary-button"
+            onClick={() =>
+              go(
+                "/cuenta/crear"
+              )
+            }
+          >
+            Crear cuenta
+          </button>
+        </section>
+
+        <section>
+          <div className="section-title">
+            <h2>
+              Productos destacados
+            </h2>
+
+            <button
+              className="link-button"
+              onClick={goProducts}
+            >
+              Ver todos
+            </button>
+          </div>
+
+          <ProductGrid
+            items={products}
+          />
+        </section>
+      </main>
+
+      <WhatsAppButton />
+      <BottomNav />
+    </>
+  );
+
+  const ProductGrid = ({
+    items,
+  }) => (
+    <div className="products-grid">
+      {items.length === 0 ? (
+        <div className="empty-state">
+          No encontramos productos.
+        </div>
+      ) : (
+        items.map((product) => {
+          const favorite =
+            favorites.some(
+              (item) =>
+                item.id ===
+                product.id
+            );
+
+          return (
+            <article
+              className="product-card"
+              key={product.id}
+            >
+              <div
+                className="product-image"
+                onClick={() =>
+                  go(
+                    `/producto/${product.id}`
+                  )
+                }
+              >
+                <img
+                  src={product.image}
+                  alt={product.name}
+                />
+
+                {product.discount >
+                  0 && (
+                  <span className="discount">
+                    -
+                    {
+                      product.discount
+                    }
+                    %
+                  </span>
+                )}
+
+                <button
+                  className="favorite-button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleFavorite(
+                      product
+                    );
+                  }}
+                >
+                  {favorite
+                    ? "❤️"
+                    : "♡"}
+                </button>
+              </div>
+
+              <div className="product-info">
+                <div className="product-category">
+                  {product.category}
+                </div>
+
+                <h3 className="product-name">
+                  {product.name}
+                </h3>
+
+                <div className="prices">
+                  <strong className="price">
+                    {formatPrice(
+                      product.price
+                    )}
+                  </strong>
+
+                  {product.oldPrice && (
+                    <span className="old-price">
+                      {formatPrice(
+                        product.oldPrice
+                      )}
+                    </span>
+                  )}
+                </div>
+
+                <div className="rating">
+                  ⭐{" "}
+                  {product.rating}{" "}
+                  ·{" "}
+                  {product.reviews}{" "}
+                  opiniones
+                </div>
+
+                <div className="product-actions">
+                  <button
+                    className="details-button"
+                    onClick={() =>
+                      go(
+                        `/producto/${product.id}`
+                      )
+                    }
+                  >
+                    Ver
+                  </button>
+
+                  <button
+                    className="add-button"
+                    onClick={() =>
+                      addToCart(
+                        product
+                      )
+                    }
+                  >
+                    🛒 Agregar
+                  </button>
+                </div>
+              </div>
+            </article>
+          );
+        })
+      )}
+    </div>
+  );
+
+  const WhatsAppButton = () => (
+    <button
+      className="floating-whatsapp"
+      onClick={openWhatsApp}
+      aria-label="Atención al cliente por WhatsApp"
+      title="Atención al cliente"
+    >
+      ☎
+    </button>
+  );
+
+  const MenuPage = () => (
+    <PageShell title="Menú">
+      <div className="menu-list-page">
+        {user ? (
+          <div className="account-box">
+            <strong>
+              {user.user_metadata
+                ?.full_name ||
+                "Mi cuenta"}
+            </strong>
+
+            <small>
+              {user.email}
+            </small>
+          </div>
+        ) : (
+          <div className="account-box">
+            <strong>
+              ¡Hola! 👋
+            </strong>
+
+            <small>
+              Inicia sesión para
+              acceder a tu cuenta.
+            </small>
+          </div>
+        )}
+
+        <MenuLink
+          icon="🏠"
+          title="Inicio"
+          onClick={goHome}
+        />
+
+        <MenuLink
+          icon="✨"
+          title="Mi cuenta"
+          onClick={() =>
+            go("/cuenta")
+          }
+        />
+
+        <MenuLink
+          icon="👤"
+          title="Perfil"
+          onClick={() =>
+            go("/perfil")
+          }
+        />
+
+        <MenuLink
+          icon="❤️"
+          title="Favoritos"
+          onClick={() =>
+            go("/favoritos")
+          }
+        />
+
+        <MenuLink
+          icon="💬"
+          title="Centro de mensajes"
+          onClick={() =>
+            go("/mensajes")
+          }
+        />
+
+        <MenuLink
+          icon="➕"
+          title="Publicar producto"
+          onClick={() =>
+            go("/publicar")
+          }
+        />
+
+        <MenuLink
+          icon="🛒"
+          title="Mi carrito"
+          suffix={
+            cartCount > 0
+              ? `(${cartCount})`
+              : ""
+          }
+          onClick={() =>
+            go("/carrito")
+          }
+        />
+
+        <MenuLink
+          icon="🛍️"
+          title="Explorar productos"
+          onClick={() =>
+            go("/productos")
+          }
+        />
+
+        <MenuLink
+          icon="⚙️"
+          title="Configuración"
+          onClick={() =>
+            go("/configuracion")
+          }
+        />
+
+        <MenuLink
+          icon="🟢"
+          title="Atención al cliente"
+          onClick={() =>
+            go("/mensajes/atencion")
+          }
+        />
+
+        {user ? (
+          <MenuLink
+            icon="🚪"
+            title="Cerrar sesión"
+            onClick={logout}
+          />
+        ) : null}
+      </div>
+    </PageShell>
+  );
+
+  const MenuLink = ({
+    icon,
+    title,
+    suffix = "",
+    onClick,
+  }) => (
+    <button
+      className="menu-link"
+      onClick={onClick}
+    >
+      <span className="menu-link-icon">
+        {icon}
+      </span>
+
+      <strong>{title}</strong>
+
+      {suffix && (
+        <span className="menu-link-suffix">
+          {suffix}
+        </span>
+      )}
+
+      <span className="menu-arrow">
+        →
+      </span>
+    </button>
+  );
+
+  const AccountPage = () => (
+    <PageShell title="Mi cuenta">
+      <div className="account-page-card">
+        <div className="account-page-icon">
+          ✨
+        </div>
+
+        {user ? (
+          <>
+            <h2>
+              Bienvenido,
+              <br />
+              {user.user_metadata
+                ?.full_name ||
+                "a VaniDaxi"}
+            </h2>
+
+            <p>
+              {user.email}
+            </p>
+
+            <div className="account-grid">
+              <button
+                className="account-option"
+                onClick={() =>
+                  go("/perfil")
+                }
+              >
+                <span>
+                  👤
+                </span>
+
+                <strong>
+                  Perfil
+                </strong>
+              </button>
+
+              <button
+                className="account-option"
+                onClick={() =>
+                  go(
+                    "/mensajes/pedidos"
+                  )
+                }
+              >
+                <span>
+                  📦
+                </span>
+
+                <strong>
+                  Mis pedidos
+                </strong>
+              </button>
+
+              <button
+                className="account-option"
+                onClick={() =>
+                  go(
+                    "/mensajes/ventas"
+                  )
+                }
+              >
+                <span>
+                  🏪
+                </span>
+
+                <strong>
+                  Mis ventas
+                </strong>
+              </button>
+
+              <button
+                className="account-option"
+                onClick={() =>
+                  go(
+                    "/configuracion"
+                  )
+                }
+              >
+                <span>
+                  ⚙️
+                </span>
+
+                <strong>
+                  Configuración
+                </strong>
+              </button>
+            </div>
+
+            <button
+              className="secondary-button full-width"
+              onClick={logout}
+            >
+              🚪 Cerrar sesión
+            </button>
+          </>
+        ) : (
+          <>
+            <h2>
+              Entra a VaniDaxi
+            </h2>
+
+            <p>
+              Accede a tu cuenta o
+              crea una nueva para
+              disfrutar de todas las
+              funciones.
+            </p>
+
+            <div className="account-buttons">
+              <button
+                className="primary-button"
+                onClick={() =>
+                  go(
+                    "/cuenta/iniciar"
+                  )
+                }
+              >
+                ✨ Iniciar sesión
+              </button>
+
+              <button
+                className="secondary-button"
+                onClick={() =>
+                  go(
+                    "/cuenta/crear"
+                  )
+                }
+              >
+                🚀 Crear cuenta
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </PageShell>
+  );
+
+  const AuthPage = ({
+    register = false,
+  }) => {
+    useEffect(() => {
+      setAuthMode(
+        register
+          ? "register"
+          : "login"
+      );
+    }, [register]);
+
+    return (
+      <PageShell
+        title={
+          register
+            ? "Crear cuenta"
+            : "Iniciar sesión"
+        }
+      >
+        <div className="auth-page">
+          <div className="auth-visual-page">
+            <div className="auth-logo">
+              🛍️
+            </div>
+
+            <h2>
+              {register
+                ? "Únete a VaniDaxi"
+                : "Bienvenido de nuevo"}
+            </h2>
+
+            <p>
+              {register
+                ? "Crea tu cuenta para comprar, vender y descubrir más."
+                : "Inicia sesión para continuar disfrutando de VaniDaxi."}
+            </p>
+          </div>
+
+          <div className="auth-form-page">
+            <form
+              className="form"
+              onSubmit={
+                handleAuth
+              }
+            >
+              {register && (
+                <input
+                  type="text"
+                  placeholder="Nombre completo"
+                  value={authName}
+                  onChange={(
+                    event
+                  ) =>
+                    setAuthName(
+                      event.target
+                        .value
+                    )
+                  }
+                  required
+                />
+              )}
+
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                value={authEmail}
+                onChange={(
+                  event
+                ) =>
+                  setAuthEmail(
+                    event.target
+                      .value
+                  )
+                }
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={
+                  authPassword
+                }
+                onChange={(
+                  event
+                ) =>
+                  setAuthPassword(
+                    event.target
+                      .value
+                  )
+                }
+                required
+              />
+
+              {authMessage && (
+                <div className="auth-message">
+                  {authMessage}
+                </div>
+              )}
+
+              <button
+                className="primary-button"
+                disabled={
+                  loading
+                }
+              >
+                {loading
+                  ? "Procesando..."
+                  : register
+                  ? "🚀 Crear mi cuenta"
+                  : "✨ Entrar a mi cuenta"}
+              </button>
+            </form>
+
+            <div className="switch-page">
+              {register
+                ? "¿Ya tienes una cuenta?"
+                : "¿Todavía no tienes una cuenta?"}
+
+              <button
+                className="text-button"
+                onClick={() =>
+                  go(
+                    register
+                      ? "/cuenta/iniciar"
+                      : "/cuenta/crear"
+                  )
+                }
+              >
+                {register
+                  ? "Iniciar sesión"
+                  : "Crear cuenta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </PageShell>
+    );
+  };
+
+  const ProfilePage = () => (
+    <PageShell title="Perfil">
+      <div className="profile-page-card">
+        {user ? (
+          <>
+            <div className="profile-avatar">
+              {(
+                user.user_metadata
+                  ?.full_name ||
+                "U"
+              )
+                .charAt(0)
+                .toUpperCase()}
+            </div>
+
+            <h2>
+              {user.user_metadata
+                ?.full_name ||
+                "Usuario VaniDaxi"}
+            </h2>
+
+            <p>
+              {user.email}
+            </p>
+
+            <div className="profile-options">
+              <button
+                onClick={() =>
+                  go(
+                    "/perfil/datos"
+                  )
+                }
+              >
+                🪪 Mis datos
+                <span>→</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  go(
+                    "/mensajes/pedidos"
+                  )
+                }
+              >
+                📦 Mis pedidos
+                <span>→</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  go(
+                    "/mensajes/ventas"
+                  )
+                }
+              >
+                🏪 Mis ventas
+                <span>→</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">
+              👤
+            </div>
+
+            <h3>
+              Inicia sesión
+            </h3>
+
+            <p>
+              Necesitas una cuenta
+              para ver tu perfil.
+            </p>
+
+            <button
+              className="primary-button"
+              onClick={() =>
+                go(
+                  "/cuenta/iniciar"
+                )
+              }
+            >
+              Iniciar sesión
+            </button>
+          </div>
+        )}
+      </div>
+    </PageShell>
+  );
+
+  const FavoritesPage = () => (
+    <PageShell title="Favoritos">
+      {favorites.length === 0 ? (
+        <div className="empty-state large-empty">
+          <div className="empty-icon">
+            ❤️
+          </div>
+
+          <h3>
+            Todavía no tienes
+            favoritos
+          </h3>
+
+          <p>
+            Guarda productos para
+            encontrarlos fácilmente
+            después.
+          </p>
+
+          <button
+            className="primary-button"
+            onClick={() =>
+              go("/productos")
+            }
+          >
+            Explorar productos
+          </button>
+        </div>
+      ) : (
+        <ProductGrid
+          items={favorites}
+        />
+      )}
+    </PageShell>
+  );
+
+  const ProductsPage = () => (
+    <PageShell title="Explorar productos">
+      <div className="search-banner">
+        <input
+          value={search}
+          onChange={(event) =>
+            setSearch(
+              event.target.value
+            )
+          }
+          placeholder="Buscar productos..."
+        />
+      </div>
+
+      <div className="mini-category-grid">
+        <button
+          className={
+            activeCategory ===
+            "Todos"
+              ? "active"
+              : ""
+          }
+          onClick={goProducts}
+        >
+          Todo
+        </button>
+
+        {categories.map(
+          (category) => (
+            <button
+              key={category.name}
+              className={
+                activeCategory ===
+                category.name
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                goCategory(
+                  category.name
+                )
+              }
+            >
+              {category.name}
+            </button>
+          )
+        )}
+      </div>
+
+      <ProductGrid
+        items={
+          filteredProducts
+        }
+      />
+    </PageShell>
+  );
+
+  const CategoryPage = () => {
+    const category =
+      activeCategory;
+
+    return (
+      <PageShell
+        title={category}
+      >
+        <div className="category-page-hero">
+          <img
+            src={
+              categories.find(
+                (item) =>
+                  item.name ===
+                  category
+              )?.image
+            }
+            alt={category}
+          />
+
+          <div>
+            <span>
+              Categoría
+            </span>
+
+            <h2>
+              {category}
+            </h2>
+
+            <p>
+              Explora productos de
+              esta categoría.
+            </p>
+          </div>
+        </div>
+
+        <ProductGrid
+          items={
+            filteredProducts
+          }
+        />
+      </PageShell>
+    );
+  };
+
+  const ProductPage = () => {
+    if (!selectedProduct) {
+      return (
+        <PageShell title="Producto">
+          <div className="empty-state">
+            <div className="empty-icon">
+              🔎
+            </div>
+
+            <h3>
+              Producto no encontrado
+            </h3>
+
+            <button
+              className="primary-button"
+              onClick={goProducts}
+            >
+              Volver a productos
+            </button>
+          </div>
+        </PageShell>
+      );
+    }
+
+    const favorite =
+      favorites.some(
+        (item) =>
+          item.id ===
+          selectedProduct.id
       );
 
-      return [
-        ...current.filter((item) =>
-          favoriteIds.includes(item.id)
-        ),
-        ...current.filter(
-          (item) =>
-            !favoriteIds.includes(item.id)
-        ),
-      ];
-    });
+    return (
+      <PageShell
+        title={
+          selectedProduct.name
+        }
+      >
+        <div className="product-detail-page">
+          <div className="product-detail-image">
+            <img
+              src={
+                selectedProduct.image
+              }
+              alt={
+                selectedProduct.name
+              }
+            />
 
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth",
-    });
+            {selectedProduct.discount >
+              0 && (
+              <span className="discount large-discount">
+                -
+                {
+                  selectedProduct.discount
+                }
+                %
+              </span>
+            )}
+          </div>
+
+          <div className="product-detail-info">
+            <div className="product-category">
+              {
+                selectedProduct.category
+              }
+            </div>
+
+            <h2>
+              {
+                selectedProduct.name
+              }
+            </h2>
+
+            <div className="rating big-rating">
+              ⭐{" "}
+              {
+                selectedProduct.rating
+              }{" "}
+              ·{" "}
+              {
+                selectedProduct.reviews
+              }{" "}
+              opiniones
+            </div>
+
+            <div className="detail-price">
+              {formatPrice(
+                selectedProduct.price
+              )}
+            </div>
+
+            {selectedProduct.oldPrice && (
+              <div className="detail-old-price">
+                {formatPrice(
+                  selectedProduct.oldPrice
+                )}
+              </div>
+            )}
+
+            <p className="detail-description">
+              {
+                selectedProduct.description
+              }
+            </p>
+
+            {selectedProduct
+              .specifications
+              ?.length > 0 && (
+              <>
+                <h3>
+                  Características
+                </h3>
+
+                <ul className="specifications">
+                  {selectedProduct.specifications.map(
+                    (specification) => (
+                      <li
+                        key={
+                          specification
+                        }
+                      >
+                        {
+                          specification
+                        }
+                      </li>
+                    )
+                  )}
+                </ul>
+              </>
+            )}
+
+            <button
+              className={`favorite-detail ${
+                favorite
+                  ? "selected"
+                  : ""
+              }`}
+              onClick={() =>
+                toggleFavorite(
+                  selectedProduct
+                )
+              }
+            >
+              {favorite
+                ? "❤️ Guardado en favoritos"
+                : "♡ Agregar a favoritos"}
+            </button>
+
+            <div className="detail-actions">
+              <button
+                className="secondary-button"
+                onClick={() =>
+                  addToCart(
+                    selectedProduct
+                  )
+                }
+              >
+                🛒 Agregar al carrito
+              </button>
+
+              <button
+                className="primary-button"
+                onClick={() =>
+                  startCheckout(
+                    selectedProduct
+                  )
+                }
+              >
+                Comprar ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      </PageShell>
+    );
+  };
+
+  const CartPage = () => (
+    <PageShell title="Mi carrito">
+      {cart.length === 0 ? (
+        <div className="empty-state large-empty">
+          <div className="empty-icon">
+            🛒
+          </div>
+
+          <h3>
+            Tu carrito está vacío
+          </h3>
+
+          <p>
+            Agrega productos para
+            comenzar tu compra.
+          </p>
+
+          <button
+            className="primary-button"
+            onClick={goProducts}
+          >
+            Explorar productos
+          </button>
+        </div>
+      ) : (
+        <div className="cart-page">
+          <div className="cart-items">
+            {cart.map((item) => (
+              <article
+                className="cart-item"
+                key={item.id}
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  onClick={() =>
+                    go(
+                      `/producto/${item.id}`
+                    )
+                  }
+                />
+
+                <div className="cart-item-info">
+                  <div className="product-category">
+                    {item.category}
+                  </div>
+
+                  <h3>
+                    {item.name}
+                  </h3>
+
+                  <strong>
+                    {formatPrice(
+                      item.price
+                    )}
+                  </strong>
+
+                  <div className="cart-controls">
+                    <button
+                      onClick={() =>
+                        changeQuantity(
+                          item.id,
+                          -1
+                        )
+                      }
+                    >
+                      −
+                    </button>
+
+                    <span>
+                      {item.quantity}
+                    </span>
+
+                    <button
+                      onClick={() =>
+                        changeQuantity(
+                          item.id,
+                          1
+                        )
+                      }
+                    >
+                      +
+                    </button>
+
+                    <button
+                      className="remove-cart"
+                      onClick={() =>
+                        removeFromCart(
+                          item.id
+                        )
+                      }
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <aside className="cart-summary">
+            <h3>
+              Resumen de compra
+            </h3>
+
+            <div className="summary-row">
+              <span>
+                Productos
+              </span>
+
+              <strong>
+                {formatPrice(
+                  cartSubtotal
+                )}
+              </strong>
+            </div>
+
+            <div className="summary-row">
+              <span>
+                Envío
+              </span>
+
+              <strong>
+                {shippingCost === 0
+                  ? "Gratis"
+                  : formatPrice(
+                      shippingCost
+                    )}
+              </strong>
+            </div>
+
+            <div className="summary-total">
+              <span>
+                Total
+              </span>
+
+              <strong>
+                {formatPrice(
+                  cartTotal
+                )}
+              </strong>
+            </div>
+
+            <button
+              className="primary-button full-width"
+              onClick={() =>
+                go(
+                  "/checkout/entrega"
+                )
+              }
+            >
+              Continuar al pago
+            </button>
+          </aside>
+        </div>
+      )}
+    </PageShell>
+  );
+
+  const CheckoutPage = ({
+    step,
+  }) => {
+    const titles = {
+      entrega:
+        "Datos de entrega",
+      pago:
+        "Método de pago",
+      confirmacion:
+        "Confirmar pedido",
+    };
+
+    const path =
+      location.pathname;
+
+    return (
+      <PageShell
+        title={
+          titles[step]
+        }
+      >
+        <div className="checkout-page">
+          <div className="checkout-progress">
+            <div
+              className={
+                step === "entrega"
+                  ? "active"
+                  : ""
+              }
+            >
+              1
+            </div>
+
+            <span />
+
+            <div
+              className={
+                step === "pago" ||
+                step ===
+                  "confirmacion"
+                  ? "active"
+                  : ""
+              }
+            >
+              2
+            </div>
+
+            <span />
+
+            <div
+              className={
+                step ===
+                "confirmacion"
+                  ? "active"
+                  : ""
+              }
+            >
+              3
+            </div>
+          </div>
+
+          {step ===
+            "entrega" && (
+            <div className="checkout-layout">
+              <div className="checkout-card-main">
+                <h3>
+                  📍 Datos de entrega
+                </h3>
+
+                <div className="checkout-grid">
+                  <input
+                    className="checkout-input"
+                    placeholder="Nombre completo"
+                    value={
+                      checkout.name
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        name:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+
+                  <input
+                    className="checkout-input"
+                    placeholder="Teléfono"
+                    value={
+                      checkout.phone
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        phone:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+
+                  <input
+                    className="checkout-input full"
+                    placeholder="Calle y número"
+                    value={
+                      checkout.address
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        address:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+
+                  <input
+                    className="checkout-input"
+                    placeholder="Ciudad"
+                    value={
+                      checkout.city
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        city:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+
+                  <input
+                    className="checkout-input"
+                    placeholder="Estado"
+                    value={
+                      checkout.state
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        state:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+
+                  <input
+                    className="checkout-input"
+                    placeholder="Código postal"
+                    value={
+                      checkout.zip
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        zip:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+
+                  <textarea
+                    className="checkout-input full"
+                    placeholder="Notas para el vendedor o repartidor"
+                    value={
+                      checkout.notes
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCheckout({
+                        ...checkout,
+                        notes:
+                          event.target
+                            .value,
+                      })
+                    }
+                  />
+                </div>
+
+                <h3 className="checkout-section-title">
+                  🚚 Tipo de entrega
+                </h3>
+
+                <button
+                  className={`choice-card ${
+                    checkout.delivery ===
+                    "standard"
+                      ? "selected"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setCheckout({
+                      ...checkout,
+                      delivery:
+                        "standard",
+                    })
+                  }
+                >
+                  <input
+                    type="radio"
+                    checked={
+                      checkout.delivery ===
+                      "standard"
+                    }
+                    readOnly
+                  />
+
+                  <span>
+                    <strong>
+                      Envío estándar
+                    </strong>
+
+                    <small>
+                      Envío gratis
+                    </small>
+                  </span>
+                </button>
+
+                <button
+                  className={`choice-card ${
+                    checkout.delivery ===
+                    "express"
+                      ? "selected"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setCheckout({
+                      ...checkout,
+                      delivery:
+                        "express",
+                    })
+                  }
+                >
+                  <input
+                    type="radio"
+                    checked={
+                      checkout.delivery ===
+                      "express"
+                    }
+                    readOnly
+                  />
+
+                  <span>
+                    <strong>
+                      Envío express
+                    </strong>
+
+                    <small>
+                      + $99 MXN
+                    </small>
+                  </span>
+                </button>
+              </div>
+
+              <CheckoutSummary />
+            </div>
+          )}
+
+          {step ===
+            "pago" && (
+            <div className="checkout-layout">
+              <div className="checkout-card-main">
+                <h3>
+                  💳 Método de pago
+                </h3>
+
+                {[
+                  {
+                    id: "card",
+                    title:
+                      "💳 Tarjeta",
+                    text:
+                      "Visa, Mastercard y otras tarjetas",
+                  },
+                  {
+                    id:
+                      "mercadopago",
+                    title:
+                      "💙 Mercado Pago",
+                    text:
+                      "Pago mediante Mercado Pago",
+                  },
+                  {
+                    id: "cash",
+                    title:
+                      "💵 Pago disponible según el vendedor",
+                    text:
+                      "La disponibilidad dependerá del vendedor.",
+                  },
+                ].map(
+                  (option) => (
+                    <button
+                      key={
+                        option.id
+                      }
+                      className={`choice-card ${
+                        checkout.payment ===
+                        option.id
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setCheckout({
+                          ...checkout,
+                          payment:
+                            option.id,
+                        })
+                      }
+                    >
+                      <input
+                        type="radio"
+                        checked={
+                          checkout.payment ===
+                          option.id
+                        }
+                        readOnly
+                      />
+
+                      <span>
+                        <strong>
+                          {
+                            option.title
+                          }
+                        </strong>
+
+                        <small>
+                          {
+                            option.text
+                          }
+                        </small>
+                      </span>
+                    </button>
+                  )
+                )}
+
+                <div className="checkout-actions">
+                  <button
+                    className="secondary-button"
+                    onClick={() =>
+                      navigate(
+                        -1
+                      )
+                    }
+                  >
+                    Regresar
+                  </button>
+
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      go(
+                        "/checkout/confirmacion"
+                      )
+                    }
+                  >
+                    Continuar
+                  </button>
+                </div>
+              </div>
+
+              <CheckoutSummary />
+            </div>
+          )}
+
+          {step ===
+            "confirmacion" && (
+            <div className="checkout-layout">
+              <div className="checkout-card-main">
+                <h3>
+                  🧾 Confirmar pedido
+                </h3>
+
+                <div className="review-box">
+                  <strong>
+                    Entrega
+                  </strong>
+
+                  <p>
+                    {checkout.name}
+                    <br />
+                    {
+                      checkout.address
+                    }
+                    <br />
+                    {
+                      checkout.city
+                    }
+                    ,{" "}
+                    {
+                      checkout.state
+                    }{" "}
+                    {
+                      checkout.zip
+                    }
+                    <br />
+                    Tel.{" "}
+                    {
+                      checkout.phone
+                    }
+                  </p>
+                </div>
+
+                <div className="review-box">
+                  <strong>
+                    Pago
+                  </strong>
+
+                  <p>
+                    {checkout.payment ===
+                    "card"
+                      ? "Tarjeta"
+                      : checkout.payment ===
+                        "mercadopago"
+                      ? "Mercado Pago"
+                      : "Pago disponible según vendedor"}
+                  </p>
+                </div>
+
+                <div className="review-box">
+                  <strong>
+                    Entrega seleccionada
+                  </strong>
+
+                  <p>
+                    {checkout.delivery ===
+                    "express"
+                      ? "Envío express · $99 MXN"
+                      : "Envío estándar · Gratis"}
+                  </p>
+                </div>
+
+                <div className="checkout-actions">
+                  <button
+                    className="secondary-button"
+                    onClick={() =>
+                      navigate(
+                        -1
+                      )
+                    }
+                  >
+                    Regresar
+                  </button>
+
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      go(
+                        "/pedido/confirmado"
+                      )
+                    }
+                  >
+                    Confirmar pedido
+                  </button>
+                </div>
+              </div>
+
+              <CheckoutSummary />
+            </div>
+          )}
+        </div>
+      </PageShell>
+    );
+  };
+
+  const CheckoutSummary = () => (
+    <aside className="checkout-summary">
+      <h3>
+        Resumen de compra
+      </h3>
+
+      {cart.map((item) => (
+        <div
+          className="summary-product"
+          key={item.id}
+        >
+          <img
+            src={item.image}
+            alt={item.name}
+          />
+
+          <div>
+            <strong>
+              {item.name}
+            </strong>
+
+            <small>
+              {item.quantity} ×{" "}
+              {formatPrice(
+                item.price
+              )}
+            </small>
+          </div>
+        </div>
+      ))}
+
+      <div className="summary-row">
+        <span>
+          Subtotal
+        </span>
+
+        <strong>
+          {formatPrice(
+            cartSubtotal
+          )}
+        </strong>
+      </div>
+
+      <div className="summary-row">
+        <span>
+          Envío
+        </span>
+
+        <strong>
+          {shippingCost === 0
+            ? "Gratis"
+            : formatPrice(
+                shippingCost
+              )}
+        </strong>
+      </div>
+
+      <div className="summary-total">
+        <span>
+          Total
+        </span>
+
+        <strong>
+          {formatPrice(
+            cartTotal
+          )}
+        </strong>
+      </div>
+    </aside>
+  );
+
+  const OrderCompletePage = () => (
+    <PageShell
+      title="Pedido confirmado"
+    >
+      <div className="success-page">
+        <div className="success-icon">
+          ✅
+        </div>
+
+        <h2>
+          ¡Pedido realizado!
+        </h2>
+
+        <p>
+          Tu pedido fue registrado
+          correctamente.
+        </p>
+
+        <strong className="success-total">
+          Total:{" "}
+          {formatPrice(
+            cartTotal
+          )}
+        </strong>
+
+        <div className="success-actions">
+          <button
+            className="primary-button"
+            onClick={() => {
+              setCart([]);
+              goHome();
+            }}
+          >
+            Volver a VaniDaxi
+          </button>
+
+          <button
+            className="secondary-button"
+            onClick={() =>
+              go(
+                "/mensajes/pedidos"
+              )
+            }
+          >
+            📦 Ver mis pedidos
+          </button>
+        </div>
+      </div>
+    </PageShell>
+  );
+
+  const MessagesPage = () => (
+    <PageShell title="Centro de mensajes">
+      <div className="message-list">
+        <button
+          className="message-card"
+          onClick={() =>
+            go(
+              "/mensajes/atencion"
+            )
+          }
+        >
+          <span>🟢</span>
+
+          <div>
+            <strong>
+              Atención al cliente
+            </strong>
+
+            <small>
+              Habla con nosotros.
+            </small>
+          </div>
+
+          <b>→</b>
+        </button>
+
+        <button
+          className="message-card"
+          onClick={() =>
+            go(
+              "/mensajes/pedidos"
+            )
+          }
+        >
+          <span>📦</span>
+
+          <div>
+            <strong>
+              Mis pedidos
+            </strong>
+
+            <small>
+              Consulta tus pedidos.
+            </small>
+          </div>
+
+          <b>→</b>
+        </button>
+
+        <button
+          className="message-card"
+          onClick={() =>
+            go(
+              "/mensajes/ventas"
+            )
+          }
+        >
+          <span>🏪</span>
+
+          <div>
+            <strong>
+              Mis ventas
+            </strong>
+
+            <small>
+              Accede a tu espacio de vendedor.
+            </small>
+          </div>
+
+          <b>→</b>
+        </button>
+
+        <button
+          className="message-card"
+          onClick={() =>
+            go(
+              "/mensajes/envios"
+            )
+          }
+        >
+          <span>🚚</span>
+
+          <div>
+            <strong>
+              Envíos
+            </strong>
+
+            <small>
+              Información sobre entregas.
+            </small>
+          </div>
+
+          <b>→</b>
+        </button>
+      </div>
+    </PageShell>
+  );
+
+  const SubMessagePage = ({
+    type,
+  }) => {
+    const content = {
+      atencion: {
+        title:
+          "Atención al cliente",
+        icon: "🟢",
+        text:
+          "Nuestro canal de atención está disponible para ayudarte con compras, ventas y dudas.",
+        button:
+          "Abrir WhatsApp",
+        action:
+          openWhatsApp,
+      },
+
+      pedidos: {
+        title:
+          "Mis pedidos",
+        icon: "📦",
+        text:
+          user
+            ? "Aquí podrás consultar el historial y estado de tus pedidos."
+            : "Inicia sesión para consultar tus pedidos.",
+        button:
+          user
+            ? "Volver a mi cuenta"
+            : "Iniciar sesión",
+        action: () =>
+          go(
+            user
+              ? "/cuenta"
+              : "/cuenta/iniciar"
+          ),
+      },
+
+      ventas: {
+        title:
+          "Mis ventas",
+        icon: "🏪",
+        text:
+          user
+            ? "Aquí podrás consultar tus productos publicados y tus ventas."
+            : "Inicia sesión para acceder a tu espacio de vendedor.",
+        button:
+          user
+            ? "Publicar producto"
+            : "Iniciar sesión",
+        action: () =>
+          go(
+            user
+              ? "/publicar"
+              : "/cuenta/iniciar"
+          ),
+      },
+
+      envios: {
+        title:
+          "Envíos",
+        icon: "🚚",
+        text:
+          "Consulta información general sobre las modalidades de entrega de VaniDaxi.",
+        button:
+          "Ir a configuración",
+        action: () =>
+          go(
+            "/configuracion/envios"
+          ),
+      },
+    };
+
+    const current =
+      content[type] ||
+      content.atencion;
+
+    return (
+      <PageShell
+        title={current.title}
+      >
+        <div className="simple-detail-page">
+          <div className="simple-detail-icon">
+            {current.icon}
+          </div>
+
+          <h2>
+            {current.title}
+          </h2>
+
+          <p>
+            {current.text}
+          </p>
+
+          <button
+            className="primary-button"
+            onClick={current.action}
+          >
+            {current.button}
+          </button>
+        </div>
+      </PageShell>
+    );
+  };
+
+  const SettingsPage = () => (
+    <PageShell title="Configuración">
+      <div className="settings-list-page">
+        <SettingsLink
+          icon="🔔"
+          title="Notificaciones"
+          text="Gestiona los avisos de VaniDaxi."
+          onClick={() =>
+            go(
+              "/configuracion/notificaciones"
+            )
+          }
+        />
+
+        <SettingsLink
+          icon="🎁"
+          title="Promociones"
+          text="Controla las novedades y ofertas."
+          onClick={() =>
+            go(
+              "/configuracion/promociones"
+            )
+          }
+        />
+
+        <SettingsLink
+          icon="🎨"
+          title="Apariencia"
+          text="Personaliza el aspecto de la aplicación."
+          onClick={() =>
+            go(
+              "/configuracion/apariencia"
+            )
+          }
+        />
+
+        <SettingsLink
+          icon="🚚"
+          title="Envíos"
+          text="Consulta las modalidades de entrega."
+          onClick={() =>
+            go(
+              "/configuracion/envios"
+            )
+          }
+        />
+
+        <SettingsLink
+          icon="💬"
+          title="Atención al cliente"
+          text="Obtén ayuda directamente."
+          onClick={() =>
+            go(
+              "/mensajes/atencion"
+            )
+          }
+        />
+      </div>
+    </PageShell>
+  );
+
+  const SettingsLink = ({
+    icon,
+    title,
+    text,
+    onClick,
+  }) => (
+    <button
+      className="settings-card"
+      onClick={onClick}
+    >
+      <span className="settings-icon">
+        {icon}
+      </span>
+
+      <span className="settings-copy">
+        <strong>
+          {title}
+        </strong>
+
+        <small>
+          {text}
+        </small>
+      </span>
+
+      <span>→</span>
+    </button>
+  );
+
+  const SettingsSubPage = ({
+    type,
+  }) => {
+    const definitions = {
+      notificaciones: {
+        title:
+          "Notificaciones",
+        icon: "🔔",
+        main:
+          "Recibe avisos relacionados con tu cuenta, compras y ventas.",
+      },
+
+      promociones: {
+        title:
+          "Promociones",
+        icon: "🎁",
+        main:
+          "Decide si quieres recibir información sobre ofertas y novedades.",
+      },
+
+      apariencia: {
+        title:
+          "Apariencia",
+        icon: "🎨",
+        main:
+          "Elige cómo quieres ver VaniDaxi.",
+      },
+
+      envios: {
+        title:
+          "Envíos",
+        icon: "🚚",
+        main:
+          "Consulta las opciones de entrega disponibles.",
+      },
+    };
+
+    const definition =
+      definitions[type] ||
+      definitions.apariencia;
+
+    if (type === "envios") {
+      return (
+        <PageShell
+          title={
+            definition.title
+          }
+        >
+          <div className="simple-detail-page">
+            <div className="simple-detail-icon">
+              🚚
+            </div>
+
+            <h2>
+              Modalidades de entrega
+            </h2>
+
+            <div className="delivery-info-card">
+              <strong>
+                Envío estándar
+              </strong>
+
+              <p>
+                Envío gratis.
+              </p>
+            </div>
+
+            <div className="delivery-info-card">
+              <strong>
+                Envío express
+              </strong>
+
+              <p>
+                Costo adicional de
+                $99 MXN.
+              </p>
+            </div>
+          </div>
+        </PageShell>
+      );
+    }
+
+    return (
+      <PageShell
+        title={
+          definition.title
+        }
+      >
+        <div className="settings-detail-page">
+          <div className="settings-detail-top">
+            <span>
+              {
+                definition.icon
+              }
+            </span>
+
+            <div>
+              <h2>
+                {
+                  definition.title
+                }
+              </h2>
+
+              <p>
+                {
+                  definition.main
+                }
+              </p>
+            </div>
+          </div>
+
+          {type ===
+            "notificaciones" && (
+            <SettingSwitch
+              title="Notificaciones"
+              text="Avisos sobre actividad de tu cuenta."
+              value={
+                settings.notifications
+              }
+              onChange={() =>
+                setSettings(
+                  (current) => ({
+                    ...current,
+                    notifications:
+                      !current.notifications,
+                  })
+                )
+              }
+            />
+          )}
+
+          {type ===
+            "promociones" && (
+            <SettingSwitch
+              title="Promociones"
+              text="Ofertas, descuentos y novedades."
+              value={
+                settings.promotions
+              }
+              onChange={() =>
+                setSettings(
+                  (current) => ({
+                    ...current,
+                    promotions:
+                      !current.promotions,
+                  })
+                )
+              }
+            />
+          )}
+
+          {type ===
+            "apariencia" && (
+            <SettingSwitch
+              title="Modo oscuro"
+              text="Activa una apariencia oscura."
+              value={
+                settings.darkMode
+              }
+              onChange={() =>
+                setSettings(
+                  (current) => ({
+                    ...current,
+                    darkMode:
+                      !current.darkMode,
+                  })
+                )
+              }
+            />
+          )}
+        </div>
+      </PageShell>
+    );
+  };
+
+  const SettingSwitch = ({
+    title,
+    text,
+    value,
+    onChange,
+  }) => (
+    <div className="setting-switch-row">
+      <div>
+        <strong>
+          {title}
+        </strong>
+
+        <small>
+          {text}
+        </small>
+      </div>
+
+      <button
+        className={`switch ${
+          value ? "active" : ""
+        }`}
+        onClick={onChange}
+        aria-label={title}
+      />
+    </div>
+  );
+
+  const PublishPage = () => (
+    <PageShell
+      title="Publicar producto"
+    >
+      {!user ? (
+        <div className="empty-state large-empty">
+          <div className="empty-icon">
+            🔐
+          </div>
+
+          <h3>
+            Necesitas una cuenta
+          </h3>
+
+          <p>
+            Inicia sesión para
+            publicar productos.
+          </p>
+
+          <button
+            className="primary-button"
+            onClick={() =>
+              go(
+                "/cuenta/iniciar"
+              )
+            }
+          >
+            Iniciar sesión
+          </button>
+        </div>
+      ) : (
+        <div className="publish-page-card">
+          <div className="publish-intro">
+            <span>
+              🏪
+            </span>
+
+            <div>
+              <strong>
+                Comienza a vender
+              </strong>
+
+              <p>
+                Agrega la información
+                de tu producto.
+              </p>
+            </div>
+          </div>
+
+          <form
+            className="form"
+            onSubmit={
+              handlePublish
+            }
+          >
+            <input
+              type="text"
+              placeholder="Nombre del producto"
+              value={
+                newProduct.name
+              }
+              onChange={(event) =>
+                setNewProduct({
+                  ...newProduct,
+                  name:
+                    event.target
+                      .value,
+                })
+              }
+              required
+            />
+
+            <input
+              type="number"
+              min="1"
+              placeholder="Precio en MXN"
+              value={
+                newProduct.price
+              }
+              onChange={(event) =>
+                setNewProduct({
+                  ...newProduct,
+                  price:
+                    event.target
+                      .value,
+                })
+              }
+              required
+            />
+
+            <select
+              value={
+                newProduct.category
+              }
+              onChange={(event) =>
+                setNewProduct({
+                  ...newProduct,
+                  category:
+                    event.target
+                      .value,
+                })
+              }
+            >
+              {categories.map(
+                (category) => (
+                  <option
+                    key={
+                      category.name
+                    }
+                    value={
+                      category.name
+                    }
+                  >
+                    {
+                      category.name
+                    }
+                  </option>
+                )
+              )}
+            </select>
+
+            <input
+              type="url"
+              placeholder="URL de la imagen"
+              value={
+                newProduct.image
+              }
+              onChange={(event) =>
+                setNewProduct({
+                  ...newProduct,
+                  image:
+                    event.target
+                      .value,
+                })
+              }
+            />
+
+            <textarea
+              placeholder="Describe tu producto..."
+              value={
+                newProduct.description
+              }
+              onChange={(event) =>
+                setNewProduct({
+                  ...newProduct,
+                  description:
+                    event.target
+                      .value,
+                })
+              }
+            />
+
+            <button className="primary-button">
+              🚀 Publicar producto
+            </button>
+          </form>
+        </div>
+      )}
+    </PageShell>
+  );
+
+  const ProfileDataPage = () => (
+    <PageShell title="Mis datos">
+      {!user ? (
+        <div className="empty-state">
+          Inicia sesión para ver
+          tus datos.
+        </div>
+      ) : (
+        <div className="data-page">
+          <DataRow
+            label="Nombre"
+            value={
+              user.user_metadata
+                ?.full_name ||
+              "No especificado"
+            }
+          />
+
+          <DataRow
+            label="Correo"
+            value={
+              user.email ||
+              "No disponible"
+            }
+          />
+
+          <div className="info-note">
+            Tus datos de acceso se
+            administran mediante
+            Supabase.
+          </div>
+        </div>
+      )}
+    </PageShell>
+  );
+
+  const DataRow = ({
+    label,
+    value,
+  }) => (
+    <div className="data-row">
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+    </div>
+  );
+
+  const NotFoundPage = () => (
+    <PageShell title="Página no encontrada">
+      <div className="empty-state large-empty">
+        <div className="empty-icon">
+          🔎
+        </div>
+
+        <h3>
+          No encontramos esta
+          sección.
+        </h3>
+
+        <button
+          className="primary-button"
+          onClick={goHome}
+        >
+          Volver al inicio
+        </button>
+      </div>
+    </PageShell>
+  );
+
+  const path =
+    location.pathname;
+
+  const renderPage = () => {
+    if (
+      path === "/" ||
+      path === ""
+    ) {
+      return <HomePage />;
+    }
+
+    if (path === "/menu") {
+      return <MenuPage />;
+    }
+
+    if (path === "/cuenta") {
+      return <AccountPage />;
+    }
+
+    if (
+      path ===
+      "/cuenta/iniciar"
+    ) {
+      return (
+        <AuthPage
+          register={false}
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/cuenta/crear"
+    ) {
+      return (
+        <AuthPage
+          register={true}
+        />
+      );
+    }
+
+    if (path === "/perfil") {
+      return <ProfilePage />;
+    }
+
+    if (
+      path ===
+      "/perfil/datos"
+    ) {
+      return <ProfileDataPage />;
+    }
+
+    if (
+      path ===
+      "/favoritos"
+    ) {
+      return (
+        <FavoritesPage />
+      );
+    }
+
+    if (
+      path ===
+      "/productos"
+    ) {
+      return <ProductsPage />;
+    }
+
+    if (
+      path.startsWith(
+        "/categoria/"
+      )
+    ) {
+      return <CategoryPage />;
+    }
+
+    if (
+      path.startsWith(
+        "/producto/"
+      )
+    ) {
+      return (
+        <ProductPage />
+      );
+    }
+
+    if (path === "/carrito") {
+      return <CartPage />;
+    }
+
+    if (
+      path ===
+      "/checkout/entrega"
+    ) {
+      return (
+        <CheckoutPage
+          step="entrega"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/checkout/pago"
+    ) {
+      return (
+        <CheckoutPage
+          step="pago"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/checkout/confirmacion"
+    ) {
+      return (
+        <CheckoutPage
+          step="confirmacion"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/pedido/confirmado"
+    ) {
+      return (
+        <OrderCompletePage />
+      );
+    }
+
+    if (
+      path === "/mensajes"
+    ) {
+      return (
+        <MessagesPage />
+      );
+    }
+
+    if (
+      path ===
+      "/mensajes/atencion"
+    ) {
+      return (
+        <SubMessagePage
+          type="atencion"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/mensajes/pedidos"
+    ) {
+      return (
+        <SubMessagePage
+          type="pedidos"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/mensajes/ventas"
+    ) {
+      return (
+        <SubMessagePage
+          type="ventas"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/mensajes/envios"
+    ) {
+      return (
+        <SubMessagePage
+          type="envios"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/configuracion"
+    ) {
+      return (
+        <SettingsPage />
+      );
+    }
+
+    if (
+      path ===
+      "/configuracion/notificaciones"
+    ) {
+      return (
+        <SettingsSubPage
+          type="notificaciones"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/configuracion/promociones"
+    ) {
+      return (
+        <SettingsSubPage
+          type="promociones"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/configuracion/apariencia"
+    ) {
+      return (
+        <SettingsSubPage
+          type="apariencia"
+        />
+      );
+    }
+
+    if (
+      path ===
+      "/configuracion/envios"
+    ) {
+      return (
+        <SettingsSubPage
+          type="envios"
+        />
+      );
+    }
+
+    if (path === "/publicar") {
+      return (
+        <PublishPage />
+      );
+    }
+
+    return <NotFoundPage />;
   };
 
   return (
@@ -669,7 +3808,7 @@ function App() {
         .app {
           min-height: 100vh;
           background: #ffffff;
-          transition: .25s;
+          padding-bottom: 75px;
         }
 
         body.dark-theme .app {
@@ -702,32 +3841,24 @@ function App() {
         }
 
         .menu-button {
+          flex: 0 0 auto;
           width: 39px;
           height: 39px;
           border: 0;
           border-radius: 11px;
-          color: #ffffff;
-          background: linear-gradient(
-            135deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          color: white;
+          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
           font-size: 20px;
         }
 
         .brand {
+          flex: 0 0 auto;
           border: 0;
           background: transparent;
           font-size: 23px;
           font-weight: 900;
           letter-spacing: -1px;
-          background-image: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background-image: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -735,14 +3866,13 @@ function App() {
 
         .search-box {
           flex: 1;
-          height: 39px;
-          min-width: 100px;
           max-width: 540px;
+          height: 39px;
           margin: 0 auto;
           display: flex;
+          overflow: hidden;
           border: 1px solid #dddddd;
           border-radius: 22px;
-          overflow: hidden;
           background: #ffffff;
         }
 
@@ -754,24 +3884,18 @@ function App() {
         .search-box input {
           flex: 1;
           min-width: 0;
+          padding: 0 14px;
           border: 0;
           outline: 0;
-          padding: 0 14px;
           background: transparent;
           color: inherit;
-          font-size: 13px;
         }
 
         .search-box button {
           width: 43px;
           border: 0;
           color: white;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .header-actions {
@@ -780,13 +3904,13 @@ function App() {
         }
 
         .header-action {
+          position: relative;
           width: 39px;
           height: 39px;
           border: 0;
           border-radius: 11px;
           background: #f5f5f7;
           font-size: 18px;
-          position: relative;
         }
 
         body.dark-theme .header-action {
@@ -804,7 +3928,7 @@ function App() {
           display: grid;
           place-items: center;
           background: #ef233c;
-          color: white;
+          color: #ffffff;
           font-size: 10px;
           font-weight: 800;
         }
@@ -825,11 +3949,11 @@ function App() {
 
         .category-pill {
           flex: 0 0 auto;
-          border: 1px solid #e4e4e4;
-          background: #ffffff;
-          color: #444444;
-          border-radius: 16px;
           padding: 6px 11px;
+          border: 1px solid #e4e4e4;
+          border-radius: 16px;
+          background: white;
+          color: #444;
           font-size: 10px;
           white-space: nowrap;
         }
@@ -841,108 +3965,111 @@ function App() {
         }
 
         .category-pill.active {
-          color: white;
           border-color: transparent;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          color: white;
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .page-content {
           width: min(1180px, calc(100% - 24px));
           margin: auto;
-          padding-bottom: 50px;
+        }
+
+        .inner-page {
+          padding-top: 16px;
+          padding-bottom: 35px;
+        }
+
+        .back-button {
+          margin-bottom: 12px;
+          padding: 8px 12px;
+          border: 0;
+          border-radius: 10px;
+          background: #f3f3f4;
+          color: #444;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        body.dark-theme .back-button {
+          background: #292929;
+          color: white;
         }
 
         .hero {
-          margin: 13px 0;
           min-height: 190px;
-          border-radius: 22px;
+          margin: 13px 0 18px;
           padding: 28px;
-          color: white;
-          background: linear-gradient(
-            110deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          border-radius: 22px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 25px;
           overflow: hidden;
+          color: white;
+          background: linear-gradient(110deg,#ef233c,#d414c9,#6d28d9);
+        }
+
+        .hero-kicker {
+          margin-bottom: 8px;
+          font-size: 11px;
+          font-weight: 800;
+          opacity: .9;
         }
 
         .hero h1 {
-          margin: 0 0 9px;
-          font-size: clamp(29px, 5vw, 48px);
-          line-height: 1;
+          margin: 0 0 10px;
+          font-size: clamp(30px,5vw,50px);
+          line-height: .98;
         }
 
         .hero p {
-          margin: 0 0 16px;
+          max-width: 570px;
+          margin: 0 0 17px;
           font-size: 14px;
-          opacity: .95;
-        }
-
-        .hero-button,
-        .primary-button {
-          border: 0;
-          border-radius: 14px;
-          padding: 11px 18px;
-          color: white;
-          font-weight: 800;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          line-height: 1.5;
         }
 
         .hero-button {
+          padding: 11px 18px;
+          border: 0;
+          border-radius: 14px;
           background: white;
           color: #b41bc1;
+          font-weight: 900;
         }
 
         .hero-icon {
-          font-size: clamp(75px, 12vw, 145px);
-          opacity: .9;
+          font-size: clamp(80px,12vw,150px);
           transform: rotate(-7deg);
+          opacity: .92;
         }
 
         .top-cards {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(4,1fr);
           gap: 10px;
           margin-bottom: 24px;
         }
 
         .top-card {
-          min-height: 130px;
-          border: 0;
-          border-radius: 18px;
-          overflow: hidden;
-          position: relative;
-          text-align: left;
-          color: white;
+          min-height: 125px;
           padding: 14px;
-          background-size: cover;
+          position: relative;
+          overflow: hidden;
+          border: 0;
+          border-radius: 17px;
           background-position: center;
+          background-size: cover;
+          color: white;
+          text-align: left;
         }
 
         .top-card::before {
           content: "";
           position: absolute;
           inset: 0;
-          background: linear-gradient(
-            180deg,
-            rgba(0,0,0,.05),
-            rgba(0,0,0,.68)
-          );
+          background: linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.7));
         }
 
         .top-card span {
@@ -952,78 +4079,142 @@ function App() {
         }
 
         .top-card strong {
-          font-size: 18px;
+          display: block;
+          font-size: 17px;
         }
 
         .top-card small {
+          display: block;
           margin-top: 3px;
-          font-size: 11px;
+          font-size: 10px;
         }
 
-        .section-title {
-          margin: 22px 0 12px;
+        .section-title,
+        .page-title {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 10px;
+          margin: 20px 0 12px;
         }
 
-        .section-title h2 {
+        .section-title h2,
+        .page-title h1 {
           margin: 0;
-          font-size: 21px;
+        }
+
+        .page-title h1 {
+          font-size: 26px;
+        }
+
+        .link-button,
+        .text-button {
+          border: 0;
+          background: transparent;
+          color: #a91cbb;
+          font-weight: 800;
+          font-size: 11px;
         }
 
         .categories-grid {
           display: grid;
-          grid-template-columns: repeat(8, 1fr);
-          gap: 9px;
+          grid-template-columns: repeat(8,1fr);
+          gap: 8px;
         }
 
         .category-card {
-          border: 0;
           padding: 0;
-          border-radius: 16px;
           overflow: hidden;
-          background: #f5f5f5;
+          border: 0;
+          border-radius: 14px;
+          background: #f5f5f6;
           text-align: left;
+          color: inherit;
         }
 
         .category-card img {
           width: 100%;
           aspect-ratio: 1;
-          object-fit: cover;
           display: block;
+          object-fit: cover;
         }
 
         .category-card span {
           display: block;
           padding: 7px;
-          font-size: 10px;
-          font-weight: 700;
+          font-size: 9px;
+          font-weight: 800;
+          line-height: 1.2;
+        }
+
+        .join-card {
+          margin: 25px 0;
+          padding: 17px;
+          border: 1px solid #eeeeee;
+          border-radius: 17px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+          background: #fafafa;
+        }
+
+        body.dark-theme .join-card {
+          background: #191919;
+          border-color: #303030;
+        }
+
+        .join-card strong {
+          font-size: 15px;
+        }
+
+        .join-card p {
+          margin: 5px 0 0;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .primary-button,
+        .secondary-button {
+          min-height: 42px;
+          padding: 10px 16px;
+          border-radius: 13px;
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .primary-button {
+          border: 0;
+          color: white;
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+        }
+
+        .secondary-button {
+          border: 1px solid #dddddd;
+          background: transparent;
+          color: inherit;
+        }
+
+        .full-width {
+          width: 100%;
         }
 
         .products-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 14px;
+          grid-template-columns: repeat(4,1fr);
+          gap: 13px;
         }
 
         .product-card {
-          border: 1px solid #eeeeee;
-          border-radius: 18px;
           overflow: hidden;
-          background: #ffffff;
-          transition: .2s;
+          border: 1px solid #eeeeee;
+          border-radius: 17px;
+          background: white;
         }
 
         body.dark-theme .product-card {
           background: #191919;
           border-color: #303030;
-        }
-
-        .product-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 28px rgba(0,0,0,.09);
         }
 
         .product-image {
@@ -1034,20 +4225,20 @@ function App() {
         .product-image img {
           width: 100%;
           aspect-ratio: 1;
-          object-fit: cover;
           display: block;
+          object-fit: cover;
         }
 
         .discount {
           position: absolute;
-          top: 9px;
-          left: 9px;
-          padding: 5px 8px;
-          border-radius: 10px;
+          top: 8px;
+          left: 8px;
+          padding: 5px 7px;
+          border-radius: 8px;
           background: #ef233c;
           color: white;
-          font-size: 10px;
-          font-weight: 800;
+          font-size: 9px;
+          font-weight: 900;
         }
 
         .favorite-button {
@@ -1058,25 +4249,25 @@ function App() {
           height: 34px;
           border: 0;
           border-radius: 50%;
-          background: rgba(255,255,255,.92);
+          background: rgba(255,255,255,.93);
           font-size: 16px;
         }
 
         .product-info {
-          padding: 12px;
+          padding: 11px;
         }
 
         .product-category {
-          color: #a61ac3;
-          font-size: 10px;
-          font-weight: 700;
+          color: #a91cbb;
+          font-size: 9px;
+          font-weight: 800;
         }
 
         .product-name {
+          min-height: 36px;
           margin: 5px 0 7px;
-          font-size: 14px;
-          line-height: 1.25;
-          min-height: 35px;
+          font-size: 13px;
+          line-height: 1.3;
         }
 
         .prices {
@@ -1092,131 +4283,113 @@ function App() {
 
         .old-price {
           color: #999;
-          font-size: 11px;
+          font-size: 10px;
           text-decoration: line-through;
         }
 
         .rating {
           margin: 8px 0;
           color: #666;
-          font-size: 11px;
+          font-size: 10px;
         }
 
         .product-actions {
           display: flex;
-          gap: 7px;
+          gap: 6px;
         }
 
         .product-actions button {
           flex: 1;
+          padding: 9px 6px;
           border: 0;
-          border-radius: 10px;
-          padding: 9px 7px;
-          font-size: 11px;
-          font-weight: 800;
+          border-radius: 9px;
+          font-size: 10px;
+          font-weight: 900;
         }
 
         .details-button {
           background: #f2f2f4;
+          color: #333;
         }
 
         body.dark-theme .details-button {
-          background: #282828;
+          background: #292929;
           color: white;
         }
 
         .add-button {
           color: white;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
-        }
-
-        .empty-state {
-          padding: 35px;
-          text-align: center;
-          border: 1px dashed #cccccc;
-          border-radius: 18px;
-          color: #777;
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .floating-whatsapp {
           position: fixed;
-          right: 18px;
-          bottom: 20px;
-          z-index: 120;
-          width: 58px;
-          height: 58px;
+          right: 16px;
+          bottom: 79px;
+          z-index: 110;
+          width: 54px;
+          height: 54px;
           border: 0;
           border-radius: 50%;
           color: white;
-          font-size: 27px;
-          box-shadow: 0 8px 25px rgba(0,0,0,.22);
-          background: linear-gradient(
-            135deg,
-            #25d366,
-            #18a957
-          );
+          background: #25d366;
+          box-shadow: 0 8px 24px rgba(0,0,0,.2);
+          font-size: 24px;
         }
 
-        .overlay {
+        .bottom-nav {
           position: fixed;
-          inset: 0;
-          z-index: 200;
-          background: rgba(0,0,0,.48);
-          backdrop-filter: blur(3px);
+          left: 50%;
+          bottom: 0;
+          z-index: 100;
+          width: min(650px,100%);
+          height: 62px;
+          transform: translateX(-50%);
+          display: grid;
+          grid-template-columns: repeat(4,1fr);
+          border-top: 1px solid #e8e8e8;
+          background: rgba(255,255,255,.97);
+          backdrop-filter: blur(12px);
         }
 
-        .side-menu {
-          width: min(350px, 88vw);
-          height: 100%;
-          padding: 18px;
-          overflow-y: auto;
-          background: white;
-          box-shadow: 10px 0 40px rgba(0,0,0,.18);
+        body.dark-theme .bottom-nav {
+          background: rgba(17,17,17,.97);
+          border-color: #2b2b2b;
         }
 
-        body.dark-theme .side-menu,
-        body.dark-theme .modal {
-          background: #181818;
-          color: white;
-        }
-
-        .menu-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 18px;
-        }
-
-        .close-button {
-          width: 38px;
-          height: 38px;
+        .bottom-nav button {
           border: 0;
-          border-radius: 10px;
-          background: #f1f1f1;
-          font-size: 17px;
+          background: transparent;
+          color: inherit;
+          display: grid;
+          place-items: center;
+          align-content: center;
+          gap: 2px;
         }
 
-        body.dark-theme .close-button {
-          background: #292929;
-          color: white;
+        .bottom-nav span {
+          font-size: 18px;
+        }
+
+        .bottom-nav small {
+          font-size: 9px;
+          font-weight: 700;
+        }
+
+        .menu-list-page,
+        .settings-list-page,
+        .message-list,
+        .profile-options {
+          display: grid;
+          gap: 9px;
         }
 
         .account-box {
-          padding: 15px;
+          padding: 16px;
+          margin-bottom: 12px;
           border-radius: 17px;
-          margin-bottom: 16px;
           color: white;
-          background: linear-gradient(
-            135deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .account-box strong,
@@ -1226,51 +4399,189 @@ function App() {
 
         .account-box small {
           margin-top: 4px;
-          opacity: .9;
+          opacity: .92;
         }
 
-        .menu-item {
+        .menu-link,
+        .settings-card,
+        .message-card,
+        .profile-options button {
           width: 100%;
-          border: 0;
-          background: transparent;
-          padding: 13px 8px;
+          min-height: 60px;
+          border: 1px solid #ededed;
+          border-radius: 14px;
+          background: white;
+          color: inherit;
           display: flex;
           align-items: center;
           gap: 12px;
+          padding: 12px;
           text-align: left;
-          border-bottom: 1px solid #eeeeee;
-          color: inherit;
         }
 
-        body.dark-theme .menu-item {
-          border-color: #2c2c2c;
+        body.dark-theme .menu-link,
+        body.dark-theme .settings-card,
+        body.dark-theme .message-card,
+        body.dark-theme .profile-options button {
+          background: #191919;
+          border-color: #303030;
         }
 
-        .menu-item-icon {
-          width: 34px;
-          text-align: center;
-          font-size: 20px;
-        }
-
-        .center-overlay {
+        .menu-link-icon,
+        .settings-icon,
+        .message-card > span:first-child {
+          width: 38px;
+          height: 38px;
+          border-radius: 11px;
           display: grid;
           place-items: center;
-          padding: 18px;
+          flex: 0 0 auto;
+          background: #f5ebff;
+          font-size: 18px;
         }
 
-        .modal {
-          width: min(500px, 100%);
-          max-height: 90vh;
-          overflow-y: auto;
-          position: relative;
-          border-radius: 22px;
+        .menu-link-suffix {
+          color: #777;
+        }
+
+        .menu-arrow,
+        .settings-card > span:last-child,
+        .message-card > b {
+          margin-left: auto;
+        }
+
+        .account-page-card,
+        .profile-page-card,
+        .publish-page-card,
+        .data-page,
+        .settings-detail-page,
+        .simple-detail-page,
+        .success-page {
+          max-width: 780px;
+          margin: 0 auto;
           padding: 24px;
+          border: 1px solid #ededed;
+          border-radius: 21px;
           background: white;
-          box-shadow: 0 25px 70px rgba(0,0,0,.22);
         }
 
-        .modal h2 {
-          margin-top: 0;
+        body.dark-theme .account-page-card,
+        body.dark-theme .profile-page-card,
+        body.dark-theme .publish-page-card,
+        body.dark-theme .data-page,
+        body.dark-theme .settings-detail-page,
+        body.dark-theme .simple-detail-page,
+        body.dark-theme .success-page {
+          background: #191919;
+          border-color: #303030;
+        }
+
+        .account-page-card {
+          text-align: center;
+        }
+
+        .account-page-icon,
+        .profile-avatar,
+        .auth-logo,
+        .simple-detail-icon {
+          width: 70px;
+          height: 70px;
+          margin: 0 auto 15px;
+          display: grid;
+          place-items: center;
+          border-radius: 21px;
+          color: white;
+          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
+          font-size: 31px;
+          font-weight: 900;
+        }
+
+        .account-page-card h2,
+        .profile-page-card h2 {
+          margin: 0 0 8px;
+        }
+
+        .account-page-card p,
+        .profile-page-card p {
+          color: #777;
+          font-size: 12px;
+        }
+
+        .account-grid {
+          display: grid;
+          grid-template-columns: repeat(2,1fr);
+          gap: 10px;
+          margin: 20px 0;
+        }
+
+        .account-option {
+          min-height: 85px;
+          border: 1px solid #ededed;
+          border-radius: 15px;
+          background: transparent;
+          color: inherit;
+          display: grid;
+          place-items: center;
+          gap: 5px;
+          padding: 13px;
+        }
+
+        .account-option span {
+          font-size: 24px;
+        }
+
+        .account-option strong {
+          font-size: 11px;
+        }
+
+        .account-buttons {
+          display: grid;
+          gap: 9px;
+          margin-top: 18px;
+        }
+
+        .auth-page {
+          max-width: 850px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: .9fr 1.1fr;
+          overflow: hidden;
+          border-radius: 22px;
+          background: white;
+          box-shadow: 0 20px 60px rgba(0,0,0,.1);
+        }
+
+        body.dark-theme .auth-page {
+          background: #191919;
+        }
+
+        .auth-visual-page {
+          padding: 30px;
+          color: white;
+          background: linear-gradient(145deg,#ef233c,#d414c9,#6d28d9);
+        }
+
+        .auth-logo {
+          margin: 0 0 22px;
+          width: 55px;
+          height: 55px;
+          border-radius: 16px;
+          background: rgba(255,255,255,.18);
+        }
+
+        .auth-visual-page h2 {
+          margin: 0 0 9px;
+          font-size: 28px;
+        }
+
+        .auth-visual-page p {
+          margin: 0;
+          line-height: 1.6;
+          font-size: 12px;
+        }
+
+        .auth-form-page {
+          padding: 30px;
         }
 
         .form {
@@ -1281,67 +4592,288 @@ function App() {
         .form input,
         .form textarea,
         .form select,
+        .search-banner input,
         .checkout-input {
           width: 100%;
+          padding: 12px;
           border: 1px solid #dddddd;
           border-radius: 11px;
-          padding: 12px;
           outline: 0;
           background: transparent;
           color: inherit;
         }
 
         .form textarea {
-          min-height: 100px;
+          min-height: 110px;
           resize: vertical;
         }
 
-        .auth-switch {
-          margin-top: 12px;
-          text-align: center;
-          font-size: 12px;
+        .auth-message {
+          padding: 10px;
+          border-radius: 10px;
+          background: #fff0f4;
+          color: #9f1d4d;
+          font-size: 11px;
         }
 
-        .text-button {
-          border: 0;
-          color: #b018be;
+        .switch-page {
+          margin-top: 15px;
+          padding-top: 15px;
+          border-top: 1px solid #eeeeee;
+          text-align: center;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .profile-avatar {
+          border-radius: 50%;
+          font-size: 26px;
+        }
+
+        .profile-options {
+          margin-top: 20px;
+        }
+
+        .profile-options button span {
+          margin-left: auto;
+        }
+
+        .data-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 15px;
+          padding: 14px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+
+        .data-row span {
+          color: #777;
+        }
+
+        .info-note {
+          margin-top: 18px;
+          padding: 12px;
+          border-radius: 11px;
+          background: #faf7ff;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .large-empty {
+          margin-top: 10px;
+        }
+
+        .empty-state {
+          padding: 40px 20px;
+          text-align: center;
+          color: #777;
+        }
+
+        .empty-icon {
+          margin-bottom: 12px;
+          font-size: 52px;
+        }
+
+        .search-banner {
+          margin-bottom: 12px;
+        }
+
+        .mini-category-grid {
+          display: flex;
+          gap: 7px;
+          overflow-x: auto;
+          padding-bottom: 6px;
+          scrollbar-width: none;
+        }
+
+        .mini-category-grid::-webkit-scrollbar {
+          display: none;
+        }
+
+        .mini-category-grid button {
+          flex: 0 0 auto;
+          padding: 7px 10px;
+          border: 1px solid #dddddd;
+          border-radius: 15px;
           background: transparent;
+          color: inherit;
+          font-size: 10px;
+        }
+
+        .mini-category-grid button.active {
+          color: white;
+          border-color: transparent;
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+        }
+
+        .category-page-hero {
+          display: grid;
+          grid-template-columns: 180px 1fr;
+          gap: 15px;
+          align-items: center;
+          margin-bottom: 20px;
+          padding: 14px;
+          border: 1px solid #ededed;
+          border-radius: 18px;
+        }
+
+        .category-page-hero img {
+          width: 180px;
+          height: 120px;
+          border-radius: 14px;
+          object-fit: cover;
+        }
+
+        .category-page-hero span {
+          color: #a91cbb;
+          font-size: 10px;
           font-weight: 800;
         }
 
-        .auth-message {
+        .category-page-hero h2 {
+          margin: 5px 0;
+        }
+
+        .category-page-hero p {
           margin: 0;
-          padding: 10px;
-          border-radius: 10px;
-          background: #f6eef8;
-          color: #8d1998;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .product-detail-page {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 25px;
+          align-items: start;
+        }
+
+        .product-detail-image {
+          position: relative;
+        }
+
+        .product-detail-image img {
+          width: 100%;
+          border-radius: 18px;
+          aspect-ratio: 1;
+          object-fit: cover;
+        }
+
+        .large-discount {
           font-size: 12px;
         }
 
-        .cart-modal {
-          width: min(650px, 100%);
+        .product-detail-info {
+          padding: 5px 0;
+        }
+
+        .product-detail-info h2 {
+          margin: 7px 0;
+          font-size: 30px;
+        }
+
+        .big-rating {
+          font-size: 12px;
+        }
+
+        .detail-price {
+          margin-top: 12px;
+          font-size: 30px;
+          font-weight: 900;
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .detail-old-price {
+          color: #999;
+          text-decoration: line-through;
+        }
+
+        .detail-description {
+          color: #666;
+          line-height: 1.65;
+          font-size: 13px;
+        }
+
+        .specifications {
+          color: #666;
+          padding-left: 18px;
+          line-height: 1.8;
+          font-size: 12px;
+        }
+
+        body.dark-theme .specifications {
+          color: #ccc;
+        }
+
+        .favorite-detail {
+          width: 100%;
+          margin: 14px 0;
+          padding: 12px;
+          border: 1px solid #dddddd;
+          border-radius: 12px;
+          background: transparent;
+          color: inherit;
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .favorite-detail.selected {
+          border-color: #d414c9;
+          background: #fff5ff;
+        }
+
+        body.dark-theme .favorite-detail.selected {
+          background: #241526;
+        }
+
+        .detail-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .cart-page {
+          display: grid;
+          grid-template-columns: 1.5fr .8fr;
+          gap: 18px;
+          align-items: start;
+        }
+
+        .cart-items {
+          display: grid;
+          gap: 9px;
         }
 
         .cart-item {
           display: flex;
-          gap: 11px;
-          padding: 11px 0;
-          border-bottom: 1px solid #eeeeee;
+          gap: 12px;
+          padding: 11px;
+          border: 1px solid #eeeeee;
+          border-radius: 15px;
+          background: white;
+        }
+
+        body.dark-theme .cart-item {
+          background: #191919;
+          border-color: #303030;
         }
 
         .cart-item img {
-          width: 70px;
-          height: 70px;
+          width: 85px;
+          height: 85px;
           border-radius: 12px;
           object-fit: cover;
+          cursor: pointer;
         }
 
         .cart-item-info {
           flex: 1;
         }
 
-        .cart-item-name {
-          margin: 0 0 5px;
+        .cart-item-info h3 {
+          margin: 4px 0 7px;
           font-size: 14px;
         }
 
@@ -1349,265 +4881,342 @@ function App() {
           display: flex;
           align-items: center;
           gap: 7px;
-          margin-top: 8px;
+          margin-top: 10px;
         }
 
-        .quantity-button {
-          width: 27px;
-          height: 27px;
+        .cart-controls button {
+          width: 28px;
+          height: 28px;
           border: 0;
           border-radius: 8px;
-          background: #f0f0f0;
+          background: #eeeeef;
+          color: inherit;
         }
 
-        .remove-button {
+        .cart-controls span {
+          min-width: 24px;
+          text-align: center;
+          font-weight: 800;
+        }
+
+        .cart-controls .remove-cart {
+          width: auto;
+          padding: 0 9px;
           margin-left: auto;
-          border: 0;
           color: #ef233c;
           background: transparent;
         }
 
-        .cart-total {
-          margin-top: 18px;
-          padding-top: 15px;
-          display: flex;
-          justify-content: space-between;
-          font-size: 18px;
-          font-weight: 900;
-        }
-
-        .cart-buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-top: 15px;
-        }
-
-        .secondary-button {
-          border: 1px solid #dddddd;
-          border-radius: 14px;
-          padding: 11px 16px;
-          background: transparent;
-          color: inherit;
-          font-weight: 800;
-        }
-
-        .product-modal-image {
-          width: 100%;
-          max-height: 330px;
+        .cart-summary,
+        .checkout-summary {
+          position: sticky;
+          top: 78px;
+          padding: 17px;
+          border: 1px solid #eeeeee;
           border-radius: 16px;
-          object-fit: cover;
-        }
-
-        .specifications {
-          padding-left: 18px;
-          color: #666;
-          font-size: 13px;
-          line-height: 1.8;
-        }
-
-        body.dark-theme .specifications {
-          color: #cccccc;
-        }
-
-        .checkout-overlay {
-          overflow-y: auto;
-          padding: 20px;
-        }
-
-        .checkout-page {
-          width: min(1000px, 100%);
-          margin: 20px auto;
-          padding: 22px;
-          border-radius: 22px;
           background: white;
         }
 
-        body.dark-theme .checkout-page {
-          background: #181818;
-        }
-
-        .checkout-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .checkout-title {
-          margin: 0;
-          font-size: 24px;
-        }
-
-        .checkout-steps {
-          display: flex;
-          gap: 8px;
-          margin: 20px 0;
-        }
-
-        .checkout-step {
-          flex: 1;
-          height: 6px;
-          border-radius: 10px;
-          background: #e4e4e4;
-        }
-
-        .checkout-step.active {
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
-        }
-
-        .checkout-layout {
-          display: grid;
-          grid-template-columns: 1.5fr .8fr;
-          gap: 18px;
-        }
-
-        .checkout-card {
-          padding: 18px;
-          border: 1px solid #e7e7e7;
-          border-radius: 18px;
-        }
-
-        body.dark-theme .checkout-card {
+        body.dark-theme .cart-summary,
+        body.dark-theme .checkout-summary {
+          background: #191919;
           border-color: #303030;
         }
 
-        .checkout-card h3 {
+        .cart-summary h3,
+        .checkout-summary h3 {
           margin-top: 0;
-        }
-
-        .checkout-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-
-        .full {
-          grid-column: 1 / -1;
-        }
-
-        .delivery-option,
-        .payment-option {
-          width: 100%;
-          margin-top: 10px;
-          padding: 13px;
-          border: 1px solid #dddddd;
-          border-radius: 13px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-align: left;
-          background: transparent;
-          color: inherit;
-        }
-
-        .delivery-option.selected,
-        .payment-option.selected {
-          border-color: #c91ac4;
-          box-shadow: 0 0 0 2px rgba(201,26,196,.08);
-        }
-
-        .checkout-actions {
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-          margin-top: 15px;
-        }
-
-        .checkout-product {
-          display: flex;
-          gap: 9px;
-          margin-bottom: 11px;
-        }
-
-        .checkout-product img {
-          width: 48px;
-          height: 48px;
-          border-radius: 9px;
-          object-fit: cover;
-        }
-
-        .checkout-product-info {
-          font-size: 11px;
         }
 
         .summary-row,
         .summary-total {
           display: flex;
           justify-content: space-between;
+          gap: 15px;
           margin-top: 10px;
           font-size: 12px;
         }
 
         .summary-total {
           padding-top: 12px;
-          border-top: 1px solid #e6e6e6;
-          font-size: 16px;
+          border-top: 1px solid #eeeeee;
+          font-size: 18px;
           font-weight: 900;
         }
 
-        .success-box {
-          padding: 40px 15px;
-          text-align: center;
-        }
-
-        .success-icon {
-          font-size: 60px;
-        }
-
-        .settings-option {
-          display: flex;
+        .checkout-progress {
+          display: grid;
+          grid-template-columns: 34px 1fr 34px 1fr 34px;
+          gap: 7px;
           align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 14px 0;
-          border-bottom: 1px solid #eeeeee;
+          max-width: 600px;
+          margin-bottom: 20px;
         }
 
-        body.dark-theme .settings-option {
+        .checkout-progress div {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          background: #e9e9ea;
+          color: #666;
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .checkout-progress div.active {
+          color: white;
+          background: linear-gradient(135deg,#ef233c,#d414c9,#6d28d9);
+        }
+
+        .checkout-progress span {
+          height: 3px;
+          border-radius: 5px;
+          background: #e9e9ea;
+        }
+
+        .checkout-layout {
+          display: grid;
+          grid-template-columns: 1.35fr .8fr;
+          gap: 18px;
+          align-items: start;
+        }
+
+        .checkout-card-main {
+          padding: 18px;
+          border: 1px solid #eeeeee;
+          border-radius: 17px;
+          background: white;
+        }
+
+        body.dark-theme .checkout-card-main {
+          background: #191919;
           border-color: #303030;
         }
 
-        .settings-option strong,
-        .settings-option small {
-          display: block;
+        .checkout-card-main h3 {
+          margin-top: 0;
         }
 
-        .settings-option small {
-          margin-top: 4px;
+        .checkout-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 9px;
+        }
+
+        .checkout-input.full {
+          grid-column: 1 / -1;
+        }
+
+        .checkout-section-title {
+          margin-top: 20px !important;
+        }
+
+        .choice-card {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 9px;
+          padding: 13px;
+          border: 1px solid #dddddd;
+          border-radius: 13px;
+          background: transparent;
+          color: inherit;
+          text-align: left;
+        }
+
+        .choice-card.selected {
+          border-color: #d414c9;
+          box-shadow: 0 0 0 2px rgba(212,20,201,.08);
+        }
+
+        .choice-card span {
+          display: grid;
+          gap: 3px;
+        }
+
+        .choice-card small {
           color: #777;
+        }
+
+        .checkout-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 18px;
+        }
+
+        .checkout-actions button {
+          flex: 1;
+        }
+
+        .summary-product {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .summary-product img {
+          width: 50px;
+          height: 50px;
+          border-radius: 8px;
+          object-fit: cover;
+        }
+
+        .summary-product div {
+          display: grid;
+          gap: 3px;
+          font-size: 11px;
+        }
+
+        .summary-product small {
+          color: #777;
+        }
+
+        .review-box {
+          padding: 13px;
+          margin-top: 10px;
+          border-radius: 11px;
+          background: #fafafa;
+        }
+
+        body.dark-theme .review-box {
+          background: #242424;
+        }
+
+        .review-box p {
+          margin: 5px 0 0;
+          color: #777;
+          font-size: 12px;
+          line-height: 1.6;
+        }
+
+        .message-card {
+          min-height: 74px;
+        }
+
+        .message-card div {
+          display: grid;
+          gap: 3px;
+        }
+
+        .message-card small {
+          color: #777;
+          font-size: 10px;
+        }
+
+        .simple-detail-page {
+          text-align: center;
+        }
+
+        .simple-detail-icon {
+          margin-bottom: 12px;
+        }
+
+        .simple-detail-page p {
+          max-width: 600px;
+          margin: 0 auto 18px;
+          color: #777;
+          line-height: 1.6;
+          font-size: 12px;
+        }
+
+        .delivery-info-card {
+          text-align: left;
+          padding: 14px;
+          margin-top: 10px;
+          border-radius: 13px;
+          border: 1px solid #eeeeee;
+        }
+
+        .delivery-info-card p {
+          margin: 4px 0 0;
+          max-width: none;
+        }
+
+        .settings-card {
+          min-height: 75px;
+        }
+
+        .settings-copy {
+          display: grid;
+          gap: 4px;
+        }
+
+        .settings-copy small {
+          color: #777;
+          font-size: 10px;
+        }
+
+        .settings-detail-top {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .settings-detail-top > span {
+          width: 55px;
+          height: 55px;
+          border-radius: 15px;
+          display: grid;
+          place-items: center;
+          background: #f5ebff;
+          font-size: 25px;
+        }
+
+        .settings-detail-top h2 {
+          margin: 0 0 5px;
+        }
+
+        .settings-detail-top p {
+          margin: 0;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .setting-switch-row {
+          min-height: 70px;
+          padding: 12px 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+          border-bottom: 1px solid #eeeeee;
+        }
+
+        .setting-switch-row div {
+          display: grid;
+          gap: 4px;
+        }
+
+        .setting-switch-row small {
+          color: #777;
+          font-size: 10px;
         }
 
         .switch {
           position: relative;
           width: 48px;
           height: 27px;
+          flex: 0 0 auto;
           border: 0;
-          border-radius: 30px;
+          border-radius: 25px;
           background: #cccccc;
-          transition: .2s;
         }
 
         .switch.active {
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
+          background: linear-gradient(90deg,#ef233c,#d414c9,#6d28d9);
         }
 
         .switch::after {
           content: "";
           position: absolute;
-          width: 21px;
-          height: 21px;
           top: 3px;
           left: 3px;
+          width: 21px;
+          height: 21px;
           border-radius: 50%;
           background: white;
           transition: .2s;
@@ -1617,27 +5226,110 @@ function App() {
           left: 24px;
         }
 
-        @media (max-width: 900px) {
-          .top-cards {
-            grid-template-columns: repeat(2, 1fr);
-          }
+        .publish-intro {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
 
+        .publish-intro > span {
+          width: 50px;
+          height: 50px;
+          display: grid;
+          place-items: center;
+          border-radius: 15px;
+          background: #f6eaff;
+          font-size: 24px;
+        }
+
+        .publish-intro strong {
+          display: block;
+        }
+
+        .publish-intro p {
+          margin: 4px 0 0;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .success-page {
+          max-width: 640px;
+          text-align: center;
+          margin: 20px auto;
+        }
+
+        .success-page .success-icon {
+          margin-bottom: 10px;
+          font-size: 68px;
+        }
+
+        .success-page h2 {
+          margin: 0 0 8px;
+        }
+
+        .success-page p {
+          color: #777;
+        }
+
+        .success-total {
+          display: block;
+          margin: 15px 0;
+          font-size: 18px;
+        }
+
+        .success-actions {
+          display: grid;
+          gap: 8px;
+          margin-top: 18px;
+        }
+
+        @media (max-width: 900px) {
           .categories-grid {
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4,1fr);
           }
 
           .products-grid {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3,1fr);
           }
 
-          .checkout-layout {
+          .top-cards {
+            grid-template-columns: repeat(2,1fr);
+          }
+
+          .cart-page,
+          .checkout-layout,
+          .product-detail-page {
             grid-template-columns: 1fr;
+          }
+
+          .cart-summary,
+          .checkout-summary {
+            position: static;
+          }
+
+          .auth-page {
+            grid-template-columns: 1fr;
+          }
+
+          .auth-visual-page {
+            min-height: 210px;
           }
         }
 
-        @media (max-width: 620px) {
+        @media (max-width: 640px) {
+          .header-main {
+            flex-wrap: wrap;
+          }
+
           .brand {
-            font-size: 18px;
+            font-size: 19px;
+          }
+
+          .search-box {
+            order: 5;
+            flex-basis: 100%;
+            max-width: none;
           }
 
           .hero {
@@ -1649,1777 +5341,81 @@ function App() {
             display: none;
           }
 
+          .categories-grid {
+            grid-template-columns: repeat(4,1fr);
+            gap: 5px;
+          }
+
+          .category-card {
+            border-radius: 9px;
+          }
+
+          .category-card span {
+            padding: 5px 4px;
+            font-size: 7px;
+          }
+
           .products-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 9px;
+            grid-template-columns: repeat(2,1fr);
+            gap: 8px;
           }
 
-          .product-info {
-            padding: 9px;
+          .top-card {
+            min-height: 95px;
           }
 
-          .product-name {
-            font-size: 12px;
+          .join-card {
+            align-items: flex-start;
+            flex-direction: column;
           }
 
-          .cart-buttons {
+          .join-card .primary-button {
+            width: 100%;
+          }
+
+          .account-grid,
+          .detail-actions {
             grid-template-columns: 1fr;
+          }
+
+          .category-page-hero {
+            grid-template-columns: 1fr;
+          }
+
+          .category-page-hero img {
+            width: 100%;
+            height: 150px;
           }
 
           .checkout-grid {
             grid-template-columns: 1fr;
           }
 
-          .full {
+          .checkout-input.full {
             grid-column: auto;
           }
 
-          .header-action.account-action {
-            display: none;
+          .checkout-actions {
+            flex-direction: column;
+          }
+
+          .auth-visual-page,
+          .auth-form-page,
+          .account-page-card,
+          .profile-page-card,
+          .publish-page-card,
+          .data-page,
+          .settings-detail-page,
+          .simple-detail-page,
+          .success-page {
+            padding: 20px;
           }
         }
       `}</style>
 
-      <header className="top-header">
-        <div className="header-main">
-          <button
-            className="menu-button"
-            onClick={() => setShowMenu(true)}
-            aria-label="Abrir menú"
-          >
-            ☰
-          </button>
+      {renderPage()}
 
-          <button
-            className="brand"
-            onClick={goHome}
-          >
-            VaniDaxi
-          </button>
-
-          <div className="search-box">
-            <input
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              placeholder="Buscar productos..."
-            />
-
-            <button
-              onClick={() =>
-                document
-                  .getElementById("productos")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-            >
-              🔍
-            </button>
-          </div>
-
-          <div className="header-actions">
-            <button
-              className="header-action account-action"
-              onClick={() =>
-                user
-                  ? setShowMenu(true)
-                  : openAuth("login")
-              }
-            >
-              ✨
-            </button>
-
-            <button
-              className="header-action"
-              onClick={() => setShowCart(true)}
-            >
-              🛒
-
-              {cartCount > 0 && (
-                <span className="cart-count">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="category-bar">
-          <button
-            className={`category-pill ${
-              activeCategory === "Todos"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setActiveCategory("Todos")
-            }
-          >
-            Todos
-          </button>
-
-          {categories.map((category) => (
-            <button
-              key={category.name}
-              className={`category-pill ${
-                activeCategory === category.name
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                setActiveCategory(category.name)
-              }
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <main className="page-content">
-        <section className="hero">
-          <div>
-            <h1>
-              Todo lo que buscas,
-              <br />
-              en un solo lugar.
-            </h1>
-
-            <p>
-              Compra, vende y descubre productos
-              increíbles en VaniDaxi.
-            </p>
-
-            <button
-              className="hero-button"
-              onClick={() =>
-                document
-                  .getElementById("productos")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-            >
-              Explorar productos
-            </button>
-          </div>
-
-          <div className="hero-icon">🛍️</div>
-        </section>
-
-        <section className="top-cards">
-          {topCards.map((card) => (
-            <button
-              key={card.title}
-              className="top-card"
-              style={{
-                backgroundImage: `url(${card.image})`,
-              }}
-              onClick={() =>
-                document
-                  .getElementById("productos")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-              }
-            >
-              <span>
-                <strong>{card.title}</strong>
-                <small>{card.subtitle}</small>
-              </span>
-            </button>
-          ))}
-        </section>
-
-        <section>
-          <div className="section-title">
-            <h2>Categorías</h2>
-          </div>
-
-          <div className="categories-grid">
-            {categories.map((category) => (
-              <button
-                className="category-card"
-                key={category.name}
-                onClick={() => {
-                  setActiveCategory(category.name);
-
-                  setTimeout(() => {
-                    document
-                      .getElementById("productos")
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                      });
-                  }, 50);
-                }}
-              >
-                <img
-                  src={category.image}
-                  alt={category.name}
-                />
-
-                <span>{category.name}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section id="productos">
-          <div className="section-title">
-            <h2>
-              {search
-                ? "Resultados de búsqueda"
-                : activeCategory === "Todos"
-                ? "Productos destacados"
-                : activeCategory}
-            </h2>
-
-            {user && (
-              <button
-                className="primary-button"
-                onClick={() =>
-                  setShowPublish(true)
-                }
-              >
-                + Publicar
-              </button>
-            )}
-          </div>
-
-          {filteredProducts.length === 0 ? (
-            <div className="empty-state">
-              No encontramos productos con esa
-              búsqueda.
-            </div>
-          ) : (
-            <div className="products-grid">
-              {filteredProducts.map((product) => {
-                const isFavorite =
-                  favorites.some(
-                    (item) =>
-                      item.id === product.id
-                  );
-
-                return (
-                  <article
-                    className="product-card"
-                    key={product.id}
-                  >
-                    <div className="product-image">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        onClick={() =>
-                          openProduct(product)
-                        }
-                      />
-
-                      {product.discount > 0 && (
-                        <span className="discount">
-                          -{product.discount}%
-                        </span>
-                      )}
-
-                      <button
-                        className="favorite-button"
-                        onClick={() =>
-                          toggleFavorite(product)
-                        }
-                      >
-                        {isFavorite ? "❤️" : "🤍"}
-                      </button>
-                    </div>
-
-                    <div className="product-info">
-                      <div className="product-category">
-                        {product.category}
-                      </div>
-
-                      <h3 className="product-name">
-                        {product.name}
-                      </h3>
-
-                      <div className="prices">
-                        <span className="price">
-                          {formatPrice(
-                            product.price
-                          )}
-                        </span>
-
-                        {product.oldPrice && (
-                          <span className="old-price">
-                            {formatPrice(
-                              product.oldPrice
-                            )}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="rating">
-                        ⭐ {product.rating} ·{" "}
-                        {product.reviews} opiniones
-                      </div>
-
-                      <div className="product-actions">
-                        <button
-                          className="details-button"
-                          onClick={() =>
-                            openProduct(product)
-                          }
-                        >
-                          Ver
-                        </button>
-
-                        <button
-                          className="add-button"
-                          onClick={() =>
-                            addToCart(product)
-                          }
-                        >
-                          🛒 Agregar
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      </main>
-
-      <button
-        className="floating-whatsapp"
-        onClick={openWhatsApp}
-        aria-label="Atención por WhatsApp"
-        title="Atención al cliente"
-      >
-        ☎
-      </button>
-
-      {showMenu && (
-        <div
-          className="overlay"
-          onClick={() =>
-            setShowMenu(false)
-          }
-        >
-          <aside
-            className="side-menu"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <div className="menu-top">
-              <strong>VaniDaxi</strong>
-
-              <button
-                className="close-button"
-                onClick={() =>
-                  setShowMenu(false)
-                }
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="account-box">
-              {user ? (
-                <>
-                  <strong>
-                    {user.user_metadata
-                      ?.full_name ||
-                      "Mi cuenta"}
-                  </strong>
-
-                  <small>{user.email}</small>
-                </>
-              ) : (
-                <>
-                  <strong>
-                    ¡Hola! 👋
-                  </strong>
-
-                  <small>
-                    Inicia sesión para disfrutar
-                    todas las funciones.
-                  </small>
-                </>
-              )}
-            </div>
-
-            {!user ? (
-              <>
-                <button
-                  className="menu-item"
-                  onClick={() =>
-                    openAuth("login")
-                  }
-                >
-                  <span className="menu-item-icon">
-                    ✨
-                  </span>
-                  <span>
-                    <strong>
-                      Iniciar sesión
-                    </strong>
-                  </span>
-                </button>
-
-                <button
-                  className="menu-item"
-                  onClick={() =>
-                    openAuth("register")
-                  }
-                >
-                  <span className="menu-item-icon">
-                    📝
-                  </span>
-                  <span>
-                    <strong>
-                      Crear cuenta
-                    </strong>
-                  </span>
-                </button>
-              </>
-            ) : (
-              <button
-                className="menu-item"
-                onClick={() =>
-                  setShowPublish(true)
-                }
-              >
-                <span className="menu-item-icon">
-                  ➕
-                </span>
-                <span>
-                  <strong>
-                    Publicar producto
-                  </strong>
-                </span>
-              </button>
-            )}
-
-            <button
-              className="menu-item"
-              onClick={goHome}
-            >
-              <span className="menu-item-icon">
-                🏠
-              </span>
-
-              <span>
-                <strong>Inicio</strong>
-              </span>
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={openFavorites}
-            >
-              <span className="menu-item-icon">
-                ❤️
-              </span>
-
-              <span>
-                <strong>Favoritos</strong>
-              </span>
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowMessages(true);
-              }}
-            >
-              <span className="menu-item-icon">
-                💬
-              </span>
-
-              <span>
-                <strong>Mensajes</strong>
-              </span>
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowSettings(true);
-              }}
-            >
-              <span className="menu-item-icon">
-                ⚙️
-              </span>
-
-              <span>
-                <strong>
-                  Configuración
-                </strong>
-              </span>
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={openWhatsApp}
-            >
-              <span className="menu-item-icon">
-                🟢
-              </span>
-
-              <span>
-                <strong>
-                  Atención al cliente
-                </strong>
-              </span>
-            </button>
-
-            {user && (
-              <button
-                className="menu-item"
-                onClick={logout}
-              >
-                <span className="menu-item-icon">
-                  🚪
-                </span>
-
-                <span>
-                  <strong>
-                    Cerrar sesión
-                  </strong>
-                </span>
-              </button>
-            )}
-          </aside>
-        </div>
-      )}
-
-      {showAuth && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setShowAuth(false)
-          }
-        >
-          <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-              }}
-              onClick={() =>
-                setShowAuth(false)
-              }
-            >
-              ✕
-            </button>
-
-            <h2>
-              {authMode === "login"
-                ? "✨ Bienvenido de nuevo"
-                : "🚀 Crea tu cuenta"}
-            </h2>
-
-            <p
-              style={{
-                color: "#777",
-                fontSize: 12,
-                marginTop: -5,
-              }}
-            >
-              {authMode === "login"
-                ? "Inicia sesión para comprar, vender y administrar tu cuenta."
-                : "Únete a VaniDaxi y comienza a comprar o vender fácilmente."}
-            </p>
-
-            <form
-              className="form"
-              onSubmit={handleAuth}
-            >
-              {authMode === "register" && (
-                <input
-                  type="text"
-                  placeholder="Nombre completo"
-                  value={authName}
-                  onChange={(event) =>
-                    setAuthName(
-                      event.target.value
-                    )
-                  }
-                  required
-                />
-              )}
-
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={authEmail}
-                onChange={(event) =>
-                  setAuthEmail(
-                    event.target.value
-                  )
-                }
-                required
-              />
-
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={authPassword}
-                onChange={(event) =>
-                  setAuthPassword(
-                    event.target.value
-                  )
-                }
-                required
-              />
-
-              {authMessage && (
-                <p className="auth-message">
-                  {authMessage}
-                </p>
-              )}
-
-              <button
-                className="primary-button"
-                disabled={loading}
-              >
-                {loading
-                  ? "Procesando..."
-                  : authMode === "login"
-                  ? "Iniciar sesión"
-                  : "Crear mi cuenta"}
-              </button>
-            </form>
-
-            <div className="auth-switch">
-              {authMode === "login" ? (
-                <>
-                  ¿Aún no tienes cuenta?{" "}
-
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      setAuthMode(
-                        "register"
-                      );
-                      setAuthMessage("");
-                    }}
-                  >
-                    Crear cuenta
-                  </button>
-                </>
-              ) : (
-                <>
-                  ¿Ya tienes cuenta?{" "}
-
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      setAuthMode(
-                        "login"
-                      );
-                      setAuthMessage("");
-                    }}
-                  >
-                    Iniciar sesión
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedProduct && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setSelectedProduct(null)
-          }
-        >
-          <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-                zIndex: 2,
-              }}
-              onClick={() =>
-                setSelectedProduct(null)
-              }
-            >
-              ✕
-            </button>
-
-            <img
-              className="product-modal-image"
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
-            />
-
-            <h2>
-              {selectedProduct.name}
-            </h2>
-
-            <div className="product-category">
-              {selectedProduct.category}
-            </div>
-
-            <p>
-              {selectedProduct.description}
-            </p>
-
-            <div className="price">
-              {formatPrice(
-                selectedProduct.price
-              )}
-            </div>
-
-            {selectedProduct.specifications
-              ?.length > 0 && (
-              <>
-                <h3>Especificaciones</h3>
-
-                <ul className="specifications">
-                  {selectedProduct.specifications.map(
-                    (specification) => (
-                      <li
-                        key={specification}
-                      >
-                        {specification}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </>
-            )}
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "1fr 1fr",
-                gap: 10,
-                marginTop: 20,
-              }}
-            >
-              <button
-                className="secondary-button"
-                onClick={() =>
-                  addToCart(
-                    selectedProduct
-                  )
-                }
-              >
-                🛒 Agregar
-              </button>
-
-              <button
-                className="primary-button"
-                onClick={() =>
-                  startCheckout(
-                    selectedProduct
-                  )
-                }
-              >
-                Comprar ahora
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCart && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setShowCart(false)
-          }
-        >
-          <div
-            className="modal cart-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-              }}
-              onClick={() =>
-                setShowCart(false)
-              }
-            >
-              ✕
-            </button>
-
-            <h2>🛒 Mi carrito</h2>
-
-            {cart.length === 0 ? (
-              <div className="empty-state">
-                Tu carrito está vacío.
-              </div>
-            ) : (
-              <>
-                {cart.map((item) => (
-                  <div
-                    className="cart-item"
-                    key={item.id}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                    />
-
-                    <div className="cart-item-info">
-                      <h3 className="cart-item-name">
-                        {item.name}
-                      </h3>
-
-                      <strong>
-                        {formatPrice(
-                          item.price
-                        )}
-                      </strong>
-
-                      <div className="cart-controls">
-                        <button
-                          className="quantity-button"
-                          onClick={() =>
-                            changeQuantity(
-                              item.id,
-                              -1
-                            )
-                          }
-                        >
-                          −
-                        </button>
-
-                        <strong>
-                          {item.quantity}
-                        </strong>
-
-                        <button
-                          className="quantity-button"
-                          onClick={() =>
-                            changeQuantity(
-                              item.id,
-                              1
-                            )
-                          }
-                        >
-                          +
-                        </button>
-
-                        <button
-                          className="remove-button"
-                          onClick={() =>
-                            removeFromCart(
-                              item.id
-                            )
-                          }
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="cart-total">
-                  <span>Total</span>
-
-                  <span>
-                    {formatPrice(
-                      cartSubtotal
-                    )}
-                  </span>
-                </div>
-
-                <div className="cart-buttons">
-                  <button
-                    className="secondary-button"
-                    onClick={() =>
-                      setShowCart(false)
-                    }
-                  >
-                    Seguir comprando
-                  </button>
-
-                  <button
-                    className="primary-button"
-                    onClick={() =>
-                      startCheckout()
-                    }
-                  >
-                    Finalizar compra
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {showMessages && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setShowMessages(false)
-          }
-        >
-          <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-              }}
-              onClick={() =>
-                setShowMessages(false)
-              }
-            >
-              ✕
-            </button>
-
-            <h2>💬 Mensajes</h2>
-
-            <p
-              style={{
-                color: "#777",
-                fontSize: 13,
-              }}
-            >
-              Aquí podrás consultar tus
-              conversaciones relacionadas con
-              compras y ventas.
-            </p>
-
-            <button
-              className="primary-button"
-              style={{
-                width: "100%",
-                marginTop: 12,
-              }}
-              onClick={openWhatsApp}
-            >
-              🟢 Contactar atención al cliente
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showSettings && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setShowSettings(false)
-          }
-        >
-          <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-              }}
-              onClick={() =>
-                setShowSettings(false)
-              }
-            >
-              ✕
-            </button>
-
-            <h2>⚙️ Configuración</h2>
-
-            <div className="settings-option">
-              <div>
-                <strong>
-                  Notificaciones
-                </strong>
-
-                <small>
-                  Recibe avisos sobre tu cuenta,
-                  compras y ventas.
-                </small>
-              </div>
-
-              <button
-                className={`switch ${
-                  settings.notifications
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() =>
-                  setSettings(
-                    (current) => ({
-                      ...current,
-                      notifications:
-                        !current.notifications,
-                    })
-                  )
-                }
-              />
-            </div>
-
-            <div className="settings-option">
-              <div>
-                <strong>
-                  Promociones
-                </strong>
-
-                <small>
-                  Recibe información sobre
-                  ofertas y novedades.
-                </small>
-              </div>
-
-              <button
-                className={`switch ${
-                  settings.promotions
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() =>
-                  setSettings(
-                    (current) => ({
-                      ...current,
-                      promotions:
-                        !current.promotions,
-                    })
-                  )
-                }
-              />
-            </div>
-
-            <div className="settings-option">
-              <div>
-                <strong>
-                  Modo oscuro
-                </strong>
-
-                <small>
-                  Cambia la apariencia de
-                  VaniDaxi.
-                </small>
-              </div>
-
-              <button
-                className={`switch ${
-                  settings.darkMode
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() =>
-                  setSettings(
-                    (current) => ({
-                      ...current,
-                      darkMode:
-                        !current.darkMode,
-                    })
-                  )
-                }
-              />
-            </div>
-
-            <button
-              className="secondary-button"
-              style={{
-                width: "100%",
-                marginTop: 18,
-              }}
-              onClick={openWhatsApp}
-            >
-              🟢 Ayuda y atención al cliente
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showPublish && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setShowPublish(false)
-          }
-        >
-          <div
-            className="modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-              }}
-              onClick={() =>
-                setShowPublish(false)
-              }
-            >
-              ✕
-            </button>
-
-            <h2>➕ Publicar producto</h2>
-
-            <p
-              style={{
-                color: "#777",
-                fontSize: 12,
-              }}
-            >
-              Agrega tu producto y comienza a
-              vender en VaniDaxi.
-            </p>
-
-            <form
-              className="form"
-              onSubmit={handlePublish}
-            >
-              <input
-                type="text"
-                placeholder="Nombre del producto"
-                value={newProduct.name}
-                onChange={(event) =>
-                  setNewProduct({
-                    ...newProduct,
-                    name: event.target.value,
-                  })
-                }
-                required
-              />
-
-              <input
-                type="number"
-                placeholder="Precio en MXN"
-                min="1"
-                value={newProduct.price}
-                onChange={(event) =>
-                  setNewProduct({
-                    ...newProduct,
-                    price: event.target.value,
-                  })
-                }
-                required
-              />
-
-              <select
-                value={newProduct.category}
-                onChange={(event) =>
-                  setNewProduct({
-                    ...newProduct,
-                    category:
-                      event.target.value,
-                  })
-                }
-              >
-                {categories.map(
-                  (category) => (
-                    <option
-                      key={category.name}
-                      value={category.name}
-                    >
-                      {category.name}
-                    </option>
-                  )
-                )}
-              </select>
-
-              <input
-                type="url"
-                placeholder="URL de la imagen"
-                value={newProduct.image}
-                onChange={(event) =>
-                  setNewProduct({
-                    ...newProduct,
-                    image: event.target.value,
-                  })
-                }
-              />
-
-              <textarea
-                placeholder="Describe tu producto..."
-                value={
-                  newProduct.description
-                }
-                onChange={(event) =>
-                  setNewProduct({
-                    ...newProduct,
-                    description:
-                      event.target.value,
-                  })
-                }
-              />
-
-              <button className="primary-button">
-                🚀 Publicar producto
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showCheckout && (
-        <div className="overlay checkout-overlay">
-          <div className="checkout-page">
-            <div className="checkout-header">
-              <h1 className="checkout-title">
-                VaniDaxi · Finalizar compra
-              </h1>
-
-              {!orderComplete && (
-                <button
-                  className="close-button"
-                  onClick={resetCheckout}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {orderComplete ? (
-              <div className="success-box">
-                <div className="success-icon">
-                  ✅
-                </div>
-
-                <h2>
-                  ¡Pedido realizado!
-                </h2>
-
-                <p>
-                  Tu pedido fue registrado
-                  correctamente.
-                </p>
-
-                <p>
-                  <strong>
-                    Total del pedido:
-                  </strong>{" "}
-                  {formatPrice(cartTotal)}
-                </p>
-
-                <button
-                  className="primary-button"
-                  onClick={() => {
-                    setCart([]);
-                    resetCheckout();
-                  }}
-                >
-                  Volver a VaniDaxi
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="checkout-steps">
-                  {[1, 2, 3].map((step) => (
-                    <div
-                      key={step}
-                      className={`checkout-step ${
-                        checkoutStep >= step
-                          ? "active"
-                          : ""
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <div className="checkout-layout">
-                  <div>
-                    {checkoutStep === 1 && (
-                      <div className="checkout-card">
-                        <h3>
-                          📍 Datos de entrega
-                        </h3>
-
-                        <div className="checkout-grid">
-                          <input
-                            className="checkout-input"
-                            placeholder="Nombre completo"
-                            value={
-                              checkout.name
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                name:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-
-                          <input
-                            className="checkout-input"
-                            placeholder="Teléfono"
-                            value={
-                              checkout.phone
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                phone:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-
-                          <input
-                            className="checkout-input full"
-                            placeholder="Calle y número"
-                            value={
-                              checkout.address
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                address:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-
-                          <input
-                            className="checkout-input"
-                            placeholder="Ciudad"
-                            value={
-                              checkout.city
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                city:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-
-                          <input
-                            className="checkout-input"
-                            placeholder="Estado"
-                            value={
-                              checkout.state
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                state:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-
-                          <input
-                            className="checkout-input"
-                            placeholder="Código postal"
-                            value={
-                              checkout.zip
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                zip:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-
-                          <textarea
-                            className="checkout-input full"
-                            placeholder="Notas para el vendedor o repartidor"
-                            value={
-                              checkout.notes
-                            }
-                            onChange={(event) =>
-                              setCheckout({
-                                ...checkout,
-                                notes:
-                                  event.target
-                                    .value,
-                              })
-                            }
-                          />
-                        </div>
-
-                        <h3
-                          style={{
-                            marginTop: 20,
-                          }}
-                        >
-                          🚚 Tipo de entrega
-                        </h3>
-
-                        <button
-                          className={`delivery-option ${
-                            checkout.delivery ===
-                            "standard"
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCheckout({
-                              ...checkout,
-                              delivery:
-                                "standard",
-                            })
-                          }
-                        >
-                          <input
-                            type="radio"
-                            checked={
-                              checkout.delivery ===
-                              "standard"
-                            }
-                            readOnly
-                          />
-
-                          <span>
-                            <strong>
-                              Envío estándar
-                            </strong>
-                            <br />
-                            <small>
-                              Envío gratis
-                            </small>
-                          </span>
-                        </button>
-
-                        <button
-                          className={`delivery-option ${
-                            checkout.delivery ===
-                            "express"
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCheckout({
-                              ...checkout,
-                              delivery:
-                                "express",
-                            })
-                          }
-                        >
-                          <input
-                            type="radio"
-                            checked={
-                              checkout.delivery ===
-                              "express"
-                            }
-                            readOnly
-                          />
-
-                          <span>
-                            <strong>
-                              Envío express
-                            </strong>
-                            <br />
-                            <small>
-                              + $99 MXN
-                            </small>
-                          </span>
-                        </button>
-                      </div>
-                    )}
-
-                    {checkoutStep === 2 && (
-                      <div className="checkout-card">
-                        <h3>
-                          💳 Método de pago
-                        </h3>
-
-                        {[
-                          {
-                            id: "card",
-                            title:
-                              "💳 Tarjeta",
-                            text:
-                              "Visa, Mastercard y otras tarjetas",
-                          },
-                          {
-                            id:
-                              "mercadopago",
-                            title:
-                              "💙 Mercado Pago",
-                            text:
-                              "Pago mediante Mercado Pago",
-                          },
-                          {
-                            id: "cash",
-                            title:
-                              "💵 Pago disponible según el vendedor",
-                            text: "",
-                          },
-                        ].map(
-                          (option) => (
-                            <button
-                              key={option.id}
-                              className={`payment-option ${
-                                checkout.payment ===
-                                option.id
-                                  ? "selected"
-                                  : ""
-                              }`}
-                              onClick={() =>
-                                setCheckout({
-                                  ...checkout,
-                                  payment:
-                                    option.id,
-                                })
-                              }
-                            >
-                              <input
-                                type="radio"
-                                checked={
-                                  checkout.payment ===
-                                  option.id
-                                }
-                                readOnly
-                              />
-
-                              <span>
-                                <strong>
-                                  {option.title}
-                                </strong>
-
-                                {option.text && (
-                                  <>
-                                    <br />
-
-                                    <small>
-                                      {
-                                        option.text
-                                      }
-                                    </small>
-                                  </>
-                                )}
-                              </span>
-                            </button>
-                          )
-                        )}
-                      </div>
-                    )}
-
-                    {checkoutStep === 3 && (
-                      <div className="checkout-card">
-                        <h3>
-                          🧾 Confirmar pedido
-                        </h3>
-
-                        <p
-                          style={{
-                            fontSize: 12,
-                            color: "#777",
-                          }}
-                        >
-                          Revisa que los datos
-                          de entrega, productos,
-                          envío y método de pago
-                          sean correctos.
-                        </p>
-
-                        <div
-                          style={{
-                            padding: 12,
-                            background:
-                              "rgba(150,150,150,.08)",
-                            borderRadius: 10,
-                            fontSize: 12,
-                            lineHeight: 1.7,
-                          }}
-                        >
-                          <strong>
-                            Entrega
-                          </strong>
-                          <br />
-
-                          {checkout.name}
-                          <br />
-
-                          {checkout.address}
-                          <br />
-
-                          {checkout.city},{" "}
-                          {checkout.state}{" "}
-                          {checkout.zip}
-                          <br />
-
-                          Tel. {checkout.phone}
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 12,
-                            padding: 12,
-                            background:
-                              "rgba(150,150,150,.08)",
-                            borderRadius: 10,
-                            fontSize: 12,
-                          }}
-                        >
-                          <strong>
-                            Pago:
-                          </strong>{" "}
-                          {checkout.payment ===
-                          "card"
-                            ? "Tarjeta"
-                            : checkout.payment ===
-                              "mercadopago"
-                            ? "Mercado Pago"
-                            : "Pago disponible según vendedor"}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="checkout-actions">
-                      <button
-                        className="secondary-button"
-                        onClick={() => {
-                          if (
-                            checkoutStep === 1
-                          ) {
-                            resetCheckout();
-                          } else {
-                            setCheckoutStep(
-                              checkoutStep - 1
-                            );
-                          }
-                        }}
-                      >
-                        {checkoutStep === 1
-                          ? "Cancelar"
-                          : "Regresar"}
-                      </button>
-
-                      <button
-                        className="primary-button"
-                        onClick={
-                          handleCheckoutNext
-                        }
-                      >
-                        {checkoutStep === 3
-                          ? "Confirmar pedido"
-                          : "Continuar"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <aside className="checkout-card">
-                    <h3>
-                      Resumen de compra
-                    </h3>
-
-                    {cart.map((item) => (
-                      <div
-                        className="checkout-product"
-                        key={item.id}
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                        />
-
-                        <div className="checkout-product-info">
-                          <strong>
-                            {item.name}
-                          </strong>
-
-                          <div>
-                            {item.quantity} ×{" "}
-                            {formatPrice(
-                              item.price
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div
-                      style={{
-                        marginTop: 15,
-                      }}
-                    >
-                      <div className="summary-row">
-                        <span>
-                          Subtotal
-                        </span>
-
-                        <strong>
-                          {formatPrice(
-                            cartSubtotal
-                          )}
-                        </strong>
-                      </div>
-
-                      <div className="summary-row">
-                        <span>Envío</span>
-
-                        <strong>
-                          {shippingCost === 0
-                            ? "Gratis"
-                            : formatPrice(
-                                shippingCost
-                              )}
-                        </strong>
-                      </div>
-
-                      <div className="summary-total">
-                        <span>Total</span>
-
-                        <span>
-                          {formatPrice(
-                            cartTotal
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </aside>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <WhatsAppButton />
     </div>
   );
 }
