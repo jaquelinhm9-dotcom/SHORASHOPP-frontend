@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
 const CART_KEY = "vanidaxi_cart";
@@ -10,8 +7,7 @@ const FAVORITES_KEY = "vanidaxi_favorites";
 const SETTINGS_KEY = "vanidaxi_settings";
 
 const WHATSAPP_NUMBER = "";
-const WHATSAPP_MESSAGE =
-  "Hola, necesito ayuda con VaniDaxi.";
+const WHATSAPP_MESSAGE = "Hola, necesito ayuda con VaniDaxi.";
 
 const categories = [
   {
@@ -168,8 +164,7 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [products, setProducts] =
-    useState(initialProducts);
+  const [products, setProducts] = useState(initialProducts);
 
   const [cart, setCart] = useState(() =>
     loadStorage(CART_KEY, [])
@@ -190,18 +185,12 @@ function App() {
   const [user, setUser] = useState(null);
   const [search, setSearch] = useState("");
 
-  const [authMode, setAuthMode] =
-    useState("login");
-  const [authEmail, setAuthEmail] =
-    useState("");
-  const [authPassword, setAuthPassword] =
-    useState("");
-  const [authName, setAuthName] =
-    useState("");
-  const [authMessage, setAuthMessage] =
-    useState("");
-  const [loading, setLoading] =
-    useState(false);
+  const [authMode, setAuthMode] = useState("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [checkout, setCheckout] = useState({
     name: "",
@@ -215,20 +204,17 @@ function App() {
     payment: "card",
   });
 
-  const [newProduct, setNewProduct] =
-    useState({
-      name: "",
-      price: "",
-      category: "Ropa y Moda",
-      image: "",
-      description: "",
-    });
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    price: "",
+    category: "Ropa y Moda",
+    image: "",
+    description: "",
+  });
 
   useEffect(() => {
     const getUser = async () => {
-      const { data } =
-        await supabase.auth.getUser();
-
+      const { data } = await supabase.auth.getUser();
       setUser(data?.user || null);
     };
 
@@ -236,35 +222,23 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
 
-    return () =>
-      subscription.unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      CART_KEY,
-      JSON.stringify(cart)
-    );
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem(
-      FAVORITES_KEY,
-      JSON.stringify(favorites)
-    );
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   }, [favorites]);
 
   useEffect(() => {
-    localStorage.setItem(
-      SETTINGS_KEY,
-      JSON.stringify(settings)
-    );
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 
     document.body.classList.toggle(
       "dark-theme",
@@ -273,8 +247,7 @@ function App() {
   }, [settings]);
 
   const cartCount = cart.reduce(
-    (total, item) =>
-      total + Number(item.quantity || 0),
+    (total, item) => total + Number(item.quantity || 0),
     0
   );
 
@@ -287,36 +260,26 @@ function App() {
   );
 
   const shippingCost =
-    checkout.delivery === "express" &&
-    cart.length > 0
+    checkout.delivery === "express" && cart.length > 0
       ? 99
       : 0;
 
-  const cartTotal =
-    cartSubtotal + shippingCost;
+  const cartTotal = cartSubtotal + shippingCost;
 
-  const activeCategory =
-    location.pathname.startsWith(
-      "/categoria/"
-    )
-      ? decodeURIComponent(
-          location.pathname.replace(
-            "/categoria/",
-            ""
-          )
-        )
-      : "Todos";
+  const activeCategory = location.pathname.startsWith(
+    "/categoria/"
+  )
+    ? decodeURIComponent(
+        location.pathname.replace("/categoria/", "")
+      )
+    : "Todos";
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    if (
-      activeCategory !== "Todos"
-    ) {
+    if (activeCategory !== "Todos") {
       result = result.filter(
-        (product) =>
-          product.category ===
-          activeCategory
+        (product) => product.category === activeCategory
       );
     }
 
@@ -325,43 +288,31 @@ function App() {
     if (!term) return result;
 
     return result.filter((product) => {
-      const searchable =
-        normalizeText(
-          [
-            product.name,
-            product.category,
-            product.description,
-            ...(product.specifications ||
-              []),
-          ].join(" ")
-        );
+      const searchable = normalizeText(
+        [
+          product.name,
+          product.category,
+          product.description,
+          ...(product.specifications || []),
+        ].join(" ")
+      );
 
       return searchable.includes(term);
     });
-  }, [
-    products,
-    activeCategory,
-    search,
-  ]);
+  }, [products, activeCategory, search]);
 
-  const currentProductId =
-    location.pathname.startsWith(
-      "/producto/"
-    )
-      ? location.pathname.replace(
-          "/producto/",
-          ""
-        )
-      : null;
+  const currentProductId = location.pathname.startsWith(
+    "/producto/"
+  )
+    ? location.pathname.replace("/producto/", "")
+    : null;
 
-  const selectedProduct =
-    currentProductId
-      ? products.find(
-          (product) =>
-            String(product.id) ===
-            String(currentProductId)
-        )
-      : null;
+  const selectedProduct = currentProductId
+    ? products.find(
+        (product) =>
+          String(product.id) === String(currentProductId)
+      )
+    : null;
 
   const go = (path) => {
     navigate(path);
@@ -384,11 +335,7 @@ function App() {
 
   const goCategory = (category) => {
     setSearch("");
-    go(
-      `/categoria/${encodeURIComponent(
-        category
-      )}`
-    );
+    go(`/categoria/${encodeURIComponent(category)}`);
   };
 
   const openAuth = (mode) => {
@@ -402,14 +349,10 @@ function App() {
     );
   };
 
-  const addToCart = (
-    product,
-    redirect = true
-  ) => {
+  const addToCart = (product, redirect = true) => {
     setCart((current) => {
       const existing = current.find(
-        (item) =>
-          item.id === product.id
+        (item) => item.id === product.id
       );
 
       if (existing) {
@@ -418,9 +361,7 @@ function App() {
             ? {
                 ...item,
                 quantity:
-                  Number(
-                    item.quantity || 0
-                  ) + 1,
+                  Number(item.quantity || 0) + 1,
               }
             : item
         );
@@ -442,16 +383,11 @@ function App() {
 
   const removeFromCart = (id) => {
     setCart((current) =>
-      current.filter(
-        (item) => item.id !== id
-      )
+      current.filter((item) => item.id !== id)
     );
   };
 
-  const changeQuantity = (
-    id,
-    amount
-  ) => {
+  const changeQuantity = (id, amount) => {
     setCart((current) =>
       current.map((item) =>
         item.id === id
@@ -459,9 +395,7 @@ function App() {
               ...item,
               quantity: Math.max(
                 1,
-                Number(
-                  item.quantity || 1
-                ) + amount
+                Number(item.quantity || 1) + amount
               ),
             }
           : item
@@ -472,30 +406,23 @@ function App() {
   const toggleFavorite = (product) => {
     setFavorites((current) => {
       const exists = current.some(
-        (item) =>
-          item.id === product.id
+        (item) => item.id === product.id
       );
 
       return exists
         ? current.filter(
-            (item) =>
-              item.id !== product.id
+            (item) => item.id !== product.id
           )
         : [...current, product];
     });
   };
 
-  const startCheckout = (
-    product = null
-  ) => {
+  const startCheckout = (product = null) => {
     if (product) {
       addToCart(product, false);
     }
 
-    if (
-      !product &&
-      cart.length === 0
-    ) {
+    if (!product && cart.length === 0) {
       go("/carrito");
       return;
     }
@@ -503,21 +430,15 @@ function App() {
     go("/checkout/entrega");
   };
 
-  const handleAuth = async (
-    event
-  ) => {
+  const handleAuth = async (event) => {
     event.preventDefault();
 
     setLoading(true);
     setAuthMessage("");
 
     try {
-      if (
-        authMode === "register"
-      ) {
-        if (
-          authPassword.length < 6
-        ) {
+      if (authMode === "register") {
+        if (authPassword.length < 6) {
           setAuthMessage(
             "La contraseña debe tener al menos 6 caracteres."
           );
@@ -547,13 +468,10 @@ function App() {
         }
       } else {
         const { data, error } =
-          await supabase.auth.signInWithPassword(
-            {
-              email: authEmail,
-              password:
-                authPassword,
-            }
-          );
+          await supabase.auth.signInWithPassword({
+            email: authEmail,
+            password: authPassword,
+          });
 
         if (error) throw error;
 
@@ -561,8 +479,7 @@ function App() {
         go("/cuenta");
       }
     } catch (error) {
-      const message =
-        error?.message || "";
+      const message = error?.message || "";
 
       if (
         normalizeText(message).includes(
@@ -608,30 +525,22 @@ function App() {
   const handlePublish = (event) => {
     event.preventDefault();
 
-    if (
-      !newProduct.name.trim() ||
-      !newProduct.price
-    ) {
-      return;
-    }
+    if (!newProduct.name.trim()) return;
 
     const product = {
       id: Date.now(),
       name: newProduct.name.trim(),
-      price: Number(
-        newProduct.price
-      ),
-      oldPrice: null,
+      price: Number(newProduct.price) || 0,
+      oldPrice: 0,
       rating: 5,
       reviews: 0,
       discount: 0,
-      category:
-        newProduct.category,
+      category: newProduct.category,
       image:
-        newProduct.image ||
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=900&q=85",
+        newProduct.image.trim() ||
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
       description:
-        newProduct.description ||
+        newProduct.description.trim() ||
         "Producto publicado en VaniDaxi.",
       specifications: [],
     };
@@ -649,35 +558,62 @@ function App() {
       description: "",
     });
 
-    go(`/producto/${product.id}`);
+    go("/productos");
   };
 
-  const updateCheckout = (
-    field,
-    value
-  ) => {
+  const updateCheckout = (field, value) => {
     setCheckout((current) => ({
       ...current,
       [field]: value,
     }));
   };
 
-  const updateNewProduct = (
-    field,
-    value
-  ) => {
-    setNewProduct((current) => ({
-      ...current,
-      [field]: value,
-    }));
+  const submitOrder = (event) => {
+    event.preventDefault();
+
+    if (cart.length === 0) {
+      go("/carrito");
+      return;
+    }
+
+    alert(
+      "¡Pedido recibido! Esta es una demostración del proceso de compra."
+    );
+
+    setCart([]);
+    go("/");
   };
 
-  const whatsappUrl =
-    WHATSAPP_NUMBER
-      ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-          WHATSAPP_MESSAGE
-        )}`
-      : "#";
+  const whatsappUrl = WHATSAPP_NUMBER
+    ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+        WHATSAPP_MESSAGE
+      )}`
+    : `https://wa.me/?text=${encodeURIComponent(
+        WHATSAPP_MESSAGE
+      )}`;
+
+  const isHome =
+    location.pathname === "/" ||
+    location.pathname === "";
+
+  const isProducts =
+    location.pathname === "/productos";
+
+  const isAccount =
+    location.pathname === "/cuenta";
+
+  const isAuth =
+    location.pathname === "/cuenta/iniciar" ||
+    location.pathname === "/cuenta/crear";
+
+  const isCart =
+    location.pathname === "/carrito";
+
+  const isCheckout =
+    location.pathname === "/checkout/entrega";
+
+  const isFavorites =
+    location.pathname === "/favoritos";
 
   return (
     <div className="app">
@@ -692,15 +628,10 @@ function App() {
 
         body {
           margin: 0;
-          font-family:
-            Inter,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif;
-          background: #fff;
-          color: #222;
+          font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+            "Segoe UI", sans-serif;
+          background: #ffffff;
+          color: #202020;
         }
 
         button,
@@ -714,664 +645,777 @@ function App() {
           cursor: pointer;
         }
 
+        a {
+          color: inherit;
+          text-decoration: none;
+        }
+
         .app {
           min-height: 100vh;
           background: #fff;
         }
 
-        .gradient-text {
-          background:
-            linear-gradient(
-              90deg,
-              #ef233c,
-              #d41472,
-              #6a11cb
-            );
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
+        .dark-theme {
+          background: #121212;
+          color: #f5f5f5;
+        }
+
+        .dark-theme .app,
+        .dark-theme .page,
+        .dark-theme .section,
+        .dark-theme .product-card,
+        .dark-theme .modal-card,
+        .dark-theme .account-card,
+        .dark-theme .checkout-card,
+        .dark-theme .cart-card {
+          background: #171717;
+          color: #f5f5f5;
         }
 
         .topbar {
           position: sticky;
           top: 0;
-          z-index: 50;
-          background: rgba(255,255,255,.96);
-          backdrop-filter: blur(14px);
-          border-bottom: 1px solid #eee;
+          z-index: 100;
+          background: rgba(255,255,255,.97);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid #eeeeee;
         }
 
-        .topbar-inner {
-          width: min(1180px, calc(100% - 28px));
+        .dark-theme .topbar {
+          background: rgba(23,23,23,.97);
+          border-color: #303030;
+        }
+
+        .header-inner {
+          max-width: 1180px;
           margin: auto;
-          min-height: 68px;
+          padding: 10px 16px;
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
         }
 
         .brand {
           border: 0;
           background: transparent;
-          font-size: 25px;
           font-weight: 900;
-          letter-spacing: -.8px;
-          padding: 4px;
+          font-size: 22px;
+          letter-spacing: -.7px;
+          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
           white-space: nowrap;
         }
 
-        .search-wrap {
+        .menu-btn,
+        .icon-btn {
+          border: 0;
+          background: #f6f6f6;
+          width: 42px;
+          height: 42px;
+          border-radius: 13px;
+          display: grid;
+          place-items: center;
+          flex: 0 0 auto;
+        }
+
+        .dark-theme .menu-btn,
+        .dark-theme .icon-btn {
+          background: #292929;
+          color: white;
+        }
+
+        .menu-lines {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .menu-lines span {
+          width: 19px;
+          height: 2px;
+          border-radius: 4px;
+          background: currentColor;
+        }
+
+        .search-box {
           flex: 1;
           position: relative;
         }
 
-        .search-input {
+        .search-box input {
           width: 100%;
-          height: 44px;
-          border: 1px solid #ddd;
-          border-radius: 13px;
-          padding: 0 15px;
+          height: 42px;
+          border: 1px solid #e4e4e4;
+          border-radius: 14px;
+          padding: 0 42px 0 15px;
           outline: none;
           background: #fafafa;
-          transition: .2s;
         }
 
-        .search-input:focus {
-          border-color: #c3299b;
-          background: #fff;
-          box-shadow:
-            0 0 0 3px
-            rgba(195,41,155,.10);
+        .search-box input:focus {
+          border-color: #d4148e;
+          box-shadow: 0 0 0 3px rgba(212,20,142,.1);
         }
 
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 7px;
+        .dark-theme .search-box input {
+          background: #242424;
+          color: white;
+          border-color: #3a3a3a;
         }
 
-        .icon-btn {
-          width: 42px;
-          height: 42px;
-          border: 1px solid #e5e5e5;
-          background: #fff;
-          border-radius: 12px;
-          display: grid;
-          place-items: center;
-          font-size: 19px;
+        .search-icon {
+          position: absolute;
+          right: 13px;
+          top: 10px;
+        }
+
+        .cart-button {
           position: relative;
         }
 
         .cart-badge {
           position: absolute;
-          right: -3px;
-          top: -5px;
-          min-width: 18px;
-          height: 18px;
-          border-radius: 99px;
-          padding: 0 4px;
+          top: -4px;
+          right: -4px;
+          min-width: 20px;
+          height: 20px;
+          padding: 0 5px;
+          border-radius: 20px;
           display: grid;
           place-items: center;
-          font-size: 10px;
+          background: linear-gradient(135deg,#ef233c,#d4148e,#7027c9);
+          color: white;
+          font-size: 11px;
           font-weight: 800;
-          color: #fff;
-          background:
-            linear-gradient(
-              135deg,
-              #ef233c,
-              #d41472,
-              #6a11cb
-            );
         }
 
-        .main {
-          width: min(1180px, calc(100% - 28px));
-          margin: auto;
-          padding: 18px 0 95px;
+        .page {
+          min-height: calc(100vh - 64px);
         }
 
         .hero {
-          border-radius: 24px;
-          padding: 30px;
-          min-height: 260px;
-          display: flex;
-          align-items: center;
-          overflow: hidden;
-          position: relative;
-          background:
-            linear-gradient(
-              135deg,
-              #ef233c,
-              #d41472 52%,
-              #6a11cb
-            );
-          color: #fff;
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 34px 16px 20px;
         }
 
-        .hero-content {
-          max-width: 650px;
+        .hero-box {
+          border-radius: 28px;
+          padding: 35px;
+          color: white;
+          background: linear-gradient(120deg,#ef233c,#d4148e 52%,#7027c9);
           position: relative;
-          z-index: 2;
+          overflow: hidden;
+        }
+
+        .hero-box::after {
+          content: "";
+          position: absolute;
+          width: 230px;
+          height: 230px;
+          border-radius: 50%;
+          right: -70px;
+          top: -80px;
+          background: rgba(255,255,255,.12);
         }
 
         .hero h1 {
           margin: 0 0 10px;
-          font-size: clamp(34px, 6vw, 58px);
+          font-size: clamp(32px,6vw,58px);
           line-height: .98;
+          max-width: 650px;
         }
 
         .hero p {
-          margin: 0 0 20px;
-          font-size: 17px;
+          margin: 0 0 22px;
+          max-width: 580px;
+          line-height: 1.6;
           opacity: .94;
         }
 
-        .hero-btn {
+        .gradient-btn,
+        .white-btn {
           border: 0;
-          border-radius: 12px;
-          background: #fff;
-          color: #a31d86;
-          font-weight: 800;
+          border-radius: 13px;
           padding: 12px 18px;
+          font-weight: 800;
+          transition: transform .18s ease, opacity .18s ease;
+        }
+
+        .gradient-btn:hover,
+        .white-btn:hover,
+        .category-card:hover,
+        .product-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .gradient-btn {
+          color: white;
+          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+        }
+
+        .white-btn {
+          color: #a41491;
+          background: white;
         }
 
         .section {
-          margin-top: 26px;
+          max-width: 1180px;
+          margin: auto;
+          padding: 24px 16px;
         }
 
         .section-title {
           display: flex;
-          align-items: center;
           justify-content: space-between;
+          align-items: center;
           gap: 12px;
-          margin-bottom: 13px;
+          margin-bottom: 15px;
         }
 
         .section-title h2 {
           margin: 0;
-          font-size: 23px;
+          font-size: 24px;
         }
 
-        .section-link {
+        .section-title button {
           border: 0;
           background: transparent;
-          font-weight: 700;
-          color: #9b208e;
-        }
-
-        .top-cards {
-          display: grid;
-          grid-template-columns:
-            repeat(4, minmax(0,1fr));
-          gap: 12px;
-        }
-
-        .top-card {
-          min-height: 130px;
-          border: 0;
-          border-radius: 17px;
-          overflow: hidden;
-          position: relative;
-          background: #222;
-          color: #fff;
-          text-align: left;
-        }
-
-        .top-card img {
-          width: 100%;
-          height: 100%;
-          min-height: 130px;
-          object-fit: cover;
-          opacity: .66;
-          display: block;
-        }
-
-        .top-card-content {
-          position: absolute;
-          inset: auto 12px 12px;
-        }
-
-        .top-card-title {
-          font-weight: 900;
-          font-size: 18px;
-        }
-
-        .top-card-subtitle {
-          font-size: 12px;
-          margin-top: 2px;
+          color: #a41491;
+          font-weight: 800;
         }
 
         .categories {
           display: grid;
-          grid-template-columns:
-            repeat(8, minmax(0,1fr));
-          gap: 9px;
+          grid-template-columns: repeat(4,1fr);
+          gap: 12px;
         }
 
         .category-card {
-          border: 1px solid #eee;
-          background: #fff;
-          border-radius: 14px;
-          padding: 7px;
-          min-width: 0;
-          transition: .2s;
+          position: relative;
+          height: 112px;
+          overflow: hidden;
+          border-radius: 18px;
+          border: 0;
+          padding: 0;
+          background: #ddd;
+          transition: transform .18s ease;
         }
 
-        .category-card:hover {
-          transform: translateY(-2px);
-          border-color: #d52c9e;
-        }
-
-        .category-image {
+        .category-card img {
           width: 100%;
-          aspect-ratio: 1;
-          border-radius: 10px;
+          height: 100%;
           object-fit: cover;
           display: block;
         }
 
-        .category-name {
-          display: block;
-          text-align: center;
-          font-size: 11px;
-          line-height: 1.15;
-          font-weight: 800;
-          margin: 6px 1px 2px;
-          color: #762078;
+        .category-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(transparent,rgba(0,0,0,.72));
         }
 
-        .products {
+        .category-name {
+          position: absolute;
+          z-index: 2;
+          left: 12px;
+          right: 12px;
+          bottom: 10px;
+          color: white;
+          font-weight: 850;
+          font-size: 14px;
+          text-align: left;
+        }
+
+        .products-grid {
           display: grid;
-          grid-template-columns:
-            repeat(4, minmax(0,1fr));
-          gap: 14px;
+          grid-template-columns: repeat(4,1fr);
+          gap: 15px;
         }
 
         .product-card {
-          border: 1px solid #eee;
-          border-radius: 17px;
+          border: 1px solid #ededed;
+          border-radius: 19px;
           overflow: hidden;
-          background: #fff;
-          min-width: 0;
+          background: white;
+          transition: transform .18s ease;
+          position: relative;
+        }
+
+        .dark-theme .product-card {
+          border-color: #333;
         }
 
         .product-image-wrap {
           position: relative;
-          background: #f7f7f7;
+          height: 205px;
+          background: #f6f6f6;
         }
 
-        .product-image {
+        .product-image-wrap img {
           width: 100%;
-          aspect-ratio: 1 / .88;
+          height: 100%;
           object-fit: cover;
           display: block;
         }
 
-        .favorite {
-          position: absolute;
-          right: 9px;
-          top: 9px;
-          width: 36px;
-          height: 36px;
-          border: 0;
-          border-radius: 50%;
-          background: rgba(255,255,255,.92);
-          font-size: 18px;
-        }
-
         .discount {
           position: absolute;
-          left: 9px;
-          top: 9px;
-          background:
-            linear-gradient(
-              135deg,
-              #ef233c,
-              #d41472
-            );
-          color: #fff;
-          padding: 5px 7px;
+          left: 10px;
+          top: 10px;
+          padding: 5px 8px;
           border-radius: 8px;
+          background: #ef233c;
+          color: white;
           font-size: 11px;
           font-weight: 900;
         }
 
-        .product-info {
-          padding: 12px;
+        .favorite {
+          position: absolute;
+          right: 10px;
+          top: 10px;
+          width: 34px;
+          height: 34px;
+          border: 0;
+          border-radius: 50%;
+          background: rgba(255,255,255,.92);
+          font-size: 17px;
         }
 
-        .product-name {
-          font-weight: 800;
-          margin-bottom: 6px;
-          min-height: 38px;
+        .product-info {
+          padding: 13px;
+        }
+
+        .product-info h3 {
+          margin: 0 0 6px;
+          font-size: 15px;
         }
 
         .rating {
           font-size: 12px;
-          color: #777;
           margin-bottom: 7px;
         }
 
         .price-row {
           display: flex;
           align-items: baseline;
-          gap: 7px;
-          flex-wrap: wrap;
+          gap: 8px;
         }
 
         .price {
-          font-size: 21px;
+          font-size: 19px;
           font-weight: 900;
         }
 
         .old-price {
+          font-size: 12px;
           color: #999;
           text-decoration: line-through;
+        }
+
+        .product-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 11px;
+        }
+
+        .small-btn {
+          flex: 1;
+          min-height: 38px;
+          border: 0;
+          border-radius: 11px;
+          font-weight: 800;
           font-size: 12px;
         }
 
-        .card-actions {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 7px;
-          margin-top: 10px;
+        .details-btn {
+          background: #f2f2f2;
         }
 
-        .primary-btn {
-          border: 0;
-          border-radius: 11px;
-          padding: 10px 12px;
-          color: #fff;
-          font-weight: 800;
-          background:
-            linear-gradient(
-              90deg,
-              #ef233c,
-              #d41472,
-              #6a11cb
-            );
+        .buy-btn {
+          color: white;
+          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
         }
 
-        .secondary-btn {
-          border: 1px solid #ddd;
-          background: #fff;
-          border-radius: 11px;
-          padding: 10px 12px;
-          font-weight: 800;
+        .promo {
+          max-width: 1180px;
+          margin: 5px auto 10px;
+          padding: 0 16px;
+        }
+
+        .promo-box {
+          border: 1px solid #f1d8ed;
+          background: linear-gradient(135deg,#fff5fa,#faf3ff);
+          border-radius: 20px;
+          padding: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 15px;
+        }
+
+        .dark-theme .promo-box {
+          background: #231b24;
+          border-color: #432f42;
+        }
+
+        .promo-box strong {
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        .promo-box span {
+          font-size: 13px;
+          color: #666;
+        }
+
+        .dark-theme .promo-box span {
+          color: #bbb;
         }
 
         .empty {
-          padding: 40px 15px;
+          padding: 40px 20px;
+          text-align: center;
           border: 1px dashed #ddd;
           border-radius: 18px;
-          text-align: center;
           color: #777;
         }
 
-        .page {
-          max-width: 900px;
-          margin: auto;
-        }
-
-        .back {
-          border: 0;
-          background: transparent;
-          padding: 5px 0;
-          color: #8b218d;
-          font-weight: 800;
-          margin-bottom: 15px;
-        }
-
-        .product-detail {
+        .floating-help {
+          position: fixed;
+          right: 17px;
+          bottom: 18px;
+          z-index: 120;
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
           display: grid;
-          grid-template-columns:
-            minmax(0,1fr)
-            minmax(0,1fr);
-          gap: 25px;
+          place-items: center;
+          color: white;
+          background: linear-gradient(135deg,#ef233c,#d4148e,#7027c9);
+          box-shadow: 0 10px 30px rgba(120,30,100,.3);
+          font-size: 25px;
+        }
+
+        .back-btn {
+          border: 0;
+          background: #f3f3f3;
+          border-radius: 12px;
+          padding: 9px 13px;
+          font-weight: 750;
+          margin-bottom: 18px;
+        }
+
+        .dark-theme .back-btn {
+          background: #292929;
+          color: white;
+        }
+
+        .detail {
+          max-width: 1100px;
+          margin: auto;
+          padding: 28px 16px;
+        }
+
+        .detail-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
         }
 
         .detail-image {
           width: 100%;
-          aspect-ratio: 1;
+          max-height: 550px;
           object-fit: cover;
-          border-radius: 22px;
+          border-radius: 25px;
         }
 
-        .detail-content h1 {
-          margin: 0 0 9px;
+        .detail h1 {
           font-size: clamp(28px,5vw,44px);
+          margin: 0 0 10px;
         }
 
         .detail-description {
+          line-height: 1.65;
           color: #666;
-          line-height: 1.6;
+        }
+
+        .dark-theme .detail-description {
+          color: #bbb;
         }
 
         .specs {
-          margin: 18px 0;
+          margin: 22px 0;
           padding: 0;
           list-style: none;
         }
 
         .specs li {
-          padding: 8px 0;
+          padding: 9px 0;
           border-bottom: 1px solid #eee;
         }
 
-        .auth-box,
-        .checkout-box,
-        .cart-box,
-        .account-box,
-        .publish-box {
-          max-width: 560px;
-          margin: 25px auto;
-          padding: 24px;
+        .dark-theme .specs li {
+          border-color: #333;
+        }
+
+        .large-price {
+          font-size: 32px;
+          font-weight: 900;
+          margin: 16px 0;
+        }
+
+        .auth-page,
+        .account-page,
+        .checkout-page,
+        .cart-page {
+          max-width: 900px;
+          margin: auto;
+          padding: 30px 16px;
+        }
+
+        .auth-card {
+          max-width: 480px;
+          margin: 20px auto;
+          padding: 28px;
+          border-radius: 25px;
+          background: white;
           border: 1px solid #eee;
-          border-radius: 22px;
-          background: #fff;
-          box-shadow:
-            0 12px 35px
-            rgba(0,0,0,.06);
+          box-shadow: 0 15px 45px rgba(0,0,0,.07);
+        }
+
+        .dark-theme .auth-card {
+          background: #1d1d1d;
+          border-color: #333;
         }
 
         .auth-logo {
-          text-align: center;
-          margin-bottom: 18px;
+          width: 62px;
+          height: 62px;
+          border-radius: 18px;
+          margin-bottom: 15px;
+          display: grid;
+          place-items: center;
+          color: white;
+          font-size: 29px;
+          font-weight: 900;
+          background: linear-gradient(135deg,#ef233c,#d4148e,#7027c9);
         }
 
-        .auth-logo strong {
-          display: block;
-          font-size: 34px;
-          font-weight: 950;
+        .auth-card h1 {
+          margin: 0 0 7px;
         }
 
-        .auth-logo span {
+        .auth-card p {
           color: #777;
-          font-size: 13px;
+          line-height: 1.5;
         }
 
-        .form {
-          display: grid;
-          gap: 12px;
+        .dark-theme .auth-card p {
+          color: #bbb;
         }
 
-        .field {
-          display: grid;
-          gap: 6px;
+        .form-group {
+          margin-bottom: 14px;
         }
 
-        .field label {
+        .form-group label {
+          display: block;
           font-size: 13px;
           font-weight: 800;
+          margin-bottom: 6px;
         }
 
-        .field input,
-        .field textarea,
-        .field select {
+        .form-control {
           width: 100%;
           border: 1px solid #ddd;
-          border-radius: 11px;
-          padding: 12px;
+          border-radius: 12px;
+          min-height: 44px;
+          padding: 10px 13px;
           outline: none;
-          background: #fff;
+          background: white;
+          color: #222;
+          -webkit-appearance: none;
+          appearance: none;
+          touch-action: manipulation;
         }
 
-        .field input:focus,
-        .field textarea:focus,
-        .field select:focus {
-          border-color: #c3299b;
-          box-shadow:
-            0 0 0 3px
-            rgba(195,41,155,.08);
+        .form-control:focus {
+          border-color: #d4148e;
+          box-shadow: 0 0 0 3px rgba(212,20,142,.1);
         }
 
-        .field textarea {
-          min-height: 95px;
+        .dark-theme .form-control {
+          background: #252525;
+          color: white;
+          border-color: #444;
+        }
+
+        textarea.form-control {
+          min-height: 100px;
           resize: vertical;
         }
 
-        .auth-switch {
-          border: 0;
-          background: transparent;
-          color: #92218d;
-          font-weight: 800;
-          padding: 5px;
+        .auth-submit {
+          width: 100%;
+          margin-top: 5px;
+          min-height: 46px;
         }
 
         .message {
-          padding: 10px 12px;
-          border-radius: 10px;
-          background: #fff3f7;
-          color: #b0175b;
+          margin: 12px 0;
+          padding: 11px 13px;
+          border-radius: 11px;
+          background: #fff0f5;
+          color: #a00055;
           font-size: 13px;
+          line-height: 1.45;
+        }
+
+        .auth-switch {
+          margin-top: 17px;
+          text-align: center;
+          font-size: 13px;
+        }
+
+        .auth-switch button {
+          border: 0;
+          background: transparent;
+          color: #a41491;
+          font-weight: 850;
+        }
+
+        .account-card,
+        .checkout-card,
+        .cart-card {
+          background: white;
+          border: 1px solid #eee;
+          border-radius: 22px;
+          padding: 22px;
+          margin-bottom: 15px;
+        }
+
+        .dark-theme .account-card,
+        .dark-theme .checkout-card,
+        .dark-theme .cart-card {
+          border-color: #333;
+        }
+
+        .account-actions {
+          display: grid;
+          grid-template-columns: repeat(2,1fr);
+          gap: 12px;
+          margin-top: 16px;
+        }
+
+        .account-action {
+          border: 1px solid #eee;
+          background: white;
+          border-radius: 15px;
+          padding: 17px;
+          text-align: left;
+        }
+
+        .dark-theme .account-action {
+          background: #222;
+          color: white;
+          border-color: #333;
         }
 
         .cart-item {
           display: grid;
-          grid-template-columns:
-            75px 1fr auto;
-          gap: 12px;
+          grid-template-columns: 80px 1fr auto;
+          gap: 13px;
           align-items: center;
-          padding: 12px 0;
+          padding: 13px 0;
           border-bottom: 1px solid #eee;
         }
 
+        .dark-theme .cart-item {
+          border-color: #333;
+        }
+
         .cart-item img {
-          width: 75px;
-          height: 75px;
+          width: 80px;
+          height: 80px;
           object-fit: cover;
-          border-radius: 12px;
+          border-radius: 13px;
         }
 
         .qty {
           display: flex;
           align-items: center;
-          gap: 7px;
-        }
-
-        .qty button {
-          width: 30px;
-          height: 30px;
-          border: 1px solid #ddd;
-          background: #fff;
-          border-radius: 8px;
-        }
-
-        .summary {
-          margin-top: 18px;
-          display: grid;
           gap: 8px;
         }
 
-        .summary-row {
-          display: flex;
-          justify-content: space-between;
-          gap: 15px;
+        .qty button {
+          width: 29px;
+          height: 29px;
+          border: 0;
+          border-radius: 8px;
+          background: #eee;
         }
 
-        .summary-total {
-          padding-top: 12px;
-          margin-top: 4px;
-          border-top: 1px solid #ddd;
-          font-size: 21px;
-          font-weight: 900;
+        .dark-theme .qty button {
+          background: #333;
+          color: white;
         }
 
-        .bottom-nav {
-          position: fixed;
-          z-index: 40;
-          bottom: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: min(520px, calc(100% - 24px));
-          display: grid;
-          grid-template-columns:
-            repeat(4,1fr);
-          padding: 7px;
-          gap: 5px;
-          background: rgba(255,255,255,.96);
-          backdrop-filter: blur(14px);
-          border: 1px solid #e8e8e8;
-          border-radius: 19px;
-          box-shadow:
-            0 10px 35px
-            rgba(0,0,0,.12);
-        }
-
-        .bottom-nav button {
+        .remove {
           border: 0;
           background: transparent;
-          padding: 7px 4px;
-          border-radius: 12px;
-          font-size: 11px;
+          color: #e00055;
+          font-size: 12px;
           font-weight: 800;
         }
 
-        .bottom-nav button.active {
-          background: #f8eaf8;
-          color: #8e208d;
+        .summary {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
         }
 
-        .support {
-          position: fixed;
-          z-index: 45;
-          right: 16px;
-          bottom: 82px;
-          width: 52px;
-          height: 52px;
-          border-radius: 50%;
-          border: 0;
+        .summary.total {
+          border-top: 1px solid #eee;
+          margin-top: 8px;
+          padding-top: 15px;
+          font-size: 20px;
+          font-weight: 900;
+        }
+
+        .dark-theme .summary.total {
+          border-color: #333;
+        }
+
+        .checkout-grid {
           display: grid;
-          place-items: center;
-          color: #fff;
-          font-size: 24px;
-          text-decoration: none;
-          background:
-            linear-gradient(
-              135deg,
-              #25d366,
-              #128c7e
-            );
-          box-shadow:
-            0 8px 25px
-            rgba(18,140,126,.28);
+          grid-template-columns: 1fr 330px;
+          gap: 18px;
         }
 
-        .menu {
+        .menu-overlay {
           position: fixed;
           inset: 0;
-          z-index: 100;
+          z-index: 200;
           background: rgba(0,0,0,.38);
         }
 
         .menu-panel {
-          width: min(350px, 88%);
+          width: min(340px,88vw);
           height: 100%;
-          background: #fff;
+          background: white;
           padding: 22px;
-          box-shadow:
-            10px 0 40px
-            rgba(0,0,0,.16);
+          box-shadow: 12px 0 40px rgba(0,0,0,.2);
+          overflow-y: auto;
+        }
+
+        .dark-theme .menu-panel {
+          background: #181818;
+          color: white;
         }
 
         .menu-head {
@@ -1381,195 +1425,220 @@ function App() {
           margin-bottom: 20px;
         }
 
-        .menu-list {
-          display: grid;
-          gap: 7px;
+        .menu-head h2 {
+          margin: 0;
         }
 
-        .menu-list button {
-          text-align: left;
+        .menu-close {
           border: 0;
-          background: #fafafa;
-          padding: 13px;
-          border-radius: 12px;
+          background: #f2f2f2;
+          border-radius: 10px;
+          width: 38px;
+          height: 38px;
+        }
+
+        .menu-item {
+          width: 100%;
+          border: 0;
+          background: transparent;
+          padding: 14px 8px;
+          border-bottom: 1px solid #eee;
+          text-align: left;
+          font-weight: 750;
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .dark-theme .menu-item {
+          border-color: #333;
+          color: white;
+        }
+
+        .category-nav {
+          max-width: 1180px;
+          margin: auto;
+          padding: 8px 16px 4px;
+          overflow-x: auto;
+          display: flex;
+          gap: 8px;
+          scrollbar-width: none;
+        }
+
+        .category-nav::-webkit-scrollbar {
+          display: none;
+        }
+
+        .category-pill {
+          flex: 0 0 auto;
+          border: 1px solid #e8e8e8;
+          background: white;
+          border-radius: 999px;
+          padding: 8px 12px;
+          font-size: 12px;
           font-weight: 750;
         }
 
-        .settings-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 15px;
-          padding: 12px 0;
-          border-bottom: 1px solid #eee;
+        .dark-theme .category-pill {
+          background: #202020;
+          color: white;
+          border-color: #333;
         }
 
-        .switch {
-          width: 45px;
-          height: 25px;
-          border: 0;
-          border-radius: 99px;
-          background: #ddd;
-          padding: 3px;
+        .category-pill.active {
+          color: white;
+          border-color: transparent;
+          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
         }
 
-        .switch span {
-          display: block;
-          width: 19px;
-          height: 19px;
-          border-radius: 50%;
-          background: #fff;
-          transition: .2s;
+        .footer {
+          margin-top: 30px;
+          padding: 35px 16px 100px;
+          background: #171717;
+          color: white;
+          text-align: center;
         }
 
-        .switch.on {
-          background:
-            linear-gradient(
-              90deg,
-              #ef233c,
-              #6a11cb
-            );
+        .footer-brand {
+          font-size: 25px;
+          font-weight: 900;
+          background: linear-gradient(90deg,#ef233c,#d4148e,#7027c9);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
         }
 
-        .switch.on span {
-          transform: translateX(20px);
+        .footer p {
+          color: #aaa;
+          font-size: 13px;
         }
 
         @media (max-width: 850px) {
-          .topbar-inner {
-            flex-wrap: wrap;
-            padding: 8px 0;
-          }
-
-          .brand {
-            order: 1;
-          }
-
-          .header-actions {
-            order: 2;
-            margin-left: auto;
-          }
-
-          .search-wrap {
-            order: 3;
-            flex-basis: 100%;
-          }
-
-          .topbar-inner {
-            min-height: 116px;
-          }
-
-          .top-cards {
-            grid-template-columns:
-              repeat(2,1fr);
+          .products-grid {
+            grid-template-columns: repeat(2,1fr);
           }
 
           .categories {
-            grid-template-columns:
-              repeat(4,1fr);
+            grid-template-columns: repeat(4,1fr);
           }
 
-          .products {
-            grid-template-columns:
-              repeat(2,1fr);
+          .checkout-grid {
+            grid-template-columns: 1fr;
           }
         }
 
         @media (max-width: 600px) {
-          .main {
-            width: min(
-              100% - 20px,
-              1180px
-            );
-            padding-top: 10px;
-          }
-
-          .hero {
-            padding: 23px 18px;
-            min-height: 230px;
-            border-radius: 20px;
-          }
-
-          .hero h1 {
-            font-size: 38px;
-          }
-
-          .top-cards {
-            display: flex;
-            overflow-x: auto;
-            scrollbar-width: none;
-          }
-
-          .top-cards::-webkit-scrollbar {
-            display: none;
-          }
-
-          .top-card {
-            flex: 0 0 155px;
-          }
-
-          .categories {
-            grid-template-columns:
-              repeat(4, minmax(0,1fr));
+          .header-inner {
             gap: 7px;
+            padding: 8px 10px;
           }
 
-          .category-card {
-            padding: 5px;
+          .brand {
+            font-size: 17px;
+          }
+
+          .menu-btn,
+          .icon-btn {
+            width: 38px;
+            height: 38px;
             border-radius: 11px;
           }
 
-          .category-name {
-            font-size: 9px;
-            margin-top: 4px;
+          .search-box input {
+            height: 38px;
+            padding-left: 11px;
+            font-size: 13px;
           }
 
-          .products {
-            grid-template-columns:
-              repeat(2,minmax(0,1fr));
+          .hero {
+            padding-top: 18px;
+          }
+
+          .hero-box {
+            padding: 26px 21px;
+            border-radius: 22px;
+          }
+
+          .hero h1 {
+            font-size: 35px;
+          }
+
+          .section {
+            padding: 18px 11px;
+          }
+
+          .categories {
+            grid-template-columns: repeat(2,1fr);
             gap: 9px;
           }
 
-          .product-info {
-            padding: 9px;
+          .category-card {
+            height: 92px;
+            border-radius: 14px;
           }
 
-          .product-name {
+          .products-grid {
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 9px;
+          }
+
+          .product-image-wrap {
+            height: 155px;
+          }
+
+          .product-info {
+            padding: 10px;
+          }
+
+          .product-info h3 {
             font-size: 13px;
-            min-height: 32px;
           }
 
           .price {
-            font-size: 18px;
+            font-size: 16px;
           }
 
-          .card-actions {
+          .old-price {
+            font-size: 10px;
+          }
+
+          .product-actions {
+            flex-direction: column;
+            gap: 5px;
+          }
+
+          .small-btn {
+            min-height: 34px;
+          }
+
+          .promo-box {
+            padding: 14px;
+            border-radius: 16px;
+          }
+
+          .detail-grid {
             grid-template-columns: 1fr;
           }
 
-          .secondary-btn {
-            display: none;
+          .detail {
+            padding: 18px 12px;
           }
 
-          .product-detail {
+          .auth-card {
+            margin: 10px auto;
+            padding: 21px;
+            border-radius: 20px;
+          }
+
+          .account-actions {
             grid-template-columns: 1fr;
-          }
-
-          .auth-box,
-          .checkout-box,
-          .cart-box,
-          .account-box,
-          .publish-box {
-            padding: 18px;
-            border-radius: 18px;
           }
 
           .cart-item {
-            grid-template-columns:
-              60px 1fr;
+            grid-template-columns: 60px 1fr;
           }
 
-          .cart-item > :last-child {
+          .cart-item > div:last-child {
             grid-column: 2;
           }
 
@@ -1578,150 +1647,122 @@ function App() {
             height: 60px;
           }
 
-          .support {
-            right: 12px;
-            bottom: 79px;
+          .floating-help {
+            width: 52px;
+            height: 52px;
+            right: 13px;
+            bottom: 13px;
           }
-        }
-
-        .dark-theme {
-          background: #111;
-          color: #eee;
-        }
-
-        .dark-theme .app,
-        .dark-theme .topbar,
-        .dark-theme .bottom-nav,
-        .dark-theme .auth-box,
-        .dark-theme .checkout-box,
-        .dark-theme .cart-box,
-        .dark-theme .account-box,
-        .dark-theme .publish-box,
-        .dark-theme .product-card,
-        .dark-theme .category-card,
-        .dark-theme .secondary-btn,
-        .dark-theme .icon-btn {
-          background: #171717;
-          color: #eee;
-          border-color: #303030;
-        }
-
-        .dark-theme .search-input,
-        .dark-theme .field input,
-        .dark-theme .field textarea,
-        .dark-theme .field select {
-          background: #202020;
-          color: #eee;
-          border-color: #383838;
-        }
-
-        .dark-theme .menu-panel {
-          background: #171717;
-          color: #eee;
-        }
-
-        .dark-theme .menu-list button {
-          background: #222;
-          color: #eee;
-        }
-
-        .dark-theme .detail-description,
-        .dark-theme .rating,
-        .dark-theme .old-price {
-          color: #aaa;
         }
       `}</style>
 
       <header className="topbar">
-        <div className="topbar-inner">
+        <div className="header-inner">
           <button
-            className="brand gradient-text"
+            className="menu-btn"
+            onClick={() => go("/menu")}
+            aria-label="Abrir menú"
+          >
+            <span className="menu-lines">
+              <span />
+              <span />
+              <span />
+            </span>
+          </button>
+
+          <button
+            className="brand"
             onClick={goHome}
           >
             VaniDaxi
           </button>
 
-          <div className="search-wrap">
+          <div className="search-box">
             <input
-              className="search-input"
               type="search"
+              inputMode="search"
               value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
+              onChange={(event) =>
+                setSearch(event.target.value)
               }
-              onKeyDown={(e) => {
-                if (
-                  e.key === "Enter"
-                ) {
-                  goProducts();
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  go("/productos");
                 }
               }}
-              placeholder="¿Qué estás buscando?"
+              placeholder="Buscar productos..."
               autoComplete="off"
-              inputMode="search"
+              enterKeyHint="search"
             />
+            <span className="search-icon">
+              🔎
+            </span>
           </div>
 
-          <div className="header-actions">
-            <button
-              className="icon-btn"
-              aria-label="Cuenta"
-              onClick={() =>
-                openAuth(
-                  user
-                    ? "account"
-                    : "login"
-                )
-              }
-            >
-              ✨
-            </button>
+          <button
+            className="icon-btn cart-button"
+            onClick={() => go("/carrito")}
+            aria-label="Carrito"
+          >
+            🛒
+            {cartCount > 0 && (
+              <span className="cart-badge">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
 
-            <button
-              className="icon-btn"
-              aria-label="Carrito"
-              onClick={() =>
-                go("/carrito")
-              }
-            >
-              🛒
-              {cartCount > 0 && (
-                <span className="cart-badge">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+        <div className="category-nav">
+          <button
+            className={`category-pill ${
+              activeCategory === "Todos" &&
+              isProducts
+                ? "active"
+                : ""
+            }`}
+            onClick={goProducts}
+          >
+            Todos
+          </button>
 
+          {categories.map((category) => (
             <button
-              className="icon-btn"
-              aria-label="Menú"
+              key={category.name}
+              className={`category-pill ${
+                activeCategory === category.name
+                  ? "active"
+                  : ""
+              }`}
               onClick={() =>
-                go("/menu")
+                goCategory(category.name)
               }
             >
-              ☰
+              {category.name}
             </button>
-          </div>
+          ))}
         </div>
       </header>
 
-      <main className="main">
-        {location.pathname === "/" && (
-          <>
+      {isHome && (
+        <>
+          <main className="page">
             <section className="hero">
-              <div className="hero-content">
+              <div className="hero-box">
                 <h1>
-                  Todo en un solo lugar.
+                  Todo lo que buscas,
+                  <br />
+                  en un solo lugar.
                 </h1>
+
                 <p>
-                  Compra, descubre y vende
-                  productos fácilmente en
-                  VaniDaxi.
+                  Compra, descubre y encuentra
+                  productos de diferentes
+                  vendedores en VaniDaxi.
                 </p>
+
                 <button
-                  className="hero-btn"
+                  className="white-btn"
                   onClick={goProducts}
                 >
                   Explorar productos
@@ -1729,63 +1770,60 @@ function App() {
               </div>
             </section>
 
+            <section className="promo">
+              <div className="promo-box">
+                <div>
+                  <strong>
+                    ✨ Crea tu cuenta gratis
+                  </strong>
+                  <span>
+                    Guarda favoritos, administra
+                    pedidos y disfruta una mejor
+                    experiencia.
+                  </span>
+                </div>
+
+                <button
+                  className="gradient-btn"
+                  onClick={() =>
+                    openAuth("register")
+                  }
+                >
+                  Crear cuenta
+                </button>
+              </div>
+            </section>
+
             <section className="section">
               <div className="section-title">
-                <h2>
-                  Descubre VaniDaxi
-                </h2>
+                <h2>Categorías</h2>
+
+                <button
+                  onClick={goProducts}
+                >
+                  Ver todas
+                </button>
               </div>
 
-              <div className="top-cards">
-                {[
-                  {
-                    title: "Ofertas",
-                    subtitle:
-                      "Hasta 50% menos",
-                    image:
-                      "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=700&q=85",
-                  },
-                  {
-                    title: "Novedades",
-                    subtitle:
-                      "Lo más reciente",
-                    image:
-                      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=700&q=85",
-                  },
-                  {
-                    title: "Vendedores",
-                    subtitle:
-                      "Descubre nuevos productos",
-                    image:
-                      "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=700&q=85",
-                  },
-                  {
-                    title: "Envíos",
-                    subtitle:
-                      "Compra fácilmente",
-                    image:
-                      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=700&q=85",
-                  },
-                ].map((card) => (
+              <div className="categories">
+                {categories.map((category) => (
                   <button
-                    key={card.title}
-                    className="top-card"
-                    onClick={
-                      goProducts
+                    key={category.name}
+                    className="category-card"
+                    onClick={() =>
+                      goCategory(
+                        category.name
+                      )
                     }
                   >
                     <img
-                      src={card.image}
-                      alt=""
+                      src={category.image}
+                      alt={category.name}
                     />
-                    <div className="top-card-content">
-                      <div className="top-card-title">
-                        {card.title}
-                      </div>
-                      <div className="top-card-subtitle">
-                        {card.subtitle}
-                      </div>
-                    </div>
+
+                    <span className="category-name">
+                      {category.name}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -1794,200 +1832,148 @@ function App() {
             <section className="section">
               <div className="section-title">
                 <h2>
-                  Categorías
-                </h2>
-              </div>
-
-              <div className="categories">
-                {categories.map(
-                  (category) => (
-                    <button
-                      className="category-card"
-                      key={
-                        category.name
-                      }
-                      onClick={() =>
-                        goCategory(
-                          category.name
-                        )
-                      }
-                    >
-                      <img
-                        className="category-image"
-                        src={
-                          category.image
-                        }
-                        alt={
-                          category.name
-                        }
-                      />
-                      <span className="category-name">
-                        {
-                          category.name
-                        }
-                      </span>
-                    </button>
-                  )
-                )}
-              </div>
-            </section>
-
-            <section className="section">
-              <div className="section-title">
-                <h2>
                   Productos destacados
                 </h2>
+
                 <button
-                  className="section-link"
-                  onClick={
-                    goProducts
-                  }
+                  onClick={goProducts}
                 >
                   Ver todos
                 </button>
               </div>
 
-              <ProductGrid
-                products={
-                  products.slice(0, 4)
-                }
-                onOpen={(product) =>
-                  go(
-                    `/producto/${product.id}`
-                  )
-                }
-                onCart={addToCart}
-                onFavorite={
-                  toggleFavorite
-                }
-                favorites={
-                  favorites
-                }
-              />
+              <div className="products-grid">
+                {products
+                  .slice(0, 4)
+                  .map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      favorites={favorites}
+                      onFavorite={
+                        toggleFavorite
+                      }
+                      onDetails={(item) =>
+                        go(
+                          `/producto/${item.id}`
+                        )
+                      }
+                      onBuy={startCheckout}
+                    />
+                  ))}
+              </div>
             </section>
-          </>
-        )}
+          </main>
 
-        {location.pathname ===
-          "/productos" && (
-          <section>
+          <footer className="footer">
+            <div className="footer-brand">
+              VaniDaxi
+            </div>
+            <p>
+              Todo lo que buscas, en un solo
+              lugar.
+            </p>
+          </footer>
+        </>
+      )}
+
+      {(isProducts ||
+        location.pathname.startsWith(
+          "/categoria/"
+        )) && (
+        <main className="page">
+          <section className="section">
             <div className="section-title">
-              <h2 className="gradient-text">
-                Todos los productos
+              <h2>
+                {activeCategory === "Todos"
+                  ? "Todos los productos"
+                  : activeCategory}
               </h2>
+
               <span>
                 {filteredProducts.length}{" "}
                 productos
               </span>
             </div>
 
-            <ProductGrid
-              products={
-                filteredProducts
-              }
-              onOpen={(product) =>
-                go(
-                  `/producto/${product.id}`
-                )
-              }
-              onCart={addToCart}
-              onFavorite={
-                toggleFavorite
-              }
-              favorites={favorites}
-            />
+            {filteredProducts.length === 0 ? (
+              <div className="empty">
+                No encontramos productos
+                para tu búsqueda.
+              </div>
+            ) : (
+              <div className="products-grid">
+                {filteredProducts.map(
+                  (product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      favorites={favorites}
+                      onFavorite={
+                        toggleFavorite
+                      }
+                      onDetails={(item) =>
+                        go(
+                          `/producto/${item.id}`
+                        )
+                      }
+                      onBuy={startCheckout}
+                    />
+                  )
+                )}
+              </div>
+            )}
           </section>
-        )}
+        </main>
+      )}
 
-        {location.pathname.startsWith(
-          "/categoria/"
-        ) && (
-          <section>
+      {selectedProduct && (
+        <main className="page">
+          <section className="detail">
             <button
-              className="back"
-              onClick={goHome}
+              className="back-btn"
+              onClick={() =>
+                window.history.back()
+              }
             >
-              ← Inicio
+              ← Volver
             </button>
 
-            <div className="section-title">
-              <h2 className="gradient-text">
-                {activeCategory}
-              </h2>
-            </div>
+            <div className="detail-grid">
+              <div>
+                <img
+                  className="detail-image"
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
+                />
+              </div>
 
-            <ProductGrid
-              products={
-                filteredProducts
-              }
-              onOpen={(product) =>
-                go(
-                  `/producto/${product.id}`
-                )
-              }
-              onCart={addToCart}
-              onFavorite={
-                toggleFavorite
-              }
-              favorites={favorites}
-            />
-          </section>
-        )}
-
-        {selectedProduct && (
-          <section className="page">
-            <button
-              className="back"
-              onClick={goProducts}
-            >
-              ← Volver a productos
-            </button>
-
-            <div className="product-detail">
-              <img
-                className="detail-image"
-                src={
-                  selectedProduct.image
-                }
-                alt={
-                  selectedProduct.name
-                }
-              />
-
-              <div className="detail-content">
+              <div>
                 <h1>
-                  {
-                    selectedProduct.name
-                  }
+                  {selectedProduct.name}
                 </h1>
 
                 <div className="rating">
                   ⭐{" "}
-                  {
-                    selectedProduct.rating
-                  }{" "}
-                  ·{" "}
-                  {
-                    selectedProduct.reviews
-                  }{" "}
+                  {selectedProduct.rating} ·{" "}
+                  {selectedProduct.reviews}{" "}
                   reseñas
                 </div>
 
-                <div className="price-row">
-                  <span className="price">
-                    {formatPrice(
-                      selectedProduct.price
-                    )}
-                  </span>
-
-                  {selectedProduct.oldPrice && (
-                    <span className="old-price">
-                      {formatPrice(
-                        selectedProduct.oldPrice
-                      )}
-                    </span>
+                <div className="large-price">
+                  {formatPrice(
+                    selectedProduct.price
                   )}
                 </div>
+
+                {selectedProduct.oldPrice >
+                  selectedProduct.price && (
+                  <div className="old-price">
+                    {formatPrice(
+                      selectedProduct.oldPrice
+                    )}
+                  </div>
+                )}
 
                 <p className="detail-description">
                   {
@@ -1995,40 +1981,40 @@ function App() {
                   }
                 </p>
 
-                <ul className="specs">
-                  {(
-                    selectedProduct.specifications ||
-                    []
-                  ).map(
-                    (specification) => (
-                      <li
-                        key={
-                          specification
-                        }
-                      >
-                        ✓{" "}
-                        {
-                          specification
-                        }
-                      </li>
-                    )
-                  )}
-                </ul>
+                {selectedProduct
+                  .specifications
+                  ?.length > 0 && (
+                  <>
+                    <h3>
+                      Características
+                    </h3>
 
-                <div className="form">
-                  <button
-                    className="primary-btn"
-                    onClick={() =>
-                      addToCart(
-                        selectedProduct
-                      )
-                    }
-                  >
-                    Agregar al carrito
-                  </button>
+                    <ul className="specs">
+                      {selectedProduct.specifications.map(
+                        (specification) => (
+                          <li
+                            key={
+                              specification
+                            }
+                          >
+                            ✓{" "}
+                            {specification}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </>
+                )}
 
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <button
-                    className="secondary-btn"
+                    className="gradient-btn"
                     onClick={() =>
                       startCheckout(
                         selectedProduct
@@ -2039,7 +2025,19 @@ function App() {
                   </button>
 
                   <button
-                    className="secondary-btn"
+                    className="back-btn"
+                    onClick={() =>
+                      addToCart(
+                        selectedProduct,
+                        false
+                      )
+                    }
+                  >
+                    🛒 Agregar al carrito
+                  </button>
+
+                  <button
+                    className="back-btn"
                     onClick={() =>
                       toggleFavorite(
                         selectedProduct
@@ -2051,54 +2049,346 @@ function App() {
                         item.id ===
                         selectedProduct.id
                     )
-                      ? "♥ En favoritos"
-                      : "♡ Agregar a favoritos"}
+                      ? "♥ Favorito"
+                      : "♡ Favorito"}
                   </button>
                 </div>
               </div>
             </div>
           </section>
-        )}
+        </main>
+      )}
 
-        {location.pathname ===
-          "/carrito" && (
-          <section className="page">
-            <button
-              className="back"
-              onClick={goHome}
+      {isAuth && (
+        <main className="page">
+          <section className="auth-page">
+            <form
+              className="auth-card"
+              onSubmit={handleAuth}
+              autoComplete={
+                authMode === "register"
+                  ? "on"
+                  : "on"
+              }
             >
-              ← Seguir comprando
-            </button>
+              <div className="auth-logo">
+                V
+              </div>
 
-            <div className="cart-box">
-              <h2>Mi carrito</h2>
+              <h1>
+                {authMode === "register"
+                  ? "Crear cuenta"
+                  : "Iniciar sesión"}
+              </h1>
 
-              {cart.length === 0 ? (
-                <div className="empty">
-                  <div
-                    style={{
-                      fontSize: 40,
-                      marginBottom: 8,
-                    }}
-                  >
-                    🛒
-                  </div>
-                  Tu carrito está vacío.
-                  <br />
-                  <button
-                    className="primary-btn"
-                    style={{
-                      marginTop: 15,
-                    }}
-                    onClick={
-                      goProducts
+              <p>
+                {authMode === "register"
+                  ? "Crea tu cuenta para disfrutar de VaniDaxi."
+                  : "Entra a tu cuenta para continuar."}
+              </p>
+
+              {authMode === "register" && (
+                <div className="form-group">
+                  <label htmlFor="auth-name">
+                    Nombre
+                  </label>
+
+                  <input
+                    id="auth-name"
+                    className="form-control"
+                    type="text"
+                    name="name"
+                    value={authName}
+                    onChange={(event) =>
+                      setAuthName(
+                        event.target.value
+                      )
                     }
-                  >
-                    Explorar productos
-                  </button>
+                    autoComplete="name"
+                    autoCorrect="off"
+                    spellCheck="false"
+                  />
                 </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="auth-email">
+                  Correo electrónico
+                </label>
+
+                <input
+                  id="auth-email"
+                  className="form-control"
+                  type="email"
+                  name="email"
+                  value={authEmail}
+                  onChange={(event) =>
+                    setAuthEmail(
+                      event.target.value
+                    )
+                  }
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  inputMode="email"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="auth-password">
+                  Contraseña
+                </label>
+
+                <input
+                  id="auth-password"
+                  className="form-control"
+                  type="password"
+                  name="password"
+                  value={authPassword}
+                  onChange={(event) =>
+                    setAuthPassword(
+                      event.target.value
+                    )
+                  }
+                  autoComplete={
+                    authMode === "register"
+                      ? "new-password"
+                      : "current-password"
+                  }
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
+                />
+              </div>
+
+              {authMessage && (
+                <div className="message">
+                  {authMessage}
+                </div>
+              )}
+
+              <button
+                className="gradient-btn auth-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading
+                  ? "Procesando..."
+                  : authMode ===
+                    "register"
+                  ? "Crear cuenta"
+                  : "Entrar"}
+              </button>
+
+              <div className="auth-switch">
+                {authMode === "register"
+                  ? "¿Ya tienes una cuenta? "
+                  : "¿No tienes una cuenta? "}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    openAuth(
+                      authMode ===
+                        "register"
+                        ? "login"
+                        : "register"
+                    )
+                  }
+                >
+                  {authMode === "register"
+                    ? "Iniciar sesión"
+                    : "Crear cuenta"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </main>
+      )}
+
+      {isAccount && (
+        <main className="page">
+          <section className="account-page">
+            <div className="account-card">
+              <h1>Mi cuenta</h1>
+
+              {user ? (
+                <>
+                  <p>
+                    Sesión iniciada como{" "}
+                    <strong>
+                      {user.email}
+                    </strong>
+                  </p>
+
+                  <div className="account-actions">
+                    <button
+                      className="account-action"
+                      onClick={() =>
+                        go("/favoritos")
+                      }
+                    >
+                      ❤️
+                      <br />
+                      Favoritos
+                    </button>
+
+                    <button
+                      className="account-action"
+                      onClick={() =>
+                        go(
+                          "/publicar"
+                        )
+                      }
+                    >
+                      📦
+                      <br />
+                      Publicar producto
+                    </button>
+
+                    <button
+                      className="account-action"
+                      onClick={() =>
+                        go("/carrito")
+                      }
+                    >
+                      🛒
+                      <br />
+                      Mi carrito
+                    </button>
+
+                    <button
+                      className="account-action"
+                      onClick={() =>
+                        setSettings(
+                          (current) => ({
+                            ...current,
+                            darkMode:
+                              !current.darkMode,
+                          })
+                        )
+                      }
+                    >
+                      ⚙️
+                      <br />
+                      {settings.darkMode
+                        ? "Modo claro"
+                        : "Modo oscuro"}
+                    </button>
+                  </div>
+
+                  <button
+                    className="back-btn"
+                    style={{
+                      marginTop: 18,
+                    }}
+                    onClick={handleLogout}
+                  >
+                    Cerrar sesión
+                  </button>
+                </>
               ) : (
                 <>
+                  <p>
+                    Inicia sesión o crea tu
+                    cuenta para continuar.
+                  </p>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      className="gradient-btn"
+                      onClick={() =>
+                        openAuth("login")
+                      }
+                    >
+                      Iniciar sesión
+                    </button>
+
+                    <button
+                      className="back-btn"
+                      onClick={() =>
+                        openAuth(
+                          "register"
+                        )
+                      }
+                    >
+                      Crear cuenta
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        </main>
+      )}
+
+      {isFavorites && (
+        <main className="page">
+          <section className="section">
+            <div className="section-title">
+              <h2>Mis favoritos</h2>
+            </div>
+
+            {favorites.length === 0 ? (
+              <div className="empty">
+                Aún no tienes productos
+                favoritos.
+              </div>
+            ) : (
+              <div className="products-grid">
+                {favorites.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    favorites={favorites}
+                    onFavorite={
+                      toggleFavorite
+                    }
+                    onDetails={(item) =>
+                      go(
+                        `/producto/${item.id}`
+                      )
+                    }
+                    onBuy={startCheckout}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      )}
+
+      {isCart && (
+        <main className="page">
+          <section className="cart-page">
+            <div className="section-title">
+              <h2>Mi carrito</h2>
+            </div>
+
+            {cart.length === 0 ? (
+              <div className="empty">
+                Tu carrito está vacío.
+                <br />
+                <button
+                  className="gradient-btn"
+                  style={{
+                    marginTop: 15,
+                  }}
+                  onClick={goProducts}
+                >
+                  Explorar productos
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="cart-card">
                   {cart.map((item) => (
                     <div
                       className="cart-item"
@@ -2114,13 +2404,22 @@ function App() {
                           {item.name}
                         </strong>
 
-                        <div>
+                        <div
+                          style={{
+                            marginTop: 5,
+                          }}
+                        >
                           {formatPrice(
                             item.price
                           )}
                         </div>
 
-                        <div className="qty">
+                        <div
+                          className="qty"
+                          style={{
+                            marginTop: 8,
+                          }}
+                        >
                           <button
                             type="button"
                             onClick={() =>
@@ -2133,11 +2432,9 @@ function App() {
                             −
                           </button>
 
-                          <span>
-                            {
-                              item.quantity
-                            }
-                          </span>
+                          <strong>
+                            {item.quantity}
+                          </strong>
 
                           <button
                             type="button"
@@ -2150,1145 +2447,699 @@ function App() {
                           >
                             +
                           </button>
+
+                          <button
+                            className="remove"
+                            type="button"
+                            onClick={() =>
+                              removeFromCart(
+                                item.id
+                              )
+                            }
+                          >
+                            Eliminar
+                          </button>
                         </div>
                       </div>
 
-                      <button
-                        className="secondary-btn"
-                        onClick={() =>
-                          removeFromCart(
-                            item.id
-                          )
-                        }
-                      >
-                        Eliminar
-                      </button>
+                      <strong>
+                        {formatPrice(
+                          Number(
+                            item.price
+                          ) *
+                            Number(
+                              item.quantity
+                            )
+                        )}
+                      </strong>
                     </div>
                   ))}
+                </div>
+
+                <div className="cart-card">
+                  <div className="summary">
+                    <span>Subtotal</span>
+                    <strong>
+                      {formatPrice(
+                        cartSubtotal
+                      )}
+                    </strong>
+                  </div>
 
                   <div className="summary">
-                    <div className="summary-row">
-                      <span>
-                        Subtotal
-                      </span>
-                      <strong>
-                        {formatPrice(
-                          cartSubtotal
-                        )}
-                      </strong>
-                    </div>
-
-                    <div className="summary-row">
-                      <span>
-                        Envío
-                      </span>
-                      <strong>
-                        {shippingCost
-                          ? formatPrice(
-                              shippingCost
-                            )
-                          : "Gratis"}
-                      </strong>
-                    </div>
-
-                    <div className="summary-row summary-total">
-                      <span>
-                        Total
-                      </span>
-                      <strong>
-                        {formatPrice(
-                          cartTotal
-                        )}
-                      </strong>
-                    </div>
-
-                    <button
-                      className="primary-btn"
-                      onClick={() =>
-                        startCheckout()
-                      }
-                    >
-                      Continuar al pago
-                    </button>
+                    <span>Envío</span>
+                    <strong>
+                      {shippingCost === 0
+                        ? "Gratis"
+                        : formatPrice(
+                            shippingCost
+                          )}
+                    </strong>
                   </div>
-                </>
-              )}
-            </div>
-          </section>
-        )}
 
-        {(location.pathname ===
-          "/cuenta/iniciar" ||
-          location.pathname ===
-            "/cuenta/crear") && (
-          <section className="page">
-            <div className="auth-box">
-              <div className="auth-logo">
-                <strong className="gradient-text">
-                  VaniDaxi
-                </strong>
-                <span>
-                  Todo en un solo lugar
-                </span>
-              </div>
-
-              <h2>
-                {authMode ===
-                "register"
-                  ? "Crear cuenta"
-                  : "Iniciar sesión"}
-              </h2>
-
-              <form
-                className="form"
-                onSubmit={
-                  handleAuth
-                }
-              >
-                {authMode ===
-                  "register" && (
-                  <div className="field">
-                    <label>
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      value={
-                        authName
-                      }
-                      onChange={(e) =>
-                        setAuthName(
-                          e.target.value
-                        )
-                      }
-                      autoComplete="name"
-                      required
-                    />
+                  <div className="summary total">
+                    <span>Total</span>
+                    <strong>
+                      {formatPrice(cartTotal)}
+                    </strong>
                   </div>
-                )}
-
-                <div className="field">
-                  <label>
-                    Correo electrónico
-                  </label>
-                  <input
-                    type="email"
-                    value={
-                      authEmail
-                    }
-                    onChange={(e) =>
-                      setAuthEmail(
-                        e.target.value
-                      )
-                    }
-                    autoComplete="email"
-                    inputMode="email"
-                    required
-                  />
-                </div>
-
-                <div className="field">
-                  <label>
-                    Contraseña
-                  </label>
-                  <input
-                    type="password"
-                    value={
-                      authPassword
-                    }
-                    onChange={(e) =>
-                      setAuthPassword(
-                        e.target.value
-                      )
-                    }
-                    autoComplete={
-                      authMode ===
-                      "register"
-                        ? "new-password"
-                        : "current-password"
-                    }
-                    required
-                  />
-                </div>
-
-                {authMessage && (
-                  <div className="message">
-                    {authMessage}
-                  </div>
-                )}
-
-                <button
-                  className="primary-btn"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading
-                    ? "Procesando..."
-                    : authMode ===
-                      "register"
-                    ? "Crear mi cuenta"
-                    : "Iniciar sesión"}
-                </button>
-              </form>
-
-              <div
-                style={{
-                  textAlign: "center",
-                  marginTop: 14,
-                }}
-              >
-                {authMode ===
-                "register"
-                  ? "¿Ya tienes cuenta?"
-                  : "¿Aún no tienes cuenta?"}
-
-                <br />
-
-                <button
-                  type="button"
-                  className="auth-switch"
-                  onClick={() =>
-                    openAuth(
-                      authMode ===
-                        "register"
-                        ? "login"
-                        : "register"
-                    )
-                  }
-                >
-                  {authMode ===
-                  "register"
-                    ? "Iniciar sesión"
-                    : "Crear una cuenta"}
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {location.pathname ===
-          "/cuenta" && (
-          <section className="page">
-            <div className="account-box">
-              <h2>
-                Mi cuenta
-              </h2>
-
-              {user ? (
-                <>
-                  <p>
-                    Has iniciado sesión
-                    como:
-                  </p>
-
-                  <strong>
-                    {user.email}
-                  </strong>
-
-                  <div
-                    className="form"
-                    style={{
-                      marginTop: 20,
-                    }}
-                  >
-                    <button
-                      className="primary-btn"
-                      onClick={() =>
-                        go(
-                          "/publicar"
-                        )
-                      }
-                    >
-                      Publicar producto
-                    </button>
-
-                    <button
-                      className="secondary-btn"
-                      onClick={() =>
-                        go(
-                          "/favoritos"
-                        )
-                      }
-                    >
-                      Mis favoritos
-                    </button>
-
-                    <button
-                      className="secondary-btn"
-                      onClick={
-                        handleLogout
-                      }
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p>
-                    Inicia sesión para
-                    acceder a tu cuenta.
-                  </p>
 
                   <button
-                    className="primary-btn"
+                    className="gradient-btn"
+                    style={{
+                      width: "100%",
+                      marginTop: 15,
+                    }}
                     onClick={() =>
-                      openAuth(
-                        "login"
-                      )
+                      startCheckout()
                     }
                   >
-                    Iniciar sesión
+                    Continuar con la compra
                   </button>
-                </>
-              )}
-            </div>
-          </section>
-        )}
-
-        {location.pathname ===
-          "/favoritos" && (
-          <section className="page">
-            <button
-              className="back"
-              onClick={goHome}
-            >
-              ← Inicio
-            </button>
-
-            <h2>
-              Mis favoritos
-            </h2>
-
-            {favorites.length ===
-            0 ? (
-              <div className="empty">
-                Aún no tienes productos
-                favoritos.
-              </div>
-            ) : (
-              <ProductGrid
-                products={
-                  favorites
-                }
-                onOpen={(product) =>
-                  go(
-                    `/producto/${product.id}`
-                  )
-                }
-                onCart={addToCart}
-                onFavorite={
-                  toggleFavorite
-                }
-                favorites={
-                  favorites
-                }
-              />
+                </div>
+              </>
             )}
           </section>
-        )}
+        </main>
+      )}
 
-        {location.pathname ===
-          "/publicar" && (
-          <section className="page">
-            <div className="publish-box">
-              <h2>
-                Publicar producto
-              </h2>
-
-              {!user ? (
-                <>
-                  <p>
-                    Necesitas iniciar
-                    sesión para publicar.
-                  </p>
-
-                  <button
-                    className="primary-btn"
-                    onClick={() =>
-                      openAuth(
-                        "login"
-                      )
-                    }
-                  >
-                    Iniciar sesión
-                  </button>
-                </>
-              ) : (
-                <form
-                  className="form"
-                  onSubmit={
-                    handlePublish
-                  }
-                >
-                  <div className="field">
-                    <label>
-                      Nombre del producto
-                    </label>
-                    <input
-                      type="text"
-                      value={
-                        newProduct.name
-                      }
-                      onChange={(e) =>
-                        updateNewProduct(
-                          "name",
-                          e.target.value
-                        )
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Precio
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={
-                        newProduct.price
-                      }
-                      onChange={(e) =>
-                        updateNewProduct(
-                          "price",
-                          e.target.value
-                        )
-                      }
-                      inputMode="numeric"
-                      required
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Categoría
-                    </label>
-                    <select
-                      value={
-                        newProduct.category
-                      }
-                      onChange={(e) =>
-                        updateNewProduct(
-                          "category",
-                          e.target.value
-                        )
-                      }
-                    >
-                      {categories.map(
-                        (category) => (
-                          <option
-                            key={
-                              category.name
-                            }
-                            value={
-                              category.name
-                            }
-                          >
-                            {
-                              category.name
-                            }
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Imagen
-                    </label>
-                    <input
-                      type="url"
-                      value={
-                        newProduct.image
-                      }
-                      onChange={(e) =>
-                        updateNewProduct(
-                          "image",
-                          e.target.value
-                        )
-                      }
-                      placeholder="https://..."
-                      inputMode="url"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label>
-                      Descripción
-                    </label>
-                    <textarea
-                      value={
-                        newProduct.description
-                      }
-                      onChange={(e) =>
-                        updateNewProduct(
-                          "description",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-
-                  <button
-                    className="primary-btn"
-                    type="submit"
-                  >
-                    Publicar producto
-                  </button>
-                </form>
-              )}
+      {isCheckout && (
+        <main className="page">
+          <section className="checkout-page">
+            <div className="section-title">
+              <h2>Datos de entrega</h2>
             </div>
-          </section>
-        )}
 
-        {location.pathname ===
-          "/checkout/entrega" && (
-          <section className="page">
-            <div className="checkout-box">
-              <button
-                className="back"
-                onClick={() =>
-                  go("/carrito")
-                }
-              >
-                ← Carrito
-              </button>
-
-              <h2>
-                Datos de entrega
-              </h2>
-
+            <div className="checkout-grid">
               <form
-                className="form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  go(
-                    "/checkout/confirmar"
-                  );
-                }}
+                className="checkout-card"
+                onSubmit={submitOrder}
               >
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-name">
                     Nombre completo
                   </label>
                   <input
+                    id="checkout-name"
+                    className="form-control"
                     type="text"
-                    value={
-                      checkout.name
-                    }
-                    onChange={(e) =>
+                    name="checkout-name"
+                    value={checkout.name}
+                    onChange={(event) =>
                       updateCheckout(
                         "name",
-                        e.target.value
+                        event.target.value
                       )
                     }
                     autoComplete="name"
-                    required
                   />
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-phone">
                     Teléfono
                   </label>
                   <input
+                    id="checkout-phone"
+                    className="form-control"
                     type="tel"
-                    value={
-                      checkout.phone
-                    }
-                    onChange={(e) =>
+                    name="checkout-phone"
+                    value={checkout.phone}
+                    onChange={(event) =>
                       updateCheckout(
                         "phone",
-                        e.target.value
+                        event.target.value
                       )
                     }
                     autoComplete="tel"
                     inputMode="tel"
-                    required
                   />
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-address">
                     Dirección
                   </label>
                   <input
+                    id="checkout-address"
+                    className="form-control"
                     type="text"
-                    value={
-                      checkout.address
-                    }
-                    onChange={(e) =>
+                    name="checkout-address"
+                    value={checkout.address}
+                    onChange={(event) =>
                       updateCheckout(
                         "address",
-                        e.target.value
+                        event.target.value
                       )
                     }
                     autoComplete="street-address"
-                    required
                   />
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-city">
                     Ciudad
                   </label>
                   <input
+                    id="checkout-city"
+                    className="form-control"
                     type="text"
-                    value={
-                      checkout.city
-                    }
-                    onChange={(e) =>
+                    name="checkout-city"
+                    value={checkout.city}
+                    onChange={(event) =>
                       updateCheckout(
                         "city",
-                        e.target.value
+                        event.target.value
                       )
                     }
                     autoComplete="address-level2"
-                    required
                   />
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-state">
                     Estado
                   </label>
                   <input
+                    id="checkout-state"
+                    className="form-control"
                     type="text"
-                    value={
-                      checkout.state
-                    }
-                    onChange={(e) =>
+                    name="checkout-state"
+                    value={checkout.state}
+                    onChange={(event) =>
                       updateCheckout(
                         "state",
-                        e.target.value
+                        event.target.value
                       )
                     }
                     autoComplete="address-level1"
-                    required
                   />
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-zip">
                     Código postal
                   </label>
                   <input
+                    id="checkout-zip"
+                    className="form-control"
                     type="text"
-                    value={
-                      checkout.zip
-                    }
-                    onChange={(e) =>
+                    name="checkout-zip"
+                    value={checkout.zip}
+                    onChange={(event) =>
                       updateCheckout(
                         "zip",
-                        e.target.value
+                        event.target.value
                       )
                     }
                     autoComplete="postal-code"
                     inputMode="numeric"
-                    required
                   />
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-delivery">
                     Tipo de envío
                   </label>
                   <select
-                    value={
-                      checkout.delivery
-                    }
-                    onChange={(e) =>
+                    id="checkout-delivery"
+                    className="form-control"
+                    name="delivery"
+                    value={checkout.delivery}
+                    onChange={(event) =>
                       updateCheckout(
                         "delivery",
-                        e.target.value
+                        event.target.value
                       )
                     }
                   >
                     <option value="standard">
-                      Envío estándar
+                      Envío estándar — Gratis
                     </option>
                     <option value="express">
-                      Envío express · $99
+                      Envío express — $99
                     </option>
                   </select>
                 </div>
 
-                <div className="field">
-                  <label>
+                <div className="form-group">
+                  <label htmlFor="checkout-payment">
+                    Método de pago
+                  </label>
+                  <select
+                    id="checkout-payment"
+                    className="form-control"
+                    name="payment"
+                    value={checkout.payment}
+                    onChange={(event) =>
+                      updateCheckout(
+                        "payment",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="card">
+                      Tarjeta
+                    </option>
+                    <option value="transfer">
+                      Transferencia
+                    </option>
+                    <option value="cash">
+                      Pago contra entrega
+                    </option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="checkout-notes">
                     Notas
                   </label>
                   <textarea
-                    value={
-                      checkout.notes
-                    }
-                    onChange={(e) =>
+                    id="checkout-notes"
+                    className="form-control"
+                    name="notes"
+                    value={checkout.notes}
+                    onChange={(event) =>
                       updateCheckout(
                         "notes",
-                        e.target.value
+                        event.target.value
                       )
                     }
-                    placeholder="Indicaciones para la entrega"
+                    placeholder="Indicaciones para la entrega..."
                   />
                 </div>
 
                 <button
-                  className="primary-btn"
+                  className="gradient-btn"
+                  style={{
+                    width: "100%",
+                    marginTop: 8,
+                  }}
                   type="submit"
-                >
-                  Continuar
-                </button>
-              </form>
-            </div>
-          </section>
-        )}
-
-        {location.pathname ===
-          "/checkout/confirmar" && (
-          <section className="page">
-            <div className="checkout-box">
-              <button
-                className="back"
-                onClick={() =>
-                  go(
-                    "/checkout/entrega"
-                  )
-                }
-              >
-                ← Datos de entrega
-              </button>
-
-              <h2>
-                Confirmar pedido
-              </h2>
-
-              <div className="summary">
-                <div className="summary-row">
-                  <span>
-                    Productos
-                  </span>
-                  <strong>
-                    {formatPrice(
-                      cartSubtotal
-                    )}
-                  </strong>
-                </div>
-
-                <div className="summary-row">
-                  <span>
-                    Envío
-                  </span>
-                  <strong>
-                    {shippingCost
-                      ? formatPrice(
-                          shippingCost
-                        )
-                      : "Gratis"}
-                  </strong>
-                </div>
-
-                <div className="summary-row summary-total">
-                  <span>
-                    Total
-                  </span>
-                  <strong>
-                    {formatPrice(
-                      cartTotal
-                    )}
-                  </strong>
-                </div>
-
-                <button
-                  className="primary-btn"
-                  onClick={() =>
-                    go(
-                      "/pedido/realizado"
-                    )
-                  }
                 >
                   Confirmar pedido
                 </button>
-              </div>
-            </div>
-          </section>
-        )}
+              </form>
 
-        {location.pathname ===
-          "/pedido/realizado" && (
-          <section className="page">
-            <div className="checkout-box"
-              style={{
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 55,
-                }}
-              >
-                ✓
-              </div>
+              <div className="checkout-card">
+                <h3>
+                  Resumen del pedido
+                </h3>
 
-              <h2>
-                ¡Pedido recibido!
-              </h2>
-
-              <p>
-                Gracias por comprar en
-                VaniDaxi.
-              </p>
-
-              <button
-                className="primary-btn"
-                onClick={goHome}
-              >
-                Volver al inicio
-              </button>
-            </div>
-          </section>
-        )}
-
-        {location.pathname ===
-          "/menu" && (
-          <section className="page">
-            <div className="account-box">
-              <h2>
-                Menú
-              </h2>
-
-              <div className="menu-list">
-                <button
-                  onClick={() =>
-                    openAuth(
-                      user
-                        ? "account"
-                        : "login"
-                    )
-                  }
-                >
-                  ✨{" "}
-                  {user
-                    ? "Mi cuenta"
-                    : "Iniciar sesión"}
-                </button>
-
-                <button
-                  onClick={() =>
-                    go("/favoritos")
-                  }
-                >
-                  ♡ Mis favoritos
-                </button>
-
-                <button
-                  onClick={() =>
-                    go("/carrito")
-                  }
-                >
-                  🛒 Mi carrito
-                </button>
-
-                <button
-                  onClick={() =>
-                    go("/publicar")
-                  }
-                >
-                  ＋ Publicar producto
-                </button>
-
-                <button
-                  onClick={() =>
-                    go("/configuracion")
-                  }
-                >
-                  ⚙ Configuración
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {location.pathname ===
-          "/configuracion" && (
-          <section className="page">
-            <div className="account-box">
-              <button
-                className="back"
-                onClick={() =>
-                  go("/menu")
-                }
-              >
-                ← Menú
-              </button>
-
-              <h2>
-                Configuración
-              </h2>
-
-              <div className="settings-row">
-                <div>
-                  <strong>
-                    Notificaciones
-                  </strong>
+                {cart.map((item) => (
                   <div
-                    style={{
-                      fontSize: 12,
-                      color: "#777",
-                    }}
+                    className="summary"
+                    key={item.id}
                   >
-                    Recibir avisos de VaniDaxi
+                    <span>
+                      {item.name} ×{" "}
+                      {item.quantity}
+                    </span>
+
+                    <strong>
+                      {formatPrice(
+                        Number(item.price) *
+                          Number(
+                            item.quantity
+                          )
+                      )}
+                    </strong>
                   </div>
+                ))}
+
+                <div className="summary">
+                  <span>Envío</span>
+                  <strong>
+                    {shippingCost === 0
+                      ? "Gratis"
+                      : formatPrice(
+                          shippingCost
+                        )}
+                  </strong>
                 </div>
 
-                <button
-                  className={`switch ${
-                    settings.notifications
-                      ? "on"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    setSettings(
-                      (current) => ({
-                        ...current,
-                        notifications:
-                          !current.notifications,
-                      })
-                    )
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div className="settings-row">
-                <div>
+                <div className="summary total">
+                  <span>Total</span>
                   <strong>
-                    Promociones
+                    {formatPrice(cartTotal)}
                   </strong>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#777",
-                    }}
-                  >
-                    Ofertas y novedades
-                  </div>
                 </div>
-
-                <button
-                  className={`switch ${
-                    settings.promotions
-                      ? "on"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    setSettings(
-                      (current) => ({
-                        ...current,
-                        promotions:
-                          !current.promotions,
-                      })
-                    )
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div className="settings-row">
-                <div>
-                  <strong>
-                    Modo oscuro
-                  </strong>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#777",
-                    }}
-                  >
-                    Cambiar apariencia
-                  </div>
-                </div>
-
-                <button
-                  className={`switch ${
-                    settings.darkMode
-                      ? "on"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    setSettings(
-                      (current) => ({
-                        ...current,
-                        darkMode:
-                          !current.darkMode,
-                      })
-                    )
-                  }
-                >
-                  <span />
-                </button>
               </div>
             </div>
           </section>
-        )}
-      </main>
-
-      {WHATSAPP_NUMBER && (
-        <a
-          className="support"
-          href={whatsappUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Atención al cliente"
-        >
-          💬
-        </a>
+        </main>
       )}
 
-      <nav className="bottom-nav">
-        <button
-          className={
-            location.pathname === "/"
-              ? "active"
-              : ""
-          }
-          onClick={goHome}
+      {location.pathname === "/publicar" && (
+        <main className="page">
+          <section className="auth-page">
+            <form
+              className="auth-card"
+              onSubmit={handlePublish}
+            >
+              <div className="auth-logo">
+                📦
+              </div>
+
+              <h1>
+                Publicar producto
+              </h1>
+
+              <p>
+                Agrega un producto a VaniDaxi.
+              </p>
+
+              <div className="form-group">
+                <label htmlFor="product-name">
+                  Nombre del producto
+                </label>
+
+                <input
+                  id="product-name"
+                  className="form-control"
+                  type="text"
+                  name="product-name"
+                  value={newProduct.name}
+                  onChange={(event) =>
+                    setNewProduct(
+                      (current) => ({
+                        ...current,
+                        name: event.target
+                          .value,
+                      })
+                    )
+                  }
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-price">
+                  Precio
+                </label>
+
+                <input
+                  id="product-price"
+                  className="form-control"
+                  type="number"
+                  name="product-price"
+                  value={newProduct.price}
+                  onChange={(event) =>
+                    setNewProduct(
+                      (current) => ({
+                        ...current,
+                        price: event.target
+                          .value,
+                      })
+                    )
+                  }
+                  inputMode="decimal"
+                  min="0"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-category">
+                  Categoría
+                </label>
+
+                <select
+                  id="product-category"
+                  className="form-control"
+                  name="product-category"
+                  value={newProduct.category}
+                  onChange={(event) =>
+                    setNewProduct(
+                      (current) => ({
+                        ...current,
+                        category:
+                          event.target.value,
+                      })
+                    )
+                  }
+                >
+                  {categories.map(
+                    (category) => (
+                      <option
+                        key={category.name}
+                        value={category.name}
+                      >
+                        {category.name}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-image">
+                  Imagen
+                </label>
+
+                <input
+                  id="product-image"
+                  className="form-control"
+                  type="url"
+                  name="product-image"
+                  value={newProduct.image}
+                  onChange={(event) =>
+                    setNewProduct(
+                      (current) => ({
+                        ...current,
+                        image:
+                          event.target
+                            .value,
+                      })
+                    )
+                  }
+                  autoComplete="url"
+                  inputMode="url"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-description">
+                  Descripción
+                </label>
+
+                <textarea
+                  id="product-description"
+                  className="form-control"
+                  name="product-description"
+                  value={
+                    newProduct.description
+                  }
+                  onChange={(event) =>
+                    setNewProduct(
+                      (current) => ({
+                        ...current,
+                        description:
+                          event.target
+                            .value,
+                      })
+                    )
+                  }
+                  autoCorrect="off"
+                />
+              </div>
+
+              <button
+                className="gradient-btn"
+                style={{
+                  width: "100%",
+                }}
+                type="submit"
+              >
+                Publicar producto
+              </button>
+            </form>
+          </section>
+        </main>
+      )}
+
+      {location.pathname === "/menu" && (
+        <div
+          className="menu-overlay"
+          onClick={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              goHome();
+            }
+          }}
         >
-          🏠
-          <br />
-          Inicio
-        </button>
+          <aside className="menu-panel">
+            <div className="menu-head">
+              <h2>Menú</h2>
 
-        <button
-          className={
-            location.pathname ===
-            "/productos"
-              ? "active"
-              : ""
-          }
-          onClick={
-            goProducts
-          }
-        >
-          🔎
-          <br />
-          Explorar
-        </button>
+              <button
+                className="menu-close"
+                onClick={goHome}
+              >
+                ✕
+              </button>
+            </div>
 
-        <button
-          className={
-            location.pathname ===
-            "/favoritos"
-              ? "active"
-              : ""
-          }
-          onClick={() =>
-            go("/favoritos")
-          }
-        >
-          ♡
-          <br />
-          Favoritos
-        </button>
+            <button
+              className="menu-item"
+              onClick={() =>
+                go("/cuenta")
+              }
+            >
+              ✨ Mi cuenta
+            </button>
 
-        <button
-          className={
-            location.pathname ===
-              "/cuenta" ||
-            location.pathname ===
-              "/cuenta/iniciar" ||
-            location.pathname ===
-              "/cuenta/crear"
-              ? "active"
-              : ""
-          }
-          onClick={() =>
-            openAuth(
-              user
-                ? "account"
-                : "login"
-            )
-          }
-        >
-          ✨
-          <br />
-          Cuenta
-        </button>
-      </nav>
-    </div>
-  );
-}
+            <button
+              className="menu-item"
+              onClick={() =>
+                go("/favoritos")
+              }
+            >
+              ❤️ Favoritos
+            </button>
 
-function ProductGrid({
-  products,
-  onOpen,
-  onCart,
-  onFavorite,
-  favorites,
-}) {
-  if (!products.length) {
-    return (
-      <div className="empty">
-        No encontramos productos
-        para esta búsqueda.
-      </div>
-    );
-  }
+            <button
+              className="menu-item"
+              onClick={() =>
+                go("/carrito")
+              }
+            >
+              🛒 Carrito
+            </button>
 
-  return (
-    <div className="products">
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          onOpen={onOpen}
-          onCart={onCart}
-          onFavorite={onFavorite}
-          favorite={favorites.some(
-            (item) =>
-              item.id === product.id
-          )}
-        />
-      ))}
+            <button
+              className="menu-item"
+              onClick={() =>
+                go("/publicar")
+              }
+            >
+              📦 Publicar producto
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                setSettings(
+                  (current) => ({
+                    ...current,
+                    notifications:
+                      !current.notifications,
+                  })
+                )
+              }
+            >
+              🔔{" "}
+              {settings.notifications
+                ? "Notificaciones activadas"
+                : "Notificaciones desactivadas"}
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                setSettings(
+                  (current) => ({
+                    ...current,
+                    promotions:
+                      !current.promotions,
+                  })
+                )
+              }
+            >
+              🎁{" "}
+              {settings.promotions
+                ? "Promociones activadas"
+                : "Promociones desactivadas"}
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                setSettings(
+                  (current) => ({
+                    ...current,
+                    darkMode:
+                      !current.darkMode,
+                  })
+                )
+              }
+            >
+              🌓{" "}
+              {settings.darkMode
+                ? "Modo claro"
+                : "Modo oscuro"}
+            </button>
+
+            {!user && (
+              <>
+                <button
+                  className="menu-item"
+                  onClick={() =>
+                    openAuth("login")
+                  }
+                >
+                  🔐 Iniciar sesión
+                </button>
+
+                <button
+                  className="menu-item"
+                  onClick={() =>
+                    openAuth(
+                      "register"
+                    )
+                  }
+                >
+                  ✨ Crear cuenta
+                </button>
+              </>
+            )}
+
+            {user && (
+              <button
+                className="menu-item"
+                onClick={handleLogout}
+              >
+                🚪 Cerrar sesión
+              </button>
+            )}
+          </aside>
+        </div>
+      )}
+
+      <a
+        className="floating-help"
+        href={whatsappUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Atención al cliente"
+      >
+        💬
+      </a>
     </div>
   );
 }
 
 function ProductCard({
   product,
-  onOpen,
-  onCart,
+  favorites,
   onFavorite,
-  favorite,
+  onDetails,
+  onBuy,
 }) {
+  const isFavorite = favorites.some(
+    (item) => item.id === product.id
+  );
+
   return (
     <article className="product-card">
       <div className="product-image-wrap">
-        <button
-          type="button"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            border: 0,
-            background: "transparent",
-            zIndex: 1,
-          }}
-          aria-label={`Ver ${product.name}`}
-          onClick={() =>
-            onOpen(product)
-          }
-        />
-
         <img
-          className="product-image"
           src={product.image}
           alt={product.name}
+          loading="lazy"
         />
 
         {product.discount > 0 && (
@@ -3299,37 +3150,34 @@ function ProductCard({
 
         <button
           className="favorite"
-          style={{
-            zIndex: 2,
-          }}
-          type="button"
           onClick={() =>
             onFavorite(product)
           }
-          aria-label="Favorito"
+          aria-label={
+            isFavorite
+              ? "Quitar de favoritos"
+              : "Agregar a favoritos"
+          }
         >
-          {favorite ? "♥" : "♡"}
+          {isFavorite ? "♥" : "♡"}
         </button>
       </div>
 
       <div className="product-info">
-        <div className="product-name">
-          {product.name}
-        </div>
+        <h3>{product.name}</h3>
 
         <div className="rating">
           ⭐ {product.rating} ·{" "}
-          {product.reviews} reseñas
+          {product.reviews}
         </div>
 
         <div className="price-row">
           <span className="price">
-            {formatPrice(
-              product.price
-            )}
+            {formatPrice(product.price)}
           </span>
 
-          {product.oldPrice && (
+          {product.oldPrice >
+            product.price && (
             <span className="old-price">
               {formatPrice(
                 product.oldPrice
@@ -3338,25 +3186,23 @@ function ProductCard({
           )}
         </div>
 
-        <div className="card-actions">
+        <div className="product-actions">
           <button
-            className="primary-btn"
-            type="button"
+            className="small-btn details-btn"
             onClick={() =>
-              onCart(product)
+              onDetails(product)
             }
           >
-            Agregar
+            Ver detalles
           </button>
 
           <button
-            className="secondary-btn"
-            type="button"
+            className="small-btn buy-btn"
             onClick={() =>
-              onOpen(product)
+              onBuy(product)
             }
           >
-            Ver
+            Comprar
           </button>
         </div>
       </div>
