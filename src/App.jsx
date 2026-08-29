@@ -5,61 +5,55 @@ import { supabase } from "./supabaseClient";
 const CART_KEY = "vanidaxi_cart";
 const FAVORITES_KEY = "vanidaxi_favorites";
 
+/*
+  WhatsApp:
+  Puedes cambiar este número cuando tengas el número oficial de atención.
+  Formato: 52 + lada + número, sin espacios ni signos.
+*/
+const WHATSAPP_NUMBER = "";
+const WHATSAPP_MESSAGE =
+  "Hola, necesito ayuda con VaniDaxi.";
+
 const categories = [
   {
     name: "Ropa y Moda",
     image:
       "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85",
-    keywords: "ropa moda vestidos camisas pantalones zapatos tenis bolsas accesorios",
   },
   {
     name: "Tecnología",
     image:
       "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "tecnologia celular teléfono samsung iphone pantalla computadora laptop tablet audifonos smartwatch electronica",
   },
   {
     name: "Hogar y Vida",
     image:
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "hogar casa cocina muebles decoración electrodomésticos licuadora refrigerador",
   },
   {
     name: "Belleza y Salud",
     image:
       "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "belleza salud maquillaje skincare cabello perfume cuidado personal",
   },
   {
     name: "Autos y Motos",
     image:
       "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "auto autos carro carros moto motos refacciones accesorios vehículos llantas",
   },
   {
     name: "Comida",
     image:
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "comida alimentos restaurante comida preparada postres bebidas tacos pizza",
   },
   {
     name: "Juguetes",
     image:
       "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "juguetes niños juegos muñecas videojuegos entretenimiento",
   },
   {
     name: "Deportes",
     image:
       "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85",
-    keywords:
-      "deportes futbol gimnasio ejercicio bicicletas tenis balones entrenamiento",
   },
 ];
 
@@ -189,103 +183,22 @@ function loadStorage(key, fallback) {
   }
 }
 
-/* =========================================================
-   BÚSQUEDA INTELIGENTE
-   ========================================================= */
-
-function normalizeText(value = "") {
-  return value
-    .toString()
+function normalizeText(text = "") {
+  return String(text)
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s.-]/g, " ")
+    .replace(/[^a-z0-9ñáéíóúü\s]/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function singularize(word) {
-  if (word.length > 4 && word.endsWith("es")) {
-    return word.slice(0, -2);
-  }
+function getSearchScore(product, searchTerm) {
+  const term = normalizeText(searchTerm);
 
-  if (word.length > 3 && word.endsWith("s")) {
-    return word.slice(0, -1);
-  }
+  if (!term) return 0;
 
-  return word;
-}
-
-function getSearchWords(text) {
-  return normalizeText(text)
-    .split(" ")
-    .filter(Boolean)
-    .map(singularize);
-}
-
-function levenshtein(a, b) {
-  if (!a) return b.length;
-  if (!b) return a.length;
-
-  const previous = Array.from(
-    { length: b.length + 1 },
-    (_, i) => i
-  );
-
-  for (let i = 1; i <= a.length; i++) {
-    let current = [i];
-
-    for (let j = 1; j <= b.length; j++) {
-      current[j] =
-        a[i - 1] === b[j - 1]
-          ? previous[j - 1]
-          : Math.min(
-              previous[j - 1] + 1,
-              current[j - 1] + 1,
-              previous[j - 1] + 1
-            );
-    }
-
-    for (let j = 0; j <= b.length; j++) {
-      previous[j] = current[j];
-    }
-  }
-
-  return previous[b.length];
-}
-
-function wordMatches(queryWord, text) {
-  if (!queryWord || !text) return false;
-
-  const normalized = normalizeText(text);
-  const words = normalized.split(" ");
-
-  if (normalized.includes(queryWord)) return true;
-
-  const closeWord = words.some((word) => {
-    if (word.includes(queryWord) || queryWord.includes(word)) {
-      return true;
-    }
-
-    if (queryWord.length >= 4 && word.length >= 4) {
-      const distance = levenshtein(queryWord, word);
-      return distance <= (queryWord.length >= 7 ? 2 : 1);
-    }
-
-    return false;
-  });
-
-  return closeWord;
-}
-
-function getProductSearchScore(product, searchText) {
-  const queryWords = getSearchWords(searchText);
-
-  if (!queryWords.length) return 1;
-
-  const categoryInfo =
-    categories.find((item) => item.name === product.category)
-      ?.keywords || "";
+  const words = term.split(" ").filter((word) => word.length > 1);
 
   const searchable = normalizeText(
     [
@@ -293,74 +206,19 @@ function getProductSearchScore(product, searchText) {
       product.category,
       product.description,
       ...(product.specifications || []),
-      categoryInfo,
     ].join(" ")
   );
 
-  const searchableWords = searchable.split(" ");
-
+  const productName = normalizeText(product.name);
   let score = 0;
 
-  queryWords.forEach((queryWord) => {
-    if (!queryWord) return;
+  if (searchable.includes(term)) score += 100;
 
-    if (normalizeText(product.name).includes(queryWord)) {
-      score += 10;
-    }
+  if (productName.includes(term)) score += 80;
 
-    if (normalizeText(product.category).includes(queryWord)) {
-      score += 7;
-    }
-
-    if (
-      normalizeText(product.description).includes(queryWord)
-    ) {
-      score += 5;
-    }
-
-    if (
-      (product.specifications || []).some((spec) =>
-        normalizeText(spec).includes(queryWord)
-      )
-    ) {
-      score += 4;
-    }
-
-    if (searchable.includes(queryWord)) {
-      score += 3;
-    }
-
-    if (
-      searchableWords.some((word) =>
-        wordMatches(queryWord, word)
-      )
-    ) {
-      score += 2;
-    }
-  });
-
-  /*
-   * Si la búsqueda contiene términos típicos de una categoría,
-   * también damos relevancia a esa categoría aunque el producto
-   * no tenga exactamente las palabras escritas.
-   */
-  categories.forEach((category) => {
-    const categoryWords = getSearchWords(
-      `${category.name} ${category.keywords}`
-    );
-
-    const categoryHits = queryWords.filter((queryWord) =>
-      categoryWords.some((categoryWord) =>
-        wordMatches(queryWord, categoryWord)
-      )
-    ).length;
-
-    if (
-      category.name === product.category &&
-      categoryHits > 0
-    ) {
-      score += categoryHits * 2;
-    }
+  words.forEach((word) => {
+    if (productName.includes(word)) score += 25;
+    else if (searchable.includes(word)) score += 10;
   });
 
   return score;
@@ -392,18 +250,30 @@ function App() {
   const [selectedProduct, setSelectedProduct] =
     useState(null);
 
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState(1);
-  const [orderComplete, setOrderComplete] = useState(false);
+  const [showCheckout, setShowCheckout] =
+    useState(false);
+
+  const [checkoutStep, setCheckoutStep] =
+    useState(1);
+
+  const [orderComplete, setOrderComplete] =
+    useState(false);
 
   const [user, setUser] = useState(null);
 
-  const [authMode, setAuthMode] = useState("login");
+  const [authMode, setAuthMode] =
+    useState("login");
+
   const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
+  const [authPassword, setAuthPassword] =
+    useState("");
+
   const [authName, setAuthName] = useState("");
-  const [authMessage, setAuthMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [authMessage, setAuthMessage] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
 
   const [checkout, setCheckout] = useState({
     name: "",
@@ -417,17 +287,20 @@ function App() {
     payment: "card",
   });
 
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    price: "",
-    category: "Ropa y Moda",
-    image: "",
-    description: "",
-  });
+  const [newProduct, setNewProduct] =
+    useState({
+      name: "",
+      price: "",
+      category: "Ropa y Moda",
+      image: "",
+      description: "",
+    });
 
   useEffect(() => {
     const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data } =
+        await supabase.auth.getUser();
+
       setUser(data?.user || null);
     };
 
@@ -445,7 +318,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    localStorage.setItem(
+      CART_KEY,
+      JSON.stringify(cart)
+    );
   }, [cart]);
 
   useEffect(() => {
@@ -455,27 +331,22 @@ function App() {
     );
   }, [favorites]);
 
-  /*
-   * Búsqueda relacionada:
-   * "pantallas Samsung A16" no exige que el producto tenga
-   * exactamente esa frase. Se buscan palabras relacionadas
-   * y se ordenan los resultados por relevancia.
-   */
   const filteredProducts = useMemo(() => {
     const term = search.trim();
 
-    const categoryFiltered = products.filter(
-      (product) =>
+    let result = products.filter((product) => {
+      return (
         activeCategory === "Todos" ||
         product.category === activeCategory
-    );
+      );
+    });
 
-    if (!term) return categoryFiltered;
+    if (!term) return result;
 
-    return categoryFiltered
+    return result
       .map((product) => ({
         product,
-        score: getProductSearchScore(product, term),
+        score: getSearchScore(product, term),
       }))
       .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score)
@@ -483,23 +354,52 @@ function App() {
   }, [products, activeCategory, search]);
 
   const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
+    (total, item) =>
+      total + item.quantity,
     0
   );
 
   const cartSubtotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) =>
+      total + item.price * item.quantity,
     0
   );
 
   const shippingCost =
-    checkout.delivery === "express" && cart.length > 0
+    checkout.delivery === "express" &&
+    cart.length > 0
       ? 99
       : 0;
 
-  const cartTotal = cartSubtotal + shippingCost;
+  const cartTotal =
+    cartSubtotal + shippingCost;
 
-  const addToCart = (product, openCart = true) => {
+  const goHome = () => {
+    setShowMenu(false);
+    setActiveCategory("Todos");
+    setSearch("");
+
+    navigate("/");
+
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }, 50);
+  };
+
+  const openAuth = (mode = "login") => {
+    setAuthMode(mode);
+    setAuthMessage("");
+    setShowMenu(false);
+    setShowAuth(true);
+  };
+
+  const addToCart = (
+    product,
+    openCart = true
+  ) => {
     setCart((current) => {
       const existing = current.find(
         (item) => item.id === product.id
@@ -510,7 +410,8 @@ function App() {
           item.id === product.id
             ? {
                 ...item,
-                quantity: item.quantity + 1,
+                quantity:
+                  item.quantity + 1,
               }
             : item
         );
@@ -532,24 +433,28 @@ function App() {
 
   const removeFromCart = (id) => {
     setCart((current) =>
-      current.filter((item) => item.id !== id)
+      current.filter(
+        (item) => item.id !== id
+      )
     );
   };
 
-  const changeQuantity = (id, amount) => {
+  const changeQuantity = (
+    id,
+    amount
+  ) => {
     setCart((current) =>
-      current
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: Math.max(
-                  1,
-                  item.quantity + amount
-                ),
-              }
-            : item
-        )
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              quantity: Math.max(
+                1,
+                item.quantity + amount
+              ),
+            }
+          : item
+      )
     );
   };
 
@@ -560,17 +465,24 @@ function App() {
       );
 
       return exists
-        ? current.filter((item) => item.id !== product.id)
+        ? current.filter(
+            (item) => item.id !== product.id
+          )
         : [...current, product];
     });
   };
 
-  const startCheckout = (product = null) => {
+  const startCheckout = (
+    product = null
+  ) => {
     if (product) {
       addToCart(product, false);
     }
 
-    if (cart.length === 0 && !product) {
+    if (
+      cart.length === 0 &&
+      !product
+    ) {
       setShowCart(true);
       return;
     }
@@ -582,27 +494,28 @@ function App() {
     setShowCheckout(true);
   };
 
-  const openLogin = () => {
-    setAuthMode("login");
-    setAuthMessage("");
-    setShowMenu(false);
-    setShowAuth(true);
-  };
-
-  const openRegister = () => {
-    setAuthMode("register");
-    setAuthMessage("");
-    setShowMenu(false);
-    setShowAuth(true);
-  };
-
-  const handleAuth = async (event) => {
+  const handleAuth = async (
+    event
+  ) => {
     event.preventDefault();
+
     setLoading(true);
     setAuthMessage("");
 
     try {
-      if (authMode === "register") {
+      if (
+        authMode === "register"
+      ) {
+        if (
+          authPassword.length < 6
+        ) {
+          setAuthMessage(
+            "La contraseña debe tener al menos 6 caracteres."
+          );
+          setLoading(false);
+          return;
+        }
+
         const { data, error } =
           await supabase.auth.signUp({
             email: authEmail,
@@ -626,10 +539,12 @@ function App() {
         }
       } else {
         const { data, error } =
-          await supabase.auth.signInWithPassword({
-            email: authEmail,
-            password: authPassword,
-          });
+          await supabase.auth.signInWithPassword(
+            {
+              email: authEmail,
+              password: authPassword,
+            }
+          );
 
         if (error) throw error;
 
@@ -637,21 +552,35 @@ function App() {
         setShowAuth(false);
       }
     } catch (error) {
-      const message = error?.message || "";
-      const lower = message.toLowerCase();
+      const message =
+        error?.message || "";
 
-      if (lower.includes("invalid login credentials")) {
+      if (
+        message
+          .toLowerCase()
+          .includes(
+            "invalid login credentials"
+          )
+      ) {
         setAuthMessage(
           "Correo o contraseña incorrectos."
         );
       } else if (
-        lower.includes("email not confirmed")
+        message
+          .toLowerCase()
+          .includes(
+            "email not confirmed"
+          )
       ) {
         setAuthMessage(
           "Primero confirma tu correo electrónico."
         );
       } else if (
-        lower.includes("user already registered")
+        message
+          .toLowerCase()
+          .includes(
+            "user already registered"
+          )
       ) {
         setAuthMessage(
           "Este correo ya tiene una cuenta. Intenta iniciar sesión."
@@ -673,20 +602,30 @@ function App() {
     setShowMenu(false);
   };
 
-  const handlePublish = (event) => {
+  const handlePublish = (
+    event
+  ) => {
     event.preventDefault();
 
-    if (!newProduct.name || !newProduct.price) return;
+    if (
+      !newProduct.name ||
+      !newProduct.price
+    ) {
+      return;
+    }
 
     const product = {
       id: Date.now(),
       name: newProduct.name,
-      price: Number(newProduct.price),
+      price: Number(
+        newProduct.price
+      ),
       oldPrice: null,
       rating: 5,
       reviews: 0,
       discount: 0,
-      category: newProduct.category,
+      category:
+        newProduct.category,
       image:
         newProduct.image ||
         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
@@ -746,6 +685,22 @@ function App() {
     setCheckoutStep(1);
   };
 
+  const openWhatsApp = () => {
+    const text = encodeURIComponent(
+      WHATSAPP_MESSAGE
+    );
+
+    const url = WHATSAPP_NUMBER
+      ? `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`
+      : `https://wa.me/?text=${text}`;
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
   return (
     <div className="app">
       <style>{`
@@ -780,9 +735,9 @@ function App() {
           background: #fff;
         }
 
-        /* =====================================================
+        /* =========================
            HEADER
-        ===================================================== */
+        ========================= */
 
         .top-header {
           position: sticky;
@@ -799,7 +754,7 @@ function App() {
           margin: auto;
           display: flex;
           align-items: center;
-          gap: 9px;
+          gap: 10px;
           padding: 7px 0;
         }
 
@@ -836,21 +791,25 @@ function App() {
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
-          white-space: nowrap;
+          cursor: pointer;
         }
 
         .search-box {
           flex: 1;
           height: 39px;
-          min-width: 0;
-          max-width: 560px;
-          margin-left: auto;
-          margin-right: auto;
+          min-width: 120px;
+          max-width: 540px;
+          margin: 0 auto;
           display: flex;
           border: 1px solid #ddd;
           border-radius: 22px;
           overflow: hidden;
           background: #fff;
+        }
+
+        .search-box:focus-within {
+          border-color: #d414c9;
+          box-shadow: 0 0 0 3px rgba(212,20,201,.08);
         }
 
         .search-box input {
@@ -862,13 +821,8 @@ function App() {
           font-size: 13px;
         }
 
-        .search-box input::placeholder {
-          color: #999;
-        }
-
         .search-box button {
           width: 43px;
-          flex: 0 0 43px;
           border: 0;
           color: white;
           background: linear-gradient(
@@ -877,20 +831,12 @@ function App() {
             #d414c9,
             #6d28d9
           );
-          font-size: 19px;
         }
 
-        /*
-         * CUENTA Y CARRITO:
-         * siempre quedan a la DERECHA, separados del nombre.
-         */
         .header-actions {
           display: flex;
-          align-items: center;
-          justify-content: flex-end;
           gap: 7px;
           flex: 0 0 auto;
-          margin-left: 2px;
         }
 
         .header-action {
@@ -901,12 +847,10 @@ function App() {
           background: #f5f5f7;
           font-size: 18px;
           position: relative;
-          display: grid;
-          place-items: center;
         }
 
         .header-action:hover {
-          background: #eeeeF2;
+          background: #f0eafa;
         }
 
         .cart-count {
@@ -939,10 +883,6 @@ function App() {
           display: none;
         }
 
-        /*
-         * CATEGORÍAS DE LA BARRA SUPERIOR:
-         * más pequeñas que antes.
-         */
         .category-pill {
           flex: 0 0 auto;
           border: 1px solid #e4e4e4;
@@ -952,6 +892,7 @@ function App() {
           padding: 5px 10px;
           font-size: 10px;
           white-space: nowrap;
+          transition: .18s;
         }
 
         .category-pill.active,
@@ -966,9 +907,9 @@ function App() {
           );
         }
 
-        /* =====================================================
+        /* =========================
            CONTENIDO
-        ===================================================== */
+        ========================= */
 
         .page-content {
           width: min(1180px, calc(100% - 24px));
@@ -977,9 +918,9 @@ function App() {
 
         .hero {
           margin: 13px 0;
-          min-height: 180px;
-          border-radius: 21px;
-          padding: 27px 30px;
+          min-height: 175px;
+          border-radius: 20px;
+          padding: 26px 28px;
           color: white;
           background: linear-gradient(
             110deg,
@@ -995,7 +936,7 @@ function App() {
 
         .hero h1 {
           margin: 0 0 8px;
-          font-size: clamp(29px, 4vw, 45px);
+          font-size: clamp(28px, 4vw, 43px);
           line-height: 1;
         }
 
@@ -1016,26 +957,26 @@ function App() {
         }
 
         .hero-icon {
-          font-size: 75px;
-          margin-right: 25px;
+          font-size: 70px;
+          margin-right: 20px;
         }
 
-        /* =====================================================
+        /* =========================
            TARJETAS
-        ===================================================== */
+        ========================= */
 
         .top-cards {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 10px;
-          margin: 11px 0 20px;
+          gap: 9px;
+          margin: 10px 0 18px;
         }
 
         .top-card {
-          height: 90px;
+          height: 88px;
           position: relative;
           overflow: hidden;
-          border-radius: 14px;
+          border-radius: 13px;
           border: 1px solid #eee;
           background: #f5f5f5;
           text-align: left;
@@ -1052,33 +993,33 @@ function App() {
         .top-card-overlay {
           position: absolute;
           inset: 0;
-          padding: 12px;
+          padding: 11px;
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
           background: linear-gradient(
-            transparent 15%,
-            rgba(0,0,0,.65)
+            transparent 10%,
+            rgba(0,0,0,.67)
           );
           color: white;
         }
 
         .top-card-title {
           font-weight: 900;
-          font-size: 14px;
+          font-size: 13px;
         }
 
         .top-card-subtitle {
-          font-size: 10px;
+          font-size: 9px;
           margin-top: 2px;
         }
 
-        /* =====================================================
+        /* =========================
            SECCIONES
-        ===================================================== */
+        ========================= */
 
         .section {
-          margin: 18px 0;
+          margin: 17px 0;
         }
 
         .section-title {
@@ -1105,30 +1046,29 @@ function App() {
           color: transparent;
         }
 
-        /* =====================================================
-           CATEGORÍAS GRANDES:
-           ahora son compactas, no ocupan media pantalla.
-        ===================================================== */
+        /* =========================
+           CATEGORÍAS COMPACTAS
+        ========================= */
 
         .categories-grid {
           display: grid;
-          grid-template-columns: repeat(8, 1fr);
-          gap: 8px;
+          grid-template-columns: repeat(8, minmax(0,1fr));
+          gap: 7px;
         }
 
         .category-card {
           padding: 0;
           overflow: hidden;
-          border: 1px solid #eee;
-          border-radius: 12px;
+          border: 1px solid #ededed;
+          border-radius: 11px;
           background: white;
           text-align: center;
-          transition: .2s;
+          transition: .18s;
         }
 
         .category-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 17px rgba(0,0,0,.08);
+          box-shadow: 0 6px 18px rgba(0,0,0,.08);
         }
 
         .category-image {
@@ -1140,21 +1080,22 @@ function App() {
 
         .category-name {
           display: block;
-          padding: 6px 3px 7px;
+          min-height: 30px;
+          padding: 5px 2px 6px;
           font-size: 9px;
           font-weight: 800;
-          line-height: 1.1;
+          line-height: 1.05;
         }
 
-        /* =====================================================
+        /* =========================
            PROMOCIÓN
-        ===================================================== */
+        ========================= */
 
         .promo-card {
-          min-height: 68px;
+          min-height: 66px;
           border: 1px solid #eee;
-          border-radius: 15px;
-          padding: 12px 16px;
+          border-radius: 14px;
+          padding: 12px 15px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -1190,22 +1131,27 @@ function App() {
           white-space: nowrap;
         }
 
-        /* =====================================================
+        .primary-button:hover,
+        .promo-button:hover {
+          filter: brightness(1.05);
+        }
+
+        /* =========================
            PRODUCTOS
-        ===================================================== */
+        ========================= */
 
         .products-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
+          gap: 11px;
         }
 
         .product-card {
           overflow: hidden;
           border: 1px solid #eee;
-          border-radius: 15px;
+          border-radius: 14px;
           background: white;
-          transition: .2s;
+          transition: .18s;
         }
 
         .product-card:hover {
@@ -1250,7 +1196,7 @@ function App() {
         }
 
         .product-info {
-          padding: 10px;
+          padding: 9px;
         }
 
         .product-name {
@@ -1314,9 +1260,54 @@ function App() {
           );
         }
 
-        /* =====================================================
+        /* =========================
+           BOTÓN WHATSAPP
+        ========================= */
+
+        .whatsapp-float {
+          position: fixed;
+          right: 17px;
+          bottom: 17px;
+          z-index: 150;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .whatsapp-label {
+          padding: 8px 11px;
+          border-radius: 15px;
+          background: white;
+          box-shadow: 0 5px 20px rgba(0,0,0,.14);
+          color: #333;
+          font-size: 10px;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+
+        .whatsapp-button {
+          width: 52px;
+          height: 52px;
+          border: 0;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          color: white;
+          background: #25D366;
+          box-shadow:
+            0 7px 22px rgba(0,0,0,.22),
+            0 0 0 4px rgba(37,211,102,.12);
+          font-size: 26px;
+          transition: .2s;
+        }
+
+        .whatsapp-button:hover {
+          transform: scale(1.06);
+        }
+
+        /* =========================
            OVERLAYS
-        ===================================================== */
+        ========================= */
 
         .overlay {
           position: fixed;
@@ -1332,9 +1323,9 @@ function App() {
           padding: 15px;
         }
 
-        /* =====================================================
+        /* =========================
            MENÚ
-        ===================================================== */
+        ========================= */
 
         .menu-panel {
           width: min(360px, 88vw);
@@ -1347,15 +1338,20 @@ function App() {
         }
 
         @keyframes menuIn {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(0); }
+          from {
+            transform: translateX(-100%);
+          }
+
+          to {
+            transform: translateX(0);
+          }
         }
 
         .menu-head {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 20px;
+          margin-bottom: 18px;
         }
 
         .menu-head h2 {
@@ -1369,15 +1365,6 @@ function App() {
           );
           -webkit-background-clip: text;
           color: transparent;
-        }
-
-        .close-button {
-          width: 35px;
-          height: 35px;
-          border: 0;
-          border-radius: 50%;
-          background: #f1f1f1;
-          font-size: 16px;
         }
 
         .menu-item {
@@ -1403,9 +1390,9 @@ function App() {
           color: white;
         }
 
-        /* =====================================================
+        /* =========================
            CARRITO
-        ===================================================== */
+        ========================= */
 
         .cart-panel {
           width: min(520px, 100%);
@@ -1419,8 +1406,13 @@ function App() {
         }
 
         @keyframes cartIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
+          from {
+            transform: translateX(100%);
+          }
+
+          to {
+            transform: translateX(0);
+          }
         }
 
         .cart-header {
@@ -1526,9 +1518,9 @@ function App() {
           font-weight: 900;
         }
 
-        /* =====================================================
-           MODALES
-        ===================================================== */
+        /* =========================
+           MODALES GENERALES
+        ========================= */
 
         .modal {
           width: min(540px, 100%);
@@ -1543,6 +1535,15 @@ function App() {
         .modal h2 {
           margin: 0 0 17px;
           font-size: 22px;
+        }
+
+        .close-button {
+          width: 35px;
+          height: 35px;
+          border: 0;
+          border-radius: 50%;
+          background: #f1f1f1;
+          font-size: 16px;
         }
 
         .form {
@@ -1561,6 +1562,13 @@ function App() {
           font-size: 13px;
         }
 
+        .form input:focus,
+        .form textarea:focus,
+        .form select:focus {
+          border-color: #d414c9;
+          box-shadow: 0 0 0 3px rgba(212,20,201,.08);
+        }
+
         .form textarea {
           min-height: 85px;
           resize: vertical;
@@ -1574,13 +1582,309 @@ function App() {
           font-size: 12px;
         }
 
+        /* =========================
+           LOGIN / REGISTRO NUEVO
+        ========================= */
+
+        .auth-modal {
+          width: min(820px, 100%);
+          max-height: 94vh;
+          overflow: hidden;
+          padding: 0;
+          border-radius: 25px;
+          background: white;
+          box-shadow: 0 25px 70px rgba(0,0,0,.25);
+          display: grid;
+          grid-template-columns: .9fr 1.1fr;
+          position: relative;
+        }
+
+        .auth-visual {
+          min-height: 510px;
+          padding: 34px 27px;
+          color: white;
+          background: linear-gradient(
+            145deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          position: relative;
+          overflow: hidden;
+        }
+
+        .auth-visual::before,
+        .auth-visual::after {
+          content: "";
+          position: absolute;
+          border-radius: 50%;
+          background: rgba(255,255,255,.10);
+        }
+
+        .auth-visual::before {
+          width: 230px;
+          height: 230px;
+          top: -90px;
+          right: -80px;
+        }
+
+        .auth-visual::after {
+          width: 180px;
+          height: 180px;
+          bottom: -80px;
+          left: -65px;
+        }
+
+        .auth-logo-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 17px;
+          display: grid;
+          place-items: center;
+          background: rgba(255,255,255,.18);
+          border: 1px solid rgba(255,255,255,.3);
+          font-size: 28px;
+          margin-bottom: 25px;
+        }
+
+        .auth-visual h2 {
+          margin: 0 0 12px;
+          color: white;
+          font-size: 29px;
+          line-height: 1.05;
+        }
+
+        .auth-visual p {
+          margin: 0;
+          color: rgba(255,255,255,.92);
+          font-size: 12px;
+          line-height: 1.6;
+        }
+
+        .auth-benefits {
+          display: grid;
+          gap: 10px;
+          margin-top: 28px;
+        }
+
+        .auth-benefit {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        .auth-benefit-icon {
+          width: 29px;
+          height: 29px;
+          border-radius: 9px;
+          display: grid;
+          place-items: center;
+          background: rgba(255,255,255,.16);
+        }
+
+        .auth-form-side {
+          padding: 34px 30px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          position: relative;
+        }
+
+        .auth-close {
+          position: absolute;
+          right: 15px;
+          top: 15px;
+        }
+
+        .auth-heading {
+          margin-bottom: 22px;
+        }
+
+        .auth-heading h2 {
+          margin: 0 0 5px;
+          font-size: 25px;
+        }
+
+        .auth-heading p {
+          margin: 0;
+          color: #777;
+          font-size: 11px;
+        }
+
+        .auth-field {
+          position: relative;
+        }
+
+        .auth-field-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #999;
+          font-size: 14px;
+          pointer-events: none;
+        }
+
+        .auth-field input {
+          width: 100%;
+          height: 45px;
+          border: 1px solid #ddd;
+          border-radius: 11px;
+          outline: 0;
+          padding: 0 12px 0 37px;
+          font-size: 12px;
+          background: #fff;
+        }
+
+        .auth-field input:focus {
+          border-color: #d414c9;
+          box-shadow: 0 0 0 3px rgba(212,20,201,.08);
+        }
+
+        .auth-submit {
+          width: 100%;
+          min-height: 46px;
+          margin-top: 4px;
+          border: 0;
+          border-radius: 12px;
+          color: white;
+          font-weight: 900;
+          font-size: 12px;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          box-shadow: 0 7px 18px rgba(212,20,201,.20);
+        }
+
+        .auth-submit:disabled {
+          opacity: .65;
+          cursor: wait;
+        }
+
+        .auth-switch-box {
+          margin-top: 17px;
+          padding-top: 15px;
+          border-top: 1px solid #eee;
+          text-align: center;
+          font-size: 11px;
+          color: #777;
+        }
+
         .auth-switch {
           border: 0;
           background: transparent;
           color: #b21bc3;
-          font-size: 12px;
-          font-weight: 800;
+          font-size: 11px;
+          font-weight: 900;
+          padding: 4px;
         }
+
+        .auth-message {
+          margin-top: 2px;
+        }
+
+        /* =========================
+           MENSAJES
+        ========================= */
+
+        .messages-modal {
+          width: min(720px, 100%);
+          max-height: 90vh;
+          border-radius: 22px;
+          overflow: hidden;
+          background: white;
+          box-shadow: 0 25px 70px rgba(0,0,0,.22);
+        }
+
+        .messages-header {
+          padding: 18px 20px;
+          color: white;
+          background: linear-gradient(
+            100deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .messages-header h2 {
+          margin: 0;
+          font-size: 20px;
+        }
+
+        .messages-content {
+          padding: 22px;
+        }
+
+        .message-welcome {
+          padding: 18px;
+          border-radius: 15px;
+          background: #faf7ff;
+          border: 1px solid #eee;
+          margin-bottom: 12px;
+        }
+
+        .message-welcome h3 {
+          margin: 0 0 7px;
+          font-size: 15px;
+        }
+
+        .message-welcome p {
+          margin: 0;
+          color: #666;
+          font-size: 11px;
+          line-height: 1.6;
+        }
+
+        .message-option {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px;
+          margin-bottom: 8px;
+          border: 1px solid #eee;
+          border-radius: 13px;
+          background: white;
+          text-align: left;
+        }
+
+        .message-option:hover {
+          border-color: #d414c9;
+          background: #fff9ff;
+        }
+
+        .message-option-icon {
+          width: 39px;
+          height: 39px;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+          background: #f5e9ff;
+          font-size: 18px;
+        }
+
+        .message-option strong {
+          display: block;
+          font-size: 12px;
+        }
+
+        .message-option small {
+          color: #777;
+          font-size: 10px;
+        }
+
+        /* =========================
+           DETALLE PRODUCTO
+        ========================= */
 
         .detail-image {
           width: 100%;
@@ -1609,107 +1913,19 @@ function App() {
           font-size: 13px;
         }
 
-        /* =====================================================
-           CENTRO DE MENSAJES
-        ===================================================== */
-
-        .messages-modal {
-          width: min(620px, 100%);
-          height: min(650px, 88vh);
-          padding: 0;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .messages-header {
-          min-height: 70px;
-          padding: 13px 18px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 1px solid #eee;
-          background: white;
-        }
-
-        .messages-header h2 {
-          margin: 0;
-          font-size: 20px;
-        }
-
-        .messages-header p {
-          margin: 3px 0 0;
-          color: #888;
-          font-size: 10px;
-        }
-
-        .messages-list {
+        .secondary-button {
           flex: 1;
-          overflow-y: auto;
-          padding: 16px;
-          background: #fafafa;
-        }
-
-        .message-conversation {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border: 1px solid #eee;
+          border: 1px solid #ddd;
+          border-radius: 11px;
           background: white;
-          border-radius: 13px;
-          padding: 13px;
-          margin-bottom: 9px;
-          text-align: left;
-        }
-
-        .message-avatar {
-          width: 43px;
-          height: 43px;
-          flex: 0 0 43px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          color: white;
-          font-size: 20px;
-          background: linear-gradient(
-            135deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
-        }
-
-        .message-conversation strong {
-          display: block;
-          font-size: 13px;
-          margin-bottom: 3px;
-        }
-
-        .message-conversation span {
-          color: #777;
+          padding: 12px;
+          font-weight: 800;
           font-size: 11px;
         }
 
-        .message-time {
-          margin-left: auto;
-          color: #aaa;
-          font-size: 9px;
-          white-space: nowrap;
-        }
-
-        .messages-footer {
-          padding: 12px 16px;
-          border-top: 1px solid #eee;
-          background: white;
-          font-size: 11px;
-          color: #777;
-          text-align: center;
-        }
-
-        /* =====================================================
+        /* =========================
            CHECKOUT
-        ===================================================== */
+        ========================= */
 
         .checkout-overlay {
           align-items: stretch;
@@ -1855,20 +2071,6 @@ function App() {
           margin-top: 15px;
         }
 
-        .secondary-button {
-          flex: 1;
-          border: 1px solid #ddd;
-          border-radius: 11px;
-          background: white;
-          padding: 12px;
-          font-weight: 800;
-          font-size: 11px;
-        }
-
-        .checkout-actions .primary-button {
-          flex: 1;
-        }
-
         .success-box {
           max-width: 570px;
           margin: 70px auto;
@@ -1899,9 +2101,9 @@ function App() {
           color: #777;
         }
 
-        /* =====================================================
+        /* =========================
            RESPONSIVO
-        ===================================================== */
+        ========================= */
 
         @media (max-width: 900px) {
           .categories-grid {
@@ -1919,15 +2121,39 @@ function App() {
           .order-summary {
             position: static;
           }
+
+          .auth-modal {
+            grid-template-columns: 1fr;
+          }
+
+          .auth-visual {
+            min-height: 190px;
+            padding: 24px;
+          }
+
+          .auth-benefits {
+            grid-template-columns: repeat(3,1fr);
+            margin-top: 18px;
+          }
+
+          .auth-benefit {
+            font-size: 9px;
+          }
+
+          .auth-form-side {
+            padding: 28px;
+          }
         }
 
         @media (max-width: 650px) {
           .header-main {
             min-height: 52px;
-            display: grid;
-            grid-template-columns: 36px 1fr auto;
+            flex-wrap: wrap;
             gap: 7px;
-            padding: 7px 0;
+          }
+
+          .brand {
+            font-size: 20px;
           }
 
           .menu-button,
@@ -1936,26 +2162,14 @@ function App() {
             height: 36px;
           }
 
-          .brand {
-            font-size: 20px;
-          }
-
-          /*
-           * En móvil:
-           * menú + VaniDaxi + cuenta/carrito arriba.
-           * búsqueda queda debajo.
-           */
           .header-actions {
-            grid-column: 3;
-            grid-row: 1;
+            margin-left: auto;
           }
 
           .search-box {
-            grid-column: 1 / -1;
-            grid-row: 2;
-            width: 100%;
+            order: 5;
+            flex-basis: 100%;
             max-width: none;
-            margin: 0;
           }
 
           .top-header {
@@ -1963,9 +2177,13 @@ function App() {
           }
 
           .hero {
-            min-height: 165px;
-            padding: 23px 20px;
-            margin-top: 10px;
+            min-height: 155px;
+            padding: 22px 19px;
+            margin-top: 9px;
+          }
+
+          .hero h1 {
+            font-size: 28px;
           }
 
           .hero-icon {
@@ -1977,26 +2195,31 @@ function App() {
           }
 
           .top-card {
-            height: 82px;
+            height: 78px;
           }
 
           .categories-grid {
             grid-template-columns: repeat(4,1fr);
-            gap: 7px;
+            gap: 5px;
+          }
+
+          .category-card {
+            border-radius: 9px;
           }
 
           .category-image {
-            aspect-ratio: 1 / .8;
+            aspect-ratio: 1 / .67;
           }
 
           .category-name {
+            min-height: 27px;
+            padding: 5px 1px;
             font-size: 8px;
-            padding: 5px 2px 6px;
           }
 
           .products-grid {
             grid-template-columns: repeat(2,1fr);
-            gap: 9px;
+            gap: 8px;
           }
 
           .promo-card {
@@ -2016,8 +2239,62 @@ function App() {
             padding: 13px;
           }
 
-          .messages-modal {
-            height: 90vh;
+          .whatsapp-float {
+            right: 12px;
+            bottom: 12px;
+          }
+
+          .whatsapp-label {
+            display: none;
+          }
+
+          .whatsapp-button {
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+          }
+
+          .auth-modal {
+            max-height: 94vh;
+            overflow-y: auto;
+          }
+
+          .auth-visual {
+            min-height: 155px;
+            padding: 21px;
+          }
+
+          .auth-logo-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 13px;
+            font-size: 21px;
+            margin-bottom: 13px;
+          }
+
+          .auth-visual h2 {
+            font-size: 23px;
+            margin-bottom: 6px;
+          }
+
+          .auth-visual p {
+            font-size: 10px;
+          }
+
+          .auth-benefits {
+            display: none;
+          }
+
+          .auth-form-side {
+            padding: 25px 20px;
+          }
+
+          .auth-heading h2 {
+            font-size: 22px;
+          }
+
+          .messages-content {
+            padding: 15px;
           }
         }
 
@@ -2026,71 +2303,77 @@ function App() {
             font-size: 18px;
           }
 
-          .header-actions {
+          .categories-grid {
             gap: 4px;
           }
 
-          .header-action {
-            width: 34px;
-            height: 34px;
-          }
-
-          .categories-grid {
-            gap: 5px;
-          }
-
           .category-name {
-            font-size: 7px;
+            font-size: 7.5px;
+          }
+
+          .header-action {
+            font-size: 16px;
           }
         }
       `}</style>
 
-      {/* =====================================================
-          BARRA SUPERIOR
-      ===================================================== */}
+      {/* =========================
+          HEADER
+      ========================= */}
 
       <header className="top-header">
         <div className="header-main">
           <button
             className="menu-button"
-            onClick={() => setShowMenu(true)}
+            onClick={() =>
+              setShowMenu(true)
+            }
             aria-label="Abrir menú"
           >
             ☰
           </button>
 
-          <Link to="/" className="brand">
+          <button
+            className="brand"
+            onClick={goHome}
+          >
             VaniDaxi
-          </Link>
+          </button>
 
           <div className="search-box">
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar productos, marcas, modelos..."
-              aria-label="Buscar productos"
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              placeholder="¿Qué estás buscando?"
             />
 
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
                 document
-                  .getElementById("productos")
+                  .getElementById(
+                    "productos"
+                  )
                   ?.scrollIntoView({
                     behavior: "smooth",
-                  })
-              }
+                  });
+              }}
               aria-label="Buscar"
             >
               ⌕
             </button>
           </div>
 
-          {/* CUENTA Y CARRITO A LA DERECHA */}
           <div className="header-actions">
             <button
               className="header-action"
-              onClick={openLogin}
+              onClick={() =>
+                openAuth("login")
+              }
               title="Mi cuenta"
               aria-label="Mi cuenta"
             >
@@ -2099,7 +2382,9 @@ function App() {
 
             <button
               className="header-action"
-              onClick={() => setShowCart(true)}
+              onClick={() =>
+                setShowCart(true)
+              }
               title="Carrito"
               aria-label="Carrito"
             >
@@ -2117,54 +2402,80 @@ function App() {
         <div className="category-bar">
           <button
             className={`category-pill ${
-              activeCategory === "Todos"
+              activeCategory ===
+              "Todos"
                 ? "active"
                 : ""
             }`}
-            onClick={() => setActiveCategory("Todos")}
+            onClick={() => {
+              setActiveCategory(
+                "Todos"
+              );
+              setSearch("");
+            }}
           >
             Todo
           </button>
 
-          {categories.map((category) => (
-            <button
-              key={category.name}
-              className={`category-pill ${
-                activeCategory === category.name
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                setActiveCategory(category.name)
-              }
-            >
-              {category.name}
-            </button>
-          ))}
+          {categories.map(
+            (category) => (
+              <button
+                key={category.name}
+                className={`category-pill ${
+                  activeCategory ===
+                  category.name
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() => {
+                  setActiveCategory(
+                    category.name
+                  );
+
+                  document
+                    .getElementById(
+                      "productos"
+                    )
+                    ?.scrollIntoView({
+                      behavior:
+                        "smooth",
+                    });
+                }}
+              >
+                {category.name}
+              </button>
+            )
+          )}
         </div>
       </header>
 
-      <main className="page-content">
-        {/* =====================================================
-            HERO
-        ===================================================== */}
+      {/* =========================
+          CONTENIDO
+      ========================= */}
 
+      <main className="page-content">
         <section className="hero">
           <div>
-            <h1>Todo en un solo lugar</h1>
+            <h1>
+              Todo en un solo lugar
+            </h1>
 
             <p>
-              Compra, vende y descubre productos de
-              diferentes categorías.
+              Compra, vende y descubre
+              productos de diferentes
+              categorías.
             </p>
 
             <button
               className="hero-button"
               onClick={() =>
                 document
-                  .getElementById("productos")
+                  .getElementById(
+                    "productos"
+                  )
                   ?.scrollIntoView({
-                    behavior: "smooth",
+                    behavior:
+                      "smooth",
                   })
               }
             >
@@ -2172,12 +2483,10 @@ function App() {
             </button>
           </div>
 
-          <div className="hero-icon">🛍️</div>
+          <div className="hero-icon">
+            🛍️
+          </div>
         </section>
-
-        {/* =====================================================
-            TARJETAS SUPERIORES
-        ===================================================== */}
 
         <section className="top-cards">
           {topCards.map((card) => (
@@ -2185,37 +2494,54 @@ function App() {
               className="top-card"
               key={card.title}
               onClick={() => {
-                if (card.title === "Ofertas") {
+                if (
+                  card.title ===
+                  "Ofertas"
+                ) {
                   setSearch("");
-                  setActiveCategory("Todos");
-
+                  setActiveCategory(
+                    "Todos"
+                  );
                   document
-                    .getElementById("productos")
+                    .getElementById(
+                      "productos"
+                    )
                     ?.scrollIntoView({
-                      behavior: "smooth",
+                      behavior:
+                        "smooth",
                     });
                 }
 
-                if (card.title === "Novedades") {
-                  setSearch("");
-
+                if (
+                  card.title ===
+                  "Novedades"
+                ) {
                   document
-                    .getElementById("productos")
+                    .getElementById(
+                      "productos"
+                    )
                     ?.scrollIntoView({
-                      behavior: "smooth",
+                      behavior:
+                        "smooth",
                     });
                 }
 
-                if (card.title === "Vendedores") {
-                  setShowPublish(true);
+                if (
+                  card.title ===
+                  "Vendedores"
+                ) {
+                  setShowPublish(
+                    true
+                  );
                 }
 
-                if (card.title === "Envíos") {
-                  document
-                    .getElementById("productos")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    });
+                if (
+                  card.title ===
+                  "Envíos"
+                ) {
+                  setShowMessages(
+                    true
+                  );
                 }
               }}
             >
@@ -2237,76 +2563,96 @@ function App() {
           ))}
         </section>
 
-        {/* =====================================================
-            CATEGORÍAS
-        ===================================================== */}
+        {/* CATEGORÍAS COMPACTAS */}
 
         <section className="section">
           <div className="section-title">
             <h2 className="gradient-text">
               Categorías
             </h2>
+
+            <button
+              className="category-pill"
+              onClick={() => {
+                setActiveCategory(
+                  "Todos"
+                );
+                setSearch("");
+              }}
+            >
+              Ver todo
+            </button>
           </div>
 
           <div className="categories-grid">
-            {categories.map((category) => (
-              <button
-                key={category.name}
-                className="category-card"
-                onClick={() => {
-                  setActiveCategory(category.name);
+            {categories.map(
+              (category) => (
+                <button
+                  key={category.name}
+                  className="category-card"
+                  onClick={() => {
+                    setActiveCategory(
+                      category.name
+                    );
 
-                  document
-                    .getElementById("productos")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    });
-                }}
-              >
-                <img
-                  className="category-image"
-                  src={category.image}
-                  alt={category.name}
-                  loading="lazy"
-                />
+                    document
+                      .getElementById(
+                        "productos"
+                      )
+                      ?.scrollIntoView({
+                        behavior:
+                          "smooth",
+                      });
+                  }}
+                >
+                  <img
+                    className="category-image"
+                    src={
+                      category.image
+                    }
+                    alt={
+                      category.name
+                    }
+                    loading="lazy"
+                  />
 
-                <span className="category-name">
-                  {category.name}
-                </span>
-              </button>
-            ))}
+                  <span className="category-name">
+                    {category.name}
+                  </span>
+                </button>
+              )
+            )}
           </div>
         </section>
 
-        {/* =====================================================
-            REGISTRO
-        ===================================================== */}
+        {/* REGISTRO */}
 
         <section className="section">
           <div className="promo-card">
             <div>
               <strong>
-                ✨ Regístrate en VaniDaxi
+                ✨ Únete a VaniDaxi
               </strong>
 
               <span>
-                Crea tu cuenta para disfrutar de todas
-                las funciones.
+                Compra, vende y disfruta
+                de más funciones con tu
+                cuenta.
               </span>
             </div>
 
             <button
               className="promo-button"
-              onClick={openRegister}
+              onClick={() =>
+                openAuth("register")
+              }
             >
-              Registrarme
+              Crear cuenta
             </button>
           </div>
         </section>
 
-        {/* =====================================================
-            PRODUCTOS
-        ===================================================== */}
+        {/* PRODUCTOS */}
 
         <section
           className="section"
@@ -2316,16 +2662,20 @@ function App() {
             <h2 className="gradient-text">
               {search.trim()
                 ? `Resultados para "${search}"`
-                : activeCategory === "Todos"
+                : activeCategory ===
+                  "Todos"
                 ? "Productos destacados"
                 : activeCategory}
             </h2>
 
-            {activeCategory !== "Todos" && (
+            {activeCategory !==
+              "Todos" && (
               <button
                 className="category-pill"
                 onClick={() =>
-                  setActiveCategory("Todos")
+                  setActiveCategory(
+                    "Todos"
+                  )
                 }
               >
                 Ver todos
@@ -2333,123 +2683,194 @@ function App() {
             )}
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {filteredProducts.length ===
+          0 ? (
             <div className="empty">
-              <div style={{ fontSize: 45 }}>
+              <div
+                style={{
+                  fontSize: 45,
+                }}
+              >
                 🔎
               </div>
 
               <h3>
-                No encontramos productos
+                No encontramos
+                productos
               </h3>
 
               <p>
-                Prueba con otras palabras, una marca,
-                modelo o categoría.
+                Prueba con otras
+                palabras, una categoría
+                diferente o una búsqueda
+                más general.
               </p>
+
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setSearch("");
+                  setActiveCategory(
+                    "Todos"
+                  );
+                }}
+              >
+                Ver todos los productos
+              </button>
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProducts.map((product) => {
-                const favorite = favorites.some(
-                  (item) =>
-                    item.id === product.id
-                );
+              {filteredProducts.map(
+                (product) => {
+                  const favorite =
+                    favorites.some(
+                      (item) =>
+                        item.id ===
+                        product.id
+                    );
 
-                return (
-                  <article
-                    className="product-card"
-                    key={product.id}
-                  >
-                    <div className="product-image-wrap">
-                      <img
-                        className="product-image"
-                        src={product.image}
-                        alt={product.name}
-                        loading="lazy"
-                      />
+                  return (
+                    <article
+                      className="product-card"
+                      key={product.id}
+                    >
+                      <div className="product-image-wrap">
+                        <img
+                          className="product-image"
+                          src={
+                            product.image
+                          }
+                          alt={
+                            product.name
+                          }
+                          loading="lazy"
+                        />
 
-                      {product.discount > 0 && (
-                        <span className="discount">
-                          -{product.discount}%
-                        </span>
-                      )}
-
-                      <button
-                        className="favorite"
-                        onClick={() =>
-                          toggleFavorite(product)
-                        }
-                        aria-label="Agregar a favoritos"
-                      >
-                        {favorite ? "❤️" : "♡"}
-                      </button>
-                    </div>
-
-                    <div className="product-info">
-                      <h3 className="product-name">
-                        {product.name}
-                      </h3>
-
-                      <div className="rating">
-                        ★ {product.rating} ·{" "}
-                        {product.reviews} reseñas
-                      </div>
-
-                      <div>
-                        <span className="price">
-                          {formatPrice(
-                            product.price
-                          )}
-                        </span>
-
-                        {product.oldPrice && (
-                          <span className="old-price">
-                            {formatPrice(
-                              product.oldPrice
-                            )}
+                        {product.discount >
+                          0 && (
+                          <span className="discount">
+                            -
+                            {
+                              product.discount
+                            }
+                            %
                           </span>
                         )}
-                      </div>
 
-                      <div className="product-actions">
                         <button
-                          className="details-button"
+                          className="favorite"
                           onClick={() =>
-                            setSelectedProduct(
+                            toggleFavorite(
                               product
                             )
                           }
+                          aria-label="Agregar a favoritos"
                         >
-                          Ver producto
-                        </button>
-
-                        <button
-                          className="add-button"
-                          onClick={() =>
-                            addToCart(product)
-                          }
-                        >
-                          🛒 Agregar
+                          {favorite
+                            ? "❤️"
+                            : "♡"}
                         </button>
                       </div>
-                    </div>
-                  </article>
-                );
-              })}
+
+                      <div className="product-info">
+                        <h3 className="product-name">
+                          {
+                            product.name
+                          }
+                        </h3>
+
+                        <div className="rating">
+                          ★{" "}
+                          {
+                            product.rating
+                          }{" "}
+                          ·{" "}
+                          {
+                            product.reviews
+                          }{" "}
+                          reseñas
+                        </div>
+
+                        <div>
+                          <span className="price">
+                            {formatPrice(
+                              product.price
+                            )}
+                          </span>
+
+                          {product.oldPrice && (
+                            <span className="old-price">
+                              {formatPrice(
+                                product.oldPrice
+                              )}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="product-actions">
+                          <button
+                            className="details-button"
+                            onClick={() =>
+                              setSelectedProduct(
+                                product
+                              )
+                            }
+                          >
+                            Ver producto
+                          </button>
+
+                          <button
+                            className="add-button"
+                            onClick={() =>
+                              addToCart(
+                                product
+                              )
+                            }
+                          >
+                            🛒 Agregar
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                }
+              )}
             </div>
           )}
         </section>
       </main>
 
-      {/* =====================================================
-          MENÚ HAMBURGUESA
-      ===================================================== */}
+      {/* =========================
+          WHATSAPP
+      ========================= */}
+
+      <div className="whatsapp-float">
+        <span className="whatsapp-label">
+          ¿Necesitas ayuda?
+        </span>
+
+        <button
+          className="whatsapp-button"
+          onClick={
+            openWhatsApp
+          }
+          aria-label="Atención al cliente por WhatsApp"
+          title="Atención al cliente"
+        >
+          <span>☏</span>
+        </button>
+      </div>
+
+      {/* =========================
+          MENÚ
+      ========================= */}
 
       {showMenu && (
         <div
           className="overlay"
-          onClick={() => setShowMenu(false)}
+          onClick={() =>
+            setShowMenu(false)
+          }
         >
           <aside
             className="menu-panel"
@@ -2472,16 +2893,92 @@ function App() {
 
             <button
               className="menu-item"
-              onClick={openLogin}
+              onClick={goHome}
+            >
+              🏠 Inicio
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                openAuth("login")
+              }
             >
               ✨ Mi cuenta
             </button>
 
             <button
               className="menu-item"
-              onClick={openLogin}
+              onClick={() =>
+                openAuth("login")
+              }
             >
               👤 Perfil
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                setShowMessages(
+                  true
+                )
+              }
+            >
+              💬 Centro de mensajes
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setShowPublish(
+                  true
+                );
+              }}
+            >
+              ➕ Publicar producto
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setShowCart(true);
+              }}
+            >
+              🛒 Mi carrito
+              {cartCount > 0
+                ? ` (${cartCount})`
+                : ""}
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() => {
+                setShowMenu(false);
+                setActiveCategory(
+                  "Todos"
+                );
+                document
+                  .getElementById(
+                    "productos"
+                  )
+                  ?.scrollIntoView({
+                    behavior:
+                      "smooth",
+                  });
+              }}
+            >
+              🛍️ Explorar productos
+            </button>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                openWhatsApp()
+              }
+            >
+              💚 Atención al cliente
             </button>
 
             <button
@@ -2493,37 +2990,6 @@ function App() {
               }
             >
               ⚙️ Configuración
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowCart(true);
-              }}
-            >
-              📦 Mis pedidos
-            </button>
-
-            {/* CENTRO DE MENSAJES REAL */}
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowMessages(true);
-              }}
-            >
-              💬 Centro de mensajes
-            </button>
-
-            <button
-              className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowPublish(true);
-              }}
-            >
-              ➕ Publicar producto
             </button>
 
             {user && (
@@ -2538,126 +3004,16 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
-          CENTRO DE MENSAJES
-      ===================================================== */}
-
-      {showMessages && (
-        <div
-          className="overlay center-overlay"
-          onClick={() =>
-            setShowMessages(false)
-          }
-        >
-          <div
-            className="modal messages-modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-            <div className="messages-header">
-              <div>
-                <h2>
-                  💬 Centro de mensajes
-                </h2>
-
-                <p>
-                  Comunícate con vendedores y soporte.
-                </p>
-              </div>
-
-              <button
-                className="close-button"
-                onClick={() =>
-                  setShowMessages(false)
-                }
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="messages-list">
-              <button
-                className="message-conversation"
-                onClick={() =>
-                  alert(
-                    "El chat con soporte estará disponible aquí."
-                  )
-                }
-              >
-                <div className="message-avatar">
-                  💬
-                </div>
-
-                <div>
-                  <strong>
-                    Soporte VaniDaxi
-                  </strong>
-
-                  <span>
-                    ¿Necesitas ayuda con tu compra?
-                  </span>
-                </div>
-
-                <span className="message-time">
-                  Ahora
-                </span>
-              </button>
-
-              <button
-                className="message-conversation"
-                onClick={() =>
-                  alert(
-                    "Tus conversaciones con vendedores aparecerán aquí."
-                  )
-                }
-              >
-                <div className="message-avatar">
-                  🛍️
-                </div>
-
-                <div>
-                  <strong>
-                    Vendedores
-                  </strong>
-
-                  <span>
-                    Aquí aparecerán tus conversaciones.
-                  </span>
-                </div>
-              </button>
-
-              <div className="empty">
-                <div style={{ fontSize: 42 }}>
-                  💌
-                </div>
-
-                <h3>
-                  Tus mensajes aparecerán aquí
-                </h3>
-
-                <p>
-                  Podrás comunicarte con vendedores y
-                  con el equipo de VaniDaxi.
-                </p>
-              </div>
-            </div>
-
-            <div className="messages-footer">
-              Centro de comunicación de VaniDaxi
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =====================================================
+      {/* =========================
           CARRITO
-      ===================================================== */}
+      ========================= */}
 
       {showCart && (
         <div
           className="overlay"
-          onClick={() => setShowCart(false)}
+          onClick={() =>
+            setShowCart(false)
+          }
         >
           <aside
             className="cart-panel"
@@ -2666,7 +3022,9 @@ function App() {
             }
           >
             <div className="cart-header">
-              <h2>🛒 Mi carrito</h2>
+              <h2>
+                🛒 Mi carrito
+              </h2>
 
               <button
                 className="close-button"
@@ -2679,20 +3037,25 @@ function App() {
             </div>
 
             <div className="cart-body">
-              {cart.length === 0 ? (
+              {cart.length ===
+              0 ? (
                 <div className="empty">
                   <div
-                    style={{ fontSize: 55 }}
+                    style={{
+                      fontSize: 55,
+                    }}
                   >
                     🛒
                   </div>
 
                   <h3>
-                    Tu carrito está vacío
+                    Tu carrito está
+                    vacío
                   </h3>
 
                   <p>
-                    Agrega productos para comenzar tu
+                    Agrega productos
+                    para comenzar tu
                     compra.
                   </p>
                 </div>
@@ -2713,7 +3076,9 @@ function App() {
                       </div>
 
                       <div>
-                        {formatPrice(item.price)}
+                        {formatPrice(
+                          item.price
+                        )}
                       </div>
 
                       <div className="quantity">
@@ -2729,7 +3094,9 @@ function App() {
                         </button>
 
                         <strong>
-                          {item.quantity}
+                          {
+                            item.quantity
+                          }
                         </strong>
 
                         <button
@@ -2763,7 +3130,9 @@ function App() {
             {cart.length > 0 && (
               <div className="cart-footer">
                 <div className="summary-row">
-                  <span>Subtotal</span>
+                  <span>
+                    Subtotal
+                  </span>
 
                   <strong>
                     {formatPrice(
@@ -2773,10 +3142,13 @@ function App() {
                 </div>
 
                 <div className="summary-row">
-                  <span>Envío</span>
+                  <span>
+                    Envío
+                  </span>
 
                   <strong>
-                    {shippingCost === 0
+                    {shippingCost ===
+                    0
                       ? "Gratis"
                       : formatPrice(
                           shippingCost
@@ -2785,10 +3157,14 @@ function App() {
                 </div>
 
                 <div className="summary-total">
-                  <span>Total</span>
+                  <span>
+                    Total
+                  </span>
 
                   <span>
-                    {formatPrice(cartTotal)}
+                    {formatPrice(
+                      cartTotal
+                    )}
                   </span>
                 </div>
 
@@ -2806,15 +3182,17 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
+      {/* =========================
           PRODUCTO
-      ===================================================== */}
+      ========================= */}
 
       {selectedProduct && (
         <div
           className="overlay center-overlay"
           onClick={() =>
-            setSelectedProduct(null)
+            setSelectedProduct(
+              null
+            )
           }
         >
           <div
@@ -2826,12 +3204,15 @@ function App() {
             <button
               className="close-button"
               style={{
-                position: "absolute",
+                position:
+                  "absolute",
                 right: 15,
                 top: 15,
               }}
               onClick={() =>
-                setSelectedProduct(null)
+                setSelectedProduct(
+                  null
+                )
               }
             >
               ✕
@@ -2839,17 +3220,34 @@ function App() {
 
             <img
               className="detail-image"
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
+              src={
+                selectedProduct.image
+              }
+              alt={
+                selectedProduct.name
+              }
             />
 
-            <h2 style={{ marginTop: 15 }}>
-              {selectedProduct.name}
+            <h2
+              style={{
+                marginTop: 15,
+              }}
+            >
+              {
+                selectedProduct.name
+              }
             </h2>
 
             <div className="rating">
-              ★ {selectedProduct.rating} ·{" "}
-              {selectedProduct.reviews} reseñas
+              ★{" "}
+              {
+                selectedProduct.rating
+              }{" "}
+              ·{" "}
+              {
+                selectedProduct.reviews
+              }{" "}
+              reseñas
             </div>
 
             <div className="detail-price">
@@ -2858,11 +3256,18 @@ function App() {
               )}
             </div>
 
-            <p style={{ fontSize: 13 }}>
-              {selectedProduct.description}
+            <p
+              style={{
+                fontSize: 13,
+              }}
+            >
+              {
+                selectedProduct.description
+              }
             </p>
 
-            {selectedProduct.specifications
+            {selectedProduct
+              .specifications
               ?.length > 0 && (
               <>
                 <h3>
@@ -2872,7 +3277,9 @@ function App() {
                 <ul className="specifications">
                   {selectedProduct.specifications.map(
                     (item) => (
-                      <li key={item}>
+                      <li
+                        key={item}
+                      >
                         {item}
                       </li>
                     )
@@ -2907,7 +3314,11 @@ function App() {
                   selectedProduct,
                   false
                 );
-                setSelectedProduct(null);
+
+                setSelectedProduct(
+                  null
+                );
+
                 setShowCart(true);
               }}
             >
@@ -2917,131 +3328,344 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
+      {/* =========================
           AUTENTICACIÓN
-      ===================================================== */}
+      ========================= */}
 
       {showAuth && (
         <div
           className="overlay center-overlay"
-          onClick={() => setShowAuth(false)}
+          onClick={() =>
+            setShowAuth(false)
+          }
         >
           <div
-            className="modal"
+            className="auth-modal"
             onClick={(e) =>
               e.stopPropagation()
             }
           >
-            <button
-              className="close-button"
-              style={{
-                position: "absolute",
-                right: 15,
-                top: 15,
-              }}
-              onClick={() =>
-                setShowAuth(false)
-              }
-            >
-              ✕
-            </button>
+            <div className="auth-visual">
+              <div className="auth-logo-icon">
+                🛍️
+              </div>
 
-            <h2>
-              {authMode === "login"
-                ? "Iniciar sesión"
-                : "Crear cuenta"}
-            </h2>
+              <h2>
+                {authMode ===
+                "login"
+                  ? "Bienvenido de nuevo"
+                  : "Únete a VaniDaxi"}
+              </h2>
 
-            <form
-              className="form"
-              onSubmit={handleAuth}
-            >
-              {authMode === "register" && (
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={authName}
-                  onChange={(e) =>
-                    setAuthName(
-                      e.target.value
-                    )
-                  }
-                  required
-                />
-              )}
+              <p>
+                {authMode ===
+                "login"
+                  ? "Inicia sesión para continuar disfrutando de todo lo que VaniDaxi tiene para ti."
+                  : "Crea tu cuenta y descubre una nueva forma de comprar y vender."}
+              </p>
 
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={authEmail}
-                onChange={(e) =>
-                  setAuthEmail(
-                    e.target.value
-                  )
-                }
-                required
-              />
-
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={authPassword}
-                onChange={(e) =>
-                  setAuthPassword(
-                    e.target.value
-                  )
-                }
-                required
-              />
-
-              {authMessage && (
-                <div className="message">
-                  {authMessage}
+              <div className="auth-benefits">
+                <div className="auth-benefit">
+                  <span className="auth-benefit-icon">
+                    🛒
+                  </span>
+                  Compra fácilmente
                 </div>
-              )}
 
+                <div className="auth-benefit">
+                  <span className="auth-benefit-icon">
+                    💬
+                  </span>
+                  Mantén tus mensajes
+                </div>
+
+                <div className="auth-benefit">
+                  <span className="auth-benefit-icon">
+                    ✨
+                  </span>
+                  Más funciones
+                </div>
+              </div>
+            </div>
+
+            <div className="auth-form-side">
               <button
-                className="primary-button"
-                disabled={loading}
+                className="close-button auth-close"
+                onClick={() =>
+                  setShowAuth(false)
+                }
               >
-                {loading
-                  ? "Procesando..."
-                  : authMode === "login"
-                  ? "Entrar"
-                  : "Crear cuenta"}
+                ✕
               </button>
 
-              <button
-                type="button"
-                className="auth-switch"
-                onClick={() => {
-                  setAuthMode(
-                    authMode === "login"
-                      ? "register"
-                      : "login"
-                  );
+              <div className="auth-heading">
+                <h2>
+                  {authMode ===
+                  "login"
+                    ? "Iniciar sesión"
+                    : "Crear cuenta"}
+                </h2>
 
-                  setAuthMessage("");
-                }}
+                <p>
+                  {authMode ===
+                  "login"
+                    ? "Accede a tu cuenta de VaniDaxi."
+                    : "Completa tus datos para comenzar."}
+                </p>
+              </div>
+
+              <form
+                className="form"
+                onSubmit={
+                  handleAuth
+                }
               >
-                {authMode === "login"
-                  ? "¿No tienes cuenta? Crear una"
-                  : "¿Ya tienes cuenta? Iniciar sesión"}
-              </button>
-            </form>
+                {authMode ===
+                  "register" && (
+                  <div className="auth-field">
+                    <span className="auth-field-icon">
+                      👤
+                    </span>
+
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      value={
+                        authName
+                      }
+                      onChange={(e) =>
+                        setAuthName(
+                          e.target.value
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="auth-field">
+                  <span className="auth-field-icon">
+                    ✉️
+                  </span>
+
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    value={
+                      authEmail
+                    }
+                    onChange={(e) =>
+                      setAuthEmail(
+                        e.target.value
+                      )
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <span className="auth-field-icon">
+                    🔒
+                  </span>
+
+                  <input
+                    type="password"
+                    placeholder="Contraseña"
+                    value={
+                      authPassword
+                    }
+                    onChange={(e) =>
+                      setAuthPassword(
+                        e.target.value
+                      )
+                    }
+                    required
+                  />
+                </div>
+
+                {authMessage && (
+                  <div className="message auth-message">
+                    {authMessage}
+                  </div>
+                )}
+
+                <button
+                  className="auth-submit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Procesando..."
+                    : authMode ===
+                      "login"
+                    ? "✨ Entrar a mi cuenta"
+                    : "🚀 Crear mi cuenta"}
+                </button>
+
+                <div className="auth-switch-box">
+                  {authMode ===
+                  "login"
+                    ? "¿Todavía no tienes una cuenta? "
+                    : "¿Ya tienes una cuenta? "}
+
+                  <button
+                    type="button"
+                    className="auth-switch"
+                    onClick={() => {
+                      setAuthMode(
+                        authMode ===
+                          "login"
+                          ? "register"
+                          : "login"
+                      );
+
+                      setAuthMessage(
+                        ""
+                      );
+                    }}
+                  >
+                    {authMode ===
+                    "login"
+                      ? "Crear cuenta"
+                      : "Iniciar sesión"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* =====================================================
+      {/* =========================
+          CENTRO DE MENSAJES
+      ========================= */}
+
+      {showMessages && (
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setShowMessages(
+              false
+            )
+          }
+        >
+          <div
+            className="messages-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="messages-header">
+              <h2>
+                💬 Centro de mensajes
+              </h2>
+
+              <button
+                className="close-button"
+                onClick={() =>
+                  setShowMessages(
+                    false
+                  )
+                }
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="messages-content">
+              <div className="message-welcome">
+                <h3>
+                  ¿En qué podemos ayudarte?
+                </h3>
+
+                <p>
+                  Desde aquí podrás
+                  consultar comunicaciones
+                  relacionadas con tus compras,
+                  ventas y atención al cliente.
+                </p>
+              </div>
+
+              <button
+                className="message-option"
+                onClick={() =>
+                  openWhatsApp()
+                }
+              >
+                <span className="message-option-icon">
+                  💚
+                </span>
+
+                <span>
+                  <strong>
+                    Atención al cliente
+                  </strong>
+
+                  <small>
+                    Habla con nosotros por
+                    WhatsApp.
+                  </small>
+                </span>
+              </button>
+
+              <button
+                className="message-option"
+                onClick={() =>
+                  openAuth("login")
+                }
+              >
+                <span className="message-option-icon">
+                  📦
+                </span>
+
+                <span>
+                  <strong>
+                    Mis pedidos
+                  </strong>
+
+                  <small>
+                    Inicia sesión para
+                    consultar tus pedidos.
+                  </small>
+                </span>
+              </button>
+
+              <button
+                className="message-option"
+                onClick={() =>
+                  openAuth("login")
+                }
+              >
+                <span className="message-option-icon">
+                  🏪
+                </span>
+
+                <span>
+                  <strong>
+                    Mis ventas
+                  </strong>
+
+                  <small>
+                    Accede a tu cuenta de
+                    vendedor.
+                  </small>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================
           PUBLICAR PRODUCTO
-      ===================================================== */}
+      ========================= */}
 
       {showPublish && (
         <div
           className="overlay center-overlay"
           onClick={() =>
-            setShowPublish(false)
+            setShowPublish(
+              false
+            )
           }
         >
           <div
@@ -3053,33 +3677,54 @@ function App() {
             <button
               className="close-button"
               style={{
-                position: "absolute",
+                position:
+                  "absolute",
                 right: 15,
                 top: 15,
               }}
               onClick={() =>
-                setShowPublish(false)
+                setShowPublish(
+                  false
+                )
               }
             >
               ✕
             </button>
 
             <h2>
-              Publicar producto
+              ➕ Publicar producto
             </h2>
+
+            <p
+              style={{
+                marginTop: -8,
+                marginBottom: 17,
+                color: "#777",
+                fontSize: 11,
+              }}
+            >
+              Agrega tu producto y
+              comienza a vender en
+              VaniDaxi.
+            </p>
 
             <form
               className="form"
-              onSubmit={handlePublish}
+              onSubmit={
+                handlePublish
+              }
             >
               <input
                 type="text"
                 placeholder="Nombre del producto"
-                value={newProduct.name}
+                value={
+                  newProduct.name
+                }
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    name: e.target.value,
+                    name: e.target
+                      .value,
                   })
                 }
                 required
@@ -3087,50 +3732,69 @@ function App() {
 
               <input
                 type="number"
-                placeholder="Precio"
-                value={newProduct.price}
+                placeholder="Precio en MXN"
+                min="1"
+                value={
+                  newProduct.price
+                }
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    price: e.target.value,
+                    price: e.target
+                      .value,
                   })
                 }
                 required
               />
 
               <select
-                value={newProduct.category}
+                value={
+                  newProduct.category
+                }
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    category: e.target.value,
+                    category:
+                      e.target
+                        .value,
                   })
                 }
               >
-                {categories.map((category) => (
-                  <option
-                    key={category.name}
-                    value={category.name}
-                  >
-                    {category.name}
-                  </option>
-                ))}
+                {categories.map(
+                  (category) => (
+                    <option
+                      key={
+                        category.name
+                      }
+                      value={
+                        category.name
+                      }
+                    >
+                      {
+                        category.name
+                      }
+                    </option>
+                  )
+                )}
               </select>
 
               <input
                 type="url"
                 placeholder="URL de la imagen"
-                value={newProduct.image}
+                value={
+                  newProduct.image
+                }
                 onChange={(e) =>
                   setNewProduct({
                     ...newProduct,
-                    image: e.target.value,
+                    image: e.target
+                      .value,
                   })
                 }
               />
 
               <textarea
-                placeholder="Descripción"
+                placeholder="Describe tu producto..."
                 value={
                   newProduct.description
                 }
@@ -3138,29 +3802,31 @@ function App() {
                   setNewProduct({
                     ...newProduct,
                     description:
-                      e.target.value,
+                      e.target
+                        .value,
                   })
                 }
               />
 
               <button className="primary-button">
-                Publicar producto
+                🚀 Publicar producto
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* =====================================================
-          CHECKOUT / PAGO
-      ===================================================== */}
+      {/* =========================
+          CHECKOUT
+      ========================= */}
 
       {showCheckout && (
         <div className="overlay checkout-overlay">
           <div className="checkout-page">
             <div className="checkout-header">
               <h1 className="checkout-title">
-                VaniDaxi · Finalizar compra
+                VaniDaxi · Finalizar
+                compra
               </h1>
 
               {!orderComplete && (
@@ -3186,18 +3852,18 @@ function App() {
                 </h2>
 
                 <p>
-                  Tu pedido fue registrado
-                  correctamente. En el siguiente
-                  paso se conectará el pago real
-                  y el vendedor recibirá la
-                  información correspondiente.
+                  Tu pedido fue
+                  registrado
+                  correctamente.
                 </p>
 
                 <p>
                   <strong>
                     Total del pedido:
                   </strong>{" "}
-                  {formatPrice(cartTotal)}
+                  {formatPrice(
+                    cartTotal
+                  )}
                 </p>
 
                 <button
@@ -3215,7 +3881,8 @@ function App() {
                 <div className="checkout-steps">
                   <div
                     className={`checkout-step ${
-                      checkoutStep >= 1
+                      checkoutStep >=
+                      1
                         ? "active"
                         : ""
                     }`}
@@ -3223,7 +3890,8 @@ function App() {
 
                   <div
                     className={`checkout-step ${
-                      checkoutStep >= 2
+                      checkoutStep >=
+                      2
                         ? "active"
                         : ""
                     }`}
@@ -3231,7 +3899,8 @@ function App() {
 
                   <div
                     className={`checkout-step ${
-                      checkoutStep >= 3
+                      checkoutStep >=
+                      3
                         ? "active"
                         : ""
                     }`}
@@ -3240,10 +3909,12 @@ function App() {
 
                 <div className="checkout-layout">
                   <div>
-                    {checkoutStep === 1 && (
+                    {checkoutStep ===
+                      1 && (
                       <div className="checkout-card">
                         <h3>
-                          📍 Datos de entrega
+                          📍 Datos de
+                          entrega
                         </h3>
 
                         <div className="checkout-grid">
@@ -3253,10 +3924,14 @@ function App() {
                             value={
                               checkout.name
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
-                                name: e.target.value,
+                                name: e
+                                  .target
+                                  .value,
                               })
                             }
                           />
@@ -3267,10 +3942,14 @@ function App() {
                             value={
                               checkout.phone
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
-                                phone: e.target.value,
+                                phone: e
+                                  .target
+                                  .value,
                               })
                             }
                           />
@@ -3281,11 +3960,15 @@ function App() {
                             value={
                               checkout.address
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
                                 address:
-                                  e.target.value,
+                                  e
+                                    .target
+                                    .value,
                               })
                             }
                           />
@@ -3296,10 +3979,14 @@ function App() {
                             value={
                               checkout.city
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
-                                city: e.target.value,
+                                city: e
+                                  .target
+                                  .value,
                               })
                             }
                           />
@@ -3310,10 +3997,15 @@ function App() {
                             value={
                               checkout.state
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
-                                state: e.target.value,
+                                state:
+                                  e
+                                    .target
+                                    .value,
                               })
                             }
                           />
@@ -3324,10 +4016,14 @@ function App() {
                             value={
                               checkout.zip
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
-                                zip: e.target.value,
+                                zip: e
+                                  .target
+                                  .value,
                               })
                             }
                           />
@@ -3338,11 +4034,15 @@ function App() {
                             value={
                               checkout.notes
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setCheckout({
                                 ...checkout,
                                 notes:
-                                  e.target.value,
+                                  e
+                                    .target
+                                    .value,
                               })
                             }
                           />
@@ -3353,7 +4053,8 @@ function App() {
                             marginTop: 20,
                           }}
                         >
-                          🚚 Tipo de entrega
+                          🚚 Tipo de
+                          entrega
                         </h3>
 
                         <button
@@ -3382,11 +4083,13 @@ function App() {
 
                           <span>
                             <strong>
-                              Envío estándar
+                              Envío
+                              estándar
                             </strong>
                             <br />
                             <small>
-                              Envío gratis
+                              Envío
+                              gratis
                             </small>
                           </span>
                         </button>
@@ -3417,7 +4120,8 @@ function App() {
 
                           <span>
                             <strong>
-                              Envío express
+                              Envío
+                              express
                             </strong>
                             <br />
                             <small>
@@ -3428,10 +4132,12 @@ function App() {
                       </div>
                     )}
 
-                    {checkoutStep === 2 && (
+                    {checkoutStep ===
+                      2 && (
                       <div className="checkout-card">
                         <h3>
-                          💳 Método de pago
+                          💳 Método de
+                          pago
                         </h3>
 
                         <button
@@ -3444,7 +4150,8 @@ function App() {
                           onClick={() =>
                             setCheckout({
                               ...checkout,
-                              payment: "card",
+                              payment:
+                                "card",
                             })
                           }
                         >
@@ -3461,8 +4168,10 @@ function App() {
                             💳 Tarjeta
                             <br />
                             <small>
-                              Visa, Mastercard y
-                              otras tarjetas
+                              Visa,
+                              Mastercard y
+                              otras
+                              tarjetas
                             </small>
                           </span>
                         </button>
@@ -3492,11 +4201,14 @@ function App() {
                           />
 
                           <span>
-                            💙 Mercado Pago
+                            💙 Mercado
+                            Pago
                             <br />
                             <small>
-                              Pago mediante
-                              Mercado Pago
+                              Pago
+                              mediante
+                              Mercado
+                              Pago
                             </small>
                           </span>
                         </button>
@@ -3511,7 +4223,8 @@ function App() {
                           onClick={() =>
                             setCheckout({
                               ...checkout,
-                              payment: "cash",
+                              payment:
+                                "cash",
                             })
                           }
                         >
@@ -3525,30 +4238,38 @@ function App() {
                           />
 
                           <span>
-                            💵 Pago disponible
-                            según el vendedor
+                            💵 Pago
+                            disponible
+                            según el
+                            vendedor
                           </span>
                         </button>
                       </div>
                     )}
 
-                    {checkoutStep === 3 && (
+                    {checkoutStep ===
+                      3 && (
                       <div className="checkout-card">
                         <h3>
-                          🧾 Confirmar pedido
+                          🧾 Confirmar
+                          pedido
                         </h3>
 
                         <p
                           style={{
                             fontSize: 12,
-                            color: "#666",
+                            color:
+                              "#666",
                           }}
                         >
-                          Revisa que los datos de
-                          entrega, productos,
-                          envío y método de pago
-                          sean correctos antes de
-                          confirmar.
+                          Revisa que los
+                          datos de
+                          entrega,
+                          productos,
+                          envío y
+                          método de
+                          pago sean
+                          correctos.
                         </p>
 
                         <div
@@ -3558,23 +4279,37 @@ function App() {
                               "#fafafa",
                             borderRadius: 10,
                             fontSize: 12,
-                            lineHeight: 1.7,
+                            lineHeight:
+                              1.7,
                           }}
                         >
                           <strong>
                             Entrega
                           </strong>
                           <br />
-                          {checkout.name}
+                          {
+                            checkout.name
+                          }
                           <br />
-                          {checkout.address}
+                          {
+                            checkout.address
+                          }
                           <br />
-                          {checkout.city},{" "}
-                          {checkout.state}{" "}
-                          {checkout.zip}
+                          {
+                            checkout.city
+                          }
+                          ,{" "}
+                          {
+                            checkout.state
+                          }{" "}
+                          {
+                            checkout.zip
+                          }
                           <br />
                           Tel.{" "}
-                          {checkout.phone}
+                          {
+                            checkout.phone
+                          }
                         </div>
 
                         <div
@@ -3612,12 +4347,14 @@ function App() {
                             resetCheckout();
                           } else {
                             setCheckoutStep(
-                              checkoutStep - 1
+                              checkoutStep -
+                                1
                             );
                           }
                         }}
                       >
-                        {checkoutStep === 1
+                        {checkoutStep ===
+                        1
                           ? "Cancelar"
                           : "Regresar"}
                       </button>
@@ -3628,7 +4365,8 @@ function App() {
                           handleCheckoutNext
                         }
                       >
-                        {checkoutStep === 3
+                        {checkoutStep ===
+                        3
                           ? "Confirmar pedido"
                           : "Continuar"}
                       </button>
@@ -3640,30 +4378,41 @@ function App() {
                       Resumen de compra
                     </h3>
 
-                    {cart.map((item) => (
-                      <div
-                        className="checkout-product"
-                        key={item.id}
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                        />
+                    {cart.map(
+                      (item) => (
+                        <div
+                          className="checkout-product"
+                          key={item.id}
+                        >
+                          <img
+                            src={
+                              item.image
+                            }
+                            alt={
+                              item.name
+                            }
+                          />
 
-                        <div className="checkout-product-info">
-                          <strong>
-                            {item.name}
-                          </strong>
+                          <div className="checkout-product-info">
+                            <strong>
+                              {
+                                item.name
+                              }
+                            </strong>
 
-                          <div>
-                            {item.quantity} ×{" "}
-                            {formatPrice(
-                              item.price
-                            )}
+                            <div>
+                              {
+                                item.quantity
+                              }{" "}
+                              ×{" "}
+                              {formatPrice(
+                                item.price
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
 
                     <div
                       style={{
