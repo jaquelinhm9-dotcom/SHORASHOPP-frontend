@@ -10,41 +10,56 @@ const categories = [
     name: "Ropa y Moda",
     image:
       "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=85",
+    keywords: "ropa moda vestidos camisas pantalones zapatos tenis bolsas accesorios",
   },
   {
     name: "Tecnología",
     image:
       "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "tecnologia celular teléfono samsung iphone pantalla computadora laptop tablet audifonos smartwatch electronica",
   },
   {
     name: "Hogar y Vida",
     image:
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "hogar casa cocina muebles decoración electrodomésticos licuadora refrigerador",
   },
   {
     name: "Belleza y Salud",
     image:
       "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "belleza salud maquillaje skincare cabello perfume cuidado personal",
   },
   {
     name: "Autos y Motos",
     image:
       "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "auto autos carro carros moto motos refacciones accesorios vehículos llantas",
   },
   {
     name: "Comida",
     image:
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "comida alimentos restaurante comida preparada postres bebidas tacos pizza",
   },
   {
     name: "Juguetes",
     image:
       "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "juguetes niños juegos muñecas videojuegos entretenimiento",
   },
   {
     name: "Deportes",
     image:
       "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=85",
+    keywords:
+      "deportes futbol gimnasio ejercicio bicicletas tenis balones entrenamiento",
   },
 ];
 
@@ -174,29 +189,215 @@ function loadStorage(key, fallback) {
   }
 }
 
+/* =========================================================
+   BÚSQUEDA INTELIGENTE
+   ========================================================= */
+
+function normalizeText(value = "") {
+  return value
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s.-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function singularize(word) {
+  if (word.length > 4 && word.endsWith("es")) {
+    return word.slice(0, -2);
+  }
+
+  if (word.length > 3 && word.endsWith("s")) {
+    return word.slice(0, -1);
+  }
+
+  return word;
+}
+
+function getSearchWords(text) {
+  return normalizeText(text)
+    .split(" ")
+    .filter(Boolean)
+    .map(singularize);
+}
+
+function levenshtein(a, b) {
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const previous = Array.from(
+    { length: b.length + 1 },
+    (_, i) => i
+  );
+
+  for (let i = 1; i <= a.length; i++) {
+    let current = [i];
+
+    for (let j = 1; j <= b.length; j++) {
+      current[j] =
+        a[i - 1] === b[j - 1]
+          ? previous[j - 1]
+          : Math.min(
+              previous[j - 1] + 1,
+              current[j - 1] + 1,
+              previous[j - 1] + 1
+            );
+    }
+
+    for (let j = 0; j <= b.length; j++) {
+      previous[j] = current[j];
+    }
+  }
+
+  return previous[b.length];
+}
+
+function wordMatches(queryWord, text) {
+  if (!queryWord || !text) return false;
+
+  const normalized = normalizeText(text);
+  const words = normalized.split(" ");
+
+  if (normalized.includes(queryWord)) return true;
+
+  const closeWord = words.some((word) => {
+    if (word.includes(queryWord) || queryWord.includes(word)) {
+      return true;
+    }
+
+    if (queryWord.length >= 4 && word.length >= 4) {
+      const distance = levenshtein(queryWord, word);
+      return distance <= (queryWord.length >= 7 ? 2 : 1);
+    }
+
+    return false;
+  });
+
+  return closeWord;
+}
+
+function getProductSearchScore(product, searchText) {
+  const queryWords = getSearchWords(searchText);
+
+  if (!queryWords.length) return 1;
+
+  const categoryInfo =
+    categories.find((item) => item.name === product.category)
+      ?.keywords || "";
+
+  const searchable = normalizeText(
+    [
+      product.name,
+      product.category,
+      product.description,
+      ...(product.specifications || []),
+      categoryInfo,
+    ].join(" ")
+  );
+
+  const searchableWords = searchable.split(" ");
+
+  let score = 0;
+
+  queryWords.forEach((queryWord) => {
+    if (!queryWord) return;
+
+    if (normalizeText(product.name).includes(queryWord)) {
+      score += 10;
+    }
+
+    if (normalizeText(product.category).includes(queryWord)) {
+      score += 7;
+    }
+
+    if (
+      normalizeText(product.description).includes(queryWord)
+    ) {
+      score += 5;
+    }
+
+    if (
+      (product.specifications || []).some((spec) =>
+        normalizeText(spec).includes(queryWord)
+      )
+    ) {
+      score += 4;
+    }
+
+    if (searchable.includes(queryWord)) {
+      score += 3;
+    }
+
+    if (
+      searchableWords.some((word) =>
+        wordMatches(queryWord, word)
+      )
+    ) {
+      score += 2;
+    }
+  });
+
+  /*
+   * Si la búsqueda contiene términos típicos de una categoría,
+   * también damos relevancia a esa categoría aunque el producto
+   * no tenga exactamente las palabras escritas.
+   */
+  categories.forEach((category) => {
+    const categoryWords = getSearchWords(
+      `${category.name} ${category.keywords}`
+    );
+
+    const categoryHits = queryWords.filter((queryWord) =>
+      categoryWords.some((categoryWord) =>
+        wordMatches(queryWord, categoryWord)
+      )
+    ).length;
+
+    if (
+      category.name === product.category &&
+      categoryHits > 0
+    ) {
+      score += categoryHits * 2;
+    }
+  });
+
+  return score;
+}
+
 function App() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState(initialProducts);
-  const [cart, setCart] = useState(() => loadStorage(CART_KEY, []));
+
+  const [cart, setCart] = useState(() =>
+    loadStorage(CART_KEY, [])
+  );
+
   const [favorites, setFavorites] = useState(() =>
     loadStorage(FAVORITES_KEY, [])
   );
 
-  const [activeCategory, setActiveCategory] = useState("Todos");
+  const [activeCategory, setActiveCategory] =
+    useState("Todos");
+
   const [search, setSearch] = useState("");
 
   const [showMenu, setShowMenu] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showMessages, setShowMessages] = useState(false);
+  const [selectedProduct, setSelectedProduct] =
+    useState(null);
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [orderComplete, setOrderComplete] = useState(false);
 
   const [user, setUser] = useState(null);
+
   const [authMode, setAuthMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -234,9 +435,11 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
@@ -246,25 +449,37 @@ function App() {
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    localStorage.setItem(
+      FAVORITES_KEY,
+      JSON.stringify(favorites)
+    );
   }, [favorites]);
 
+  /*
+   * Búsqueda relacionada:
+   * "pantallas Samsung A16" no exige que el producto tenga
+   * exactamente esa frase. Se buscan palabras relacionadas
+   * y se ordenan los resultados por relevancia.
+   */
   const filteredProducts = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = search.trim();
 
-    return products.filter((product) => {
-      const categoryMatch =
+    const categoryFiltered = products.filter(
+      (product) =>
         activeCategory === "Todos" ||
-        product.category === activeCategory;
+        product.category === activeCategory
+    );
 
-      const searchMatch =
-        !term ||
-        product.name.toLowerCase().includes(term) ||
-        product.category.toLowerCase().includes(term) ||
-        product.description.toLowerCase().includes(term);
+    if (!term) return categoryFiltered;
 
-      return categoryMatch && searchMatch;
-    });
+    return categoryFiltered
+      .map((product) => ({
+        product,
+        score: getProductSearchScore(product, term),
+      }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map((item) => item.product);
   }, [products, activeCategory, search]);
 
   const cartCount = cart.reduce(
@@ -278,13 +493,17 @@ function App() {
   );
 
   const shippingCost =
-    checkout.delivery === "express" && cart.length > 0 ? 99 : 0;
+    checkout.delivery === "express" && cart.length > 0
+      ? 99
+      : 0;
 
   const cartTotal = cartSubtotal + shippingCost;
 
   const addToCart = (product, openCart = true) => {
     setCart((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const existing = current.find(
+        (item) => item.id === product.id
+      );
 
       if (existing) {
         return current.map((item) =>
@@ -363,6 +582,20 @@ function App() {
     setShowCheckout(true);
   };
 
+  const openLogin = () => {
+    setAuthMode("login");
+    setAuthMessage("");
+    setShowMenu(false);
+    setShowAuth(true);
+  };
+
+  const openRegister = () => {
+    setAuthMode("register");
+    setAuthMessage("");
+    setShowMenu(false);
+    setShowAuth(true);
+  };
+
   const handleAuth = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -370,15 +603,16 @@ function App() {
 
     try {
       if (authMode === "register") {
-        const { data, error } = await supabase.auth.signUp({
-          email: authEmail,
-          password: authPassword,
-          options: {
-            data: {
-              full_name: authName,
+        const { data, error } =
+          await supabase.auth.signUp({
+            email: authEmail,
+            password: authPassword,
+            options: {
+              data: {
+                full_name: authName,
+              },
             },
-          },
-        });
+          });
 
         if (error) throw error;
 
@@ -404,22 +638,28 @@ function App() {
       }
     } catch (error) {
       const message = error?.message || "";
+      const lower = message.toLowerCase();
 
-      if (
-        message
-          .toLowerCase()
-          .includes("invalid login credentials")
-      ) {
-        setAuthMessage("Correo o contraseña incorrectos.");
+      if (lower.includes("invalid login credentials")) {
+        setAuthMessage(
+          "Correo o contraseña incorrectos."
+        );
       } else if (
-        message.toLowerCase().includes("email not confirmed")
+        lower.includes("email not confirmed")
       ) {
         setAuthMessage(
           "Primero confirma tu correo electrónico."
         );
+      } else if (
+        lower.includes("user already registered")
+      ) {
+        setAuthMessage(
+          "Este correo ya tiene una cuenta. Intenta iniciar sesión."
+        );
       } else {
         setAuthMessage(
-          message || "No fue posible completar la operación."
+          message ||
+            "No fue posible completar la operación."
         );
       }
     } finally {
@@ -456,7 +696,10 @@ function App() {
       specifications: [],
     };
 
-    setProducts((current) => [product, ...current]);
+    setProducts((current) => [
+      product,
+      ...current,
+    ]);
 
     setNewProduct({
       name: "",
@@ -479,7 +722,9 @@ function App() {
         !checkout.state ||
         !checkout.zip
       ) {
-        alert("Completa todos los datos de entrega.");
+        alert(
+          "Completa todos los datos de entrega."
+        );
         return;
       }
 
@@ -535,9 +780,9 @@ function App() {
           background: #fff;
         }
 
-        /* =========================
-           BARRA SUPERIOR
-        ========================= */
+        /* =====================================================
+           HEADER
+        ===================================================== */
 
         .top-header {
           position: sticky;
@@ -554,25 +799,8 @@ function App() {
           margin: auto;
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 9px;
           padding: 7px 0;
-        }
-
-        .brand {
-          flex: 0 0 auto;
-          text-decoration: none;
-          font-size: 23px;
-          font-weight: 900;
-          letter-spacing: -1px;
-          background: linear-gradient(
-            90deg,
-            #ef233c,
-            #d414c9,
-            #6d28d9
-          );
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
         }
 
         .menu-button {
@@ -593,11 +821,29 @@ function App() {
           place-items: center;
         }
 
+        .brand {
+          flex: 0 0 auto;
+          text-decoration: none;
+          font-size: 23px;
+          font-weight: 900;
+          letter-spacing: -1px;
+          background: linear-gradient(
+            90deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          white-space: nowrap;
+        }
+
         .search-box {
           flex: 1;
           height: 39px;
           min-width: 0;
-          max-width: 540px;
+          max-width: 560px;
           margin-left: auto;
           margin-right: auto;
           display: flex;
@@ -616,8 +862,13 @@ function App() {
           font-size: 13px;
         }
 
+        .search-box input::placeholder {
+          color: #999;
+        }
+
         .search-box button {
           width: 43px;
+          flex: 0 0 43px;
           border: 0;
           color: white;
           background: linear-gradient(
@@ -626,12 +877,20 @@ function App() {
             #d414c9,
             #6d28d9
           );
+          font-size: 19px;
         }
 
+        /*
+         * CUENTA Y CARRITO:
+         * siempre quedan a la DERECHA, separados del nombre.
+         */
         .header-actions {
           display: flex;
+          align-items: center;
+          justify-content: flex-end;
           gap: 7px;
           flex: 0 0 auto;
+          margin-left: 2px;
         }
 
         .header-action {
@@ -642,6 +901,12 @@ function App() {
           background: #f5f5f7;
           font-size: 18px;
           position: relative;
+          display: grid;
+          place-items: center;
+        }
+
+        .header-action:hover {
+          background: #eeeeF2;
         }
 
         .cart-count {
@@ -663,9 +928,9 @@ function App() {
         .category-bar {
           width: min(1180px, calc(100% - 24px));
           margin: auto;
-          padding: 0 0 8px;
+          padding: 0 0 7px;
           display: flex;
-          gap: 7px;
+          gap: 6px;
           overflow-x: auto;
           scrollbar-width: none;
         }
@@ -674,14 +939,18 @@ function App() {
           display: none;
         }
 
+        /*
+         * CATEGORÍAS DE LA BARRA SUPERIOR:
+         * más pequeñas que antes.
+         */
         .category-pill {
           flex: 0 0 auto;
           border: 1px solid #e4e4e4;
           background: #fff;
           color: #444;
-          border-radius: 18px;
-          padding: 6px 12px;
-          font-size: 11px;
+          border-radius: 16px;
+          padding: 5px 10px;
+          font-size: 10px;
           white-space: nowrap;
         }
 
@@ -697,9 +966,9 @@ function App() {
           );
         }
 
-        /* =========================
-           CONTENIDO CENTRAL
-        ========================= */
+        /* =====================================================
+           CONTENIDO
+        ===================================================== */
 
         .page-content {
           width: min(1180px, calc(100% - 24px));
@@ -707,10 +976,10 @@ function App() {
         }
 
         .hero {
-          margin: 14px 0;
-          min-height: 185px;
+          margin: 13px 0;
+          min-height: 180px;
           border-radius: 21px;
-          padding: 28px 30px;
+          padding: 27px 30px;
           color: white;
           background: linear-gradient(
             110deg,
@@ -751,19 +1020,19 @@ function App() {
           margin-right: 25px;
         }
 
-        /* =========================
-           TARJETAS SUPERIORES
-        ========================= */
+        /* =====================================================
+           TARJETAS
+        ===================================================== */
 
         .top-cards {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 10px;
-          margin: 12px 0 22px;
+          margin: 11px 0 20px;
         }
 
         .top-card {
-          height: 94px;
+          height: 90px;
           position: relative;
           overflow: hidden;
           border-radius: 14px;
@@ -783,7 +1052,7 @@ function App() {
         .top-card-overlay {
           position: absolute;
           inset: 0;
-          padding: 13px;
+          padding: 12px;
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
@@ -804,24 +1073,24 @@ function App() {
           margin-top: 2px;
         }
 
-        /* =========================
-           CATEGORÍAS
-        ========================= */
+        /* =====================================================
+           SECCIONES
+        ===================================================== */
 
         .section {
-          margin: 20px 0;
+          margin: 18px 0;
         }
 
         .section-title {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
 
         .section-title h2 {
           margin: 0;
-          font-size: 21px;
+          font-size: 20px;
         }
 
         .gradient-text {
@@ -836,51 +1105,56 @@ function App() {
           color: transparent;
         }
 
+        /* =====================================================
+           CATEGORÍAS GRANDES:
+           ahora son compactas, no ocupan media pantalla.
+        ===================================================== */
+
         .categories-grid {
           display: grid;
           grid-template-columns: repeat(8, 1fr);
-          gap: 9px;
+          gap: 8px;
         }
 
         .category-card {
           padding: 0;
           overflow: hidden;
           border: 1px solid #eee;
-          border-radius: 14px;
+          border-radius: 12px;
           background: white;
           text-align: center;
           transition: .2s;
         }
 
         .category-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 7px 22px rgba(0,0,0,.09);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 17px rgba(0,0,0,.08);
         }
 
         .category-image {
           width: 100%;
-          aspect-ratio: 1 / 1;
+          aspect-ratio: 1 / .72;
           object-fit: cover;
           display: block;
         }
 
         .category-name {
           display: block;
-          padding: 8px 3px 9px;
-          font-size: 10px;
+          padding: 6px 3px 7px;
+          font-size: 9px;
           font-weight: 800;
-          line-height: 1.15;
+          line-height: 1.1;
         }
 
-        /* =========================
+        /* =====================================================
            PROMOCIÓN
-        ========================= */
+        ===================================================== */
 
         .promo-card {
-          min-height: 70px;
+          min-height: 68px;
           border: 1px solid #eee;
           border-radius: 15px;
-          padding: 13px 17px;
+          padding: 12px 16px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -916,9 +1190,9 @@ function App() {
           white-space: nowrap;
         }
 
-        /* =========================
+        /* =====================================================
            PRODUCTOS
-        ========================= */
+        ===================================================== */
 
         .products-grid {
           display: grid;
@@ -1040,9 +1314,9 @@ function App() {
           );
         }
 
-        /* =========================
+        /* =====================================================
            OVERLAYS
-        ========================= */
+        ===================================================== */
 
         .overlay {
           position: fixed;
@@ -1058,9 +1332,9 @@ function App() {
           padding: 15px;
         }
 
-        /* =========================
-           MENÚ HAMBURGUESA
-        ========================= */
+        /* =====================================================
+           MENÚ
+        ===================================================== */
 
         .menu-panel {
           width: min(360px, 88vw);
@@ -1073,12 +1347,8 @@ function App() {
         }
 
         @keyframes menuIn {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
         }
 
         .menu-head {
@@ -1133,9 +1403,9 @@ function App() {
           color: white;
         }
 
-        /* =========================
-           CARRITO — PANEL COMPLETO
-        ========================= */
+        /* =====================================================
+           CARRITO
+        ===================================================== */
 
         .cart-panel {
           width: min(520px, 100%);
@@ -1149,12 +1419,8 @@ function App() {
         }
 
         @keyframes cartIn {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
         }
 
         .cart-header {
@@ -1260,9 +1526,9 @@ function App() {
           font-weight: 900;
         }
 
-        /* =========================
+        /* =====================================================
            MODALES
-        ========================= */
+        ===================================================== */
 
         .modal {
           width: min(540px, 100%);
@@ -1343,9 +1609,107 @@ function App() {
           font-size: 13px;
         }
 
-        /* =========================
+        /* =====================================================
+           CENTRO DE MENSAJES
+        ===================================================== */
+
+        .messages-modal {
+          width: min(620px, 100%);
+          height: min(650px, 88vh);
+          padding: 0;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .messages-header {
+          min-height: 70px;
+          padding: 13px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid #eee;
+          background: white;
+        }
+
+        .messages-header h2 {
+          margin: 0;
+          font-size: 20px;
+        }
+
+        .messages-header p {
+          margin: 3px 0 0;
+          color: #888;
+          font-size: 10px;
+        }
+
+        .messages-list {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px;
+          background: #fafafa;
+        }
+
+        .message-conversation {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border: 1px solid #eee;
+          background: white;
+          border-radius: 13px;
+          padding: 13px;
+          margin-bottom: 9px;
+          text-align: left;
+        }
+
+        .message-avatar {
+          width: 43px;
+          height: 43px;
+          flex: 0 0 43px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          color: white;
+          font-size: 20px;
+          background: linear-gradient(
+            135deg,
+            #ef233c,
+            #d414c9,
+            #6d28d9
+          );
+        }
+
+        .message-conversation strong {
+          display: block;
+          font-size: 13px;
+          margin-bottom: 3px;
+        }
+
+        .message-conversation span {
+          color: #777;
+          font-size: 11px;
+        }
+
+        .message-time {
+          margin-left: auto;
+          color: #aaa;
+          font-size: 9px;
+          white-space: nowrap;
+        }
+
+        .messages-footer {
+          padding: 12px 16px;
+          border-top: 1px solid #eee;
+          background: white;
+          font-size: 11px;
+          color: #777;
+          text-align: center;
+        }
+
+        /* =====================================================
            CHECKOUT
-        ========================= */
+        ===================================================== */
 
         .checkout-overlay {
           align-items: stretch;
@@ -1535,9 +1899,9 @@ function App() {
           color: #777;
         }
 
-        /* =========================
+        /* =====================================================
            RESPONSIVO
-        ========================= */
+        ===================================================== */
 
         @media (max-width: 900px) {
           .categories-grid {
@@ -1560,11 +1924,10 @@ function App() {
         @media (max-width: 650px) {
           .header-main {
             min-height: 52px;
-            flex-wrap: wrap;
-          }
-
-          .brand {
-            font-size: 20px;
+            display: grid;
+            grid-template-columns: 36px 1fr auto;
+            gap: 7px;
+            padding: 7px 0;
           }
 
           .menu-button,
@@ -1573,10 +1936,26 @@ function App() {
             height: 36px;
           }
 
+          .brand {
+            font-size: 20px;
+          }
+
+          /*
+           * En móvil:
+           * menú + VaniDaxi + cuenta/carrito arriba.
+           * búsqueda queda debajo.
+           */
+          .header-actions {
+            grid-column: 3;
+            grid-row: 1;
+          }
+
           .search-box {
-            order: 5;
-            flex-basis: 100%;
+            grid-column: 1 / -1;
+            grid-row: 2;
+            width: 100%;
             max-width: none;
+            margin: 0;
           }
 
           .top-header {
@@ -1606,8 +1985,13 @@ function App() {
             gap: 7px;
           }
 
+          .category-image {
+            aspect-ratio: 1 / .8;
+          }
+
           .category-name {
-            font-size: 9px;
+            font-size: 8px;
+            padding: 5px 2px 6px;
           }
 
           .products-grid {
@@ -1631,6 +2015,10 @@ function App() {
           .checkout-page {
             padding: 13px;
           }
+
+          .messages-modal {
+            height: 90vh;
+          }
         }
 
         @media (max-width: 390px) {
@@ -1638,19 +2026,28 @@ function App() {
             font-size: 18px;
           }
 
+          .header-actions {
+            gap: 4px;
+          }
+
+          .header-action {
+            width: 34px;
+            height: 34px;
+          }
+
           .categories-grid {
             gap: 5px;
           }
 
           .category-name {
-            font-size: 8px;
+            font-size: 7px;
           }
         }
       `}</style>
 
-      {/* =========================
+      {/* =====================================================
           BARRA SUPERIOR
-      ========================= */}
+      ===================================================== */}
 
       <header className="top-header">
         <div className="header-main">
@@ -1670,19 +2067,32 @@ function App() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar productos..."
+              placeholder="Buscar productos, marcas, modelos..."
+              aria-label="Buscar productos"
             />
-            <button>⌕</button>
+
+            <button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("productos")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  })
+              }
+              aria-label="Buscar"
+            >
+              ⌕
+            </button>
           </div>
 
+          {/* CUENTA Y CARRITO A LA DERECHA */}
           <div className="header-actions">
             <button
               className="header-action"
-              onClick={() => {
-                setAuthMode("login");
-                setShowAuth(true);
-              }}
+              onClick={openLogin}
               title="Mi cuenta"
+              aria-label="Mi cuenta"
             >
               ✨
             </button>
@@ -1691,8 +2101,10 @@ function App() {
               className="header-action"
               onClick={() => setShowCart(true)}
               title="Carrito"
+              aria-label="Carrito"
             >
               🛒
+
               {cartCount > 0 && (
                 <span className="cart-count">
                   {cartCount}
@@ -1705,7 +2117,9 @@ function App() {
         <div className="category-bar">
           <button
             className={`category-pill ${
-              activeCategory === "Todos" ? "active" : ""
+              activeCategory === "Todos"
+                ? "active"
+                : ""
             }`}
             onClick={() => setActiveCategory("Todos")}
           >
@@ -1716,7 +2130,9 @@ function App() {
             <button
               key={category.name}
               className={`category-pill ${
-                activeCategory === category.name ? "active" : ""
+                activeCategory === category.name
+                  ? "active"
+                  : ""
               }`}
               onClick={() =>
                 setActiveCategory(category.name)
@@ -1729,14 +2145,17 @@ function App() {
       </header>
 
       <main className="page-content">
-        {/* HERO */}
+        {/* =====================================================
+            HERO
+        ===================================================== */}
 
         <section className="hero">
           <div>
             <h1>Todo en un solo lugar</h1>
+
             <p>
-              Compra, vende y descubre productos de diferentes
-              categorías.
+              Compra, vende y descubre productos de
+              diferentes categorías.
             </p>
 
             <button
@@ -1756,7 +2175,9 @@ function App() {
           <div className="hero-icon">🛍️</div>
         </section>
 
-        {/* TARJETAS SUPERIORES */}
+        {/* =====================================================
+            TARJETAS SUPERIORES
+        ===================================================== */}
 
         <section className="top-cards">
           {topCards.map((card) => (
@@ -1767,6 +2188,7 @@ function App() {
                 if (card.title === "Ofertas") {
                   setSearch("");
                   setActiveCategory("Todos");
+
                   document
                     .getElementById("productos")
                     ?.scrollIntoView({
@@ -1775,6 +2197,8 @@ function App() {
                 }
 
                 if (card.title === "Novedades") {
+                  setSearch("");
+
                   document
                     .getElementById("productos")
                     ?.scrollIntoView({
@@ -1785,9 +2209,20 @@ function App() {
                 if (card.title === "Vendedores") {
                   setShowPublish(true);
                 }
+
+                if (card.title === "Envíos") {
+                  document
+                    .getElementById("productos")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                }
               }}
             >
-              <img src={card.image} alt={card.title} />
+              <img
+                src={card.image}
+                alt={card.title}
+              />
 
               <span className="top-card-overlay">
                 <span className="top-card-title">
@@ -1802,7 +2237,9 @@ function App() {
           ))}
         </section>
 
-        {/* CATEGORÍAS */}
+        {/* =====================================================
+            CATEGORÍAS
+        ===================================================== */}
 
         <section className="section">
           <div className="section-title">
@@ -1841,7 +2278,9 @@ function App() {
           </div>
         </section>
 
-        {/* REGISTRO */}
+        {/* =====================================================
+            REGISTRO
+        ===================================================== */}
 
         <section className="section">
           <div className="promo-card">
@@ -1858,22 +2297,26 @@ function App() {
 
             <button
               className="promo-button"
-              onClick={() => {
-                setAuthMode("register");
-                setShowAuth(true);
-              }}
+              onClick={openRegister}
             >
               Registrarme
             </button>
           </div>
         </section>
 
-        {/* PRODUCTOS */}
+        {/* =====================================================
+            PRODUCTOS
+        ===================================================== */}
 
-        <section className="section" id="productos">
+        <section
+          className="section"
+          id="productos"
+        >
           <div className="section-title">
             <h2 className="gradient-text">
-              {activeCategory === "Todos"
+              {search.trim()
+                ? `Resultados para "${search}"`
+                : activeCategory === "Todos"
                 ? "Productos destacados"
                 : activeCategory}
             </h2>
@@ -1892,16 +2335,25 @@ function App() {
 
           {filteredProducts.length === 0 ? (
             <div className="empty">
-              <h3>No encontramos productos</h3>
+              <div style={{ fontSize: 45 }}>
+                🔎
+              </div>
+
+              <h3>
+                No encontramos productos
+              </h3>
+
               <p>
-                Prueba con otra búsqueda o categoría.
+                Prueba con otras palabras, una marca,
+                modelo o categoría.
               </p>
             </div>
           ) : (
             <div className="products-grid">
               {filteredProducts.map((product) => {
                 const favorite = favorites.some(
-                  (item) => item.id === product.id
+                  (item) =>
+                    item.id === product.id
                 );
 
                 return (
@@ -1928,6 +2380,7 @@ function App() {
                         onClick={() =>
                           toggleFavorite(product)
                         }
+                        aria-label="Agregar a favoritos"
                       >
                         {favorite ? "❤️" : "♡"}
                       </button>
@@ -1945,12 +2398,16 @@ function App() {
 
                       <div>
                         <span className="price">
-                          {formatPrice(product.price)}
+                          {formatPrice(
+                            product.price
+                          )}
                         </span>
 
                         {product.oldPrice && (
                           <span className="old-price">
-                            {formatPrice(product.oldPrice)}
+                            {formatPrice(
+                              product.oldPrice
+                            )}
                           </span>
                         )}
                       </div>
@@ -1959,7 +2416,9 @@ function App() {
                         <button
                           className="details-button"
                           onClick={() =>
-                            setSelectedProduct(product)
+                            setSelectedProduct(
+                              product
+                            )
                           }
                         >
                           Ver producto
@@ -1983,9 +2442,9 @@ function App() {
         </section>
       </main>
 
-      {/* =========================
+      {/* =====================================================
           MENÚ HAMBURGUESA
-      ========================= */}
+      ===================================================== */}
 
       {showMenu && (
         <div
@@ -1994,14 +2453,18 @@ function App() {
         >
           <aside
             className="menu-panel"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
             <div className="menu-head">
               <h2>VaniDaxi</h2>
 
               <button
                 className="close-button"
-                onClick={() => setShowMenu(false)}
+                onClick={() =>
+                  setShowMenu(false)
+                }
               >
                 ✕
               </button>
@@ -2009,22 +2472,14 @@ function App() {
 
             <button
               className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setAuthMode("login");
-                setShowAuth(true);
-              }}
+              onClick={openLogin}
             >
               ✨ Mi cuenta
             </button>
 
             <button
               className="menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setAuthMode("login");
-                setShowAuth(true);
-              }}
+              onClick={openLogin}
             >
               👤 Perfil
             </button>
@@ -2050,15 +2505,15 @@ function App() {
               📦 Mis pedidos
             </button>
 
+            {/* CENTRO DE MENSAJES REAL */}
             <button
               className="menu-item"
-              onClick={() =>
-                alert(
-                  "El centro de mensajes estará disponible aquí."
-                )
-              }
+              onClick={() => {
+                setShowMenu(false);
+                setShowMessages(true);
+              }}
             >
-              💬 Mensajes
+              💬 Centro de mensajes
             </button>
 
             <button
@@ -2083,9 +2538,121 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          CARRITO COMPLETO
-      ========================= */}
+      {/* =====================================================
+          CENTRO DE MENSAJES
+      ===================================================== */}
+
+      {showMessages && (
+        <div
+          className="overlay center-overlay"
+          onClick={() =>
+            setShowMessages(false)
+          }
+        >
+          <div
+            className="modal messages-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="messages-header">
+              <div>
+                <h2>
+                  💬 Centro de mensajes
+                </h2>
+
+                <p>
+                  Comunícate con vendedores y soporte.
+                </p>
+              </div>
+
+              <button
+                className="close-button"
+                onClick={() =>
+                  setShowMessages(false)
+                }
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="messages-list">
+              <button
+                className="message-conversation"
+                onClick={() =>
+                  alert(
+                    "El chat con soporte estará disponible aquí."
+                  )
+                }
+              >
+                <div className="message-avatar">
+                  💬
+                </div>
+
+                <div>
+                  <strong>
+                    Soporte VaniDaxi
+                  </strong>
+
+                  <span>
+                    ¿Necesitas ayuda con tu compra?
+                  </span>
+                </div>
+
+                <span className="message-time">
+                  Ahora
+                </span>
+              </button>
+
+              <button
+                className="message-conversation"
+                onClick={() =>
+                  alert(
+                    "Tus conversaciones con vendedores aparecerán aquí."
+                  )
+                }
+              >
+                <div className="message-avatar">
+                  🛍️
+                </div>
+
+                <div>
+                  <strong>
+                    Vendedores
+                  </strong>
+
+                  <span>
+                    Aquí aparecerán tus conversaciones.
+                  </span>
+                </div>
+              </button>
+
+              <div className="empty">
+                <div style={{ fontSize: 42 }}>
+                  💌
+                </div>
+
+                <h3>
+                  Tus mensajes aparecerán aquí
+                </h3>
+
+                <p>
+                  Podrás comunicarte con vendedores y
+                  con el equipo de VaniDaxi.
+                </p>
+              </div>
+            </div>
+
+            <div className="messages-footer">
+              Centro de comunicación de VaniDaxi
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          CARRITO
+      ===================================================== */}
 
       {showCart && (
         <div
@@ -2094,14 +2661,18 @@ function App() {
         >
           <aside
             className="cart-panel"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
             <div className="cart-header">
               <h2>🛒 Mi carrito</h2>
 
               <button
                 className="close-button"
-                onClick={() => setShowCart(false)}
+                onClick={() =>
+                  setShowCart(false)
+                }
               >
                 ✕
               </button>
@@ -2110,11 +2681,15 @@ function App() {
             <div className="cart-body">
               {cart.length === 0 ? (
                 <div className="empty">
-                  <div style={{ fontSize: 55 }}>
+                  <div
+                    style={{ fontSize: 55 }}
+                  >
                     🛒
                   </div>
 
-                  <h3>Tu carrito está vacío</h3>
+                  <h3>
+                    Tu carrito está vacío
+                  </h3>
 
                   <p>
                     Agrega productos para comenzar tu
@@ -2189,22 +2764,29 @@ function App() {
               <div className="cart-footer">
                 <div className="summary-row">
                   <span>Subtotal</span>
+
                   <strong>
-                    {formatPrice(cartSubtotal)}
+                    {formatPrice(
+                      cartSubtotal
+                    )}
                   </strong>
                 </div>
 
                 <div className="summary-row">
                   <span>Envío</span>
+
                   <strong>
                     {shippingCost === 0
                       ? "Gratis"
-                      : formatPrice(shippingCost)}
+                      : formatPrice(
+                          shippingCost
+                        )}
                   </strong>
                 </div>
 
                 <div className="summary-total">
                   <span>Total</span>
+
                   <span>
                     {formatPrice(cartTotal)}
                   </span>
@@ -2224,9 +2806,9 @@ function App() {
         </div>
       )}
 
-      {/* =========================
+      {/* =====================================================
           PRODUCTO
-      ========================= */}
+      ===================================================== */}
 
       {selectedProduct && (
         <div
@@ -2283,12 +2865,16 @@ function App() {
             {selectedProduct.specifications
               ?.length > 0 && (
               <>
-                <h3>Características</h3>
+                <h3>
+                  Características
+                </h3>
 
                 <ul className="specifications">
                   {selectedProduct.specifications.map(
                     (item) => (
-                      <li key={item}>{item}</li>
+                      <li key={item}>
+                        {item}
+                      </li>
                     )
                   )}
                 </ul>
@@ -2331,9 +2917,9 @@ function App() {
         </div>
       )}
 
-      {/* =========================
+      {/* =====================================================
           AUTENTICACIÓN
-      ========================= */}
+      ===================================================== */}
 
       {showAuth && (
         <div
@@ -2353,7 +2939,9 @@ function App() {
                 right: 15,
                 top: 15,
               }}
-              onClick={() => setShowAuth(false)}
+              onClick={() =>
+                setShowAuth(false)
+              }
             >
               ✕
             </button>
@@ -2374,7 +2962,9 @@ function App() {
                   placeholder="Nombre"
                   value={authName}
                   onChange={(e) =>
-                    setAuthName(e.target.value)
+                    setAuthName(
+                      e.target.value
+                    )
                   }
                   required
                 />
@@ -2385,7 +2975,9 @@ function App() {
                 placeholder="Correo electrónico"
                 value={authEmail}
                 onChange={(e) =>
-                  setAuthEmail(e.target.value)
+                  setAuthEmail(
+                    e.target.value
+                  )
                 }
                 required
               />
@@ -2428,6 +3020,7 @@ function App() {
                       ? "register"
                       : "login"
                   );
+
                   setAuthMessage("");
                 }}
               >
@@ -2440,9 +3033,9 @@ function App() {
         </div>
       )}
 
-      {/* =========================
-          PUBLICAR
-      ========================= */}
+      {/* =====================================================
+          PUBLICAR PRODUCTO
+      ===================================================== */}
 
       {showPublish && (
         <div
@@ -2471,7 +3064,9 @@ function App() {
               ✕
             </button>
 
-            <h2>Publicar producto</h2>
+            <h2>
+              Publicar producto
+            </h2>
 
             <form
               className="form"
@@ -2556,9 +3151,9 @@ function App() {
         </div>
       )}
 
-      {/* =========================
+      {/* =====================================================
           CHECKOUT / PAGO
-      ========================= */}
+      ===================================================== */}
 
       {showCheckout && (
         <div className="overlay checkout-overlay">
