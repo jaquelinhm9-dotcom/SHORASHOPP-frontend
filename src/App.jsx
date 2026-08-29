@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  BrowserRouter,
   Link,
   NavLink,
   Route,
@@ -12,174 +11,147 @@ import {
 
 import { supabase } from "./supabaseClient";
 
-/* =========================================================
-   VaniDaxi
-   App.jsx — interfaz principal
-   ========================================================= */
-
 const CART_KEY = "vanidaxi_cart";
 const FAVORITES_KEY = "vanidaxi_favorites";
 
 const WHATSAPP_NUMBER = "5210000000000";
 
-/* =========================================================
-   CATEGORÍAS
-   Las imágenes sustituyen los iconos de la referencia,
-   conservando el tamaño compacto de las tarjetas.
-   ========================================================= */
-
 const categories = [
   {
-    id: "ropa",
-    name: "Ropa y Moda",
+    name: "Moda",
     image:
-      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "tecnologia",
     name: "Tecnología",
     image:
-      "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "hogar",
-    name: "Hogar y Vida",
+    name: "Hogar",
     image:
-      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1556912167-f556f1f39fdf?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "belleza",
     name: "Belleza",
     image:
-      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "autos",
     name: "Autos y Motos",
     image:
-      "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "comida",
     name: "Comida",
     image:
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "juguetes",
     name: "Juguetes",
     image:
-      "https://images.unsplash.com/photo-1594784055417-7a4c1b1a1e4b?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?auto=format&fit=crop&w=500&q=80",
   },
   {
-    id: "deportes",
     name: "Deportes",
     image:
-      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=500&q=85",
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=500&q=80",
   },
 ];
 
-/* =========================================================
-   PRODUCTOS DE DEMOSTRACIÓN
-   ========================================================= */
-
 const initialProducts = [
   {
-    id: "p1",
+    id: "1",
     name: "Smartwatch Pro",
-    price: 799,
-    oldPrice: 1199,
+    price: 899,
+    oldPrice: 1299,
     rating: 4.8,
-    reviews: 126,
-    discount: 33,
-    category: "tecnologia",
-    type: "Destacado",
+    reviews: 124,
+    discount: 31,
+    category: "Tecnología",
+    type: "Oferta",
     image:
-      "https://images.unsplash.com/photo-1544117519-31a4b719223d?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
     description:
-      "Smartwatch moderno con funciones para actividad física, llamadas y notificaciones.",
+      "Smartwatch moderno con pantalla táctil, monitoreo de actividad y diseño elegante.",
     specifications: [
       "Pantalla táctil",
-      "Monitoreo deportivo",
-      "Notificaciones",
+      "Monitoreo de actividad",
+      "Bluetooth",
       "Resistente a salpicaduras",
     ],
   },
   {
-    id: "p2",
+    id: "2",
     name: "Licuadora Profesional",
-    price: 1299,
-    oldPrice: 1799,
+    price: 749,
+    oldPrice: 999,
     rating: 4.7,
-    reviews: 84,
-    discount: 28,
-    category: "hogar",
+    reviews: 86,
+    discount: 25,
+    category: "Hogar",
     type: "Oferta",
     image:
-      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=900&q=85",
     description:
-      "Licuadora de alto rendimiento ideal para smoothies, bebidas y preparaciones.",
+      "Licuadora de alta potencia ideal para preparar bebidas, salsas y alimentos.",
     specifications: [
-      "Motor de alta potencia",
+      "Alta potencia",
       "Vaso de gran capacidad",
-      "Varias velocidades",
       "Cuchillas de acero",
+      "Varias velocidades",
     ],
   },
   {
-    id: "p3",
+    id: "3",
     name: "Tenis Urbanos",
-    price: 899,
-    oldPrice: 1299,
+    price: 599,
+    oldPrice: 799,
     rating: 4.9,
-    reviews: 203,
-    discount: 31,
-    category: "ropa",
+    reviews: 213,
+    discount: 25,
+    category: "Moda",
     type: "Popular",
     image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
     description:
       "Tenis urbanos cómodos y versátiles para uso diario.",
     specifications: [
-      "Suela antiderrapante",
       "Diseño urbano",
-      "Material transpirable",
+      "Suela antiderrapante",
+      "Material ligero",
       "Uso diario",
     ],
   },
   {
-    id: "p4",
+    id: "4",
     name: "Audífonos Bluetooth",
-    price: 549,
-    oldPrice: 799,
-    rating: 4.6,
-    reviews: 178,
-    discount: 31,
-    category: "tecnologia",
+    price: 449,
+    oldPrice: 699,
+    rating: 4.8,
+    reviews: 176,
+    discount: 36,
+    category: "Tecnología",
     type: "Oferta",
     image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=85",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
     description:
-      "Audífonos inalámbricos con sonido envolvente y estuche de carga.",
+      "Audífonos inalámbricos con sonido envolvente y batería de larga duración.",
     specifications: [
       "Bluetooth",
       "Micrófono integrado",
+      "Batería de larga duración",
       "Estuche de carga",
-      "Controles táctiles",
     ],
   },
 ];
-
-/* =========================================================
-   UTILIDADES
-   ========================================================= */
 
 function formatPrice(value) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
     maximumFractionDigits: 0,
-  }).format(Number(value) || 0);
+  }).format(value);
 }
 
 function readStorage(key, fallback) {
@@ -195,3136 +167,2036 @@ function saveStorage(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Evita que un error de almacenamiento rompa la aplicación.
+    // Ignorar errores de almacenamiento.
   }
 }
 
-/* =========================================================
-   ESTILOS
-   Se mantienen dentro del archivo para que el diseño sea
-   independiente de App.css.
-   ========================================================= */
-
-const styles = `
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  background: #f7f7f9;
-  color: #202124;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
-}
-
-button,
-input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.vd-app {
-  min-height: 100vh;
-  background: #f7f7f9;
-  padding-bottom: 82px;
-}
-
-.vd-shell {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-}
-
-/* ================= HEADER ================= */
-
-.vd-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255,255,255,.97);
-  border-bottom: 1px solid #ededf2;
-  backdrop-filter: blur(14px);
-}
-
-.vd-header-inner {
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 9px 18px;
-}
-
-.vd-menu-button,
-.vd-cart-button {
-  width: 42px;
-  height: 42px;
-  border: 0;
-  border-radius: 13px;
-  background: #fff;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  box-shadow: 0 3px 12px rgba(40,20,80,.08);
-}
-
-.vd-menu-button span {
-  width: 20px;
-  height: 2px;
-  background: #7b178e;
-  position: relative;
-  display: block;
-}
-
-.vd-menu-button span::before,
-.vd-menu-button span::after {
-  content: "";
-  width: 20px;
-  height: 2px;
-  background: #7b178e;
-  position: absolute;
-  left: 0;
-}
-
-.vd-menu-button span::before {
-  top: -7px;
-}
-
-.vd-menu-button span::after {
-  top: 7px;
-}
-
-.vd-logo {
-  min-width: 126px;
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -1px;
-  background: linear-gradient(90deg,#ef1f35,#d91591,#7219bd);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.vd-search {
-  flex: 1;
-  height: 42px;
-  min-width: 100px;
-  border-radius: 14px;
-  border: 1px solid #e5e2eb;
-  background: #f7f6f9;
-  padding: 0 15px 0 42px;
-  outline: none;
-  color: #333;
-}
-
-.vd-search-wrap {
-  position: relative;
-  flex: 1;
-}
-
-.vd-search-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 17px;
-  opacity: .65;
-}
-
-.vd-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.vd-cart-button {
-  position: relative;
-  background: linear-gradient(135deg,#ef233c,#d4148e,#7117bd);
-  color: #fff;
-  box-shadow: 0 5px 15px rgba(191,30,150,.22);
-}
-
-.vd-cart-count {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  min-width: 19px;
-  height: 19px;
-  padding: 0 5px;
-  border-radius: 20px;
-  background: #ff3048;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  display: grid;
-  place-items: center;
-  border: 2px solid #fff;
-}
-
-/* ================= HERO ================= */
-
-.vd-main {
-  padding: 14px 18px 0;
-}
-
-.vd-hero {
-  background: linear-gradient(120deg,#ef233c 0%,#db168b 52%,#7219bd 100%);
-  border-radius: 22px;
-  min-height: 192px;
-  color: white;
-  padding: 24px 25px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 10px 28px rgba(160,20,130,.17);
-}
-
-.vd-hero::after {
-  content: "";
-  position: absolute;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  right: -80px;
-  top: -110px;
-  background: rgba(255,255,255,.09);
-}
-
-.vd-hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 610px;
-}
-
-.vd-hero-kicker {
-  font-size: 12px;
-  font-weight: 800;
-  opacity: .9;
-  margin-bottom: 7px;
-}
-
-.vd-hero h1 {
-  margin: 0;
-  font-size: clamp(27px,4vw,42px);
-  line-height: 1.02;
-  letter-spacing: -1.4px;
-}
-
-.vd-hero p {
-  margin: 10px 0 17px;
-  font-size: 14px;
-  line-height: 1.45;
-  opacity: .94;
-}
-
-.vd-hero-button {
-  border: 0;
-  background: #fff;
-  color: #8b157f;
-  font-weight: 800;
-  border-radius: 12px;
-  padding: 10px 17px;
-  font-size: 13px;
-  box-shadow: 0 5px 14px rgba(0,0,0,.1);
-}
-
-/* ================= QUICK CARDS ================= */
-
-.vd-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2,1fr);
-  gap: 12px;
-  margin: 14px 0;
-}
-
-.vd-quick-card {
-  background: #fff;
-  border-radius: 17px;
-  padding: 14px;
-  min-height: 86px;
-  border: 1px solid #eeeef3;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 4px 14px rgba(30,20,70,.045);
-}
-
-.vd-quick-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  background: linear-gradient(135deg,#fff0f2,#fce8f7);
-}
-
-.vd-quick-card h3 {
-  margin: 0 0 4px;
-  font-size: 14px;
-}
-
-.vd-quick-card p {
-  margin: 0;
-  font-size: 11px;
-  color: #777;
-}
-
-/* ================= SECTIONS ================= */
-
-.vd-section {
-  margin-top: 20px;
-}
-
-.vd-section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.vd-section-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: -.4px;
-}
-
-.vd-section-link {
-  border: 0;
-  background: transparent;
-  font-size: 12px;
-  color: #a018a1;
-  font-weight: 800;
-}
-
-/* ================= CATEGORIES ================= */
-
-.vd-category-scroll {
-  display: grid;
-  grid-template-columns: repeat(8,minmax(86px,1fr));
-  gap: 9px;
-}
-
-.vd-category-card {
-  background: #fff;
-  border: 1px solid #eeeeF3;
-  border-radius: 14px;
-  overflow: hidden;
-  padding: 0;
-  min-width: 0;
-  box-shadow: 0 3px 11px rgba(40,20,80,.045);
-  transition: transform .15s ease, box-shadow .15s ease;
-}
-
-.vd-category-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 18px rgba(40,20,80,.09);
-}
-
-.vd-category-image {
-  width: 100%;
-  aspect-ratio: 1 / .82;
-  object-fit: cover;
-  display: block;
-}
-
-.vd-category-name {
-  min-height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px;
-  text-align: center;
-  font-size: 10px;
-  line-height: 1.1;
-  font-weight: 800;
-}
-
-/* ================= PROMO ================= */
-
-.vd-promo {
-  margin-top: 18px;
-  border-radius: 18px;
-  padding: 18px 20px;
-  color: #fff;
-  background: linear-gradient(100deg,#e91e38,#d8168f,#7218bc);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  overflow: hidden;
-}
-
-.vd-promo h2 {
-  margin: 0 0 4px;
-  font-size: 19px;
-}
-
-.vd-promo p {
-  margin: 0;
-  font-size: 11px;
-  opacity: .9;
-}
-
-.vd-promo-button {
-  flex: 0 0 auto;
-  border: 0;
-  background: #fff;
-  color: #8d157e;
-  border-radius: 11px;
-  padding: 9px 14px;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-/* ================= PRODUCTS ================= */
-
-.vd-product-grid {
-  display: grid;
-  grid-template-columns: repeat(4,1fr);
-  gap: 12px;
-}
-
-.vd-product-card {
-  background: #fff;
-  border: 1px solid #eeeef3;
-  border-radius: 16px;
-  overflow: hidden;
-  min-width: 0;
-  position: relative;
-  box-shadow: 0 4px 13px rgba(30,20,70,.045);
-}
-
-.vd-product-image-wrap {
-  aspect-ratio: 1 / .92;
-  background: #f4f4f6;
-  position: relative;
-  overflow: hidden;
-}
-
-.vd-product-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.vd-discount {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: #ef2944;
-  color: #fff;
-  border-radius: 7px;
-  padding: 4px 6px;
-  font-size: 9px;
-  font-weight: 900;
-}
-
-.vd-favorite {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,.92);
-  display: grid;
-  place-items: center;
-  font-size: 15px;
-}
-
-.vd-product-info {
-  padding: 10px;
-}
-
-.vd-product-name {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.vd-rating {
-  margin-top: 5px;
-  font-size: 10px;
-  color: #7b7b80;
-}
-
-.vd-price-row {
-  margin-top: 7px;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.vd-price {
-  font-size: 15px;
-  font-weight: 900;
-  color: #202124;
-}
-
-.vd-old-price {
-  color: #999;
-  text-decoration: line-through;
-  font-size: 9px;
-}
-
-.vd-add {
-  margin-top: 8px;
-  width: 100%;
-  height: 31px;
-  border: 0;
-  border-radius: 9px;
-  color: #fff;
-  background: linear-gradient(90deg,#ef233c,#d61791,#7218bd);
-  font-size: 10px;
-  font-weight: 900;
-}
-
-/* ================= BENEFITS ================= */
-
-.vd-benefits {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 10px;
-  margin: 20px 0;
-}
-
-.vd-benefit {
-  background: #fff;
-  border: 1px solid #eeeeF3;
-  border-radius: 15px;
-  padding: 13px;
-  text-align: center;
-}
-
-.vd-benefit-icon {
-  font-size: 19px;
-  margin-bottom: 5px;
-}
-
-.vd-benefit strong {
-  display: block;
-  font-size: 11px;
-}
-
-.vd-benefit span {
-  display: block;
-  color: #888;
-  font-size: 9px;
-  margin-top: 3px;
-}
-
-/* ================= BOTTOM NAV ================= */
-
-.vd-bottom {
-  position: fixed;
-  z-index: 110;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 68px;
-  background: rgba(255,255,255,.98);
-  border-top: 1px solid #e9e7ee;
-  box-shadow: 0 -5px 18px rgba(30,20,60,.07);
-}
-
-.vd-bottom-inner {
-  max-width: 600px;
-  height: 100%;
-  margin: auto;
-  display: grid;
-  grid-template-columns: repeat(5,1fr);
-  align-items: center;
-}
-
-.vd-bottom-link {
-  border: 0;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  color: #85838a;
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.vd-bottom-link.active {
-  color: #9b178f;
-}
-
-.vd-bottom-icon {
-  font-size: 19px;
-}
-
-.vd-sell-button {
-  width: 52px;
-  height: 52px;
-  margin-top: -25px;
-  border-radius: 50%;
-  border: 5px solid #f7f7f9;
-  background: linear-gradient(135deg,#ef233c,#d61791,#7218bd);
-  color: white;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  box-shadow: 0 7px 18px rgba(160,20,130,.25);
-}
-
-/* ================= DRAWER ================= */
-
-.vd-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: rgba(15,10,25,.42);
-  backdrop-filter: blur(2px);
-}
-
-.vd-drawer {
-  width: min(340px,88vw);
-  height: 100%;
-  background: #fff;
-  padding: 20px;
-  box-shadow: 8px 0 30px rgba(0,0,0,.14);
-  animation: vd-slide .2s ease;
-}
-
-@keyframes vd-slide {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-
-.vd-drawer-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 25px;
-}
-
-.vd-close {
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 10px;
-  background: #f5f4f7;
-}
-
-.vd-menu-item {
-  width: 100%;
-  min-height: 47px;
-  border: 0;
-  border-bottom: 1px solid #f0eef3;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: left;
-}
-
-/* ================= MODALS ================= */
-
-.vd-modal-wrap {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  background: rgba(15,10,25,.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.vd-modal {
-  width: min(620px,100%);
-  max-height: 90vh;
-  overflow-y: auto;
-  background: #fff;
-  border-radius: 24px 24px 0 0;
-  padding: 20px;
-  animation: vd-up .2s ease;
-}
-
-@keyframes vd-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.vd-modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
-.vd-modal h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.vd-field {
-  width: 100%;
-  height: 44px;
-  border: 1px solid #dedbe4;
-  border-radius: 11px;
-  outline: none;
-  padding: 0 12px;
-  margin-bottom: 10px;
-  background: #fafafd;
-}
-
-textarea.vd-field {
-  min-height: 100px;
-  padding: 12px;
-  resize: vertical;
-}
-
-.vd-primary {
-  width: 100%;
-  min-height: 45px;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(90deg,#ef233c,#d61791,#7218bd);
-  color: #fff;
-  font-weight: 900;
-}
-
-.vd-secondary {
-  width: 100%;
-  min-height: 43px;
-  border: 1px solid #dedbe4;
-  border-radius: 12px;
-  background: #fff;
-  font-weight: 800;
-}
-
-/* ================= CART ================= */
-
-.vd-cart-item {
-  display: grid;
-  grid-template-columns: 66px 1fr auto;
-  gap: 10px;
-  align-items: center;
-  padding: 11px 0;
-  border-bottom: 1px solid #eeeef2;
-}
-
-.vd-cart-item img {
-  width: 66px;
-  height: 66px;
-  object-fit: cover;
-  border-radius: 11px;
-}
-
-.vd-cart-name {
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.vd-cart-price {
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-.vd-quantity {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 7px;
-}
-
-.vd-quantity button {
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ddd9e3;
-  border-radius: 7px;
-  background: #fff;
-}
-
-.vd-cart-total {
-  display: flex;
-  justify-content: space-between;
-  padding: 16px 0;
-  font-size: 17px;
-  font-weight: 900;
-}
-
-/* ================= PRODUCT PAGE ================= */
-
-.vd-detail {
-  padding: 18px;
-}
-
-.vd-detail-card {
-  background: #fff;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid #eeeef3;
-}
-
-.vd-detail-image {
-  width: 100%;
-  max-height: 430px;
-  object-fit: cover;
-  display: block;
-}
-
-.vd-detail-info {
-  padding: 18px;
-}
-
-.vd-detail-title {
-  font-size: 24px;
-  margin: 0;
-  letter-spacing: -.7px;
-}
-
-.vd-detail-price {
-  font-size: 26px;
-  font-weight: 900;
-  margin: 9px 0;
-}
-
-.vd-spec {
-  padding: 8px 0;
-  border-bottom: 1px solid #f0eef3;
-  font-size: 12px;
-}
-
-/* ================= RESPONSIVE ================= */
-
-@media (max-width: 900px) {
-  .vd-category-scroll {
-    grid-template-columns: repeat(4,1fr);
-  }
-
-  .vd-product-grid {
-    grid-template-columns: repeat(3,1fr);
-  }
-}
-
-@media (max-width: 650px) {
-  .vd-header-inner {
-    padding: 8px 12px;
-    gap: 8px;
-  }
-
-  .vd-logo {
-    min-width: 88px;
-    font-size: 18px;
-  }
-
-  .vd-menu-button,
-  .vd-cart-button {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-  }
-
-  .vd-main {
-    padding: 10px 11px 0;
-  }
-
-  .vd-hero {
-    min-height: 175px;
-    border-radius: 18px;
-    padding: 20px;
-  }
-
-  .vd-hero h1 {
-    font-size: 27px;
-  }
-
-  .vd-quick-grid {
-    gap: 8px;
-  }
-
-  .vd-quick-card {
-    padding: 10px;
-    min-height: 74px;
-    gap: 8px;
-  }
-
-  .vd-quick-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-    font-size: 18px;
-  }
-
-  .vd-category-scroll {
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .vd-category-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .vd-category-card {
-    min-width: 79px;
-    width: 79px;
-  }
-
-  .vd-category-name {
-    font-size: 9px;
-  }
-
-  .vd-product-grid {
-    grid-template-columns: repeat(2,1fr);
-    gap: 9px;
-  }
-
-  .vd-benefits {
-    grid-template-columns: 1fr;
-  }
-
-  .vd-promo {
-    padding: 15px;
-  }
-
-  .vd-promo h2 {
-    font-size: 16px;
-  }
-
-  .vd-search {
-    height: 38px;
-  }
-}
-
-@media (min-width: 1000px) {
-  .vd-bottom {
-    width: min(600px,100%);
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    border-radius: 18px 18px 0 0;
-  }
-
-  .vd-modal-wrap {
-    align-items: center;
-  }
-
-  .vd-modal {
-    border-radius: 22px;
-  }
-}
-`;
-
-/* =========================================================
-   PRODUCT CARD
-   ========================================================= */
-
-function ProductCard({
-  product,
-  favorite,
-  onFavorite,
-  onAdd,
-  onOpen,
-}) {
-  return (
-    <article className="vd-product-card">
-      <Link to={`/producto/${product.id}`}>
-        <div className="vd-product-image-wrap">
-          <img
-            className="vd-product-image"
-            src={product.image}
-            alt={product.name}
-            loading="lazy"
-          />
-
-          {product.discount ? (
-            <span className="vd-discount">-{product.discount}%</span>
-          ) : null}
-
-          <button
-            className="vd-favorite"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onFavorite(product.id);
-            }}
-            aria-label="Favorito"
-          >
-            {favorite ? "❤️" : "♡"}
-          </button>
-        </div>
-      </Link>
-
-      <div className="vd-product-info">
-        <button
-          onClick={() => onOpen(product)}
-          style={{
-            border: 0,
-            padding: 0,
-            margin: 0,
-            background: "transparent",
-            textAlign: "left",
-            width: "100%",
-          }}
-        >
-          <h3 className="vd-product-name">{product.name}</h3>
-        </button>
-
-        <div className="vd-rating">
-          ⭐ {product.rating} · {product.reviews} reseñas
-        </div>
-
-        <div className="vd-price-row">
-          <span className="vd-price">{formatPrice(product.price)}</span>
-
-          {product.oldPrice ? (
-            <span className="vd-old-price">
-              {formatPrice(product.oldPrice)}
-            </span>
-          ) : null}
-        </div>
-
-        <button className="vd-add" onClick={() => onAdd(product)}>
-          Agregar al carrito
-        </button>
-      </div>
-    </article>
-  );
-}
-
-/* =========================================================
-   HOME
-   ========================================================= */
-
-function Home({
-  products,
-  favorites,
-  onFavorite,
-  onAdd,
-  onOpenProduct,
-  onSearch,
-  onPublish,
-}) {
+function App() {
   const navigate = useNavigate();
-
-  return (
-    <>
-      <style>{styles}</style>
-
-      <div className="vd-app">
-        <main className="vd-shell vd-main">
-          <section className="vd-hero">
-            <div className="vd-hero-content">
-              <div className="vd-hero-kicker">VaniDaxi</div>
-
-              <h1>Todo en un solo lugar</h1>
-
-              <p>
-                Compra, vende y descubre productos de personas y negocios
-                cerca de ti.
-              </p>
-
-              <button
-                className="vd-hero-button"
-                onClick={() =>
-                  document
-                    .getElementById("productos")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                Comprar ahora
-              </button>
-            </div>
-          </section>
-
-          <section className="vd-quick-grid">
-            <div className="vd-quick-card">
-              <div className="vd-quick-icon">🛍️</div>
-              <div>
-                <h3>Compra fácil</h3>
-                <p>Encuentra todo en un mismo lugar.</p>
-              </div>
-            </div>
-
-            <button
-              className="vd-quick-card"
-              onClick={onPublish}
-              style={{ border: "1px solid #eeeef3", textAlign: "left" }}
-            >
-              <div className="vd-quick-icon">💰</div>
-              <div>
-                <h3>Vende tus productos</h3>
-                <p>Publica y llega a nuevos clientes.</p>
-              </div>
-            </button>
-          </section>
-
-          <section className="vd-section">
-            <div className="vd-section-head">
-              <h2 className="vd-section-title">Categorías</h2>
-
-              <button
-                className="vd-section-link"
-                onClick={() => navigate("/categorias")}
-              >
-                Ver todas
-              </button>
-            </div>
-
-            <div className="vd-category-scroll">
-              {categories.map((category) => (
-                <button
-                  className="vd-category-card"
-                  key={category.id}
-                  onClick={() =>
-                    navigate(`/categoria/${category.id}`)
-                  }
-                >
-                  <img
-                    className="vd-category-image"
-                    src={category.image}
-                    alt={category.name}
-                    loading="lazy"
-                  />
-
-                  <span className="vd-category-name">
-                    {category.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="vd-promo">
-            <div>
-              <h2>Ofertas todos los días</h2>
-              <p>Encuentra precios especiales en productos seleccionados.</p>
-            </div>
-
-            <button
-              className="vd-promo-button"
-              onClick={() => onSearch("oferta")}
-            >
-              Ver ofertas
-            </button>
-          </section>
-
-          <section className="vd-section" id="productos">
-            <div className="vd-section-head">
-              <h2 className="vd-section-title">Productos destacados</h2>
-
-              <button
-                className="vd-section-link"
-                onClick={() => navigate("/productos")}
-              >
-                Ver todos
-              </button>
-            </div>
-
-            <div className="vd-product-grid">
-              {products.slice(0, 8).map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  favorite={favorites.includes(product.id)}
-                  onFavorite={onFavorite}
-                  onAdd={onAdd}
-                  onOpen={onOpenProduct}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section className="vd-benefits">
-            <div className="vd-benefit">
-              <div className="vd-benefit-icon">🚚</div>
-              <strong>Compra local</strong>
-              <span>Encuentra productos cerca de ti.</span>
-            </div>
-
-            <div className="vd-benefit">
-              <div className="vd-benefit-icon">🔒</div>
-              <strong>Compra segura</strong>
-              <span>Tu experiencia es nuestra prioridad.</span>
-            </div>
-
-            <div className="vd-benefit">
-              <div className="vd-benefit-icon">💬</div>
-              <strong>Atención</strong>
-              <span>Estamos para ayudarte.</span>
-            </div>
-          </section>
-        </main>
-      </div>
-    </>
-  );
-}
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-function Header({
-  cartCount,
-  onMenu,
-  onCart,
-  search,
-  setSearch,
-}) {
-  const navigate = useNavigate();
-
-  return (
-    <header className="vd-header">
-      <div className="vd-shell vd-header-inner">
-        <button
-          className="vd-menu-button"
-          onClick={onMenu}
-          aria-label="Abrir menú"
-        >
-          <span />
-        </button>
-
-        <button
-          className="vd-logo"
-          onClick={() => navigate("/")}
-          style={{
-            border: 0,
-            background: "transparent",
-            padding: 0,
-          }}
-        >
-          VaniDaxi
-        </button>
-
-        <div className="vd-search-wrap">
-          <span className="vd-search-icon">⌕</span>
-
-          <input
-            className="vd-search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                navigate(
-                  search.trim()
-                    ? `/buscar?q=${encodeURIComponent(search.trim())}`
-                    : "/productos"
-                );
-              }
-            }}
-            placeholder="¿Qué estás buscando?"
-            aria-label="Buscar"
-          />
-        </div>
-
-        <div className="vd-header-actions">
-          <button
-            className="vd-cart-button"
-            onClick={onCart}
-            aria-label="Carrito"
-          >
-            🛒
-
-            {cartCount > 0 ? (
-              <span className="vd-cart-count">{cartCount}</span>
-            ) : null}
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/* =========================================================
-   BOTTOM NAV
-   ========================================================= */
-
-function BottomNavigation({ onPublish, cartCount }) {
   const location = useLocation();
-  const navigate = useNavigate();
 
-  const isHome = location.pathname === "/";
-  const isFavorites = location.pathname === "/favoritos";
-  const isOrders = location.pathname === "/pedidos";
-
-  return (
-    <nav className="vd-bottom">
-      <div className="vd-bottom-inner">
-        <button
-          className={`vd-bottom-link ${isHome ? "active" : ""}`}
-          onClick={() => navigate("/")}
-        >
-          <span className="vd-bottom-icon">⌂</span>
-          Inicio
-        </button>
-
-        <button
-          className="vd-bottom-link"
-          onClick={() => navigate("/categorias")}
-        >
-          <span className="vd-bottom-icon">▦</span>
-          Categorías
-        </button>
-
-        <button
-          className="vd-bottom-link"
-          onClick={onPublish}
-          aria-label="Vender"
-        >
-          <span className="vd-sell-button">＋</span>
-          Vender
-        </button>
-
-        <button
-          className={`vd-bottom-link ${isFavorites ? "active" : ""}`}
-          onClick={() => navigate("/favoritos")}
-        >
-          <span className="vd-bottom-icon">♡</span>
-          Favoritos
-        </button>
-
-        <button
-          className={`vd-bottom-link ${isOrders ? "active" : ""}`}
-          onClick={() => navigate("/pedidos")}
-        >
-          <span className="vd-bottom-icon">▤</span>
-          Pedidos
-        </button>
-      </div>
-    </nav>
+  const [products, setProducts] = useState(initialProducts);
+  const [cart, setCart] = useState(() => readStorage(CART_KEY, []));
+  const [favorites, setFavorites] = useState(() =>
+    readStorage(FAVORITES_KEY, [])
   );
-}
-
-/* =========================================================
-   MENU
-   ========================================================= */
-
-function MenuDrawer({
-  user,
-  onClose,
-  onAuth,
-  onPublish,
-}) {
-  const navigate = useNavigate();
-
-  function go(path) {
-    onClose();
-    navigate(path);
-  }
-
-  return (
-    <div className="vd-overlay" onClick={onClose}>
-      <aside
-        className="vd-drawer"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="vd-drawer-top">
-          <div>
-            <div className="vd-logo">VaniDaxi</div>
-
-            <div
-              style={{
-                fontSize: 11,
-                color: "#888",
-                marginTop: 5,
-              }}
-            >
-              Todo en un solo lugar
-            </div>
-          </div>
-
-          <button className="vd-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
-        <button className="vd-menu-item" onClick={() => go("/")}>
-          🏠 Inicio
-        </button>
-
-        <button
-          className="vd-menu-item"
-          onClick={() => go("/categorias")}
-        >
-          🛍️ Categorías
-        </button>
-
-        <button
-          className="vd-menu-item"
-          onClick={() => {
-            onClose();
-            onPublish();
-          }}
-        >
-          ➕ Publicar producto
-        </button>
-
-        <button
-          className="vd-menu-item"
-          onClick={() => go("/favoritos")}
-        >
-          ❤️ Favoritos
-        </button>
-
-        <button
-          className="vd-menu-item"
-          onClick={() => go("/pedidos")}
-        >
-          📦 Mis pedidos
-        </button>
-
-        <button
-          className="vd-menu-item"
-          onClick={() => {
-            onClose();
-            onAuth();
-          }}
-        >
-          ✨ {user ? "Mi cuenta" : "Iniciar sesión"}
-        </button>
-
-        <button
-          className="vd-menu-item"
-          onClick={() => go("/ayuda")}
-        >
-          💬 Ayuda y soporte
-        </button>
-      </aside>
-    </div>
-  );
-}
-
-/* =========================================================
-   AUTH
-   ========================================================= */
-
-function AuthModal({ onClose, user, onUser }) {
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleAuth(event) {
-    event.preventDefault();
-    setMessage("");
-    setLoading(true);
-
-    try {
-      if (mode === "login") {
-        const { data, error } =
-          await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-        if (error) throw error;
-
-        onUser(data.user);
-        setMessage("Sesión iniciada correctamente.");
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: name,
-            },
-          },
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          onUser(data.user);
-        }
-
-        setMessage(
-          "Cuenta creada. Revisa tu correo si Supabase solicita confirmación."
-        );
-      }
-    } catch (error) {
-      setMessage(
-        error?.message ||
-          "No fue posible completar la operación."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function logout() {
-    await supabase.auth.signOut();
-    onUser(null);
-    onClose();
-  }
-
-  return (
-    <div
-      className="vd-modal-wrap"
-      onClick={onClose}
-    >
-      <div
-        className="vd-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="vd-modal-head">
-          <h2>{user ? "Mi cuenta" : mode === "login" ? "Bienvenido" : "Crear cuenta"}</h2>
-
-          <button className="vd-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
-        {user ? (
-          <>
-            <div
-              style={{
-                background: "#f7f5f9",
-                borderRadius: 14,
-                padding: 15,
-                marginBottom: 14,
-              }}
-            >
-              <strong>{user.user_metadata?.full_name || "Usuario VaniDaxi"}</strong>
-              <div
-                style={{
-                  color: "#777",
-                  fontSize: 12,
-                  marginTop: 4,
-                }}
-              >
-                {user.email}
-              </div>
-            </div>
-
-            <button
-              className="vd-primary"
-              onClick={logout}
-            >
-              Cerrar sesión
-            </button>
-          </>
-        ) : (
-          <>
-            <form onSubmit={handleAuth}>
-              {mode === "register" ? (
-                <input
-                  className="vd-field"
-                  value={name}
-                  onChange={(event) =>
-                    setName(event.target.value)
-                  }
-                  placeholder="Nombre"
-                  required
-                />
-              ) : null}
-
-              <input
-                className="vd-field"
-                type="email"
-                value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
-                placeholder="Correo electrónico"
-                required
-              />
-
-              <input
-                className="vd-field"
-                type="password"
-                value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
-                placeholder="Contraseña"
-                minLength={6}
-                required
-              />
-
-              <button
-                className="vd-primary"
-                type="submit"
-                disabled={loading}
-              >
-                {loading
-                  ? "Procesando..."
-                  : mode === "login"
-                  ? "Iniciar sesión"
-                  : "Crear cuenta"}
-              </button>
-            </form>
-
-            <button
-              className="vd-secondary"
-              style={{ marginTop: 10 }}
-              onClick={() =>
-                setMode(
-                  mode === "login"
-                    ? "register"
-                    : "login"
-                )
-              }
-            >
-              {mode === "login"
-                ? "Crear una cuenta"
-                : "Ya tengo una cuenta"}
-            </button>
-
-            {message ? (
-              <div
-                style={{
-                  marginTop: 12,
-                  padding: 11,
-                  background: "#faf5fb",
-                  borderRadius: 10,
-                  fontSize: 12,
-                  color: "#74127d",
-                }}
-              >
-                {message}
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   CART
-   ========================================================= */
-
-function CartModal({
-  cart,
-  onClose,
-  onRemove,
-  onQuantity,
-  onCheckout,
-}) {
-  const total = cart.reduce(
-    (sum, item) =>
-      sum + Number(item.price) * Number(item.quantity),
-    0
-  );
-
-  return (
-    <div
-      className="vd-modal-wrap"
-      onClick={onClose}
-    >
-      <div
-        className="vd-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="vd-modal-head">
-          <h2>Mi carrito</h2>
-
-          <button className="vd-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
-        {cart.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "35px 10px",
-              color: "#777",
-            }}
-          >
-            <div style={{ fontSize: 42 }}>🛒</div>
-            <strong>Tu carrito está vacío</strong>
-            <p style={{ fontSize: 12 }}>
-              Agrega productos para comenzar.
-            </p>
-          </div>
-        ) : (
-          <>
-            {cart.map((item) => (
-              <div
-                className="vd-cart-item"
-                key={item.id}
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                />
-
-                <div>
-                  <div className="vd-cart-name">
-                    {item.name}
-                  </div>
-
-                  <div className="vd-cart-price">
-                    {formatPrice(item.price)}
-                  </div>
-
-                  <div className="vd-quantity">
-                    <button
-                      onClick={() =>
-                        onQuantity(
-                          item.id,
-                          item.quantity - 1
-                        )
-                      }
-                    >
-                      −
-                    </button>
-
-                    <strong>{item.quantity}</strong>
-
-                    <button
-                      onClick={() =>
-                        onQuantity(
-                          item.id,
-                          item.quantity + 1
-                        )
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  className="vd-close"
-                  onClick={() =>
-                    onRemove(item.id)
-                  }
-                >
-                  🗑️
-                </button>
-              </div>
-            ))}
-
-            <div className="vd-cart-total">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-
-            <button
-              className="vd-primary"
-              onClick={onCheckout}
-            >
-              Continuar al checkout
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   PUBLISH MODAL
-   ========================================================= */
-
-function PublishModal({
-  onClose,
-  user,
-  onPublished,
-}) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState(
-    categories[0].id
-  );
-  const [image, setImage] = useState("");
-  const [description, setDescription] =
-    useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function publish(event) {
-    event.preventDefault();
-
-    if (!user) {
-      setMessage(
-        "Necesitas iniciar sesión para publicar un producto."
-      );
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const product = {
-        name,
-        price: Number(price),
-        category,
-        image:
-          image ||
-          categories.find(
-            (item) => item.id === category
-          )?.image,
-        description,
-        seller_id: user.id,
-      };
-
-      const { error } = await supabase
-        .from("products")
-        .insert(product);
-
-      if (error) throw error;
-
-      setMessage(
-        "Producto publicado correctamente."
-      );
-
-      setTimeout(() => {
-        onPublished();
-      }, 700);
-    } catch (error) {
-      setMessage(
-        error?.message ||
-          "No fue posible publicar el producto."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div
-      className="vd-modal-wrap"
-      onClick={onClose}
-    >
-      <div
-        className="vd-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="vd-modal-head">
-          <h2>Publicar producto</h2>
-
-          <button className="vd-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={publish}>
-          <input
-            className="vd-field"
-            value={name}
-            onChange={(event) =>
-              setName(event.target.value)
-            }
-            placeholder="Nombre del producto"
-            required
-          />
-
-          <input
-            className="vd-field"
-            type="number"
-            min="1"
-            value={price}
-            onChange={(event) =>
-              setPrice(event.target.value)
-            }
-            placeholder="Precio"
-            required
-          />
-
-          <select
-            className="vd-field"
-            value={category}
-            onChange={(event) =>
-              setCategory(event.target.value)
-            }
-          >
-            {categories.map((item) => (
-              <option
-                key={item.id}
-                value={item.id}
-              >
-                {item.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            className="vd-field"
-            value={image}
-            onChange={(event) =>
-              setImage(event.target.value)
-            }
-            placeholder="URL de imagen"
-          />
-
-          <textarea
-            className="vd-field"
-            value={description}
-            onChange={(event) =>
-              setDescription(event.target.value)
-            }
-            placeholder="Describe tu producto"
-          />
-
-          <button
-            className="vd-primary"
-            type="submit"
-            disabled={loading}
-          >
-            {loading
-              ? "Publicando..."
-              : "Publicar producto"}
-          </button>
-        </form>
-
-        {message ? (
-          <div
-            style={{
-              marginTop: 12,
-              fontSize: 12,
-              color: "#76127f",
-            }}
-          >
-            {message}
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   CATEGORÍAS PAGE
-   ========================================================= */
-
-function CategoriesPage() {
-  const navigate = useNavigate();
-
-  return (
-    <div className="vd-app">
-      <style>{styles}</style>
-
-      <main className="vd-shell vd-main">
-        <div className="vd-section-head">
-          <h1 className="vd-section-title">
-            Categorías
-          </h1>
-        </div>
-
-        <div
-          className="vd-category-scroll"
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fill,minmax(100px,1fr))",
-          }}
-        >
-          {categories.map((category) => (
-            <button
-              className="vd-category-card"
-              key={category.id}
-              onClick={() =>
-                navigate(
-                  `/categoria/${category.id}`
-                )
-              }
-            >
-              <img
-                className="vd-category-image"
-                src={category.image}
-                alt={category.name}
-              />
-
-              <span className="vd-category-name">
-                {category.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </main>
-    </div>
-  );
-}
-
-/* =========================================================
-   PRODUCT LIST PAGE
-   ========================================================= */
-
-function ProductListPage({
-  products,
-  favorites,
-  onFavorite,
-  onAdd,
-  onOpen,
-  searchTerm = "",
-}) {
-  const filtered = useMemo(() => {
-    if (!searchTerm.trim()) return products;
-
-    const query = searchTerm.toLowerCase();
-
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(query) ||
-        product.description
-          ?.toLowerCase()
-          .includes(query)
-    );
-  }, [products, searchTerm]);
-
-  return (
-    <div className="vd-app">
-      <style>{styles}</style>
-
-      <main className="vd-shell vd-main">
-        <section className="vd-section">
-          <div className="vd-section-head">
-            <h1 className="vd-section-title">
-              {searchTerm
-                ? `Resultados para "${searchTerm}"`
-                : "Todos los productos"}
-            </h1>
-          </div>
-
-          {filtered.length === 0 ? (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 18,
-                padding: 35,
-                textAlign: "center",
-              }}
-            >
-              No encontramos productos.
-            </div>
-          ) : (
-            <div className="vd-product-grid">
-              {filtered.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  favorite={favorites.includes(
-                    product.id
-                  )}
-                  onFavorite={onFavorite}
-                  onAdd={onAdd}
-                  onOpen={onOpen}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
-  );
-}
-
-/* =========================================================
-   CATEGORY PAGE
-   ========================================================= */
-
-function CategoryPage({
-  products,
-  favorites,
-  onFavorite,
-  onAdd,
-  onOpen,
-}) {
-  const { categoryId } = useParams();
-
-  const category = categories.find(
-    (item) => item.id === categoryId
-  );
-
-  const categoryProducts = products.filter(
-    (product) =>
-      product.category === categoryId
-  );
-
-  return (
-    <div className="vd-app">
-      <style>{styles}</style>
-
-      <main className="vd-shell vd-main">
-        <section className="vd-section">
-          <div className="vd-section-head">
-            <h1 className="vd-section-title">
-              {category?.name || "Categoría"}
-            </h1>
-          </div>
-
-          {categoryProducts.length === 0 ? (
-            <div
-              style={{
-                background: "#fff",
-                padding: 35,
-                borderRadius: 18,
-                textAlign: "center",
-              }}
-            >
-              Todavía no hay productos en esta
-              categoría.
-            </div>
-          ) : (
-            <div className="vd-product-grid">
-              {categoryProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  favorite={favorites.includes(
-                    product.id
-                  )}
-                  onFavorite={onFavorite}
-                  onAdd={onAdd}
-                  onOpen={onOpen}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
-  );
-}
-
-/* =========================================================
-   PRODUCT DETAIL
-   ========================================================= */
-
-function ProductPage({
-  products,
-  favorites,
-  onFavorite,
-  onAdd,
-}) {
-  const { productId } = useParams();
-  const navigate = useNavigate();
-
-  const product = products.find(
-    (item) => item.id === productId
-  );
-
-  if (!product) {
-    return (
-      <div className="vd-app">
-        <style>{styles}</style>
-
-        <main className="vd-shell vd-main">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 18,
-              padding: 30,
-              textAlign: "center",
-            }}
-          >
-            Producto no encontrado.
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  const favorite = favorites.includes(product.id);
-
-  function buyNow() {
-    onAdd(product, true);
-  }
-
-  function shareWhatsApp() {
-    const text = `Hola, me interesa ${product.name} de VaniDaxi.`;
-    window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-        text
-      )}`,
-      "_blank"
-    );
-  }
-
-  return (
-    <div className="vd-app">
-      <style>{styles}</style>
-
-      <main className="vd-shell vd-detail">
-        <div className="vd-detail-card">
-          <img
-            className="vd-detail-image"
-            src={product.image}
-            alt={product.name}
-          />
-
-          <div className="vd-detail-info">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 10,
-              }}
-            >
-              <h1 className="vd-detail-title">
-                {product.name}
-              </h1>
-
-              <button
-                className="vd-close"
-                onClick={() =>
-                  onFavorite(product.id)
-                }
-              >
-                {favorite ? "❤️" : "♡"}
-              </button>
-            </div>
-
-            <div className="vd-rating">
-              ⭐ {product.rating} ·{" "}
-              {product.reviews} reseñas
-            </div>
-
-            <div className="vd-detail-price">
-              {formatPrice(product.price)}
-            </div>
-
-            {product.oldPrice ? (
-              <div
-                style={{
-                  textDecoration: "line-through",
-                  color: "#999",
-                  fontSize: 12,
-                }}
-              >
-                {formatPrice(product.oldPrice)}
-              </div>
-            ) : null}
-
-            <p
-              style={{
-                fontSize: 13,
-                lineHeight: 1.55,
-                color: "#666",
-              }}
-            >
-              {product.description}
-            </p>
-
-            <h3
-              style={{
-                fontSize: 15,
-                marginTop: 20,
-              }}
-            >
-              Características
-            </h3>
-
-            {product.specifications?.map(
-              (specification, index) => (
-                <div
-                  className="vd-spec"
-                  key={index}
-                >
-                  ✓ {specification}
-                </div>
-              )
-            )}
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 9,
-                marginTop: 18,
-              }}
-            >
-              <button
-                className="vd-secondary"
-                onClick={shareWhatsApp}
-              >
-                WhatsApp
-              </button>
-
-              <button
-                className="vd-primary"
-                onClick={buyNow}
-              >
-                Comprar ahora
-              </button>
-            </div>
-
-            <button
-              className="vd-secondary"
-              style={{ marginTop: 9 }}
-              onClick={() => {
-                onAdd(product);
-                navigate("/");
-              }}
-            >
-              Agregar al carrito
-            </button>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-/* =========================================================
-   SIMPLE PAGES
-   ========================================================= */
-
-function SimplePage({ title, children }) {
-  return (
-    <div className="vd-app">
-      <style>{styles}</style>
-
-      <main className="vd-shell vd-main">
-        <section
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: 22,
-            marginTop: 5,
-          }}
-        >
-          <h1
-            style={{
-              marginTop: 0,
-              fontSize: 22,
-            }}
-          >
-            {title}
-          </h1>
-
-          {children}
-        </section>
-      </main>
-    </div>
-  );
-}
-
-/* =========================================================
-   APP PRINCIPAL
-   ========================================================= */
-
-export default function App() {
-  const [products, setProducts] =
-    useState(initialProducts);
-
-  const [favorites, setFavorites] =
-    useState(() =>
-      readStorage(FAVORITES_KEY, [])
-    );
-
-  const [cart, setCart] =
-    useState(() =>
-      readStorage(CART_KEY, [])
-    );
-
-  const [search, setSearch] =
-    useState("");
-
-  const [showMenu, setShowMenu] =
-    useState(false);
-
-  const [showAuth, setShowAuth] =
-    useState(false);
-
-  const [showPublish, setShowPublish] =
-    useState(false);
-
-  const [showCart, setShowCart] =
-    useState(false);
-
-  const [selectedProduct, setSelectedProduct] =
-    useState(null);
 
   const [user, setUser] = useState(null);
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("Todos");
 
-  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
+  const [showCart, setShowCart] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
 
-  /* ================= AUTH ================= */
+  const [authMode, setAuthMode] = useState("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadUser() {
-      const { data } =
-        await supabase.auth.getUser();
-
-      if (mounted) {
-        setUser(data?.user || null);
-      }
-    }
-
-    loadUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe();
-    };
-  }, []);
-
-  /* ================= PRODUCTS ================= */
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadProducts() {
-      try {
-        const { data, error } =
-          await supabase
-            .from("products")
-            .select("*")
-            .order("created_at", {
-              ascending: false,
-            });
-
-        if (
-          !error &&
-          Array.isArray(data) &&
-          data.length > 0 &&
-          mounted
-        ) {
-          setProducts((current) => {
-            const databaseProducts =
-              data.map((item) => ({
-                ...item,
-                id: String(item.id),
-                price: Number(item.price) || 0,
-                category:
-                  item.category || "hogar",
-                image:
-                  item.image ||
-                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=85",
-                rating:
-                  Number(item.rating) || 5,
-                reviews:
-                  Number(item.reviews) || 0,
-              }));
-
-            const databaseIds = new Set(
-              databaseProducts.map((item) =>
-                String(item.id)
-              )
-            );
-
-            const fallbackProducts =
-              current.filter(
-                (item) =>
-                  !databaseIds.has(
-                    String(item.id)
-                  )
-              );
-
-            return [
-              ...databaseProducts,
-              ...fallbackProducts,
-            ];
-          });
-        }
-      } catch {
-        // Los productos iniciales permanecen disponibles.
-      }
-    }
-
-    loadProducts();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  /* ================= STORAGE ================= */
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    price: "",
+    category: "Moda",
+    image: "",
+    description: "",
+  });
 
   useEffect(() => {
     saveStorage(CART_KEY, cart);
   }, [cart]);
 
   useEffect(() => {
-    saveStorage(
-      FAVORITES_KEY,
-      favorites
-    );
+    saveStorage(FAVORITES_KEY, favorites);
   }, [favorites]);
 
-  /* ================= CART ================= */
+  useEffect(() => {
+    let mounted = true;
 
-  function addToCart(product, goCheckout = false) {
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setUser(data?.session?.user ?? null);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setUser(session?.user ?? null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return products.filter((product) => {
+      const categoryMatch =
+        activeCategory === "Todos" ||
+        product.category.toLowerCase() === activeCategory.toLowerCase();
+
+      const searchMatch =
+        !term ||
+        product.name.toLowerCase().includes(term) ||
+        product.category.toLowerCase().includes(term) ||
+        product.description.toLowerCase().includes(term);
+
+      return categoryMatch && searchMatch;
+    });
+  }, [products, activeCategory, search]);
+
+  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+
+  const cartTotal = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  function addToCart(product) {
     setCart((current) => {
-      const existing = current.find(
-        (item) =>
-          String(item.id) ===
-          String(product.id)
-      );
+      const existing = current.find((item) => item.id === product.id);
 
       if (existing) {
         return current.map((item) =>
-          String(item.id) ===
-          String(product.id)
-            ? {
-                ...item,
-                quantity:
-                  Number(item.quantity) + 1,
-              }
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
 
-      return [
-        ...current,
-        {
-          ...product,
-          quantity: 1,
-        },
-      ];
+      return [...current, { ...product, quantity: 1 }];
     });
 
-    if (goCheckout) {
-      setShowCart(true);
-    }
+    setShowCart(true);
   }
 
-  function removeFromCart(productId) {
+  function removeFromCart(id) {
+    setCart((current) => current.filter((item) => item.id !== id));
+  }
+
+  function changeQuantity(id, amount) {
     setCart((current) =>
-      current.filter(
-        (item) =>
-          String(item.id) !==
-          String(productId)
-      )
+      current
+        .map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                quantity: Math.max(1, item.quantity + amount),
+              }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
     );
   }
 
-  function changeQuantity(productId, quantity) {
-    if (quantity <= 0) {
-      removeFromCart(productId);
+  function toggleFavorite(id) {
+    setFavorites((current) =>
+      current.includes(id)
+        ? current.filter((favoriteId) => favoriteId !== id)
+        : [...current, id]
+    );
+  }
+
+  function buyNow(product) {
+    addToCart(product);
+  }
+
+  async function handleAuth(event) {
+    event.preventDefault();
+
+    try {
+      if (authMode === "register") {
+        const { data, error } = await supabase.auth.signUp({
+          email: authEmail,
+          password: authPassword,
+          options: {
+            data: {
+              full_name: authName,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.session) {
+          setUser(data.user);
+          setShowAuth(false);
+        } else {
+          alert(
+            "Cuenta creada. Revisa tu correo electrónico para confirmar tu cuenta."
+          );
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password: authPassword,
+        });
+
+        if (error) throw error;
+
+        setUser(data.user);
+        setShowAuth(false);
+      }
+    } catch (error) {
+      alert(error?.message || "No fue posible completar la operación.");
+    }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setUser(null);
+    setShowMenu(false);
+  }
+
+  async function handlePublish(event) {
+    event.preventDefault();
+
+    if (!newProduct.name || !newProduct.price) {
+      alert("Completa el nombre y el precio del producto.");
       return;
     }
 
-    setCart((current) =>
-      current.map((item) =>
-        String(item.id) ===
-        String(productId)
-          ? {
-              ...item,
-              quantity,
-            }
-          : item
-      )
-    );
-  }
+    const product = {
+      id: `local-${Date.now()}`,
+      name: newProduct.name,
+      price: Number(newProduct.price),
+      oldPrice: null,
+      rating: 5,
+      reviews: 0,
+      discount: 0,
+      category: newProduct.category,
+      type: "Nuevo",
+      image:
+        newProduct.image ||
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
+      description:
+        newProduct.description || "Producto publicado en VaniDaxi.",
+      specifications: [],
+    };
 
-  /* ================= FAVORITES ================= */
+    setProducts((current) => [product, ...current]);
 
-  function toggleFavorite(productId) {
-    setFavorites((current) => {
-      const exists = current.includes(
-        productId
-      );
-
-      return exists
-        ? current.filter(
-            (id) => id !== productId
-          )
-        : [...current, productId];
+    setNewProduct({
+      name: "",
+      price: "",
+      category: "Moda",
+      image: "",
+      description: "",
     });
+
+    setShowPublish(false);
+    navigate("/");
   }
 
-  /* ================= SEARCH ================= */
+  function handleCategory(category) {
+    setActiveCategory(category);
+    setSearch("");
 
-  function runSearch(value) {
-    setSearch(value);
-
-    navigate(
-      value
-        ? `/buscar?q=${encodeURIComponent(value)}`
-        : "/productos"
-    );
+    if (location.pathname !== "/") {
+      navigate("/");
+    }
   }
 
-  /* ================= CHECKOUT ================= */
-
-  function checkout() {
+  function whatsappCheckout() {
     if (!cart.length) return;
 
-    if (!user) {
-      setShowCart(false);
-      setShowAuth(true);
-      return;
-    }
+    const lines = cart.map(
+      (item) =>
+        `${item.quantity} x ${item.name} — ${formatPrice(
+          item.price * item.quantity
+        )}`
+    );
 
-    setShowCart(false);
-    navigate("/checkout");
+    const message = [
+      "Hola, quiero realizar una compra en VaniDaxi:",
+      "",
+      ...lines,
+      "",
+      `Total: ${formatPrice(cartTotal)}`,
+    ].join("\n");
+
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
+      "_blank"
+    );
   }
 
-  const cartCount = cart.reduce(
-    (total, item) =>
-      total + Number(item.quantity || 0),
-    0
-  );
-
   return (
-    <>
-      <style>{styles}</style>
+    <div className="app-shell">
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
 
-      <Header
-        cartCount={cartCount}
-        onMenu={() => setShowMenu(true)}
-        onCart={() => setShowCart(true)}
-        search={search}
-        setSearch={setSearch}
-      />
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          margin: 0;
+          background: #ffffff;
+          color: #222;
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+          font: inherit;
+        }
+
+        button {
+          cursor: pointer;
+        }
+
+        a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .app-shell {
+          min-height: 100vh;
+          background: #fff;
+        }
+
+        .top-header {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: rgba(255,255,255,.97);
+          border-bottom: 1px solid #eeeeee;
+          backdrop-filter: blur(12px);
+        }
+
+        .header-inner {
+          width: min(1180px, calc(100% - 28px));
+          margin: 0 auto;
+          min-height: 72px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          min-width: max-content;
+        }
+
+        .brand-icon {
+          width: 39px;
+          height: 39px;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+          color: #fff;
+          font-size: 21px;
+          font-weight: 900;
+          background: linear-gradient(135deg, #ff2d55, #e50087 52%, #6d25d9);
+          box-shadow: 0 5px 15px rgba(211, 0, 112, .20);
+        }
+
+        .brand-name {
+          font-size: 22px;
+          font-weight: 900;
+          letter-spacing: -1px;
+          background: linear-gradient(90deg, #ed174d, #d60089, #6b29d8);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .search-box {
+          flex: 1;
+          max-width: 560px;
+          height: 44px;
+          margin-left: auto;
+          margin-right: auto;
+          border: 1px solid #e5e5e5;
+          border-radius: 23px;
+          background: #f8f8f9;
+          display: flex;
+          align-items: center;
+          padding: 0 15px;
+          gap: 8px;
+        }
+
+        .search-box span {
+          color: #8a8a8a;
+          font-size: 18px;
+        }
+
+        .search-box input {
+          border: 0;
+          outline: 0;
+          width: 100%;
+          background: transparent;
+          font-size: 14px;
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+        }
+
+        .icon-button {
+          position: relative;
+          width: 42px;
+          height: 42px;
+          border: 1px solid #eeeeee;
+          border-radius: 50%;
+          background: #fff;
+          display: grid;
+          place-items: center;
+          font-size: 19px;
+        }
+
+        .cart-badge {
+          position: absolute;
+          top: -3px;
+          right: -2px;
+          min-width: 19px;
+          height: 19px;
+          padding: 0 5px;
+          border-radius: 10px;
+          background: #e6007e;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 800;
+          display: grid;
+          place-items: center;
+        }
+
+        .menu-button {
+          border: 0;
+          background: transparent;
+          width: 42px;
+          height: 42px;
+          display: grid;
+          place-items: center;
+          font-size: 24px;
+        }
+
+        .category-bar {
+          border-bottom: 1px solid #eeeeee;
+          background: #fff;
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+
+        .category-bar::-webkit-scrollbar {
+          display: none;
+        }
+
+        .category-inner {
+          width: min(1180px, calc(100% - 28px));
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 26px;
+          height: 45px;
+          white-space: nowrap;
+        }
+
+        .category-link {
+          border: 0;
+          background: transparent;
+          color: #555;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 0;
+          height: 45px;
+          position: relative;
+        }
+
+        .category-link.active {
+          color: #b4007c;
+          font-weight: 800;
+        }
+
+        .category-link.active::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 3px;
+          border-radius: 4px 4px 0 0;
+          background: linear-gradient(90deg, #ef2456, #d40088, #6d2bd9);
+        }
+
+        .page {
+          width: min(1180px, calc(100% - 28px));
+          margin: 0 auto;
+        }
+
+        .hero {
+          margin-top: 20px;
+          min-height: 280px;
+          border-radius: 24px;
+          overflow: hidden;
+          position: relative;
+          background:
+            linear-gradient(90deg, rgba(44,8,55,.80), rgba(102,10,78,.34)),
+            url("https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=1800&q=85")
+            center/cover;
+          display: flex;
+          align-items: center;
+        }
+
+        .hero-content {
+          width: min(570px, 100%);
+          padding: 42px;
+          color: #fff;
+        }
+
+        .hero-kicker {
+          display: inline-flex;
+          padding: 7px 13px;
+          border-radius: 20px;
+          background: rgba(255,255,255,.16);
+          font-size: 12px;
+          font-weight: 700;
+          margin-bottom: 12px;
+        }
+
+        .hero h1 {
+          margin: 0 0 12px;
+          font-size: clamp(30px, 5vw, 48px);
+          line-height: 1.02;
+          letter-spacing: -1.8px;
+        }
+
+        .hero p {
+          margin: 0 0 22px;
+          font-size: 15px;
+          line-height: 1.55;
+          opacity: .92;
+          max-width: 470px;
+        }
+
+        .primary-button {
+          border: 0;
+          min-height: 43px;
+          padding: 0 20px;
+          border-radius: 22px;
+          color: #fff;
+          font-weight: 800;
+          background: linear-gradient(90deg, #f02455, #d6008a, #6d29d7);
+          box-shadow: 0 7px 18px rgba(197, 0, 116, .22);
+        }
+
+        .secondary-button {
+          min-height: 42px;
+          padding: 0 18px;
+          border-radius: 22px;
+          border: 1px solid #e3e3e3;
+          background: #fff;
+          font-weight: 700;
+        }
+
+        .section {
+          padding: 28px 0 0;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: end;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .section-title {
+          margin: 0;
+          font-size: 22px;
+          letter-spacing: -.6px;
+        }
+
+        .section-subtitle {
+          color: #888;
+          font-size: 12px;
+          margin: 5px 0 0;
+        }
+
+        .see-all {
+          border: 0;
+          background: transparent;
+          color: #b6007d;
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .categories-grid {
+          display: grid;
+          grid-template-columns: repeat(8, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .category-card {
+          border: 1px solid #eeeeee;
+          background: #fff;
+          border-radius: 16px;
+          overflow: hidden;
+          padding: 0;
+          min-width: 0;
+          box-shadow: 0 3px 12px rgba(0,0,0,.035);
+          transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .category-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0,0,0,.08);
+        }
+
+        .category-image {
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          display: block;
+          object-fit: cover;
+        }
+
+        .category-name {
+          display: block;
+          padding: 9px 5px 11px;
+          text-align: center;
+          font-size: 11px;
+          font-weight: 800;
+          color: #333;
+        }
+
+        .promo {
+          margin-top: 26px;
+          border-radius: 18px;
+          min-height: 112px;
+          padding: 20px 24px;
+          background: linear-gradient(90deg, #fff1f7, #faf1ff);
+          border: 1px solid #f4deeb;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+        }
+
+        .promo h3 {
+          margin: 0 0 6px;
+          font-size: 19px;
+        }
+
+        .promo p {
+          margin: 0;
+          color: #777;
+          font-size: 13px;
+        }
+
+        .products-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 17px;
+          padding-bottom: 50px;
+        }
+
+        .product-card {
+          border: 1px solid #eeeeee;
+          border-radius: 17px;
+          overflow: hidden;
+          background: #fff;
+          position: relative;
+          box-shadow: 0 3px 12px rgba(0,0,0,.035);
+        }
+
+        .product-image-wrap {
+          position: relative;
+          background: #f6f6f6;
+          aspect-ratio: 1 / .92;
+          overflow: hidden;
+        }
+
+        .product-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .discount-badge {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          border-radius: 13px;
+          background: #e90073;
+          color: #fff;
+          padding: 5px 8px;
+          font-size: 10px;
+          font-weight: 900;
+        }
+
+        .favorite-button {
+          position: absolute;
+          top: 9px;
+          right: 9px;
+          width: 33px;
+          height: 33px;
+          border-radius: 50%;
+          border: 0;
+          background: rgba(255,255,255,.94);
+          font-size: 17px;
+        }
+
+        .product-body {
+          padding: 13px;
+        }
+
+        .product-category {
+          color: #999;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: .6px;
+          font-weight: 800;
+        }
+
+        .product-name {
+          margin: 5px 0 8px;
+          font-size: 14px;
+          line-height: 1.3;
+          min-height: 36px;
+        }
+
+        .rating {
+          font-size: 11px;
+          color: #e79a00;
+          margin-bottom: 9px;
+        }
+
+        .rating span {
+          color: #999;
+        }
+
+        .price-row {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .price {
+          font-size: 18px;
+          font-weight: 900;
+        }
+
+        .old-price {
+          font-size: 11px;
+          color: #aaa;
+          text-decoration: line-through;
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 7px;
+          margin-top: 12px;
+        }
+
+        .add-button {
+          flex: 1;
+          min-height: 38px;
+          border: 0;
+          border-radius: 11px;
+          color: #fff;
+          font-size: 12px;
+          font-weight: 800;
+          background: linear-gradient(90deg, #ef2858, #d30088, #6b2bd7);
+        }
+
+        .details-button {
+          width: 40px;
+          border: 1px solid #e8e8e8;
+          background: #fff;
+          border-radius: 11px;
+          font-size: 16px;
+        }
+
+        .floating-cart {
+          position: fixed;
+          left: 18px;
+          bottom: 22px;
+          z-index: 80;
+          width: 55px;
+          height: 55px;
+          border: 0;
+          border-radius: 50%;
+          color: #fff;
+          background: linear-gradient(135deg, #f12658, #d1008b, #6828d7);
+          box-shadow: 0 10px 26px rgba(144,0,116,.28);
+          font-size: 22px;
+        }
+
+        .floating-support {
+          position: fixed;
+          right: 18px;
+          bottom: 22px;
+          z-index: 80;
+          width: 55px;
+          height: 55px;
+          border: 0;
+          border-radius: 50%;
+          background: #fff;
+          border: 1px solid #eee;
+          box-shadow: 0 8px 24px rgba(0,0,0,.12);
+          font-size: 22px;
+        }
+
+        .overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.38);
+          z-index: 100;
+          display: flex;
+        }
+
+        .side-menu {
+          width: min(340px, 88vw);
+          height: 100%;
+          background: #fff;
+          padding: 22px;
+          box-shadow: 8px 0 30px rgba(0,0,0,.15);
+          animation: slideIn .2s ease;
+        }
+
+        @keyframes slideIn {
+          from {
+            transform: translateX(-100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .menu-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 25px;
+        }
+
+        .close-button {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 1px solid #eee;
+          background: #fff;
+        }
+
+        .menu-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          min-height: 50px;
+          border: 0;
+          border-bottom: 1px solid #f0f0f0;
+          background: transparent;
+          text-align: left;
+          font-weight: 700;
+        }
+
+        .modal-card {
+          width: min(480px, calc(100% - 28px));
+          max-height: calc(100vh - 40px);
+          overflow-y: auto;
+          margin: auto;
+          border-radius: 22px;
+          background: #fff;
+          padding: 24px;
+          box-shadow: 0 20px 60px rgba(0,0,0,.22);
+        }
+
+        .modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 18px;
+        }
+
+        .modal-header h2 {
+          margin: 0;
+          font-size: 21px;
+        }
+
+        .form {
+          display: grid;
+          gap: 13px;
+        }
+
+        .form label {
+          font-size: 12px;
+          font-weight: 800;
+          color: #555;
+        }
+
+        .form input,
+        .form select,
+        .form textarea {
+          width: 100%;
+          border: 1px solid #e4e4e4;
+          border-radius: 12px;
+          padding: 12px;
+          outline: 0;
+          background: #fafafa;
+        }
+
+        .form textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
+
+        .cart-panel {
+          margin-left: auto;
+          width: min(440px, 94vw);
+          height: 100%;
+          background: #fff;
+          padding: 22px;
+          display: flex;
+          flex-direction: column;
+          box-shadow: -8px 0 30px rgba(0,0,0,.14);
+        }
+
+        .cart-items {
+          flex: 1;
+          overflow-y: auto;
+          display: grid;
+          align-content: start;
+          gap: 12px;
+        }
+
+        .cart-item {
+          display: grid;
+          grid-template-columns: 65px 1fr auto;
+          gap: 10px;
+          align-items: center;
+          padding: 9px;
+          border: 1px solid #eee;
+          border-radius: 14px;
+        }
+
+        .cart-item img {
+          width: 65px;
+          height: 65px;
+          border-radius: 10px;
+          object-fit: cover;
+        }
+
+        .cart-item h4 {
+          margin: 0 0 5px;
+          font-size: 13px;
+        }
+
+        .cart-item p {
+          margin: 0;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .quantity {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+        }
+
+        .quantity button {
+          width: 25px;
+          height: 25px;
+          border: 1px solid #ddd;
+          background: #fff;
+          border-radius: 7px;
+        }
+
+        .remove {
+          border: 0;
+          background: transparent;
+          color: #c70069;
+          font-size: 11px;
+        }
+
+        .cart-footer {
+          border-top: 1px solid #eee;
+          padding-top: 16px;
+          margin-top: 15px;
+        }
+
+        .total-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 17px;
+          font-weight: 900;
+          margin-bottom: 13px;
+        }
+
+        .product-page {
+          padding: 25px 0 70px;
+        }
+
+        .back-button {
+          border: 0;
+          background: transparent;
+          padding: 0;
+          margin-bottom: 18px;
+          font-weight: 800;
+          color: #777;
+        }
+
+        .product-detail {
+          display: grid;
+          grid-template-columns: 1.1fr 1fr;
+          gap: 34px;
+        }
+
+        .detail-image {
+          width: 100%;
+          aspect-ratio: 1 / .9;
+          border-radius: 22px;
+          object-fit: cover;
+          background: #f6f6f6;
+        }
+
+        .detail-category {
+          color: #b30079;
+          font-size: 12px;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .detail-title {
+          margin: 7px 0 13px;
+          font-size: clamp(28px, 4vw, 42px);
+          line-height: 1.05;
+        }
+
+        .detail-description {
+          color: #666;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+
+        .specifications {
+          padding: 0;
+          list-style: none;
+          display: grid;
+          gap: 8px;
+        }
+
+        .specifications li {
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: #f8f8f8;
+          font-size: 13px;
+        }
+
+        .empty-state {
+          padding: 45px 15px;
+          text-align: center;
+          color: #888;
+          grid-column: 1 / -1;
+        }
+
+        .footer {
+          border-top: 1px solid #eee;
+          padding: 35px 0 80px;
+          color: #777;
+          font-size: 12px;
+          text-align: center;
+        }
+
+        @media (max-width: 900px) {
+          .header-inner {
+            min-height: 65px;
+          }
+
+          .search-box {
+            max-width: none;
+          }
+
+          .categories-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+
+          .products-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+
+          .product-detail {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 650px) {
+          .header-inner {
+            gap: 7px;
+          }
+
+          .brand-name {
+            font-size: 18px;
+          }
+
+          .brand-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+          }
+
+          .search-box {
+            order: 5;
+            width: 100%;
+            flex-basis: 100%;
+            margin: 0;
+          }
+
+          .header-inner {
+            flex-wrap: wrap;
+            padding: 10px 0;
+          }
+
+          .top-header {
+            position: relative;
+          }
+
+          .header-actions {
+            margin-left: auto;
+          }
+
+          .category-inner {
+            gap: 20px;
+          }
+
+          .hero {
+            min-height: 360px;
+            border-radius: 18px;
+          }
+
+          .hero-content {
+            padding: 27px;
+          }
+
+          .hero h1 {
+            font-size: 34px;
+          }
+
+          .categories-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+          }
+
+          .category-card {
+            border-radius: 12px;
+          }
+
+          .category-name {
+            font-size: 9px;
+            padding: 7px 2px 9px;
+          }
+
+          .promo {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .products-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+
+          .product-body {
+            padding: 10px;
+          }
+
+          .product-name {
+            font-size: 12px;
+          }
+
+          .price {
+            font-size: 16px;
+          }
+
+          .add-button {
+            font-size: 10px;
+          }
+
+          .floating-cart,
+          .floating-support {
+            width: 50px;
+            height: 50px;
+            bottom: 16px;
+          }
+
+          .floating-cart {
+            left: 13px;
+          }
+
+          .floating-support {
+            right: 13px;
+          }
+        }
+
+        @media (max-width: 390px) {
+          .page,
+          .header-inner,
+          .category-inner {
+            width: min(100% - 20px, 1180px);
+          }
+
+          .categories-grid {
+            gap: 6px;
+          }
+
+          .products-grid {
+            gap: 8px;
+          }
+
+          .hero-content {
+            padding: 22px;
+          }
+
+          .hero h1 {
+            font-size: 30px;
+          }
+        }
+      `}</style>
+
+      <header className="top-header">
+        <div className="header-inner">
+          <Link className="brand" to="/" onClick={() => setActiveCategory("Todos")}>
+            <div className="brand-icon">S</div>
+            <div className="brand-name">VaniDaxi</div>
+          </Link>
+
+          <div className="search-box">
+            <span>⌕</span>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="¿Qué estás buscando?"
+            />
+          </div>
+
+          <div className="header-actions">
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Favoritos"
+              onClick={() => {
+                if (favorites.length) {
+                  setActiveCategory("Todos");
+                  setSearch("");
+                }
+              }}
+            >
+              ♡
+            </button>
+
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Carrito"
+              onClick={() => setShowCart(true)}
+            >
+              🛒
+              {cartCount > 0 && (
+                <span className="cart-badge">{cartCount}</span>
+              )}
+            </button>
+
+            <button
+              className="menu-button"
+              type="button"
+              aria-label="Menú"
+              onClick={() => setShowMenu(true)}
+            >
+              ☰
+            </button>
+          </div>
+        </div>
+
+        <nav className="category-bar">
+          <div className="category-inner">
+            {["Todos", ...categories.map((category) => category.name)].map(
+              (category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`category-link ${
+                    activeCategory === category ? "active" : ""
+                  }`}
+                  onClick={() => handleCategory(category)}
+                >
+                  {category}
+                </button>
+              )
+            )}
+          </div>
+        </nav>
+      </header>
 
       <Routes>
         <Route
           path="/"
           element={
-            <Home
-              products={products}
-              favorites={favorites}
-              onFavorite={toggleFavorite}
-              onAdd={addToCart}
-              onOpenProduct={
-                setSelectedProduct
-              }
-              onSearch={runSearch}
-              onPublish={() =>
-                setShowPublish(true)
-              }
-            />
+            <>
+              <main className="page">
+                <section className="hero">
+                  <div className="hero-content">
+                    <span className="hero-kicker">
+                      ✨ Todo en un solo lugar
+                    </span>
+
+                    <h1>Compra, vende y descubre.</h1>
+
+                    <p>
+                      Encuentra productos, ofertas y servicios de diferentes
+                      vendedores en un solo lugar.
+                    </p>
+
+                    <button
+                      className="primary-button"
+                      type="button"
+                      onClick={() => {
+                        document
+                          .getElementById("productos")
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
+                      Explorar productos
+                    </button>
+                  </div>
+                </section>
+
+                <section className="section">
+                  <div className="section-header">
+                    <div>
+                      <h2 className="section-title">Categorías</h2>
+                      <p className="section-subtitle">
+                        Encuentra exactamente lo que necesitas
+                      </p>
+                    </div>
+
+                    <button
+                      className="see-all"
+                      type="button"
+                      onClick={() => handleCategory("Todos")}
+                    >
+                      Ver todo
+                    </button>
+                  </div>
+
+                  <div className="categories-grid">
+                    {categories.map((category) => (
+                      <button
+                        type="button"
+                        className="category-card"
+                        key={category.name}
+                        onClick={() => handleCategory(category.name)}
+                      >
+                        <img
+                          className="category-image"
+                          src={category.image}
+                          alt={category.name}
+                        />
+
+                        <span className="category-name">
+                          {category.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="promo">
+                  <div>
+                    <h3>¿Quieres vender en VaniDaxi?</h3>
+                    <p>
+                      Publica tus productos y llega a nuevos clientes.
+                    </p>
+                  </div>
+
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        setAuthMode("login");
+                        setShowAuth(true);
+                      } else {
+                        setShowPublish(true);
+                      }
+                    }}
+                  >
+                    Publicar producto
+                  </button>
+                </section>
+
+                <section className="section" id="productos">
+                  <div className="section-header">
+                    <div>
+                      <h2 className="section-title">
+                        {activeCategory === "Todos"
+                          ? "Productos destacados"
+                          : activeCategory}
+                      </h2>
+
+                      <p className="section-subtitle">
+                        {filteredProducts.length} productos disponibles
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="products-grid">
+                    {filteredProducts.length ? (
+                      filteredProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          favorite={favorites.includes(product.id)}
+                          onFavorite={() => toggleFavorite(product.id)}
+                          onAdd={() => addToCart(product)}
+                          onDetails={() =>
+                            navigate(`/producto/${product.id}`)
+                          }
+                        />
+                      ))
+                    ) : (
+                      <div className="empty-state">
+                        No encontramos productos con esa búsqueda.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </main>
+
+              <footer className="footer">
+                VaniDaxi · Todo en un solo lugar
+              </footer>
+            </>
           }
         />
 
         <Route
-          path="/categorias"
-          element={<CategoriesPage />}
-        />
-
-        <Route
-          path="/productos"
-          element={
-            <ProductListPage
-              products={products}
-              favorites={favorites}
-              onFavorite={toggleFavorite}
-              onAdd={addToCart}
-              onOpen={setSelectedProduct}
-            />
-          }
-        />
-
-        <Route
-          path="/buscar"
-          element={
-            <SearchRoute
-              products={products}
-              favorites={favorites}
-              onFavorite={toggleFavorite}
-              onAdd={addToCart}
-              onOpen={setSelectedProduct}
-            />
-          }
-        />
-
-        <Route
-          path="/categoria/:categoryId"
-          element={
-            <CategoryPage
-              products={products}
-              favorites={favorites}
-              onFavorite={toggleFavorite}
-              onAdd={addToCart}
-              onOpen={setSelectedProduct}
-            />
-          }
-        />
-
-        <Route
-          path="/producto/:productId"
+          path="/producto/:id"
           element={
             <ProductPage
               products={products}
-              favorites={favorites}
-              onFavorite={toggleFavorite}
               onAdd={addToCart}
-            />
-          }
-        />
-
-        <Route
-          path="/favoritos"
-          element={
-            <FavoritesPage
-              products={products}
-              favorites={favorites}
+              onBuy={buyNow}
+              favoriteIds={favorites}
               onFavorite={toggleFavorite}
-              onAdd={addToCart}
-              onOpen={setSelectedProduct}
             />
-          }
-        />
-
-        <Route
-          path="/pedidos"
-          element={
-            <SimplePage title="Mis pedidos">
-              <p style={{ color: "#777" }}>
-                Aquí aparecerán tus pedidos y su
-                seguimiento.
-              </p>
-            </SimplePage>
-          }
-        />
-
-        <Route
-          path="/checkout"
-          element={
-            <CheckoutPage
-              cart={cart}
-              user={user}
-              onBack={() => setShowCart(true)}
-              onComplete={() => {
-                setCart([]);
-                navigate("/");
-              }}
-            />
-          }
-        />
-
-        <Route
-          path="/ayuda"
-          element={
-            <SimplePage title="Ayuda y soporte">
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#666",
-                  lineHeight: 1.6,
-                }}
-              >
-                Si necesitas ayuda con una compra,
-                una publicación o tu cuenta,
-                puedes comunicarte con atención
-                VaniDaxi.
-              </p>
-
-              <button
-                className="vd-primary"
-                onClick={() => {
-                  const text =
-                    "Hola, necesito ayuda con VaniDaxi.";
-                  window.open(
-                    `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                      text
-                    )}`,
-                    "_blank"
-                  );
-                }}
-              >
-                Contactar por WhatsApp
-              </button>
-            </SimplePage>
           }
         />
       </Routes>
 
-      <BottomNavigation
-        onPublish={() => setShowPublish(true)}
-        cartCount={cartCount}
-      />
+      <button
+        className="floating-cart"
+        type="button"
+        aria-label="Abrir carrito"
+        onClick={() => setShowCart(true)}
+      >
+        🛒
+        {cartCount > 0 && (
+          <span className="cart-badge">{cartCount}</span>
+        )}
+      </button>
 
-      {showMenu ? (
-        <MenuDrawer
-          user={user}
-          onClose={() => setShowMenu(false)}
-          onAuth={() => setShowAuth(true)}
-          onPublish={() => setShowPublish(true)}
-        />
-      ) : null}
+      <button
+        className="floating-support"
+        type="button"
+        aria-label="Soporte"
+        onClick={() =>
+          window.open(
+            `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+              "Hola, necesito ayuda con VaniDaxi."
+            )}`,
+            "_blank"
+          )
+        }
+      >
+        💬
+      </button>
 
-      {showAuth ? (
-        <AuthModal
-          user={user}
-          onClose={() => setShowAuth(false)}
-          onUser={setUser}
-        />
-      ) : null}
-
-      {showPublish ? (
-        <PublishModal
-          user={user}
-          onClose={() => setShowPublish(false)}
-          onPublished={() => {
-            setShowPublish(false);
-            window.location.reload();
-          }}
-        />
-      ) : null}
-
-      {showCart ? (
-        <CartModal
-          cart={cart}
-          onClose={() => setShowCart(false)}
-          onRemove={removeFromCart}
-          onQuantity={changeQuantity}
-          onCheckout={checkout}
-        />
-      ) : null}
-
-      {selectedProduct ? (
+      {showMenu && (
         <div
-          className="vd-modal-wrap"
-          onClick={() =>
-            setSelectedProduct(null)
-          }
-        >
-          <div
-            className="vd-modal"
-            onClick={(event) =>
-              event.stopPropagation()
+          className="overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowMenu(false);
             }
-          >
-            <div className="vd-modal-head">
-              <h2>
-                {selectedProduct.name}
-              </h2>
+          }}
+        >
+          <aside className="side-menu">
+            <div className="menu-header">
+              <div className="brand">
+                <div className="brand-icon">S</div>
+                <div className="brand-name">VaniDaxi</div>
+              </div>
 
               <button
-                className="vd-close"
-                onClick={() =>
-                  setSelectedProduct(null)
-                }
+                className="close-button"
+                type="button"
+                onClick={() => setShowMenu(false)}
               >
                 ✕
               </button>
             </div>
 
-            <img
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
-              style={{
-                width: "100%",
-                height: 230,
-                objectFit: "cover",
-                borderRadius: 15,
-              }}
-            />
-
-            <div
-              style={{
-                fontSize: 23,
-                fontWeight: 900,
-                marginTop: 13,
+            <button
+              className="menu-item"
+              type="button"
+              onClick={() => {
+                setShowMenu(false);
+                setShowAuth(true);
+                setAuthMode("login");
               }}
             >
-              {formatPrice(
-                selectedProduct.price
-              )}
-            </div>
-
-            <p
-              style={{
-                color: "#777",
-                fontSize: 12,
-                lineHeight: 1.5,
-              }}
-            >
-              {selectedProduct.description}
-            </p>
+              ✨ {user ? "Mi cuenta" : "Iniciar sesión"}
+            </button>
 
             <button
-              className="vd-primary"
+              className="menu-item"
+              type="button"
               onClick={() => {
-                addToCart(selectedProduct);
-                setSelectedProduct(null);
+                setShowMenu(false);
                 setShowCart(true);
               }}
             >
-              Agregar al carrito
+              🛒 Mi carrito
             </button>
-          </div>
-        </div>
-      ) : null}
-    </>
-  );
-}
 
-/* =========================================================
-   SEARCH ROUTE
-   ========================================================= */
-
-function SearchRoute(props) {
-  const location = useLocation();
-
-  const query =
-    new URLSearchParams(location.search).get(
-      "q"
-    ) || "";
-
-  return (
-    <ProductListPage
-      {...props}
-      searchTerm={query}
-    />
-  );
-}
-
-/* =========================================================
-   FAVORITES PAGE
-   ========================================================= */
-
-function FavoritesPage({
-  products,
-  favorites,
-  onFavorite,
-  onAdd,
-  onOpen,
-}) {
-  const favoriteProducts = products.filter(
-    (product) =>
-      favorites.includes(product.id)
-  );
-
-  return (
-    <div className="vd-app">
-      <style>{styles}</style>
-
-      <main className="vd-shell vd-main">
-        <section className="vd-section">
-          <div className="vd-section-head">
-            <h1 className="vd-section-title">
-              Mis favoritos
-            </h1>
-          </div>
-
-          {favoriteProducts.length === 0 ? (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 18,
-                padding: 35,
-                textAlign: "center",
-                color: "#777",
+            <button
+              className="menu-item"
+              type="button"
+              onClick={() => {
+                setShowMenu(false);
+                setShowPublish(true);
               }}
             >
-              <div
-                style={{
-                  fontSize: 42,
-                  marginBottom: 8,
-                }}
-              >
-                ♡
-              </div>
+              📦 Publicar producto
+            </button>
 
-              Todavía no tienes favoritos.
+            <button
+              className="menu-item"
+              type="button"
+              onClick={() => {
+                setShowMenu(false);
+                alert("La sección de pedidos estará disponible próximamente.");
+              }}
+            >
+              🧾 Mis pedidos
+            </button>
+
+            <button
+              className="menu-item"
+              type="button"
+              onClick={() => {
+                setShowMenu(false);
+                alert("La mensajería estará disponible próximamente.");
+              }}
+            >
+              💬 Mensajes
+            </button>
+
+            {user && (
+              <button className="menu-item" type="button" onClick={handleLogout}>
+                🚪 Cerrar sesión
+              </button>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {showCart && (
+        <div
+          className="overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowCart(false);
+            }
+          }}
+        >
+          <aside className="cart-panel">
+            <div className="modal-header">
+              <h2>Mi carrito</h2>
+
+              <button
+                className="close-button"
+                type="button"
+                onClick={() => setShowCart(false)}
+              >
+                ✕
+              </button>
             </div>
-          ) : (
-            <div className="vd-product-grid">
-              {favoriteProducts.map(
-                (product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    favorite
-                    onFavorite={onFavorite}
-                    onAdd={onAdd}
-                    onOpen={onOpen}
-                  />
-                )
+
+            <div className="cart-items">
+              {cart.length ? (
+                cart.map((item) => (
+                  <div className="cart-item" key={item.id}>
+                    <img src={item.image} alt={item.name} />
+
+                    <div>
+                      <h4>{item.name}</h4>
+                      <p>{formatPrice(item.price)}</p>
+
+                      <div className="quantity">
+                        <button
+                          type="button"
+                          onClick={() => changeQuantity(item.id, -1)}
+                        >
+                          −
+                        </button>
+
+                        <strong>{item.quantity}</strong>
+
+                        <button
+                          type="button"
+                          onClick={() => changeQuantity(item.id, 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      className="remove"
+                      type="button"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <div style={{ fontSize: 38, marginBottom: 10 }}>🛒</div>
+                  Tu carrito está vacío.
+                </div>
               )}
             </div>
-          )}
-        </section>
-      </main>
+
+            {cart.length > 0 && (
+              <div className="cart-footer">
+                <div className="total-row">
+                  <span>Total</span>
+                  <span>{formatPrice(cartTotal)}</span>
+                </div>
+
+                <button
+                  className="primary-button"
+                  type="button"
+                  style={{ width: "100%" }}
+                  onClick={whatsappCheckout}
+                >
+                  Continuar compra
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {showAuth && (
+        <div
+          className="overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowAuth(false);
+            }
+          }}
+        >
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>
+                {authMode === "login"
+                  ? "Bienvenido a VaniDaxi"
+                  : "Crear cuenta"}
+              </h2>
+
+              <button
+                className="close-button"
+                type="button"
+                onClick={() => setShowAuth(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form className="form" onSubmit={handleAuth}>
+              {authMode === "register" && (
+                <>
+                  <label htmlFor="auth-name">Nombre</label>
+                  <input
+                    id="auth-name"
+                    value={authName}
+                    onChange={(event) => setAuthName(event.target.value)}
+                    placeholder="Tu nombre"
+                    required
+                  />
+                </>
+              )}
+
+              <label htmlFor="auth-email">Correo electrónico</label>
+              <input
+                id="auth-email"
+                type="email"
+                value={authEmail}
+                onChange={(event) => setAuthEmail(event.target.value)}
+                placeholder="correo@ejemplo.com"
+                required
+              />
+
+              <label htmlFor="auth-password">Contraseña</label>
+              <input
+                id="auth-password"
+                type="password"
+                value={authPassword}
+                onChange={(event) => setAuthPassword(event.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+
+              <button className="primary-button" type="submit">
+                {authMode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+              </button>
+
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  setAuthMode((current) =>
+                    current === "login" ? "register" : "login"
+                  )
+                }
+              >
+                {authMode === "login"
+                  ? "Crear una cuenta"
+                  : "Ya tengo una cuenta"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showPublish && (
+        <div
+          className="overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowPublish(false);
+            }
+          }}
+        >
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Publicar producto</h2>
+
+              <button
+                className="close-button"
+                type="button"
+                onClick={() => setShowPublish(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form className="form" onSubmit={handlePublish}>
+              <label htmlFor="product-name">Nombre del producto</label>
+              <input
+                id="product-name"
+                value={newProduct.name}
+                onChange={(event) =>
+                  setNewProduct((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                placeholder="Ej. Bolsa de mano"
+                required
+              />
+
+              <label htmlFor="product-price">Precio</label>
+              <input
+                id="product-price"
+                type="number"
+                min="1"
+                value={newProduct.price}
+                onChange={(event) =>
+                  setNewProduct((current) => ({
+                    ...current,
+                    price: event.target.value,
+                  }))
+                }
+                placeholder="599"
+                required
+              />
+
+              <label htmlFor="product-category">Categoría</label>
+              <select
+                id="product-category"
+                value={newProduct.category}
+                onChange={(event) =>
+                  setNewProduct((current) => ({
+                    ...current,
+                    category: event.target.value,
+                  }))
+                }
+              >
+                {categories.map((category) => (
+                  <option key={category.name} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="product-image">URL de imagen</label>
+              <input
+                id="product-image"
+                value={newProduct.image}
+                onChange={(event) =>
+                  setNewProduct((current) => ({
+                    ...current,
+                    image: event.target.value,
+                  }))
+                }
+                placeholder="https://..."
+              />
+
+              <label htmlFor="product-description">Descripción</label>
+              <textarea
+                id="product-description"
+                value={newProduct.description}
+                onChange={(event) =>
+                  setNewProduct((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+                placeholder="Describe tu producto..."
+              />
+
+              <button className="primary-button" type="submit">
+                Publicar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* =========================================================
-   CHECKOUT
-   ========================================================= */
-
-function CheckoutPage({
-  cart,
-  user,
-  onBack,
-  onComplete,
+function ProductCard({
+  product,
+  favorite,
+  onFavorite,
+  onAdd,
+  onDetails,
 }) {
-  const [name, setName] = useState(
-    user?.user_metadata?.full_name || ""
+  return (
+    <article className="product-card">
+      <div className="product-image-wrap">
+        <img
+          className="product-image"
+          src={product.image}
+          alt={product.name}
+        />
+
+        {product.discount > 0 && (
+          <span className="discount-badge">
+            -{product.discount}%
+          </span>
+        )}
+
+        <button
+          className="favorite-button"
+          type="button"
+          aria-label="Favorito"
+          onClick={onFavorite}
+        >
+          {favorite ? "♥" : "♡"}
+        </button>
+      </div>
+
+      <div className="product-body">
+        <div className="product-category">{product.category}</div>
+
+        <h3 className="product-name">{product.name}</h3>
+
+        <div className="rating">
+          ★ {product.rating}{" "}
+          <span>({product.reviews})</span>
+        </div>
+
+        <div className="price-row">
+          <span className="price">{formatPrice(product.price)}</span>
+
+          {product.oldPrice && (
+            <span className="old-price">
+              {formatPrice(product.oldPrice)}
+            </span>
+          )}
+        </div>
+
+        <div className="card-actions">
+          <button
+            className="add-button"
+            type="button"
+            onClick={onAdd}
+          >
+            Agregar al carrito
+          </button>
+
+          <button
+            className="details-button"
+            type="button"
+            aria-label="Ver producto"
+            onClick={onDetails}
+          >
+            →
+          </button>
+        </div>
+      </div>
+    </article>
   );
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] =
-    useState("");
-  const [notes, setNotes] = useState("");
-  const [message, setMessage] =
-    useState("");
+}
 
-  const total = cart.reduce(
-    (sum, item) =>
-      sum +
-      Number(item.price) *
-        Number(item.quantity),
-    0
-  );
+function ProductPage({
+  products,
+  onAdd,
+  onBuy,
+  favoriteIds,
+  onFavorite,
+}) {
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-  function finishOrder(event) {
-    event.preventDefault();
+  const product = products.find((item) => item.id === id);
 
-    if (!cart.length) {
-      setMessage(
-        "No hay productos en el carrito."
-      );
-      return;
-    }
+  if (!product) {
+    return (
+      <main className="page product-page">
+        <button
+          className="back-button"
+          type="button"
+          onClick={() => navigate(-1)}
+        >
+          ← Regresar
+        </button>
 
-    const lines = cart
-      .map(
-        (item) =>
-          `${item.name} x${item.quantity} — ${formatPrice(
-            item.price * item.quantity
-          )}`
-      )
-      .join("\n");
-
-    const text =
-      `Hola, quiero realizar un pedido en VaniDaxi.\n\n` +
-      `${lines}\n\n` +
-      `Total: ${formatPrice(total)}\n` +
-      `Nombre: ${name}\n` +
-      `Teléfono: ${phone}\n` +
-      `Dirección: ${address}\n` +
-      `Notas: ${notes}`;
-
-    window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-        text
-      )}`,
-      "_blank"
-    );
-
-    setMessage(
-      "Pedido preparado. Puedes continuar la conversación por WhatsApp."
+        <div className="empty-state">
+          <h2>Producto no encontrado</h2>
+        </div>
+      </main>
     );
   }
 
+  const favorite = favoriteIds.includes(product.id);
+
   return (
-    <div className="vd-app">
-      <style>{styles}</style>
+    <main className="page product-page">
+      <button
+        className="back-button"
+        type="button"
+        onClick={() => navigate(-1)}
+      >
+        ← Regresar
+      </button>
 
-      <main className="vd-shell vd-main">
-        <section
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: 20,
-          }}
-        >
-          <div className="vd-section-head">
-            <h1 className="vd-section-title">
-              Checkout
-            </h1>
+      <div className="product-detail">
+        <div>
+          <img
+            className="detail-image"
+            src={product.image}
+            alt={product.name}
+          />
+        </div>
 
-            <button
-              className="vd-close"
-              onClick={onBack}
-            >
-              ✕
-            </button>
+        <div>
+          <div className="detail-category">{product.category}</div>
+
+          <h1 className="detail-title">{product.name}</h1>
+
+          <div className="rating">
+            ★ {product.rating}{" "}
+            <span>({product.reviews} reseñas)</span>
           </div>
 
-          <form onSubmit={finishOrder}>
-            <input
-              className="vd-field"
-              value={name}
-              onChange={(event) =>
-                setName(event.target.value)
-              }
-              placeholder="Nombre completo"
-              required
-            />
+          <div className="price-row" style={{ margin: "18px 0" }}>
+            <span className="price" style={{ fontSize: 30 }}>
+              {formatPrice(product.price)}
+            </span>
 
-            <input
-              className="vd-field"
-              value={phone}
-              onChange={(event) =>
-                setPhone(event.target.value)
-              }
-              placeholder="Teléfono"
-              required
-            />
+            {product.oldPrice && (
+              <span className="old-price" style={{ fontSize: 14 }}>
+                {formatPrice(product.oldPrice)}
+              </span>
+            )}
+          </div>
 
-            <textarea
-              className="vd-field"
-              value={address}
-              onChange={(event) =>
-                setAddress(event.target.value)
-              }
-              placeholder="Dirección de entrega"
-              required
-            />
+          <p className="detail-description">{product.description}</p>
 
-            <textarea
-              className="vd-field"
-              value={notes}
-              onChange={(event) =>
-                setNotes(event.target.value)
-              }
-              placeholder="Notas del pedido"
-            />
+          {product.specifications?.length > 0 && (
+            <>
+              <h3 style={{ marginTop: 25 }}>Características</h3>
 
-            <div className="vd-cart-total">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
-            </div>
+              <ul className="specifications">
+                {product.specifications.map((specification) => (
+                  <li key={specification}>{specification}</li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginTop: 22,
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => onBuy(product)}
+            >
+              Comprar ahora
+            </button>
 
             <button
-              className="vd-primary"
-              type="submit"
+              className="secondary-button"
+              type="button"
+              onClick={() => onAdd(product)}
             >
-              Enviar pedido
+              Agregar al carrito
             </button>
-          </form>
 
-          {message ? (
-            <div
-              style={{
-                marginTop: 12,
-                fontSize: 12,
-                color: "#79157e",
-              }}
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => onFavorite(product.id)}
             >
-              {message}
-            </div>
-          ) : null}
-        </section>
-      </main>
-    </div>
+              {favorite ? "♥ Guardado" : "♡ Favorito"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
 
